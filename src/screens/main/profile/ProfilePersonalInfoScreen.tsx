@@ -62,14 +62,48 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { draft, updateDraft } = useProfileSetup();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const { cities } = useSelector((state: RootState) => state.meta);
+
+  // All State hooks
   const [dobOpen, setDobOpen] = useState(false);
+  const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
 
-  const { data: profileData } = useSelector((state: RootState) => state.profile);
-  const { cities } = useSelector((state: RootState) => state.meta);
+  // All Memo hooks
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const yearList = [];
+    for (let i = currentYear; i >= 1950; i--) {
+      yearList.push(i);
+    }
+    return yearList;
+  }, []);
 
+  const markedDates = useMemo(
+    () =>
+      draft.dateOfBirth
+        ? { [draft.dateOfBirth]: { selected: true, selectedColor: colors.primary } }
+        : {},
+    [colors.primary, draft.dateOfBirth],
+  );
+
+  const filteredCities = useMemo(() => {
+    const q = cityQuery.trim().toLowerCase();
+    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
+    if (!q) {
+      return source;
+    }
+    return source.filter(c => c.toLowerCase().includes(q));
+  }, [cityQuery, cities]);
+
+  const calendarCurrent = useMemo(() => {
+    if (draft.dateOfBirth) return draft.dateOfBirth;
+    return new Date().toISOString().slice(0, 10);
+  }, [draft.dateOfBirth]);
+
+  // All Effect hooks
   React.useEffect(() => {
     if (cities.length === 0) {
       dispatch(fetchMetaCities());
@@ -81,7 +115,6 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       const p = profileData.profile.personal;
       const pref = profileData.profile.preferences;
       
-      // Parse address if it contains a comma
       let city = pref?.current_city || '';
       let area = '';
       if (p.address && p.address.includes(',')) {
@@ -102,27 +135,9 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [profileData, updateDraft]);
 
-  // Use user name if draft is empty
   const fullName = draft.fullName || user?.name || '';
   const email = user?.email || '';
   const phone = user?.phone || '';
-
-  const markedDates = useMemo(
-    () =>
-      draft.dateOfBirth
-        ? { [draft.dateOfBirth]: { selected: true, selectedColor: colors.primary } }
-        : {},
-    [colors.primary, draft.dateOfBirth],
-  );
-
-  const filteredCities = useMemo(() => {
-    const q = cityQuery.trim().toLowerCase();
-    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
-    if (!q) {
-      return source;
-    }
-    return source.filter(c => c.toLowerCase().includes(q));
-  }, [cityQuery, cities]);
 
   const canSave =
     draft.fullName.trim().length >= 2 &&
@@ -262,34 +277,79 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.modalSheet, { backgroundColor: colors.surface }]}
             onPress={e => e.stopPropagation()}>
             <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Date of birth</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Date of birth</Text>
+                <Pressable 
+                  onPress={() => setYearPickerOpen(!yearPickerOpen)}
+                  style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
+                >
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>
+                    {draft.dateOfBirth ? draft.dateOfBirth.split('-')[0] : new Date().getFullYear()}
+                  </Text>
+                  <Icon name={yearPickerOpen ? "chevron-up" : "chevron-down"} size={10} color={colors.primary} />
+                </Pressable>
+              </View>
               <Pressable onPress={() => setDobOpen(false)} hitSlop={12}>
                 <Text style={[typography.labelMedium, { color: colors.primary }]}>Done</Text>
               </Pressable>
             </View>
-            <Calendar
-              current={draft.dateOfBirth || undefined}
-              minDate="1950-01-01"
-              maxDate={new Date().toISOString().slice(0, 10)}
-              onDayPress={day => {
-                updateDraft({ dateOfBirth: day.dateString });
-                setDobOpen(false);
-              }}
-              markedDates={markedDates}
-              enableSwipeMonths
-              theme={{
-                backgroundColor: colors.surface,
-                calendarBackground: colors.surface,
-                textSectionTitleColor: colors.textSecondary,
-                selectedDayBackgroundColor: colors.primary,
-                selectedDayTextColor: colors.onPrimary,
-                todayTextColor: colors.primary,
-                dayTextColor: colors.textPrimary,
-                textDisabledColor: colors.textPlaceholder,
-                monthTextColor: colors.textPrimary,
-                arrowColor: colors.primary,
-              }}
-            />
+
+            {yearPickerOpen ? (
+              <View style={{ height: 300 }}>
+                <FlatList
+                  data={years}
+                  keyExtractor={item => item.toString()}
+                  initialScrollIndex={years.indexOf(parseInt(draft.dateOfBirth?.split('-')[0] || new Date().getFullYear().toString()))}
+                  getItemLayout={(data, index) => ({ length: 50, offset: 50 * index, index })}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => {
+                        const currentDob = draft.dateOfBirth || new Date().toISOString().slice(0, 10);
+                        const parts = currentDob.split('-');
+                        const newDob = `${item}-${parts[1]}-${parts[2]}`;
+                        updateDraft({ dateOfBirth: newDob });
+                        setYearPickerOpen(false);
+                      }}
+                      style={[
+                        styles.yearRow,
+                        { borderBottomColor: colors.border }
+                      ]}
+                    >
+                      <Text style={[
+                        typography.body, 
+                        { color: (draft.dateOfBirth?.startsWith(item.toString())) ? colors.primary : colors.textPrimary, textAlign: 'center' }
+                      ]}>
+                        {item}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              </View>
+            ) : (
+              <Calendar
+                current={calendarCurrent}
+                minDate="1950-01-01"
+                maxDate={new Date().toISOString().slice(0, 10)}
+                onDayPress={day => {
+                  updateDraft({ dateOfBirth: day.dateString });
+                  setDobOpen(false);
+                }}
+                markedDates={markedDates}
+                enableSwipeMonths
+                theme={{
+                  backgroundColor: colors.surface,
+                  calendarBackground: colors.surface,
+                  textSectionTitleColor: colors.textSecondary,
+                  selectedDayBackgroundColor: colors.primary,
+                  selectedDayTextColor: colors.onPrimary,
+                  todayTextColor: colors.primary,
+                  dayTextColor: colors.textPrimary,
+                  textDisabledColor: colors.textPlaceholder,
+                  monthTextColor: colors.textPrimary,
+                  arrowColor: colors.primary,
+                }}
+              />
+            )}
           </Pressable>
         </Pressable>
       </Modal>
@@ -482,6 +542,20 @@ const styles = StyleSheet.create({
   cityRow: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
+  },
+  yearToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.xs,
+  },
+  yearRow: {
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

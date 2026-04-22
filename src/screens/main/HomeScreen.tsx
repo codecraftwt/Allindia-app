@@ -250,7 +250,7 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View
         style={[
           styles.fixedHeader,
@@ -343,7 +343,7 @@ const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+          { paddingBottom: spacing.md },
         ]}>
         <Pressable
           onPress={goSearch}
@@ -737,7 +737,7 @@ const styles = StyleSheet.create({
   },
   verticalList: {
     gap: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: 0,
   },
   listCard: {
     padding: spacing.md,

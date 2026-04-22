@@ -170,12 +170,12 @@ const ProfileOverviewScreen: React.FC = () => {
   }, [profile?.resume, draft.resumeName, draft.resumeSkipped]);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+          { paddingBottom: 0 },
         ]}>
         <View style={styles.hero}>
           <View style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}>

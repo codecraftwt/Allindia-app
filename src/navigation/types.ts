@@ -17,6 +17,11 @@ export type SavedStackParamList = {
   JobDetail: JobDetailParams;
 };
 
+export type JobReelsStackParamList = {
+  ReelsMain: undefined;
+  SavedPost: undefined;
+};
+
 export type ProfileStackParamList = {
   ProfileOverview: undefined;
   ProfilePersonalInfo: undefined;
@@ -31,7 +36,9 @@ export type MainTabParamList = {
   Search: undefined;
   Applications: undefined;
   Saved: undefined;
+  JobReels: undefined;
   Profile: undefined;
+  SavedPost: undefined;
 };
 
 export type AuthStackParamList = {

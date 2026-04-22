@@ -120,7 +120,7 @@ const SavedJobsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Saved jobs</Text>
         <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>
@@ -144,7 +144,7 @@ const SavedJobsScreen: React.FC = () => {
         contentContainerStyle={[
           styles.listContent,
           wishlistJobs.length === 0 && styles.listEmpty,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+          { paddingBottom: 0 },
         ]}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListEmptyComponent={!loading ? (

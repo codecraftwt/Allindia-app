@@ -65,13 +65,13 @@ const SearchScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+          { paddingBottom: 0 },
         ]}>
         <View style={[styles.searchRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Icon name="search" size={18} color={colors.textPlaceholder} />

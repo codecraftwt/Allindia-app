@@ -34,6 +34,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const onLogin = async () => {
@@ -99,8 +100,15 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                 />
+                <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={12}>
+                  <Icon 
+                    name={showPassword ? "eye" : "eye-slash"} 
+                    size={18} 
+                    color={colors.textPlaceholder} 
+                  />
+                </Pressable>
               </View>
             </View>
 
