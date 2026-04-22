@@ -8,8 +8,10 @@ import {
   View,
   Image,
 } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../../redux/store';
+import { logoutCandidate } from '../../../redux/slice/authSlice';
+import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -78,19 +80,51 @@ const ProfileOverviewScreen: React.FC = () => {
   const { colors, mode, setMode } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
+  const dispatch = useDispatch<AppDispatch>();
   const { draft } = useProfileSetup();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
+  const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const [notificationsOn, setNotificationsOn] = useState(true);
 
-  const displayName = user?.name || draft.fullName || 'Your profile';
-  const displayEmail = user?.email || draft.email || '';
-  const displayPhone = user?.phone || draft.phone || '';
+  React.useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
+
+  const profile = profileData?.profile;
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutCandidate()).unwrap();
+      logoutToLogin(navigation);
+    } catch (error) {
+      // Even if API fails, we redirect because state is cleared locally
+      logoutToLogin(navigation);
+    }
+  };
+
+  const displayName = profile?.personal?.name || user?.name || draft.fullName || 'Your profile';
+  const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
+  const displayPhone = profile?.personal?.phone || user?.phone || draft.phone || '';
 
   const salaryLabel = useMemo(() => {
+    const pref = profile?.preferences;
+    if (pref?.expected_salary_min || pref?.expected_salary_max) {
+      if (pref.expected_salary_min === 0 && pref.expected_salary_max === 0) {
+        return 'Not set';
+      }
+      const min = pref.expected_salary_min ? `₹${pref.expected_salary_min.toLocaleString()}` : '0';
+      const max = pref.expected_salary_max ? `₹${pref.expected_salary_max.toLocaleString()}` : 'Max';
+      return `${min} - ${max}`;
+    }
     return SALARY_OPTIONS.find(o => o.id === draft.expectedSalary)?.label ?? 'Not set';
-  }, [draft.expectedSalary]);
+  }, [profile?.preferences, draft.expectedSalary]);
 
-  const categoryPreview = useMemo(() => {
+  const job_category = useMemo(() => {
+    const pref = profile?.preferences;
+    if (pref?.job_category) {
+      const cat = pref.job_category;
+      return typeof cat === 'object' ? cat.name : cat;
+    }
     const labels = draft.jobCategoryIds
       .map(id => JOB_CATEGORIES.find(c => c.id === id)?.label)
       .filter(Boolean) as string[];
@@ -98,12 +132,42 @@ const ProfileOverviewScreen: React.FC = () => {
       return 'Not set';
     }
     return labels.slice(0, 3).join(' · ');
-  }, [draft.jobCategoryIds]);
+  }, [profile?.preferences, draft.jobCategoryIds]);
 
-  const locationLine =
-    draft.city || draft.area
+  const locationLine = useMemo(() => {
+    if (profile?.preferences?.current_city) {
+      return profile.preferences.current_city;
+    }
+    return draft.city || draft.area
       ? [draft.city, draft.area].filter(Boolean).join(' · ')
       : 'Add your location';
+  }, [profile?.preferences, draft.city, draft.area]);
+
+  const qualificationText = profile?.education?.qualification || draft.qualification || 'Qualification not set';
+
+  const experienceText = useMemo(() => {
+    if (profile?.experience?.experience_type) {
+      const type = profile.experience.experience_type;
+      const years = profile.experience.total_experience_years;
+      return type === 'fresher' ? 'Fresher' : `${years} years experience`;
+    }
+    return draft.isFresher
+      ? 'Fresher'
+      : draft.experienceYears
+        ? `${draft.experienceYears} years`
+        : 'Not set';
+  }, [profile?.experience, draft.isFresher, draft.experienceYears]);
+
+  const resumeText = useMemo(() => {
+    if (profile?.resume?.has_resume) {
+      return profile.resume.resume_original_name || 'Resume uploaded';
+    }
+    return draft.resumeName
+      ? draft.resumeName
+      : draft.resumeSkipped
+        ? 'Skipped — add a file anytime'
+        : 'No resume uploaded';
+  }, [profile?.resume, draft.resumeName, draft.resumeSkipped]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
@@ -116,9 +180,9 @@ const ProfileOverviewScreen: React.FC = () => {
         <View style={styles.hero}>
           <View style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}>
             {user?.profile_picture_url ? (
-              <Image 
-                source={{ uri: `https://floralwhite-louse-700260.hostingersite.com${user.profile_picture_url}` }} 
-                style={styles.avatarImage} 
+              <Image
+                source={{ uri: `https://floralwhite-louse-700260.hostingersite.com${user.profile_picture_url}` }}
+                style={styles.avatarImage}
               />
             ) : displayName.trim() ? (
               <Text style={[typography.appTitle, { color: colors.primary, fontSize: 28 }]}>
@@ -137,10 +201,10 @@ const ProfileOverviewScreen: React.FC = () => {
           <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xs }]}>
             {locationLine}
           </Text>
-          {draft.qualification ? (
+          {qualificationText !== 'Qualification not set' ? (
             <Text
               style={[typography.small, { color: colors.textPlaceholder, textAlign: 'center', marginTop: 4 }]}>
-              {draft.qualification}
+              {qualificationText}
             </Text>
           ) : null}
           <PrimaryButton
@@ -164,37 +228,25 @@ const ProfileOverviewScreen: React.FC = () => {
           />
           <SectionRow
             title="Education"
-            subtitle={draft.qualification || 'Qualification not set'}
+            subtitle={qualificationText}
             colors={colors}
             onPress={() => navigation.navigate('ProfileEducation')}
           />
           <SectionRow
             title="Experience"
-            subtitle={
-              draft.isFresher
-                ? 'Fresher'
-                : draft.experienceYears
-                  ? `${draft.experienceYears} years`
-                  : 'Not set'
-            }
+            subtitle={experienceText}
             colors={colors}
             onPress={() => navigation.navigate('ProfileExperience')}
           />
           <SectionRow
             title="Job preferences"
-            subtitle={`${categoryPreview} · ${salaryLabel}`}
+            subtitle={`${job_category} · ${salaryLabel}`}
             colors={colors}
             onPress={() => navigation.navigate('ProfileJobPreferences')}
           />
           <SectionRow
             title="Resume"
-            subtitle={
-              draft.resumeName
-                ? draft.resumeName
-                : draft.resumeSkipped
-                  ? 'Skipped — add a file anytime'
-                  : 'No resume uploaded'
-            }
+            subtitle={resumeText}
             colors={colors}
             onPress={() => navigation.navigate('ProfileResume')}
           />
@@ -252,8 +304,9 @@ const ProfileOverviewScreen: React.FC = () => {
             />
           </View>
           <Pressable
-            onPress={() => logoutToLogin(navigation)}
-            style={styles.logoutPress}
+            onPress={handleLogout}
+            disabled={authLoading}
+            style={[styles.logoutPress, authLoading && { opacity: 0.5 }]}
             accessibilityRole="button"
             accessibilityLabel="Log out">
             <Icon name="sign-out" size={18} color={colors.error} style={styles.settingsIcon} />

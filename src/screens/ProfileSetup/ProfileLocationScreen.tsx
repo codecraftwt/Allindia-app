@@ -8,6 +8,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { fetchMetaCities } from '../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../components/auth';
@@ -25,16 +28,25 @@ type Props = StackScreenProps<AuthStackParamList, 'ProfileLocation'>;
 const ProfileLocationScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const { draft, updateDraft } = useProfileSetup();
+  const dispatch = useDispatch<AppDispatch>();
+  const { cities } = useSelector((state: RootState) => state.meta);
   const [cityOpen, setCityOpen] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
 
+  React.useEffect(() => {
+    if (cities.length === 0) {
+      dispatch(fetchMetaCities());
+    }
+  }, [dispatch, cities.length]);
+
   const filteredCities = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
+    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
     if (!q) {
-      return INDIAN_CITIES;
+      return source;
     }
-    return INDIAN_CITIES.filter(c => c.toLowerCase().includes(q));
-  }, [cityQuery]);
+    return source.filter(c => c.toLowerCase().includes(q));
+  }, [cityQuery, cities]);
 
   const canContinue = draft.city.trim().length > 0 && draft.area.trim().length >= 2;
 

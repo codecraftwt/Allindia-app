@@ -1,0 +1,166 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../api/axiosInstance';
+
+export const fetchJobs = createAsyncThunk(
+  'jobs/fetchJobs',
+  async (params: {
+    sort?: string;
+    q?: string;
+    category_id?: number;
+    city_id?: number;
+    job_type?: string;
+    applied?: boolean;
+    wishlisted?: boolean;
+    per_page?: number;
+    page?: number;
+  }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/candidate/jobs', { params });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs');
+    }
+  }
+);
+
+export const fetchJobDetail = createAsyncThunk(
+  'jobs/fetchJobDetail',
+  async (jobId: number | string, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`api/candidate/jobs/${jobId}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch job detail');
+    }
+  }
+);
+
+import { fetchWishlist } from './profileSlice';
+
+export const toggleWishlist = createAsyncThunk(
+  'jobs/toggleWishlist',
+  async ({ jobId, isWishlisted }: { jobId: number | string; isWishlisted: boolean }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
+      
+      if (isWishlisted) {
+    
+        const res = await api.request({
+          method: 'DELETE',
+          url: `/api/candidate/jobs/${jobId}/wishlist`,
+          headers: { Authorization: `Bearer ${token}` },
+        });
+   
+      } else {
+   
+        const res = await api.request({
+          method: 'POST',
+          url: `/api/candidate/jobs/${jobId}/wishlist`,
+          headers: { Authorization: `Bearer ${token}` },
+        });
+     
+      }
+      // Refresh wishlist in profile slice
+      dispatch(fetchWishlist());
+      return { jobId, isWishlisted: !isWishlisted };
+    } catch (error: any) {
+
+      return rejectWithValue(error.response?.data?.message || 'Failed to update wishlist');
+    }
+  }
+);
+
+export const applyJob = createAsyncThunk(
+  'jobs/applyJob',
+  async ({ jobId, answers }: { jobId: number | string, answers?: Record<string, number> }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.post(`api/candidate/jobs/${jobId}/apply`, { answers }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to apply for job');
+    }
+  }
+);
+
+const jobSlice = createSlice({
+  name: 'jobs',
+  initialState: {
+    recommended: [] as any[],
+    nearby: [] as any[],
+    trending: [] as any[],
+    currentJob: null as any,
+    loading: false,
+    error: null as string | null,
+    meta: null as any,
+  },
+  reducers: {
+    clearCurrentJob: (state) => {
+      state.currentJob = null;
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchJobs.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchJobs.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.meta.arg.sort === 'recommended') {
+          state.recommended = action.payload.data.jobs;
+        } else if (action.meta.arg.sort === 'latest') {
+          state.trending = action.payload.data.jobs;
+        } else {
+          state.recommended = action.payload.data.jobs;
+        }
+        state.meta = action.payload.meta;
+      })
+      .addCase(fetchJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchJobDetail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchJobDetail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentJob = action.payload.data.job;
+      })
+      .addCase(fetchJobDetail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(applyJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(applyJob.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(applyJob.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(toggleWishlist.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(toggleWishlist.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(toggleWishlist.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
+
+export const { clearCurrentJob } = jobSlice.actions;
+export default jobSlice.reducer;

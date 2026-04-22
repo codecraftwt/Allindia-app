@@ -8,8 +8,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../../redux/store';
+import { updatePersonalProfile } from '../../../redux/slice/profileSlice';
+import { fetchMetaCities } from '../../../redux/slice/metaSlice';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
@@ -57,11 +59,48 @@ function formatDobDisplay(iso: string) {
 
 const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const dispatch = useDispatch<AppDispatch>();
   const { draft, updateDraft } = useProfileSetup();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const [dobOpen, setDobOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [cityQuery, setCityQuery] = useState('');
+
+  const { data: profileData } = useSelector((state: RootState) => state.profile);
+  const { cities } = useSelector((state: RootState) => state.meta);
+
+  React.useEffect(() => {
+    if (cities.length === 0) {
+      dispatch(fetchMetaCities());
+    }
+  }, [dispatch, cities.length]);
+
+  React.useEffect(() => {
+    if (profileData?.profile?.personal) {
+      const p = profileData.profile.personal;
+      const pref = profileData.profile.preferences;
+      
+      // Parse address if it contains a comma
+      let city = pref?.current_city || '';
+      let area = '';
+      if (p.address && p.address.includes(',')) {
+        const parts = p.address.split(',');
+        city = parts[0].trim();
+        area = parts.slice(1).join(',').trim();
+      } else if (p.address) {
+        area = p.address;
+      }
+
+      updateDraft({
+        fullName: p.name || '',
+        gender: (p.gender as Gender) || '',
+        dateOfBirth: p.date_of_birth || '',
+        city: city,
+        area: area,
+      });
+    }
+  }, [profileData, updateDraft]);
 
   // Use user name if draft is empty
   const fullName = draft.fullName || user?.name || '';
@@ -78,18 +117,35 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
   const filteredCities = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
+    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
     if (!q) {
-      return INDIAN_CITIES;
+      return source;
     }
-    return INDIAN_CITIES.filter(c => c.toLowerCase().includes(q));
-  }, [cityQuery]);
+    return source.filter(c => c.toLowerCase().includes(q));
+  }, [cityQuery, cities]);
 
   const canSave =
     draft.fullName.trim().length >= 2 &&
     draft.gender !== '' &&
     draft.dateOfBirth !== '' &&
     draft.city.trim().length > 0 &&
-    draft.area.trim().length >= 2;
+    draft.area.trim().length >= 2 &&
+    !profileLoading;
+
+  const handleSave = async () => {
+    try {
+      await dispatch(updatePersonalProfile({
+        name: draft.fullName,
+        phone: user?.phone || undefined,
+        gender: draft.gender as string,
+        date_of_birth: draft.dateOfBirth,
+        address: `${draft.city}, ${draft.area}`,
+      })).unwrap();
+      navigation.goBack();
+    } catch (error) {
+
+    }
+  };
 
   return (
     <ProfileEditLayout
@@ -337,8 +393,8 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       />
 
       <PrimaryButton
-        title="Save"
-        onPress={() => navigation.goBack()}
+        title={profileLoading ? "Saving..." : "Save"}
+        onPress={handleSave}
         disabled={!canSave}
         colors={colors}
       />

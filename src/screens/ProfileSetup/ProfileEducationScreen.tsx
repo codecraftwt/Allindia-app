@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { fetchMetaQualifications } from '../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../components/auth';
@@ -17,7 +20,17 @@ type Props = StackScreenProps<AuthStackParamList, 'ProfileEducation'>;
 const ProfileEducationScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const { draft, updateDraft } = useProfileSetup();
+  const dispatch = useDispatch<AppDispatch>();
+  const { qualifications } = useSelector((state: RootState) => state.meta);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (qualifications.length === 0) {
+      dispatch(fetchMetaQualifications());
+    }
+  }, [dispatch, qualifications.length]);
+
+  const displayData = qualifications.length > 0 ? qualifications.map(q => q.name) : QUALIFICATIONS;
 
   const canContinue = draft.qualification.trim().length > 0;
 
@@ -64,7 +77,7 @@ const ProfileEducationScreen: React.FC<Props> = ({ navigation }) => {
               </Pressable>
             </View>
             <FlatList
-              data={QUALIFICATIONS}
+              data={displayData}
               keyExtractor={item => item}
               style={styles.list}
               renderItem={({ item }) => (

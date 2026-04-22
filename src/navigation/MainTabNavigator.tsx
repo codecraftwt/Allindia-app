@@ -1,5 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Platform, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../context/ThemeContext';
 import ApplicationsScreen from '../screens/main/ApplicationsScreen';
@@ -25,14 +26,33 @@ const MainTabNavigator: React.FC = () => {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          paddingTop: 6,
-          paddingBottom: 8,
-          height: 60,
+          paddingTop: 16,
+          paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+          height: Platform.OS === 'ios' ? 110 : 104, 
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontFamily: typography.small.fontFamily,
+          marginTop: -4,
+          marginBottom: 8,
         },
+        tabBarIconStyle: {
+          marginTop: -10, // Pushing the icon significantly upwards
+        },
+        tabBarButton: (props) => (
+          <Pressable
+            {...props}
+            android_ripple={{
+              color: colors.surfaceHighlight,
+              borderless: true,
+              radius: 35,
+            }}
+            style={({ pressed }) => [
+              props.style,
+              Platform.OS === 'ios' && pressed && { opacity: 0.6 }
+            ]}
+          />
+        ),
       }}>
       <Tab.Screen
         name="Home"

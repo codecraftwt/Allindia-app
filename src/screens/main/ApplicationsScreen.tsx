@@ -1,5 +1,13 @@
 import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  RefreshControl,
+  Image,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../context/ThemeContext';
@@ -7,18 +15,25 @@ import type { ThemeColors } from '../../theme/colors';
 import { components } from '../../theme/components';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../redux/store';
+import { fetchAppliedJobs } from '../../redux/slice/profileSlice';
 import { typography } from '../../theme/typography';
-import type { AppliedJob } from './applicationsMockData';
-import { APPLIED_JOBS } from './applicationsMockData';
+import { AuthHeadline } from '../../components/auth';
 
-function statusLabel(status: AppliedJob['status']): string {
-  return status === 'contacted' ? 'Contacted' : 'Applied';
-}
-
-function AppliedJobCard({ job, colors }: { job: AppliedJob; colors: ThemeColors }) {
-  const isContacted = job.status === 'contacted';
+function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
+  const application = job.application || {};
+  const status = application.status || 'submitted';
+  const isContacted = status === 'contacted';
   const statusBg = isContacted ? colors.successBackground : colors.badgeBackground;
   const statusFg = isContacted ? colors.success : colors.badgeText;
+  
+  const company = job.employer?.company || {};
+  const location = job.location?.label || 'Remote';
+
+  const appliedDate = application.applied_at 
+    ? new Date(application.applied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
 
   return (
     <Pressable
@@ -30,60 +45,96 @@ function AppliedJobCard({ job, colors }: { job: AppliedJob; colors: ThemeColors 
           shadowColor: colors.shadow,
         },
       ]}>
-      <View style={styles.cardTop}>
-        <View style={[styles.iconWrap, { backgroundColor: colors.surfaceHighlight }]}>
-          <Icon name="briefcase" size={18} color={colors.primary} />
+        <View style={styles.cardHeader}>
+          <View style={[styles.logoContainer, { backgroundColor: colors.surfaceHighlight }]}>
+            {company.company_logo_url ? (
+              <Image source={{ uri: company.company_logo_url }} style={styles.logo} />
+            ) : (
+              <Icon name="briefcase" size={20} color={colors.primary} />
+            )}
+          </View>
+          <View style={styles.headerInfo}>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>
+              {job.title}
+            </Text>
+            <Text style={[typography.small, { color: colors.textSecondary }]} numberOfLines={1}>
+              {company.company_name || 'Anonymous Company'}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+            <Text style={[typography.tiny, { color: statusFg, textTransform: 'capitalize' }]}>
+              {status}
+            </Text>
+          </View>
         </View>
-        <View style={styles.cardText}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-            {job.title}
-          </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-            {job.company}
-          </Text>
+
+        <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+          <View style={styles.footerItem}>
+            <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
+            <Text style={[typography.tiny, { color: colors.textSecondary }]}>{location}</Text>
+          </View>
+          <View style={styles.footerItem}>
+            <Icon name="money" size={12} color={colors.textPlaceholder} />
+            <Text style={[typography.tiny, { color: colors.textSecondary }]}>
+              ₹{job.salary_min?.toLocaleString()} - ₹{job.salary_max?.toLocaleString()}
+            </Text>
+          </View>
+          {appliedDate ? (
+            <Text style={[typography.tiny, { color: colors.textPlaceholder, marginLeft: 'auto' }]}>
+              Applied {appliedDate}
+            </Text>
+          ) : null}
         </View>
-      </View>
-      <View style={[styles.statusRow, { borderTopColor: colors.border }]}>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>Status</Text>
-        <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
-          <Icon
-            name={isContacted ? 'comments-o' : 'paper-plane-o'}
-            size={12}
-            color={statusFg}
-            style={styles.statusIcon}
-          />
-          <Text style={[typography.small, { color: statusFg, fontFamily: typography.labelMedium.fontFamily }]}>
-            {statusLabel(job.status)}
-          </Text>
-        </View>
-      </View>
     </Pressable>
   );
 }
 
 const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
+  const dispatch = useDispatch<AppDispatch>();
+  const { appliedJobs, loading } = useSelector((state: RootState) => state.profile);
+
+  React.useEffect(() => {
+    dispatch(fetchAppliedJobs());
+  }, [dispatch]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.header}>
-        <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Applications</Text>
-        <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>
-          Jobs you have applied to
-        </Text>
-      </View>
-      <FlatList
-        data={APPLIED_JOBS}
-        keyExtractor={item => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
-        ]}
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        renderItem={({ item }) => <AppliedJobCard job={item} colors={colors} />}
+       <ScrollView
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-      />
+        refreshControl={
+          <RefreshControl 
+            refreshing={loading} 
+            onRefresh={() => dispatch(fetchAppliedJobs())} 
+            colors={[colors.primary]}
+          />
+        }
+      >
+        <AuthHeadline
+          colors={colors}
+          title="Applications"
+          subtitle="Track the status of your job applications"
+        />
+
+        <View style={styles.list}>
+          {appliedJobs.length > 0 ? (
+            appliedJobs.map((job: any) => (
+              <AppliedJobCard key={job.id} job={job} colors={colors} />
+            ))
+          ) : !loading ? (
+            <View style={styles.emptyContainer}>
+              <Icon name="file-text-o" size={48} color={colors.border} />
+              <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
+                No applications yet
+              </Text>
+              <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+                Applied jobs will appear here
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -92,59 +143,63 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  header: {
+  scroll: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    maxWidth: 520,
-    width: '100%',
-    alignSelf: 'center',
+    paddingBottom: spacing.xxl,
   },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    maxWidth: 520,
-    width: '100%',
-    alignSelf: 'center',
+  list: {
+    gap: spacing.md,
   },
   card: {
     ...components.jobCard,
     padding: spacing.md,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  cardTop: {
-    flexDirection: 'row',
     gap: spacing.md,
   },
-  iconWrap: {
-    width: 44,
-    height: 44,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  logoContainer: {
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  cardText: {
+  logo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  headerInfo: {
     flex: 1,
-    minWidth: 0,
   },
-  statusRow: {
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.xs,
+  },
+  cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+    gap: spacing.md,
+    paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  statusPill: {
+  footerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radius.sm,
+    gap: 4,
   },
-  statusIcon: {
-    marginRight: 0,
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl * 2,
   },
 });
 

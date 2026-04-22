@@ -7,6 +7,8 @@ import profileReducer from './slice/profileSlice';
 import servicePurchaseReducer from './slice/servicePurchaseSlice';
 import referralReducer from './slice/referralSlice';
 import addressReducer from './slice/addressSlice';
+import metaReducer from './slice/metaSlice';
+import jobReducer from './slice/jobSlice';
 
 const rootReducer = combineReducers({
   auth: getPersistedReducer('auth', authReducer),
@@ -15,6 +17,8 @@ const rootReducer = combineReducers({
   servicePurchase: servicePurchaseReducer,
   referral: referralReducer,
   address: addressReducer,
+  meta: metaReducer,
+  jobs: jobReducer,
 });
 
 export const store = configureStore({

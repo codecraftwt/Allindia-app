@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axiosInstance';
+import { clearProfile } from './profileSlice';
 
 interface AuthState {
   user: any | null;
@@ -23,14 +24,42 @@ export const loginCandidate = createAsyncThunk(
   'auth/loginCandidate',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      console.log('Attempting login at:', api.defaults.baseURL + 'api/candidate/login');
+
       const response = await api.post('api/candidate/login', credentials);
-      console.log('Login Response:', response.data);
+   
       return response.data;
     } catch (error: any) {
-      console.log('Login Error Status:', error.response?.status);
-      console.log('Login Error Data:', error.response?.data);
+    
+   
       return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
+  }
+);
+
+export const logoutCandidate = createAsyncThunk(
+  'auth/logoutCandidate',
+  async (_, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
+      if (token) {
+        await api.post('api/candidate/logout', {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+      
+      dispatch(logout());
+      dispatch(clearProfile());
+      return true;
+    } catch (error: any) {
+
+      // Still logout locally even if API fails (e.g. token expired)
+      dispatch(logout());
+      dispatch(clearProfile());
+      return rejectWithValue(error.response?.data?.message || 'Logout failed');
     }
   }
 );

@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   Pressable,
   ScrollView,
@@ -7,8 +8,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { fetchMetaCategories } from '../../redux/slice/metaSlice';
+import { fetchJobs } from '../../redux/slice/jobSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -54,6 +57,19 @@ function profileInitials(name: string): string {
     return parts[0].slice(0, 2).toUpperCase();
   }
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+}
+
+function getCategoryIcon(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes('it') || n.includes('tech')) return 'laptop';
+  if (n.includes('sales')) return 'line-chart';
+  if (n.includes('hr') || n.includes('people')) return 'users';
+  if (n.includes('finance') || n.includes('account')) return 'money';
+  if (n.includes('ops') || n.includes('operation')) return 'cogs';
+  if (n.includes('health')) return 'heartbeat';
+  if (n.includes('edu')) return 'book';
+  if (n.includes('hospitality')) return 'hotel';
+  return 'briefcase';
 }
 
 function SectionHeader({
@@ -137,10 +153,16 @@ function JobListCard({
   colors,
   onPress,
 }: {
-  job: HomeJob;
+  job: any;
   colors: ThemeColors;
   onPress?: () => void;
 }) {
+  const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
+  const locationLabel = job.location?.label || job.location || 'Remote';
+  const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
+  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
+
   return (
     <Pressable
       onPress={onPress}
@@ -161,7 +183,7 @@ function JobListCard({
             {job.title}
           </Text>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
-            {job.company}
+            {companyName}
           </Text>
         </View>
       </View>
@@ -169,21 +191,21 @@ function JobListCard({
         <View style={styles.metaItem}>
           <Icon name="map-marker" size={13} color={colors.textPlaceholder} />
           <Text style={[typography.small, { color: colors.textSecondary }]} numberOfLines={1}>
-            {job.location}
+            {locationLabel}
           </Text>
         </View>
         <View style={styles.metaItem}>
           <Icon name="clock-o" size={13} color={colors.textPlaceholder} />
           <Text style={[typography.small, { color: colors.textPlaceholder }]} numberOfLines={1}>
-            {job.postedLabel}
+            {postedLabel}
           </Text>
         </View>
       </View>
       <View style={styles.listFooter}>
-        <Text style={[typography.labelMedium, { color: colors.success }]}>{job.salary}</Text>
+        <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
         <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground }]}>
           <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily }]}>
-            {job.employmentType}
+            {jobType}
           </Text>
         </View>
       </View>
@@ -196,7 +218,15 @@ const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<HomeNav>();
   const { draft } = useProfileSetup();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { categories } = useSelector((state: RootState) => state.meta);
+  const { recommended, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
+
+  useEffect(() => {
+    dispatch(fetchMetaCategories());
+    dispatch(fetchJobs({ sort: 'recommended' }));
+  }, [dispatch]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
@@ -392,7 +422,26 @@ const HomeScreen: React.FC = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesScroll}
           decelerationRate="fast">
-          {HOME_CATEGORIES.map(cat => (
+          {categories.map(cat => (
+            <Pressable
+              key={cat.id}
+              style={[
+                styles.categoryChip,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  shadowColor: colors.shadow,
+                },
+              ]}>
+              <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
+                <Icon name={getCategoryIcon(cat.name)} size={16} color={colors.primary} />
+              </View>
+              <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
+                {cat.name}
+              </Text>
+            </Pressable>
+          ))}
+          {categories.length === 0 && HOME_CATEGORIES.map(cat => (
             <Pressable
               key={cat.id}
               style={[
@@ -441,9 +490,18 @@ const HomeScreen: React.FC = () => {
         <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
 
         <View style={styles.verticalList}>
-          {RECOMMENDED_JOBS.map(job => (
-            <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
-          ))}
+          {jobsLoading && recommended.length === 0 ? (
+            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+          ) : (
+            recommended.map((job: any) => (
+              <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+            ))
+          )}
+          {!jobsLoading && recommended.length === 0 && (
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
+              No recommendations found yet.
+            </Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

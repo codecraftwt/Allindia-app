@@ -1,5 +1,9 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Alert, ToastAndroid, Platform } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../../redux/store';
+import { uploadResume, deleteResume } from '../../../redux/slice/profileSlice';
+import { pick, isCancel, types } from '@react-native-documents/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../../components/auth';
@@ -15,15 +19,99 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileResume'>;
 
 const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const dispatch = useDispatch<AppDispatch>();
   const { draft, updateDraft } = useProfileSetup();
+  const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
 
-  const clearFile = () => {
-    updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
+  const resume = profileData?.profile?.resume;
+
+  React.useEffect(() => {
+    if (resume?.has_resume) {
+      updateDraft({
+        resumeName: resume.resume_original_name,
+        resumeUri: resume.resume_url, // This might not be a local URI but we use it as a flag
+      });
+    }
+  }, [resume, updateDraft]);
+
+  const handlePickFile = async () => {
+    try {
+      const res = await pick({
+        type: [types.pdf, types.doc, types.docx],
+      });
+      
+      const file = res[0];
+      
+      // Auto-upload when file is picked
+      const resultAction = await dispatch(uploadResume({
+        uri: file.uri,
+        name: file.name || 'resume.pdf',
+        type: file.type || 'application/pdf',
+      }));
+
+      if (uploadResume.fulfilled.match(resultAction)) {
+        updateDraft({ 
+          resumeUri: file.uri, 
+          resumeName: file.name || 'resume.pdf' 
+        });
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Resume uploaded successfully ✅', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Success', 'Resume uploaded successfully ✅');
+        }
+      } else {
+        // Show specific error from backend (like file size limit)
+        let errorMsg = resultAction.payload as string;
+        
+        // Convert technical "5120 kilobytes" to "5 MB" for better UX
+        if (errorMsg?.includes('5120 kilobytes')) {
+          errorMsg = 'File size is too large. Please upload a resume smaller than 5 MB.';
+        }
+
+        Alert.alert('Upload Failed ❌', errorMsg || 'Something went wrong while uploading.');
+      }
+      
+    } catch (err) {
+      if (!isCancel(err)) {
+    
+        Alert.alert('Error', 'Failed to pick file.');
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    Alert.alert(
+      'Delete Resume',
+      'Are you sure you want to remove your resume?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const resultAction = await dispatch(deleteResume());
+              if (deleteResume.fulfilled.match(resultAction)) {
+                updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
+                if (Platform.OS === 'android') {
+                  ToastAndroid.show('Resume removed successfully 🗑️', ToastAndroid.SHORT);
+                } else {
+                  Alert.alert('Deleted', 'Resume removed successfully 🗑️');
+                }
+              } else {
+                Alert.alert('Error', resultAction.payload as string || 'Failed to delete resume.');
+              }
+            } catch (err) {
+            
+            }
+          }
+        },
+      ]
+    );
   };
 
   const skip = () => {
-    clearFile();
-    updateDraft({ resumeSkipped: true });
+    updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: true });
   };
 
   const canSave = draft.resumeSkipped || Boolean(draft.resumeUri);
@@ -32,7 +120,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
     <ProfileEditLayout
       title="Resume"
       subtitle="Upload your CV so employers can review it when you apply.">
-      {draft.resumeUri && draft.resumeName ? (
+      {draft.resumeName ? (
         <View
           style={[
             styles.preview,
@@ -48,13 +136,35 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
               numberOfLines={1}>
               {draft.resumeName}
             </Text>
-            <Text style={[typography.small, { color: colors.textSecondary }]}>Ready to send</Text>
+            <Text style={[typography.small, { color: colors.textSecondary }]}>
+              {resume?.has_resume ? 'Uploaded' : 'Ready to upload'}
+            </Text>
           </View>
-          <Pressable onPress={clearFile} hitSlop={10}>
-            <Icon name="times-circle" size={22} color={colors.textPlaceholder} />
+          <Pressable onPress={handleDelete} hitSlop={10} disabled={profileLoading}>
+            <Icon name="trash-o" size={22} color={colors.error} />
           </Pressable>
         </View>
-      ) : null}
+      ) : (
+        <Pressable
+          onPress={handlePickFile}
+          disabled={profileLoading}
+          style={[
+            styles.uploadBox,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              borderStyle: 'dashed',
+            },
+          ]}>
+          <Icon name="cloud-upload" size={32} color={colors.primary} />
+          <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
+            {profileLoading ? 'Uploading...' : 'Tap to upload resume'}
+          </Text>
+          <Text style={[typography.small, { color: colors.textSecondary }]}>
+            PDF, DOC, DOCX up to 5MB
+          </Text>
+        </Pressable>
+      )}
 
       {draft.resumeSkipped && !draft.resumeUri ? (
         <View
@@ -110,6 +220,15 @@ const styles = StyleSheet.create({
   skipBtn: {
     alignSelf: 'center',
     paddingVertical: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  uploadBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    borderRadius: radius.card,
+    borderWidth: 2,
+    marginBottom: spacing.md,
   },
 });
 
