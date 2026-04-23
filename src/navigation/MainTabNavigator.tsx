@@ -7,7 +7,6 @@ import ApplicationsScreen from '../screens/main/ApplicationsScreen';
 import HomeStackNavigator from './HomeStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SavedStackNavigator from './SavedStackNavigator';
-import SearchStackNavigator from './SearchStackNavigator';
 import JobReelsStackNavigator from './JobReelsStackNavigator';
 import { typography } from '../theme/typography';
 import type { MainTabParamList } from './types';
@@ -76,15 +75,6 @@ const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => <TabItem name="home" color={color} focused={focused} colors={colors} />,
-        }}
-      />
-
-            <Tab.Screen
-        name="Search"
-        component={SearchStackNavigator}
-        options={{
-          tabBarLabel: 'Search',
-          tabBarIcon: ({ color, size }) => <Icon name="search" size={size} color={color} />,
         }}
       />
       

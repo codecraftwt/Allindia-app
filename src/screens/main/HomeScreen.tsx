@@ -236,8 +236,7 @@ const HomeScreen: React.FC = () => {
   const avatarInitials = useMemo(() => profileInitials(displayName), [displayName]);
 
   const goSearch = () => {
-    const tab = navigation.getParent() as BottomTabNavigationProp<MainTabParamList> | undefined;
-    tab?.navigate('Search');
+    navigation.navigate('SearchHome');
   };
 
   const goProfile = () => {

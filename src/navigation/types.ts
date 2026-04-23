@@ -4,6 +4,8 @@ export type HomeStackParamList = {
   HomeFeed: undefined;
   JobDetail: JobDetailParams;
   Notifications: undefined;
+  SearchHome: undefined;
+  JobListing: { query?: string } | undefined;
 };
 
 export type SearchStackParamList = {
@@ -33,7 +35,6 @@ export type ProfileStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  Search: undefined;
   Applications: undefined;
   Saved: undefined;
   JobReels: undefined;
