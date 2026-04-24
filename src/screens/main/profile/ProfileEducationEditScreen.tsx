@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { 
+  FadeInDown, 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring, 
+  withTiming 
+} from 'react-native-reanimated';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaQualifications } from '../../../redux/slice/metaSlice';
@@ -16,6 +23,8 @@ import { QUALIFICATIONS } from '../../ProfileSetup/profileSetupConstants';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileEducation'>;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
@@ -34,33 +43,56 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
 
   const canSave = draft.qualification.trim().length > 0;
 
+  const scale = useSharedValue(1);
+  const selectStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const renderSection = (children: React.ReactNode, index: number) => (
+    <Animated.View 
+      entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
+      style={{ gap: spacing.xs }}
+    >
+      {children}
+    </Animated.View>
+  );
+
   return (
     <ProfileEditLayout
       title="Education"
       subtitle="Your highest qualification helps match you to the right roles.">
-      <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
-      <Pressable
-        onPress={() => setOpen(true)}
-        style={[
-          styles.selectField,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-        ]}>
-        <Icon name="graduation-cap" size={18} color={colors.primary} />
-        <Text
-          style={[
-            typography.body,
-            {
-              color: draft.qualification ? colors.textPrimary : colors.textPlaceholder,
-              flex: 1,
-            },
-          ]}>
-          {draft.qualification || 'Select qualification'}
-        </Text>
-        <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-      </Pressable>
+      
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
+          <AnimatedPressable
+            onPressIn={() => (scale.value = withSpring(0.97))}
+            onPressOut={() => (scale.value = withSpring(1))}
+            onPress={() => setOpen(true)}
+            style={[
+              styles.selectField,
+              selectStyle,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}>
+            <Icon name="graduation-cap" size={18} color={colors.primary} />
+            <Text
+              style={[
+                typography.body,
+                {
+                  color: draft.qualification ? colors.textPrimary : colors.textPlaceholder,
+                  flex: 1,
+                },
+              ]}>
+              {draft.qualification || 'Select qualification'}
+            </Text>
+            <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+          </AnimatedPressable>
+        </>,
+        0
+      )}
 
       <Modal visible={open} animationType="slide" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
@@ -79,31 +111,35 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
               data={displayData}
               keyExtractor={item => item}
               style={styles.list}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    updateDraft({ qualification: item });
-                    setOpen(false);
-                  }}
-                  style={[
-                    styles.row,
-                    {
-                      backgroundColor:
-                        draft.qualification === item ? colors.surfaceHighlight : 'transparent',
-                    },
-                  ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item}</Text>
-                  {draft.qualification === item ? (
-                    <Icon name="check" size={16} color={colors.primary} />
-                  ) : null}
-                </Pressable>
+              renderItem={({ item, index }) => (
+                <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
+                  <Pressable
+                    onPress={() => {
+                      updateDraft({ qualification: item });
+                      setOpen(false);
+                    }}
+                    style={[
+                      styles.row,
+                      {
+                        backgroundColor:
+                          draft.qualification === item ? colors.surfaceHighlight : 'transparent',
+                      },
+                    ]}>
+                    <Text style={[typography.body, { color: colors.textPrimary }]}>{item}</Text>
+                    {draft.qualification === item ? (
+                      <Icon name="check" size={16} color={colors.primary} />
+                    ) : null}
+                  </Pressable>
+                </Animated.View>
               )}
             />
           </Pressable>
         </Pressable>
       </Modal>
 
-      <PrimaryButton title="Save" onPress={() => navigation.goBack()} disabled={!canSave} colors={colors} />
+      <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+        <PrimaryButton title="Save" onPress={() => navigation.goBack()} disabled={!canSave} colors={colors} />
+      </Animated.View>
     </ProfileEditLayout>
   );
 };

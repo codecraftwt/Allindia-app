@@ -139,24 +139,21 @@ const jobSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(applyJob.pending, (state) => {
-        state.loading = true;
         state.error = null;
       })
       .addCase(applyJob.fulfilled, (state) => {
-        state.loading = false;
+        // Handled locally
       })
       .addCase(applyJob.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload as string;
       })
       .addCase(toggleWishlist.pending, (state) => {
-        state.loading = true;
+        // Handled locally
       })
       .addCase(toggleWishlist.fulfilled, (state) => {
-        state.loading = false;
+        // Handled locally
       })
       .addCase(toggleWishlist.rejected, (state, action) => {
-        state.loading = false;
         state.error = action.payload as string;
       });
   },

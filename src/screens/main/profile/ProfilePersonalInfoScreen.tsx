@@ -8,6 +8,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  withRepeat,
+  withSequence,
+  interpolateColor,
+  interpolate
+} from 'react-native-reanimated';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { updatePersonalProfile } from '../../../redux/slice/profileSlice';
@@ -56,6 +68,160 @@ function formatDobDisplay(iso: string) {
   ];
   return `${d} ${months[mi]} ${y}`;
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const GenderChip: React.FC<{
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  colors: any;
+}> = ({ label, selected, onPress, colors }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const bgColor = selected ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
+    const borderColor = selected ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
+    const textColor = selected ? (colors?.primary || '#2563EB') : (colors?.textSecondary || '#6B7280');
+    
+    return {
+      transform: [{ scale: scale.value }],
+      backgroundColor: withTiming(bgColor, { duration: 250 }),
+      borderColor: withTiming(borderColor, { duration: 250 }),
+    };
+  });
+
+  const textStyle = useAnimatedStyle(() => {
+    const textColor = selected ? (colors?.primary || '#2563EB') : (colors?.textSecondary || '#6B7280');
+    return {
+      color: withTiming(textColor, { duration: 250 }),
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[styles.genderChip, animatedStyle]}
+    >
+      <Animated.Text style={[typography.labelMedium, textStyle]}>
+        {label}
+      </Animated.Text>
+    </AnimatedPressable>
+  );
+};
+
+const SkeletonItem: React.FC<{ width?: any; height: number; borderRadius?: number; style?: any }> = ({ width = '100%', height, borderRadius = radius.md, style }) => {
+  const { colors } = useTheme();
+  const shimmerValue = useSharedValue(-1);
+
+  React.useEffect(() => {
+    shimmerValue.value = withRepeat(
+      withTiming(1, { duration: 1500 }),
+      -1,
+      false
+    );
+  }, []);
+
+  const shimmerStyle = useAnimatedStyle(() => {
+    const translateX = interpolate(shimmerValue.value, [-1, 1], [-200, 400]);
+    return {
+      transform: [{ translateX }],
+    };
+  });
+
+  return (
+    <View 
+      style={[
+        { 
+          width, 
+          height, 
+          borderRadius, 
+          backgroundColor: colors.surfaceSecondary, 
+          overflow: 'hidden' 
+        }, 
+        style
+      ]}
+    >
+      <Animated.View 
+        style={[
+          shimmerStyle, 
+          { 
+            width: '50%', 
+            height: '100%', 
+            backgroundColor: 'rgba(255,255,255,0.3)', 
+            position: 'absolute' 
+          }
+        ]} 
+      />
+    </View>
+  );
+};
+
+const ProfileSkeleton = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.lg, paddingVertical: spacing.md }}>
+      <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
+        <SkeletonItem width={100} height={100} borderRadius={50} />
+      </View>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View key={i} style={{ gap: spacing.xs }}>
+          <SkeletonItem width={120} height={16} />
+          <SkeletonItem height={50} borderRadius={radius.card} />
+        </View>
+      ))}
+    </View>
+  );
+};
+
+const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
+  const focusValue = useSharedValue(0);
+  const { colors } = useTheme();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const bColor = colors?.border || '#E5E7EB';
+    const pColor = colors?.primary || '#2563EB';
+    
+    return {
+      borderColor: interpolateColor(
+        focusValue.value,
+        [0, 1],
+        [bColor, pColor]
+      ),
+      borderWidth: withTiming(focusValue.value ? 1.5 : StyleSheet.hairlineWidth),
+      shadowOpacity: withTiming(focusValue.value * 0.1),
+      shadowRadius: withTiming(focusValue.value * 4),
+      elevation: withTiming(focusValue.value * 2),
+    };
+  });
+
+  return (
+    <Animated.View style={[animatedStyle, { borderRadius: radius.card, shadowColor: colors.primary }]}>
+      <TextInput
+        {...props}
+        style={[style, { borderWidth: 0 }]} // Remove border from TextInput as Animated.View handles it
+        onFocus={(e) => {
+          focusValue.value = withTiming(1);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          focusValue.value = withTiming(0);
+          onBlur?.(e);
+        }}
+      />
+    </Animated.View>
+  );
+};
 
 const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
@@ -114,7 +280,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     if (profileData?.profile?.personal) {
       const p = profileData.profile.personal;
       const pref = profileData.profile.preferences;
-      
+
       let city = pref?.current_city || '';
       let area = '';
       if (p.address && p.address.includes(',')) {
@@ -162,114 +328,203 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const renderSection = (children: React.ReactNode, index: number) => (
+    <Animated.View
+      entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
+      style={{ gap: spacing.xs }}
+    >
+      {children}
+    </Animated.View>
+  );
+
   return (
     <ProfileEditLayout
       title="Personal info"
       subtitle="Your name, identity, and where you’re based — used across job matches.">
-      <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Full name</Text>
-      <TextInput
-        value={fullName}
-        onChangeText={t => updateDraft({ fullName: t })}
-        placeholder="As on your ID / resume"
-        placeholderTextColor={colors.textPlaceholder}
-        style={[
-          styles.input,
-          {
-            color: colors.textPrimary,
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-        ]}
-        autoCapitalize="words"
-        autoCorrect={false}
-      />
 
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-        Email Address
-      </Text>
-      <TextInput
-        value={email}
-        editable={false}
-        style={[
-          styles.input,
-          {
-            color: colors.textSecondary,
-            backgroundColor: colors.surfaceHighlight,
-            borderColor: colors.border,
-          },
-        ]}
-      />
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Full name</Text>
+          <AnimatedInput
+            value={fullName}
+            onChangeText={t => updateDraft({ fullName: t })}
+            placeholder="As on your ID / resume"
+            placeholderTextColor={colors.textPlaceholder}
+            style={[
+              styles.input,
+              {
+                color: colors.textPrimary,
+                backgroundColor: colors.surface,
+              },
+            ]}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+        </>,
+        0
+      )}
 
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-        Phone Number
-      </Text>
-      <TextInput
-        value={phone}
-        editable={false}
-        style={[
-          styles.input,
-          {
-            color: colors.textSecondary,
-            backgroundColor: colors.surfaceHighlight,
-            borderColor: colors.border,
-          },
-        ]}
-      />
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Email Address
+          </Text>
+          <TextInput
+            value={email}
+            editable={false}
+            style={[
+              styles.input,
+              {
+                color: colors.textSecondary,
+                backgroundColor: colors.surfaceHighlight,
+                borderColor: colors.border,
+              },
+            ]}
+          />
+        </>,
+        1
+      )}
 
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-        Gender
-      </Text>
-      <View style={styles.genderRow}>
-        {GENDERS.map(g => {
-          const selected = draft.gender === g.id;
-          return (
-            <Pressable
-              key={g.id}
-              onPress={() => updateDraft({ gender: g.id })}
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Phone Number
+          </Text>
+          <TextInput
+            value={phone}
+            editable={false}
+            style={[
+              styles.input,
+              {
+                color: colors.textSecondary,
+                backgroundColor: colors.surfaceHighlight,
+                borderColor: colors.border,
+              },
+            ]}
+          />
+        </>,
+        2
+      )}
+
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Gender
+          </Text>
+          <View style={styles.genderRow}>
+            {GENDERS.map((g, idx) => {
+              const selected = draft.gender === g.id;
+
+              return (
+                <GenderChip
+                  key={g.id}
+                  label={g.label}
+                  selected={selected}
+                  onPress={() => updateDraft({ gender: g.id })}
+                  colors={colors}
+                />
+              );
+            })}
+          </View>
+        </>,
+        3
+      )}
+
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Date of birth
+          </Text>
+          <Pressable
+            onPress={() => setDobOpen(true)}
+            style={[
+              styles.dobField,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}>
+            <Icon name="calendar" size={18} color={colors.primary} />
+            <Text
               style={[
-                styles.genderChip,
+                typography.body,
                 {
-                  backgroundColor: selected ? colors.surfaceHighlight : colors.surface,
-                  borderColor: selected ? colors.primary : colors.border,
+                  color: draft.dateOfBirth ? colors.textPrimary : colors.textPlaceholder,
+                  flex: 1,
                 },
               ]}>
-              <Text
-                style={[
-                  typography.labelMedium,
-                  { color: selected ? colors.primary : colors.textSecondary },
-                ]}>
-                {g.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+              {draft.dateOfBirth ? formatDobDisplay(draft.dateOfBirth) : 'Select date of birth'}
+            </Text>
+            <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+          </Pressable>
+        </>,
+        4
+      )}
 
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-        Date of birth
-      </Text>
-      <Pressable
-        onPress={() => setDobOpen(true)}
-        style={[
-          styles.dobField,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-        ]}>
-        <Icon name="calendar" size={18} color={colors.primary} />
-        <Text
-          style={[
-            typography.body,
-            {
-              color: draft.dateOfBirth ? colors.textPrimary : colors.textPlaceholder,
-              flex: 1,
-            },
-          ]}>
-          {draft.dateOfBirth ? formatDobDisplay(draft.dateOfBirth) : 'Select date of birth'}
-        </Text>
-        <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-      </Pressable>
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            City
+          </Text>
+          <Pressable
+            onPress={() => {
+              setCityQuery('');
+              setCityOpen(true);
+            }}
+            style={[
+              styles.selectField,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
+            ]}>
+            <Icon name="map-marker" size={18} color={colors.primary} />
+            <Text
+              style={[
+                typography.body,
+                {
+                  color: draft.city ? colors.textPrimary : colors.textPlaceholder,
+                  flex: 1,
+                },
+              ]}>
+              {draft.city || 'Search or select city'}
+            </Text>
+            <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+          </Pressable>
+        </>,
+        5
+      )}
+
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Area / locality
+          </Text>
+          <AnimatedInput
+            value={draft.area}
+            onChangeText={t => updateDraft({ area: t })}
+            placeholder="e.g. Koramangala, Andheri West"
+            placeholderTextColor={colors.textPlaceholder}
+            style={[
+              styles.input,
+              {
+                color: colors.textPrimary,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          />
+        </>,
+        6
+      )}
+
+      <Animated.View entering={FadeInDown.delay(900).duration(500)}>
+        <PrimaryButton
+          title={profileLoading ? "Saving..." : "Save"}
+          onPress={handleSave}
+          disabled={!canSave}
+          colors={colors}
+        />
+      </Animated.View>
 
       <Modal visible={dobOpen} animationType="slide" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setDobOpen(false)}>
@@ -279,7 +534,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                 <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Date of birth</Text>
-                <Pressable 
+                <Pressable
                   onPress={() => setYearPickerOpen(!yearPickerOpen)}
                   style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
                 >
@@ -306,7 +561,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => {
                         const currentDob = draft.dateOfBirth || new Date().toISOString().slice(0, 10);
                         const parts = currentDob.split('-');
-                        const newDob = `${item}-${parts[1]}-${parts[2]}`;
+                        const newDob = `${item}-${parts[1] || '01'}-${parts[2] || '01'}`;
                         updateDraft({ dateOfBirth: newDob });
                         setYearPickerOpen(false);
                       }}
@@ -316,7 +571,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
                       ]}
                     >
                       <Text style={[
-                        typography.body, 
+                        typography.body,
                         { color: (draft.dateOfBirth?.startsWith(item.toString())) ? colors.primary : colors.textPrimary, textAlign: 'center' }
                       ]}>
                         {item}
@@ -353,35 +608,6 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           </Pressable>
         </Pressable>
       </Modal>
-
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
-        City
-      </Text>
-      <Pressable
-        onPress={() => {
-          setCityQuery('');
-          setCityOpen(true);
-        }}
-        style={[
-          styles.selectField,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-        ]}>
-        <Icon name="map-marker" size={18} color={colors.primary} />
-        <Text
-          style={[
-            typography.body,
-            {
-              color: draft.city ? colors.textPrimary : colors.textPlaceholder,
-              flex: 1,
-            },
-          ]}>
-          {draft.city || 'Search or select city'}
-        </Text>
-        <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-      </Pressable>
 
       <Modal visible={cityOpen} animationType="slide" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setCityOpen(false)}>
@@ -433,31 +659,6 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           </Pressable>
         </Pressable>
       </Modal>
-
-      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-        Area / locality
-      </Text>
-      <TextInput
-        value={draft.area}
-        onChangeText={t => updateDraft({ area: t })}
-        placeholder="e.g. Koramangala, Andheri West"
-        placeholderTextColor={colors.textPlaceholder}
-        style={[
-          styles.input,
-          {
-            color: colors.textPrimary,
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-          },
-        ]}
-      />
-
-      <PrimaryButton
-        title={profileLoading ? "Saving..." : "Save"}
-        onPress={handleSave}
-        disabled={!canSave}
-        colors={colors}
-      />
     </ProfileEditLayout>
   );
 };
@@ -554,6 +755,15 @@ const styles = StyleSheet.create({
   yearRow: {
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthGridItem: {
+    flex: 1,
+    margin: 4,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

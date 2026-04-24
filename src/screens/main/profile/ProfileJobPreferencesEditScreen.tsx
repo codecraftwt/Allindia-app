@@ -1,5 +1,17 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { 
+  FadeInDown, 
+  FadeIn,
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring, 
+  withTiming,
+  Layout,
+  interpolate,
+  interpolateColor
+} from 'react-native-reanimated';
+import Icon from 'react-native-vector-icons/Feather';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { updatePreferencesProfile } from '../../../redux/slice/profileSlice';
@@ -15,6 +27,132 @@ import { SALARY_OPTIONS } from '../../ProfileSetup/profileSetupConstants';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+const SelectionChip: React.FC<{
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  colors: any;
+  style?: any;
+  textStyle?: any;
+}> = ({ label, selected, onPress, colors, style, textStyle }) => {
+  const scale = useSharedValue(1);
+  
+  const animatedStyle = useAnimatedStyle(() => {
+    const bgColor = selected ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
+    const borderColor = selected ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
+    
+    return {
+      transform: [{ scale: withSpring(selected ? 1.05 : 1) }],
+      backgroundColor: withTiming(bgColor, { duration: 250 }),
+      borderColor: withTiming(borderColor, { duration: 250 }),
+    };
+  });
+
+  const textStyleAnimated = useAnimatedStyle(() => {
+    const textColor = selected ? (colors?.primary || '#2563EB') : (colors?.textSecondary || '#6B7280');
+    return {
+      color: withTiming(textColor, { duration: 250 }),
+    };
+  });
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={() => (scale.value = withSpring(0.95))}
+      onPressOut={() => (scale.value = withSpring(1))}
+      style={[styles.chip, animatedStyle, style]}
+    >
+      <Animated.Text
+        style={[
+          typography.small,
+          textStyleAnimated,
+          textStyle
+        ]}>
+        {label}
+      </Animated.Text>
+    </AnimatedPressable>
+  );
+};
+
+const CategoryAccordion: React.FC<{
+  category: any;
+  selectedIds: string[];
+  isExpanded: boolean;
+  onToggle: (id: string, isParent: boolean) => void;
+  colors: any;
+}> = ({ category, selectedIds, isExpanded, onToggle, colors }) => {
+  const isParentSelected = selectedIds.includes(category.id.toString());
+  const hasSub = category.subcategories && category.subcategories.length > 0;
+  const rotation = useSharedValue(0);
+
+  React.useEffect(() => {
+    rotation.value = withSpring(isExpanded ? 1 : 0);
+  }, [isExpanded]);
+
+  const arrowStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value * 180}deg` }],
+    };
+  });
+
+  const cardStyle = useAnimatedStyle(() => {
+    const bColor = isExpanded ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
+    const bg = isExpanded ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
+    return {
+      borderColor: withTiming(bColor),
+      backgroundColor: withTiming(bg),
+      borderWidth: isExpanded ? 1.5 : StyleSheet.hairlineWidth,
+    };
+  });
+
+  return (
+    <Animated.View layout={Layout.springify()} style={[styles.categoryCard, cardStyle]}>
+      <Pressable 
+        onPress={() => onToggle(category.id.toString(), true)}
+        style={styles.categoryHeader}
+      >
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <View style={[styles.iconDot, { backgroundColor: isExpanded ? colors.primary : colors.border }]} />
+          <Text style={[typography.labelMedium, { color: isExpanded ? colors.primary : colors.textPrimary }]}>
+            {category.name}
+          </Text>
+        </View>
+        {hasSub && (
+          <Animated.View style={arrowStyle}>
+            <Icon name="chevron-down" size={18} color={isExpanded ? colors.primary : colors.textSecondary} />
+          </Animated.View>
+        )}
+      </Pressable>
+
+      {isExpanded && hasSub && (
+        <Animated.View 
+          entering={FadeIn.duration(300)} 
+          style={[styles.subContent, { backgroundColor: colors.background + '50' }]}
+        >
+          <View style={styles.subGrid}>
+            {category.subcategories.map((sub: any) => {
+              const isSubSelected = selectedIds.includes(sub.id.toString());
+              return (
+                <SelectionChip 
+                  key={sub.id}
+                  label={sub.name}
+                  selected={isSubSelected}
+                  onPress={() => onToggle(sub.id.toString(), false)}
+                  colors={colors}
+                  style={styles.subChip}
+                  textStyle={{ fontSize: 12 }}
+                />
+              );
+            })}
+          </View>
+        </Animated.View>
+      )}
+    </Animated.View>
+  );
+};
+
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferences'>;
 
@@ -24,6 +162,7 @@ const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
   const { draft, setDraft, updateDraft } = useProfileSetup();
   const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const isInitialized = React.useRef(false);
 
   React.useEffect(() => {
@@ -43,11 +182,20 @@ const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [profileData, updateDraft]);
 
-  const toggleCategory = (id: string) => {
-    setDraft(prev => ({
-      ...prev,
-      jobCategoryIds: [id], // Single selection to ensure it updates correctly
-    }));
+  const toggleCategory = (id: string, isParent: boolean = false) => {
+    if (isParent) {
+      setExpandedId(prev => (prev === id ? null : id));
+      // Optionally, you can also clear selection if you want, but usually opening doesn't mean selecting
+    } else {
+      setDraft(prev => {
+        const isSelected = prev.jobCategoryIds.includes(id);
+        if (isSelected) {
+          return { ...prev, jobCategoryIds: prev.jobCategoryIds.filter(cid => cid !== id) };
+        } else {
+          return { ...prev, jobCategoryIds: [...prev.jobCategoryIds, id] };
+        }
+      });
+    }
   };
 
   const canSave = draft.jobCategoryIds.length >= 1 && draft.expectedSalary !== '' && !profileLoading;
@@ -78,139 +226,127 @@ const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const renderSection = (children: React.ReactNode, index: number) => (
+    <Animated.View 
+      entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
+      style={{ gap: spacing.xs }}
+    >
+      {children}
+    </Animated.View>
+  );
+
   return (
     <ProfileEditLayout
       title="Job preferences"
       subtitle="Categories you’re open to and your expected salary range.">
-      <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Job categories</Text>
-      <Text style={[typography.small, { color: colors.textPlaceholder, marginTop: -spacing.xs }]}>
-        Select all that apply
-      </Text>
-      <View style={styles.chipWrap}>
-        {metaLoading && categories.length === 0 ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-        ) : (
-          categories.map((cat: any) => {
-            const isCategorySelected = draft.jobCategoryIds.includes(cat.id.toString());
-            
-            return (
-              <React.Fragment key={cat.id}>
-                <Pressable
-                  onPress={() => toggleCategory(cat.id.toString())}
-                  style={[
-                    styles.chip,
-                    {
-                      backgroundColor: isCategorySelected ? colors.surfaceHighlight : colors.surface,
-                      borderColor: isCategorySelected ? colors.primary : colors.border,
-                    },
-                  ]}>
-                  <Text
-                    style={[
-                      typography.small,
-                      {
-                        color: isCategorySelected ? colors.primary : colors.textSecondary,
-                        fontFamily: typography.labelMedium.fontFamily,
-                      },
-                    ]}>
-                    {cat.name}
-                  </Text>
-                </Pressable>
-                
-                {/* Show subcategories if parent category is selected */}
-                {isCategorySelected && cat.subcategories && cat.subcategories.length > 0 && (
-                  <View style={styles.subCategoryWrap}>
-                    {cat.subcategories.map((sub: any) => {
-                      const isSubSelected = draft.jobCategoryIds.includes(sub.id.toString());
-                      return (
-                        <Pressable
-                          key={sub.id}
-                          onPress={() => toggleCategory(sub.id.toString())}
-                          style={[
-                            styles.subChip,
-                            {
-                              backgroundColor: isSubSelected ? colors.primary + '10' : colors.surface,
-                              borderColor: isSubSelected ? colors.primary : colors.border,
-                            },
-                          ]}>
-                          <Text
-                            style={[
-                              typography.small,
-                              {
-                                color: isSubSelected ? colors.primary : colors.textSecondary,
-                                fontSize: 12,
-                              },
-                            ]}>
-                            {sub.name}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )}
-              </React.Fragment>
-            );
-          })
-        )}
-      </View>
+      
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Job categories</Text>
+          <Text style={[typography.small, { color: colors.textPlaceholder, marginTop: -spacing.xs }]}>
+            Choose your primary field
+          </Text>
+          <View style={styles.accordionList}>
+            {metaLoading && categories.length === 0 ? (
+              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+            ) : (
+              categories.map((cat: any) => (
+                <CategoryAccordion 
+                  key={cat.id}
+                  category={cat}
+                  selectedIds={draft.jobCategoryIds}
+                  isExpanded={expandedId === cat.id.toString()}
+                  onToggle={toggleCategory}
+                  colors={colors}
+                />
+              ))
+            )}
+          </View>
+        </>,
+        0
+      )}
 
-      <Text
-        style={[
-          typography.labelMedium,
-          { color: colors.textPrimary, marginTop: spacing.md },
-        ]}>
-        Expected salary
-      </Text>
-      <View style={styles.salaryWrap}>
-        {SALARY_OPTIONS.map(opt => {
-          const selected = draft.expectedSalary === opt.id;
-          return (
-            <Pressable
-              key={opt.id}
-              onPress={() => updateDraft({ expectedSalary: opt.id })}
-              style={[
-                styles.salaryChip,
-                {
-                  backgroundColor: selected ? colors.surfaceHighlight : colors.surface,
-                  borderColor: selected ? colors.primary : colors.border,
-                },
-              ]}>
-              <Text
-                style={[
-                  typography.small,
-                  {
-                    color: selected ? colors.primary : colors.textSecondary,
-                    fontFamily: typography.labelMedium.fontFamily,
-                  },
-                ]}>
-                {opt.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {renderSection(
+        <>
+          <Text
+            style={[
+              typography.labelMedium,
+              { color: colors.textPrimary, marginTop: spacing.md },
+            ]}>
+            Expected salary
+          </Text>
+          <View style={styles.salaryWrap}>
+            {SALARY_OPTIONS.map(opt => {
+              const selected = draft.expectedSalary === opt.id;
+              return (
+                <SelectionChip 
+                  key={opt.id}
+                  label={opt.label}
+                  selected={selected}
+                  onPress={() => updateDraft({ expectedSalary: opt.id })}
+                  colors={colors}
+                  style={styles.salaryChip}
+                />
+              );
+            })}
+          </View>
+        </>,
+        1
+      )}
 
-      <PrimaryButton 
-        title={profileLoading ? "Saving..." : "Save"} 
-        onPress={handleSave} 
-        disabled={!canSave} 
-        colors={colors} 
-      />
+      <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+        <PrimaryButton 
+          title={profileLoading ? "Saving..." : "Save"} 
+          onPress={handleSave} 
+          disabled={!canSave} 
+          colors={colors} 
+        />
+      </Animated.View>
     </ProfileEditLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  chipWrap: {
+  accordionList: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  categoryCard: {
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    justifyContent: 'space-between',
+  },
+  iconDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  subContent: {
+    padding: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  subGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
   chip: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.button,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  subChip: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.sm,
   },
   salaryWrap: {
     flexDirection: 'row',
@@ -222,20 +358,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.button,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  subCategoryWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    width: '100%',
-    paddingLeft: spacing.md,
-    marginVertical: spacing.xs,
-  },
-  subChip: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
     borderWidth: StyleSheet.hairlineWidth,
   },
 });

@@ -22,7 +22,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>('light');
+  const [mode, setMode] = useState<ThemeMode>('dark');
 
   const colors = useMemo<ThemeColors>(
     () => (mode === 'dark' ? darkColors : lightColors),

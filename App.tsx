@@ -1,9 +1,6 @@
-/**
- * @format
- */
-
+import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { StatusBar } from 'react-native';
+import { StatusBar, View, StyleSheet, Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
@@ -11,6 +8,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/redux/store';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { AnimatedBackground } from './src/components/AnimatedBackground';
 
 function App() {
   return (
@@ -35,7 +33,7 @@ function AppNavigation() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: colors.background,
+      background: 'transparent', 
       card: colors.surface,
       text: colors.textPrimary,
       border: colors.border,
@@ -44,13 +42,17 @@ function AppNavigation() {
   };
 
   return (
-    <NavigationContainer theme={navTheme}>
-      <StatusBar
-        barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.background}
-      />
-      <AuthNavigator />
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      <AnimatedBackground colors={colors} />
+      
+      <NavigationContainer theme={navTheme}>
+        <StatusBar
+          barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.background}
+        />
+        <AuthNavigator />
+      </NavigationContainer>
+    </View>
   );
 }
 

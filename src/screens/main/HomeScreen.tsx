@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   Pressable,
   ScrollView,
@@ -12,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { fetchMetaCategories } from '../../redux/slice/metaSlice';
 import { fetchJobs } from '../../redux/slice/jobSlice';
+import { fetchProfile } from '../../redux/slice/profileSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -25,6 +27,8 @@ import { components } from '../../theme/components';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import ProfileStrengthAssistant from '../../components/ProfileStrengthAssistant';
+import HeaderFilterGrid from '../../components/HeaderFilterGrid';
 import type { HomeJob } from './homeMockData';
 import {
   HOME_CATEGORIES,
@@ -36,6 +40,8 @@ import {
 const H_CARD_W = Math.min(Dimensions.get('window').width * 0.78, 300);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
+
+const COLLAPSE_DISTANCE = 110;
 
 function greetingLine(): string {
   const h = new Date().getHours();
@@ -213,6 +219,51 @@ function JobListCard({
   );
 }
 
+const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
+  const opacity = useMemo(() => new Animated.Value(0.3), []);
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return <Animated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
+};
+
+const HomeSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.lg }}>
+      {/* Hero Skeleton */}
+      <SkeletonPulse style={styles.heroSkeleton} />
+
+      <View style={{ gap: spacing.md }}>
+        <SkeletonPulse style={styles.sectionTitleSkeleton} />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          {[1, 2, 3].map(i => <SkeletonPulse key={i} style={styles.chipSkeleton} />)}
+        </View>
+      </View>
+
+      <View style={{ gap: spacing.md }}>
+        <SkeletonPulse style={styles.sectionTitleSkeleton} />
+        <View style={{ flexDirection: 'row', gap: spacing.md }}>
+          {[1, 2].map(i => <SkeletonPulse key={i} style={styles.trendSkeleton} />)}
+        </View>
+      </View>
+
+      <View style={{ gap: spacing.md }}>
+        <SkeletonPulse style={styles.sectionTitleSkeleton} />
+        {[1, 2, 3].map(i => <SkeletonPulse key={i} style={styles.listSkeleton} />)}
+      </View>
+    </View>
+  );
+};
+
 const HomeScreen: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -220,12 +271,79 @@ const HomeScreen: React.FC = () => {
   const { draft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { categories } = useSelector((state: RootState) => state.meta);
+  const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { recommended, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
+  const { data: profileData } = useSelector((state: RootState) => state.profile);
+  const isAnyLoading = jobsLoading || metaLoading;
+
+  const [showNotifyHint, setShowNotifyHint] = useState(false);
+  const notifyHintAnim = useRef(new Animated.Value(0)).current;
+  const bellAnim = useRef(new Animated.Value(0)).current;
+  const badgeAnim = useRef(new Animated.Value(1)).current;
+
+  // Filter Grid States
+  const [showFilterGrid, setShowFilterGrid] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  const scrollY = useMemo(() => new Animated.Value(0), []);
+
+  const shakeBell = useCallback(() => {
+    // Shake the bell
+    Animated.sequence([
+      Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
+      Animated.timing(bellAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
+
+    // Pulse the badge
+    Animated.sequence([
+      Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
+      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
+      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  }, [bellAnim, badgeAnim]);
+
+  useEffect(() => {
+    // Show hint initially after 3 seconds
+    const timer = setTimeout(() => {
+      setShowNotifyHint(true);
+      shakeBell();
+      Animated.spring(notifyHintAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        Animated.timing(notifyHintAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start(() => setShowNotifyHint(false));
+      }, 5000);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [notifyHintAnim, shakeBell]);
+
+  useEffect(() => {
+    // Repeat shake every 8 seconds
+    const interval = setInterval(() => {
+      shakeBell();
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [shakeBell]);
 
   useEffect(() => {
     dispatch(fetchMetaCategories());
     dispatch(fetchJobs({ sort: 'recommended' }));
+    dispatch(fetchProfile());
   }, [dispatch]);
 
   const displayName = useMemo(() => {
@@ -248,18 +366,42 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('JobDetail', { jobId });
   };
 
+  const applyAdvancedFilters = (filters: any) => {
+    setActiveFilter(filters.jobType || 'All');
+    setShowFilterGrid(false);
+    // Dispatch filtered fetch with all selected values
+    dispatch(fetchJobs({
+      sort: filters.jobType?.toLowerCase(),
+      salary: filters.salary,
+      experience: filters.experience
+    }));
+  };
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_DISTANCE],
+    outputRange: [0, -COLLAPSE_DISTANCE + 40], // Stick 40px from the top
+    extrapolate: 'clamp',
+  });
+
+  const topRowOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_DISTANCE * 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <View
+      <Animated.View
         style={[
           styles.fixedHeader,
           {
             backgroundColor: colors.background,
             borderBottomColor: colors.border,
+            transform: [{ translateY: headerTranslateY }],
           },
         ]}>
         <View style={styles.headerBlock}>
-          <View style={styles.headerTopRow}>
+          <Animated.View style={[styles.headerTopRow, { opacity: topRowOpacity }]}>
             <Pressable
               onPress={goProfile}
               style={styles.headerLeft}
@@ -287,6 +429,25 @@ const HomeScreen: React.FC = () => {
               </View>
             </Pressable>
             <View style={styles.headerActions}>
+              {showNotifyHint && (
+                <Animated.View
+                  style={[
+                    styles.headerNotifyHint,
+                    {
+                      backgroundColor: colors.accent,
+                      opacity: notifyHintAnim,
+                      transform: [
+                        { scale: notifyHintAnim },
+                        { translateX: -1 }
+                      ]
+                    }
+                  ]}>
+                  <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
+                    New Notification! 🔔
+                  </Text>
+                  <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
+                </Animated.View>
+              )}
               <Pressable
                 onPress={() => navigation.navigate('Notifications')}
                 hitSlop={8}
@@ -300,11 +461,27 @@ const HomeScreen: React.FC = () => {
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel="Notifications">
-                <Icon name="bell-o" size={20} color={colors.textPrimary} />
-                <View style={[styles.notifyBadge, { backgroundColor: colors.accent, borderColor: colors.surface }]} />
+                <Animated.View style={{
+                  transform: [{
+                    rotate: bellAnim.interpolate({
+                      inputRange: [-1, 1],
+                      outputRange: ['-20deg', '20deg']
+                    })
+                  }]
+                }}>
+                  <Icon name="bell-o" size={20} color={colors.textPrimary} />
+                </Animated.View>
+                <Animated.View style={[
+                  styles.notifyBadge,
+                  {
+                    backgroundColor: colors.accent,
+                    borderColor: colors.surface,
+                    transform: [{ scale: badgeAnim }]
+                  }
+                ]} />
               </Pressable>
             </View>
-          </View>
+          </Animated.View>
 
           <View
             style={[
@@ -325,184 +502,232 @@ const HomeScreen: React.FC = () => {
                 Search for a job or company
               </Text>
             </Pressable>
-            <View style={[styles.searchDivider, { backgroundColor: colors.border }]} />
+
             <Pressable
-              onPress={goSearch}
-              style={styles.searchFilterBtn}
+              onPress={() => setShowFilterGrid(!showFilterGrid)}
+              style={({ pressed }) => [
+                styles.searchFilterBtnPremium,
+                {
+                  backgroundColor: showFilterGrid || activeFilter !== 'All' ? colors.primary : colors.surfaceHighlight,
+                },
+                pressed && { transform: [{ scale: 0.94 }] }
+              ]}
               accessibilityRole="button"
               accessibilityLabel="Open search and filters">
-              <Icon name="sliders" size={18} color={colors.primary} />
+              <View style={styles.filterBtnContent}>
+                <Icon
+                  name="sliders"
+                  size={14}
+                  color={showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary}
+                />
+                {/* <Text style={[
+                  styles.filterLabelText, 
+                  { color: showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary }
+                ]}>
+                  Filter
+                </Text> */}
+                {(activeFilter !== 'All' && activeFilter !== null) && (
+                  <View style={[styles.filterActiveBadgeWhite, { backgroundColor: '#fff' }]} />
+                )}
+              </View>
             </Pressable>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
-      <ScrollView
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
         style={styles.scrollMain}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: spacing.md },
         ]}>
-        <Pressable
-          onPress={goSearch}
-          style={[
-            styles.heroBanner,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.primaryDark,
-            },
-          ]}
-          accessibilityRole="button"
-          accessibilityHint="Opens search">
-          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-            <View
-              style={[
-                styles.heroBlob,
-                { backgroundColor: colors.onPrimary, opacity: 0.12, top: -24, right: -32 },
-              ]}
-            />
-            <View
-              style={[
-                styles.heroBlob,
-                { backgroundColor: colors.onPrimary, opacity: 0.08, bottom: -28, left: -16 },
-              ]}
-            />
-          </View>
-          <View style={styles.heroInner}>
-            <View style={styles.heroCopy}>
-              <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 20, lineHeight: 26 }]}>
-                See how you can find a job quickly!
-              </Text>
-              <Text
-                style={[
-                  typography.small,
-                  {
-                    color: colors.onPrimary,
-                    opacity: 0.92,
-                    marginTop: spacing.sm,
-                    lineHeight: 18,
-                  },
-                ]}>
-                Discover roles that match your skills and apply in minutes.
-              </Text>
-              <Pressable
-                onPress={goSearch}
-                style={[
-                  styles.heroCta,
-                  {
-                    backgroundColor: colors.onPrimary,
-                    marginTop: spacing.md,
-                  },
-                ]}>
-                <Text style={[typography.labelMedium, { color: colors.primary }]}>Read more</Text>
-              </Pressable>
-            </View>
-            <View style={styles.heroVisual}>
-              <View
-                style={[
-                  StyleSheet.absoluteFill,
-                  {
-                    backgroundColor: colors.onPrimary,
-                    opacity: 0.2,
-                    borderRadius: radius.lg,
-                  },
-                ]}
-              />
-              <Icon name="briefcase" size={42} color={colors.onPrimary} />
-            </View>
-          </View>
-        </Pressable>
-
-        <SectionHeader title="Categories" colors={colors} />
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesScroll}
-          decelerationRate="fast">
-          {categories.map(cat => (
+        {isAnyLoading && recommended.length === 0 ? (
+          <HomeSkeleton />
+        ) : (
+          <>
             <Pressable
-              key={cat.id}
+              onPress={goSearch}
               style={[
-                styles.categoryChip,
+                styles.heroBanner,
                 {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  shadowColor: colors.shadow,
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.primaryDark,
                 },
-              ]}>
-              <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name={getCategoryIcon(cat.name)} size={16} color={colors.primary} />
+              ]}
+              accessibilityRole="button"
+              accessibilityHint="Opens search">
+              <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                <View
+                  style={[
+                    styles.heroBlob,
+                    { backgroundColor: colors.onPrimary, opacity: 0.12, top: -24, right: -32 },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.heroBlob,
+                    { backgroundColor: colors.onPrimary, opacity: 0.08, bottom: -28, left: -16 },
+                  ]}
+                />
               </View>
-              <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
-                {cat.name}
-              </Text>
-            </Pressable>
-          ))}
-          {categories.length === 0 && HOME_CATEGORIES.map(cat => (
-            <Pressable
-              key={cat.id}
-              style={[
-                styles.categoryChip,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  shadowColor: colors.shadow,
-                },
-              ]}>
-              <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name={cat.icon} size={16} color={colors.primary} />
+              <View style={styles.heroInner}>
+                <View style={styles.heroCopy}>
+                  <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 20, lineHeight: 26 }]}>
+                    See how you can find a job quickly!
+                  </Text>
+                  <Text
+                    style={[
+                      typography.small,
+                      {
+                        color: colors.onPrimary,
+                        opacity: 0.92,
+                        marginTop: spacing.sm,
+                        lineHeight: 18,
+                      },
+                    ]}>
+                    Discover roles that match your skills and apply in minutes.
+                  </Text>
+                  <Pressable
+                    onPress={goSearch}
+                    style={[
+                      styles.heroCta,
+                      {
+                        backgroundColor: colors.onPrimary,
+                        marginTop: spacing.md,
+                      },
+                    ]}>
+                    <Text style={[typography.labelMedium, { color: colors.primary }]}>Read more</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.heroVisual}>
+                  <View
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: colors.onPrimary,
+                        opacity: 0.2,
+                        borderRadius: radius.lg,
+                      },
+                    ]}
+                  />
+                  <Icon name="briefcase" size={42} color={colors.onPrimary} />
+                </View>
               </View>
-              <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]}>
-                {cat.label}
-              </Text>
             </Pressable>
-          ))}
-        </ScrollView>
 
-        <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
+            <SectionHeader title="Categories" colors={colors} />
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.trendingScroll}
-          decelerationRate="fast">
-          {TRENDING_JOBS.map(job => (
-            <JobTrendCard
-              key={job.id}
-              job={job}
-              colors={colors}
-              onPress={() => openJob(job.id)}
-            />
-          ))}
-        </ScrollView>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScroll}
+              decelerationRate="fast">
+              {categories.map(cat => (
+                <Pressable
+                  key={cat.id}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      shadowColor: colors.shadow,
+                    },
+                  ]}>
+                  <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Icon name={getCategoryIcon(cat.name)} size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
+                    {cat.name}
+                  </Text>
+                </Pressable>
+              ))}
+              {categories.length === 0 && HOME_CATEGORIES.map(cat => (
+                <Pressable
+                  key={cat.id}
+                  style={[
+                    styles.categoryChip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      shadowColor: colors.shadow,
+                    },
+                  ]}>
+                  <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Icon name={cat.icon} size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]}>
+                    {cat.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
 
-        <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
+            <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
 
-        <View style={styles.verticalList}>
-          {NEARBY_JOBS.map(job => (
-            <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
-          ))}
-        </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.trendingScroll}
+              decelerationRate="fast">
+              {TRENDING_JOBS.map(job => (
+                <JobTrendCard
+                  key={job.id}
+                  job={job}
+                  colors={colors}
+                  onPress={() => openJob(job.id)}
+                />
+              ))}
+            </ScrollView>
 
-        <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
+            <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
 
-        <View style={styles.verticalList}>
-          {jobsLoading && recommended.length === 0 ? (
-            <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-          ) : (
-            recommended.map((job: any) => (
-              <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
-            ))
-          )}
-          {!jobsLoading && recommended.length === 0 && (
-            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
-              No recommendations found yet.
-            </Text>
-          )}
-        </View>
-      </ScrollView>
+            <View style={styles.verticalList}>
+              {NEARBY_JOBS.map(job => (
+                <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+              ))}
+            </View>
+
+            <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
+
+            <View style={styles.verticalList}>
+              {jobsLoading && recommended.length === 0 ? (
+                <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+              ) : (
+                recommended.map((job: any) => (
+                  <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                ))
+              )}
+              {!jobsLoading && recommended.length === 0 && (
+                <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
+                  No recommendations found yet.
+                </Text>
+              )}
+            </View>
+          </>
+        )}
+      </Animated.ScrollView>
+
+      <ProfileStrengthAssistant 
+        profile={profileData} 
+        colors={colors} 
+        navigation={navigation} 
+        scrollY={scrollY} // Pass scroll for auto-hide
+      />
+
+      <HeaderFilterGrid
+        visible={showFilterGrid}
+        onClose={() => setShowFilterGrid(false)}
+        onFilterSelect={applyAdvancedFilters}
+        activeFilter={activeFilter}
+        colors={colors}
+        headerTranslateY={headerTranslateY}
+      />
     </SafeAreaView>
   );
 };
@@ -513,31 +738,36 @@ const styles = StyleSheet.create({
   },
   fixedHeader: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xs, // Reduced even more
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100, // Increased to be on top of everything
   },
   scrollMain: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: 136,
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
   },
   headerBlock: {
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.md,
+    zIndex: 5,
   },
   headerLeft: {
     flex: 1,
@@ -582,23 +812,51 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 2,
   },
+  headerNotifyHint: {
+    position: 'absolute',
+    right: 54, // Positioned to the left of the 46px bell icon
+    top: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    zIndex: 100,
+    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    minWidth: 110,
+    alignItems: 'center',
+  },
+  hintArrowRight: {
+    position: 'absolute',
+    right: -6,
+    top: 10,
+    width: 0,
+    height: 0,
+    borderTopWidth: 6,
+    borderBottomWidth: 6,
+    borderLeftWidth: 6,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+  },
   searchBarOuter: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 52,
+    minHeight: 46, // Reduced from 52
     overflow: 'hidden',
     ...components.jobCard,
     shadowOpacity: 0.06,
     elevation: 2,
+    zIndex: 10, // Higher than HeaderFilterGrid
   },
   searchBarMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs, // Reduced from sm
     paddingHorizontal: spacing.md,
     minWidth: 0,
   },
@@ -612,12 +870,39 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginVertical: spacing.sm,
   },
-  searchFilterBtn: {
-    width: 52,
+  searchFilterBtnPremium: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'stretch',
-    paddingVertical: spacing.sm,
+    marginRight: 4,
+    borderRadius: radius.pill,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  filterBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterLabelText: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  filterActiveBadgeWhite: {
+    position: 'absolute',
+    top: -6,
+    right: -10,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   heroBanner: {
     borderRadius: radius.xl,
@@ -781,6 +1066,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
+  },
+  // Skeleton Styles
+  heroSkeleton: {
+    height: 160,
+    borderRadius: radius.xl,
+    width: '100%',
+    marginBottom: spacing.lg,
+  },
+  sectionTitleSkeleton: {
+    height: 24,
+    width: 150,
+    borderRadius: radius.sm,
+    marginBottom: spacing.md,
+  },
+  chipSkeleton: {
+    height: 44,
+    width: 100,
+    borderRadius: radius.card,
+  },
+  trendSkeleton: {
+    height: 180,
+    width: H_CARD_W,
+    borderRadius: radius.card,
+  },
+  listSkeleton: {
+    height: 140,
+    width: '100%',
+    borderRadius: radius.card,
+    marginBottom: spacing.md,
   },
 });
 

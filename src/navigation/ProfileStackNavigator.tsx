@@ -19,7 +19,7 @@ const ProfileStackNavigator: React.FC = () => {
       initialRouteName="ProfileOverview"
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: colors.background },
+        cardStyle: { backgroundColor: 'transparent' },
       }}>
       <Stack.Screen name="ProfileOverview" component={ProfileOverviewScreen} />
       <Stack.Screen name="ProfilePersonalInfo" component={ProfilePersonalInfoScreen} />

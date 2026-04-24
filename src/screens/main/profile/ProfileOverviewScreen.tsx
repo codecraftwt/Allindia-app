@@ -7,6 +7,9 @@ import {
   Text,
   View,
   Image,
+  Animated,
+  Easing,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -27,6 +30,7 @@ import { typography } from '../../../theme/typography';
 import type { ThemeColors } from '../../../theme/colors';
 import { JOB_CATEGORIES, SALARY_OPTIONS } from '../../ProfileSetup/profileSetupConstants';
 import { logoutToLogin } from './logoutToLogin';
+import LogoutModal from '../../../components/LogoutModal';
 
 type Nav = StackNavigationProp<ProfileStackParamList, 'ProfileOverview'>;
 
@@ -76,6 +80,43 @@ function SectionRow({
   );
 }
 
+const AnimatedProgressBar = ({ colors, progress }: { colors: ThemeColors; progress: number }) => {
+  const widthAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: progress,
+      duration: 1500,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  return (
+    <View style={styles.progressContainer}>
+      <View style={styles.progressHeader}>
+        <Text style={[typography.small, { color: colors.textSecondary }]}>Profile Strength</Text>
+        <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>{progress}%</Text>
+      </View>
+      <View style={[styles.progressBarBase, { backgroundColor: colors.surfaceHighlight }]}>
+        <Animated.View
+          style={[
+            styles.progressBarFill,
+            {
+              backgroundColor: colors.primary,
+              width: widthAnim.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['0%', '100%'],
+              })
+            }
+          ]}
+        />
+      </View>
+    </View>
+  );
+};
+
+
 const ProfileOverviewScreen: React.FC = () => {
   const { colors, mode, setMode } = useTheme();
   const insets = useSafeAreaInsets();
@@ -85,19 +126,50 @@ const ProfileOverviewScreen: React.FC = () => {
   const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
   const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const [notificationsOn, setNotificationsOn] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Animation Values
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const staggerAnims = React.useRef([...Array(6)].map(() => new Animated.Value(0))).current;
 
   React.useEffect(() => {
     dispatch(fetchProfile());
+
+    // Trigger Animations
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+
+
+
+    // Staggered Entrance for rows
+    const animations = staggerAnims.map((anim, i) =>
+      Animated.spring(anim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        delay: i * 100 + 300,
+        useNativeDriver: true,
+      })
+    );
+    Animated.parallel(animations).start();
   }, [dispatch]);
 
   const profile = profileData?.profile;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     try {
       await dispatch(logoutCandidate()).unwrap();
+      setShowLogoutModal(false);
       logoutToLogin(navigation);
     } catch (error) {
-      // Even if API fails, we redirect because state is cleared locally
+      setShowLogoutModal(false);
       logoutToLogin(navigation);
     }
   };
@@ -170,27 +242,36 @@ const ProfileOverviewScreen: React.FC = () => {
   }, [profile?.resume, draft.resumeName, draft.resumeSkipped]);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: 'transparent' }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: 0 },
+          { paddingBottom: 80 },
         ]}>
-        <View style={styles.hero}>
-          <View style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}>
-            {user?.profile_picture_url ? (
-              <Image
-                source={{ uri: `https://floralwhite-louse-700260.hostingersite.com${user.profile_picture_url}` }}
-                style={styles.avatarImage}
-              />
-            ) : displayName.trim() ? (
-              <Text style={[typography.appTitle, { color: colors.primary, fontSize: 28 }]}>
-                {profileInitials(displayName)}
-              </Text>
-            ) : (
-              <Icon name="user" size={40} color={colors.primary} />
-            )}
+        <Animated.View style={[
+          styles.hero, 
+          { 
+            backgroundColor: 'transparent',
+            opacity: fadeAnim, 
+            transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] 
+          }
+        ]}>
+          <View style={styles.avatarWrapper}>
+            <View style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}>
+              {user?.profile_picture_url ? (
+                <Image
+                  source={{ uri: `https://floralwhite-louse-700260.hostingersite.com${user.profile_picture_url}` }}
+                  style={styles.avatarImage}
+                />
+              ) : displayName.trim() ? (
+                <Text style={[typography.appTitle, { color: colors.primary, fontSize: 28 }]}>
+                  {profileInitials(displayName)}
+                </Text>
+              ) : (
+                <Icon name="user" size={40} color={colors.primary} />
+              )}
+            </View>
           </View>
           <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center' }]}>
             {displayName}
@@ -198,15 +279,9 @@ const ProfileOverviewScreen: React.FC = () => {
           <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 4 }]}>
             {displayEmail}
           </Text>
-          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xs }]}>
-            {locationLine}
-          </Text>
-          {qualificationText !== 'Qualification not set' ? (
-            <Text
-              style={[typography.small, { color: colors.textPlaceholder, textAlign: 'center', marginTop: 4 }]}>
-              {qualificationText}
-            </Text>
-          ) : null}
+
+          <AnimatedProgressBar colors={colors} progress={85} />
+
           <PrimaryButton
             title="Edit profile"
             onPress={() => navigation.navigate('ProfilePersonalInfo')}
@@ -214,42 +289,52 @@ const ProfileOverviewScreen: React.FC = () => {
             variant="secondary"
             style={styles.editBtn}
           />
-        </View>
+        </Animated.View>
 
         <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textPrimary }]}>
           Profile
         </Text>
         <View style={styles.sectionBlock}>
-          <SectionRow
-            title="Personal info"
-            subtitle={`${displayName} · ${displayPhone}`}
-            colors={colors}
-            onPress={() => navigation.navigate('ProfilePersonalInfo')}
-          />
-          <SectionRow
-            title="Education"
-            subtitle={qualificationText}
-            colors={colors}
-            onPress={() => navigation.navigate('ProfileEducation')}
-          />
-          <SectionRow
-            title="Experience"
-            subtitle={experienceText}
-            colors={colors}
-            onPress={() => navigation.navigate('ProfileExperience')}
-          />
-          <SectionRow
-            title="Job preferences"
-            subtitle={`${job_category} · ${salaryLabel}`}
-            colors={colors}
-            onPress={() => navigation.navigate('ProfileJobPreferences')}
-          />
-          <SectionRow
-            title="Resume"
-            subtitle={resumeText}
-            colors={colors}
-            onPress={() => navigation.navigate('ProfileResume')}
-          />
+          <Animated.View style={{ opacity: staggerAnims[0], transform: [{ translateY: staggerAnims[0].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+            <SectionRow
+              title="Personal info"
+              subtitle={`${displayName} · ${displayPhone}`}
+              colors={colors}
+              onPress={() => navigation.navigate('ProfilePersonalInfo')}
+            />
+          </Animated.View>
+          <Animated.View style={{ opacity: staggerAnims[1], transform: [{ translateY: staggerAnims[1].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+            <SectionRow
+              title="Education"
+              subtitle={qualificationText}
+              colors={colors}
+              onPress={() => navigation.navigate('ProfileEducation')}
+            />
+          </Animated.View>
+          <Animated.View style={{ opacity: staggerAnims[2], transform: [{ translateY: staggerAnims[2].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+            <SectionRow
+              title="Experience"
+              subtitle={experienceText}
+              colors={colors}
+              onPress={() => navigation.navigate('ProfileExperience')}
+            />
+          </Animated.View>
+          <Animated.View style={{ opacity: staggerAnims[3], transform: [{ translateY: staggerAnims[3].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+            <SectionRow
+              title="Job preferences"
+              subtitle={`${job_category} · ${salaryLabel}`}
+              colors={colors}
+              onPress={() => navigation.navigate('ProfileJobPreferences')}
+            />
+          </Animated.View>
+          <Animated.View style={{ opacity: staggerAnims[4], transform: [{ translateY: staggerAnims[4].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
+            <SectionRow
+              title="Resume"
+              subtitle={resumeText}
+              colors={colors}
+              onPress={() => navigation.navigate('ProfileResume')}
+            />
+          </Animated.View>
         </View>
 
         <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -314,6 +399,14 @@ const ProfileOverviewScreen: React.FC = () => {
           </Pressable>
         </View>
       </ScrollView>
+
+      <LogoutModal
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+        colors={colors}
+        loading={authLoading}
+      />
     </SafeAreaView>
   );
 };
@@ -353,12 +446,12 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   sectionTitle: {
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+    marginTop: spacing.xs,
   },
   sectionBlock: {
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   sectionRow: {
     ...components.jobCard,
@@ -405,6 +498,44 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
+  },
+  // Animation Styles
+  avatarWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  pulseCircle: {
+    position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    borderWidth: 2,
+  },
+  progressContainer: {
+    width: '100%',
+    maxWidth: 280,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xs,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  progressBarBase: {
+    height: 8,
+    borderRadius: 4,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  bubble: {
+    position: 'absolute',
+    opacity: 0.6,
   },
 });
 

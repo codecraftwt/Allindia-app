@@ -116,6 +116,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    implementation "com.facebook.fresco:animated-gif:3.1.3"
+    implementation "com.facebook.fresco:animated-webp:3.1.3"
+    implementation "com.facebook.fresco:webpsupport:3.1.3"
 }
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

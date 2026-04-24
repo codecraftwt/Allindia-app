@@ -17,7 +17,7 @@ const HomeStackNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: colors.background },
+        cardStyle: { backgroundColor: 'transparent' },
       }}>
       <Stack.Screen name="HomeFeed" component={HomeScreen} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} />

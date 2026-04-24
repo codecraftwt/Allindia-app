@@ -71,16 +71,15 @@ function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
         <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
           <View style={styles.footerItem}>
             <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-            <Text style={[typography.tiny, { color: colors.textSecondary }]}>{location}</Text>
+            <Text style={[typography.small, { color: colors.textSecondary }]}>{location}</Text>
           </View>
           <View style={styles.footerItem}>
             <Icon name="money" size={12} color={colors.textPlaceholder} />
-            <Text style={[typography.tiny, { color: colors.textSecondary }]}>
-              ₹{job.salary_min?.toLocaleString()} - ₹{job.salary_max?.toLocaleString()}
-            </Text>
+            
+             
           </View>
           {appliedDate ? (
-            <Text style={[typography.tiny, { color: colors.textPlaceholder, marginLeft: 'auto' }]}>
+            <Text style={[typography.small, { color: colors.textPlaceholder, marginLeft: 'auto' }]}>
               Applied {appliedDate}
             </Text>
           ) : null}
@@ -116,6 +115,46 @@ const ApplicationsScreen: React.FC = () => {
           title="Applications"
           subtitle="Track the status of your job applications"
         />
+
+        {/* Static Job Application Stats Dashboard for Demo */}
+        <View style={[styles.dashboardCard, { backgroundColor: colors.surface, shadowColor: colors.primary }]}>
+          <Text style={[styles.dashboardTitle, { color: colors.textSecondary }]}>APPLICATION STATS</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <View style={[styles.statIconWrap, { backgroundColor: colors.primary + '15' }]}>
+                <Icon name="briefcase" size={18} color={colors.primary} />
+              </View>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>05</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Applied</Text>
+            </View>
+
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+
+            <View style={styles.statItem}>
+              <View style={[styles.statIconWrap, { backgroundColor: colors.warning + '15' }]}>
+                <Icon name="clock-o" size={18} color={colors.warning} />
+              </View>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>02</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
+            </View>
+
+            <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+
+            <View style={styles.statItem}>
+              <View style={[styles.statIconWrap, { backgroundColor: colors.success + '15' }]}>
+                <Icon name="calendar-check-o" size={18} color={colors.success} />
+              </View>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>01</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interview</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+          <Text style={{ color: colors.primary, fontWeight: '700' }}>{appliedJobs.length} Jobs</Text>
+        </View>
+
 
         <View style={styles.list}>
           {appliedJobs.length > 0 ? (
@@ -200,6 +239,66 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.xxl * 2,
+  },
+  // Dashboard Styles
+  dashboardCard: {
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    marginBottom: spacing.xl,
+    marginTop: spacing.md,
+  },
+  dashboardTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    marginBottom: spacing.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    opacity: 0.3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
   },
 });
 

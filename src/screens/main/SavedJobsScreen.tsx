@@ -82,12 +82,12 @@ function SavedJobCard({
           <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
           <Text style={[typography.tiny, { color: colors.textSecondary }]}>{location}</Text>
         </View>
-        <View style={styles.footerItem}>
+        {/* <View style={styles.footerItem}>
           <Icon name="money" size={12} color={colors.textPlaceholder} />
           <Text style={[typography.tiny, { color: colors.textSecondary }]}>
             ₹{job.salary_min?.toLocaleString()} - ₹{job.salary_max?.toLocaleString()}
           </Text>
-        </View>
+        </View> */}
         <View style={[styles.typeBadge, { backgroundColor: colors.surfaceHighlight }]}>
           <Text style={[typography.tiny, { color: colors.primary }]}>
             {job.job_type === 'full_time' ? 'Full Time' : job.job_type || 'Part Time'}

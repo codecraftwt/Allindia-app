@@ -1,14 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState,useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   Linking,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
+  Modal,
 } from 'react-native';
 import {
   useNavigation,
@@ -57,6 +60,45 @@ function InfoRow({ label, value, icon, colors }: { label: string; value: string;
   );
 }
 
+const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
+  const opacity = useMemo(() => new Animated.Value(0.3), []);
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return <Animated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
+};
+
+const JobDetailSkeleton: React.FC = () => {
+  return (
+    <View style={styles.skeletonContainer}>
+      <SkeletonPulse style={styles.skeletonTitle} />
+      <SkeletonPulse style={styles.skeletonSubTitle} />
+      
+      <View style={styles.skeletonMetaRow}>
+        <SkeletonPulse style={styles.skeletonPill} />
+        <SkeletonPulse style={styles.skeletonPill} />
+      </View>
+      
+      <SkeletonPulse style={styles.skeletonSectionTitle} />
+      <View style={styles.skeletonGrid}>
+        {[1, 2, 3, 4].map(i => <SkeletonPulse key={i} style={styles.skeletonGridItem} />)}
+      </View>
+      
+      <SkeletonPulse style={styles.skeletonSectionTitle} />
+      <SkeletonPulse style={styles.skeletonLongText} />
+      <SkeletonPulse style={styles.skeletonLongText} />
+    </View>
+  );
+};
+
 const JobDetailScreen: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -83,7 +125,35 @@ const JobDetailScreen: React.FC = () => {
 
   const [saved, setSaved] = useState(false);
   const [isWishlisting, setIsWishlisting] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  
+  // Toast State
+  const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    visible: false,
+    message: '',
+    type: 'success',
+  });
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const toastAnim = useRef(new Animated.Value(-100)).current;
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ visible: true, message, type });
+    Animated.spring(toastAnim, {
+      toValue: 20,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 8,
+    }).start();
+
+    setTimeout(() => {
+      Animated.timing(toastAnim, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setToast(prev => ({ ...prev, visible: false })));
+    }, 3500);
+  }, [toastAnim]);
 
   const handleSelectOption = (questionId: number, optionId: number) => {
     setAnswers(prev => ({
@@ -102,16 +172,16 @@ const JobDetailScreen: React.FC = () => {
   }, [currentJob]);
 
   const handleToggleWishlist = useCallback(async () => {
-  
+
     if (!currentJob || isWishlisting) return;
-    
+
     setIsWishlisting(true);
     try {
-    
+
       await dispatch(toggleWishlist({ jobId: currentJob.id, isWishlisted: saved })).unwrap();
       setSaved(!saved);
     } catch (err: any) {
-    
+
       Alert.alert('Error', err || 'Failed to update wishlist');
     } finally {
       setIsWishlisting(false);
@@ -136,19 +206,50 @@ const JobDetailScreen: React.FC = () => {
     );
 
     if (missingRequired && missingRequired.length > 0) {
-      Alert.alert('Required Answers', 'Please answer all required screening questions before applying.');
+      setShowValidationModal(true);
       return;
     }
 
+    setIsApplying(true);
     try {
       const resultAction = await dispatch(applyJob({ jobId: currentJob.id, answers })).unwrap();
-      Alert.alert('Success', resultAction.message || 'Application submitted successfully!');
-      // Optionally refresh job detail to update application status if needed
+      // Use API message or fallback
+      const msg = resultAction.message || 'Application submitted successfully!';
+      showToast(msg, msg.includes('already') ? 'info' : 'success');
+      
+      // Refresh job detail to update application status
       dispatch(fetchJobDetail(currentJob.id));
     } catch (err: any) {
-      Alert.alert('Application Failed', err || 'Something went wrong while applying.');
+      showToast(err || 'Something went wrong while applying.', 'error');
+    } finally {
+      setIsApplying(false);
     }
-  }, [currentJob, answers, dispatch]);
+  }, [currentJob, answers, dispatch, showToast]);
+
+  const companyName = currentJob?.employer?.company?.company_name || currentJob?.employer?.name || 'Unknown Company';
+  const locationLabel = currentJob?.location?.label || 'Remote';
+  const salaryLabel = currentJob?.salary_min && currentJob?.salary_max
+    ? `₹${currentJob.salary_min.toLocaleString()} - ${currentJob.salary_max.toLocaleString()}`
+    : 'Negotiable';
+  const postedDate = currentJob?.created_at ? new Date(currentJob.created_at).toLocaleDateString() : 'Recently';
+  const jobTypeLabel = currentJob?.job_type_label || currentJob?.job_type || 'Full Time';
+
+  const handleShare = useCallback(async () => {
+    if (!currentJob) return;
+    try {
+      const jobLink = `https://jobindia.app/job/${currentJob.id}`;
+      // Indeed-style clean format: Title - Location - Site
+      const shareMessage = `${currentJob.title} - ${locationLabel} - JobIndia.app\n${companyName}\n\nApply here: ${jobLink}`;
+      
+      await Share.share({
+        message: shareMessage,
+        url: jobLink, // For iOS to show the link preview correctly
+        title: `${currentJob.title} at ${companyName}`,
+      });
+    } catch (error: any) {
+      Alert.alert('Error', 'Could not open share menu');
+    }
+  }, [currentJob, companyName, locationLabel, salaryLabel]);
 
   if (loading && !currentJob) {
     return (
@@ -158,10 +259,7 @@ const JobDetailScreen: React.FC = () => {
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
           </Pressable>
         </View>
-        <View style={styles.empty}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>Loading job details...</Text>
-        </View>
+        <JobDetailSkeleton />
       </SafeAreaView>
     );
   }
@@ -184,16 +282,31 @@ const JobDetailScreen: React.FC = () => {
     );
   }
 
-  const companyName = currentJob.employer?.company?.company_name || currentJob.employer?.name || 'Unknown Company';
-  const locationLabel = currentJob.location?.label || 'Remote';
-  const salaryLabel = currentJob.salary_min && currentJob.salary_max 
-    ? `₹${currentJob.salary_min.toLocaleString()} - ${currentJob.salary_max.toLocaleString()}` 
-    : 'Negotiable';
-  const postedDate = currentJob.created_at ? new Date(currentJob.created_at).toLocaleDateString() : 'Recently';
-  const jobTypeLabel = currentJob.job_type_label || currentJob.job_type || 'Full Time';
+
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      {/* Animated Toast */}
+      {toast.visible && (
+        <Animated.View 
+          style={[
+            styles.toastContainer, 
+            { 
+              transform: [{ translateY: toastAnim }],
+              backgroundColor: toast.type === 'success' ? colors.success : (toast.type === 'error' ? colors.error : colors.primary)
+            }
+          ]}>
+          <Icon 
+            name={toast.type === 'success' ? 'check-circle' : (toast.type === 'error' ? 'exclamation-circle' : 'info-circle')} 
+            size={18} 
+            color="#FFFFFF" 
+          />
+          <Text style={[typography.labelMedium, { color: '#FFFFFF', marginLeft: spacing.sm, flexShrink: 1 }]}>
+            {toast.message}
+          </Text>
+        </Animated.View>
+      )}
+
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn} accessibilityLabel="Go back">
           <Icon name="chevron-left" size={22} color={colors.textPrimary} />
@@ -201,6 +314,13 @@ const JobDetailScreen: React.FC = () => {
         <Text style={[typography.labelMedium, { color: colors.textPrimary, flex: 1, textAlign: 'left' }]} numberOfLines={1}>
           Job details
         </Text>
+        <Pressable
+          onPress={handleShare}
+          hitSlop={12}
+          style={[styles.iconBtn, { marginRight: spacing.xs }]}
+          accessibilityLabel="Share job">
+          <Icon name="share-alt" size={20} color={colors.textSecondary} />
+        </Pressable>
         <Pressable
           onPress={handleToggleWishlist}
           disabled={isWishlisting}
@@ -271,9 +391,9 @@ const JobDetailScreen: React.FC = () => {
             <SectionTitle title="About Company" colors={colors} />
             <View style={styles.companyHeader}>
               {currentJob.employer.company.company_logo_url ? (
-                <Image 
-                  source={{ uri: currentJob.employer.company.company_logo_url }} 
-                  style={styles.companyLogo} 
+                <Image
+                  source={{ uri: currentJob.employer.company.company_logo_url }}
+                  style={styles.companyLogo}
                 />
               ) : (
                 <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
@@ -360,11 +480,11 @@ const JobDetailScreen: React.FC = () => {
             paddingBottom: spacing.md,
           },
         ]}>
-        <PrimaryButton 
-          title={loading ? "Processing..." : (currentJob.is_applied ? "Already Applied" : "Apply now")} 
-          onPress={applyNow} 
-          colors={colors} 
-          disabled={loading || currentJob.is_applied}
+        <PrimaryButton
+          title={isApplying ? "Processing..." : (currentJob.is_applied ? "Already Applied" : "Apply now")}
+          onPress={applyNow}
+          colors={colors}
+          disabled={isApplying || currentJob.is_applied}
         />
         <View style={styles.footerRow}>
           <PrimaryButton
@@ -374,9 +494,36 @@ const JobDetailScreen: React.FC = () => {
             variant="secondary"
             style={styles.callBtn}
           />
-       
+
         </View>
       </View>
+
+      {/* Validation Modal */}
+      <Modal
+        visible={showValidationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowValidationModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowValidationModal(false)} />
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIconBox, { backgroundColor: colors.error + '15' }]}>
+              <Icon name="exclamation-triangle" size={24} color={colors.error} />
+            </View>
+            <Text style={[typography.h4, { color: colors.textPrimary, marginTop: spacing.md }]}>
+              Required Answers
+            </Text>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm }]}>
+              Please answer all required screening questions before applying for this job.
+            </Text>
+            <Pressable 
+              style={[styles.modalBtn, { backgroundColor: colors.primary }]} 
+              onPress={() => setShowValidationModal(false)}>
+              <Text style={[typography.labelMedium, { color: '#FFFFFF', fontWeight: '700' }]}>Got it</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -542,6 +689,107 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  // Skeleton Styles
+  skeletonContainer: {
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  skeletonTitle: {
+    height: 32,
+    width: '80%',
+    borderRadius: radius.sm,
+  },
+  skeletonSubTitle: {
+    height: 20,
+    width: '40%',
+    borderRadius: radius.sm,
+    marginBottom: spacing.md,
+  },
+  skeletonMetaRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  skeletonPill: {
+    height: 36,
+    width: 120,
+    borderRadius: radius.button,
+  },
+  skeletonSectionTitle: {
+    height: 24,
+    width: 150,
+    borderRadius: radius.sm,
+    marginTop: spacing.lg,
+  },
+  skeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  skeletonGridItem: {
+    height: 60,
+    width: '45%',
+    borderRadius: radius.md,
+  },
+  skeletonLongText: {
+    height: 16,
+    width: '100%',
+    borderRadius: radius.xs,
+    marginTop: spacing.xs,
+  },
+  // Toast Styles
+  toastContainer: {
+    position: 'absolute',
+    top: 50,
+    left: spacing.lg,
+    right: spacing.lg,
+    zIndex: 1000,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.xl,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: radius.xxl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    elevation: 20,
+  },
+  modalIconBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBtn: {
+    marginTop: spacing.xl,
+    width: '100%',
+    height: 48,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

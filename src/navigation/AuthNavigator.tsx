@@ -26,7 +26,7 @@ const AuthNavigator: React.FC = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: colors.background },
+          cardStyle: { backgroundColor: 'transparent' },
         }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />

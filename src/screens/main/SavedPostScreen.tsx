@@ -44,7 +44,7 @@ const SAVED_DATA = [
 ];
 
 const SavedPostScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
   const navigation = useNavigation();
 
   const renderItem = ({ item }: any) => (
@@ -67,7 +67,7 @@ const SavedPostScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <StatusBar barStyle={colors.mode === 'dark' ? 'light-content' : 'dark-content'} />
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
       
       {/* Header */}
       <View style={styles.header}>
