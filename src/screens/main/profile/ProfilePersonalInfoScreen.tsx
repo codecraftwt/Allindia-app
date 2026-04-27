@@ -297,6 +297,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         dateOfBirth: p.date_of_birth || '',
         city: city,
         area: area,
+        bio: p.bio || '',
       });
     }
   }, [profileData, updateDraft]);
@@ -321,6 +322,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         gender: draft.gender as string,
         date_of_birth: draft.dateOfBirth,
         address: `${draft.city}, ${draft.area}`,
+        bio: draft.bio,
       })).unwrap();
       navigation.goBack();
     } catch (error) {
@@ -515,6 +517,30 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           />
         </>,
         6
+      )}
+
+      {renderSection(
+        <>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+            Bio
+          </Text>
+          <AnimatedInput
+            multiline
+            numberOfLines={4}
+            value={draft.bio}
+            onChangeText={t => updateDraft({ bio: t })}
+            placeholder="A short introduction about yourself..."
+            placeholderTextColor={colors.textPlaceholder}
+            style={[
+              styles.textArea,
+              {
+                color: colors.textPrimary,
+                backgroundColor: colors.surface,
+              },
+            ]}
+          />
+        </>,
+        7
       )}
 
       <Animated.View entering={FadeInDown.delay(900).duration(500)}>
@@ -766,6 +792,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textArea: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.card,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    fontSize: 16,
+    fontFamily: typography.body.fontFamily,
+    height: 120,
+    textAlignVertical: 'top',
   },
 });
 

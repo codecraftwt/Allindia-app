@@ -7,8 +7,13 @@ import {
   Pressable,
   ScrollView,
   TouchableOpacity,
-  Dimensions
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../redux/store';
+import { fetchMetaCategories, fetchMetaCities } from '../redux/slice/metaSlice';
+import { fetchProfileCompletion } from '../redux/slice/profileSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
@@ -23,13 +28,19 @@ interface HeaderFilterGridProps {
   activeFilter: string | null;
   colors: any;
   headerTranslateY?: Animated.Value | Animated.AnimatedInterpolation<string | number>;
+  top?: number;
 }
 
 const CATEGORIES = [
   { id: 'jobType', label: 'Type', icon: 'bolt' },
+  { id: 'Department', label: 'Department', icon: 'business' },
+  { id: 'company', label: 'Companies', icon: 'building' },
+  { id: 'industry', label: 'Industry', icon: 'industry' },
+  { id: 'role', label: 'Role', icon: 'briefcase' },
+  { id: 'freshness', label: 'Freshness', icon: 'graduation-cap' },
+  { id: 'location', label: 'Location', icon: 'map-marker' },
   { id: 'salary', label: 'Salary', icon: 'money' },
   { id: 'experience', label: 'Exp', icon: 'briefcase' },
-  { id: 'location', label: 'City', icon: 'map-marker' },
   { id: 'sortBy', label: 'Sort', icon: 'sort-amount-desc' },
 ];
 
@@ -46,6 +57,11 @@ const OPTIONS: any = {
   experience: ['Fresher', '1-3 Yrs', '3-5 Yrs', '5-10 Yrs'],
   location: ['Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Remote'],
   sortBy: ['Relevance', 'Newest First', 'Salary: High to Low', 'Salary: Low to High'],
+  Department: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'],
+  company: ['Google', 'Amazon', 'Microsoft', 'Meta', 'Netflix'],
+  industry: ['IT Services', 'E-commerce', 'Fintech', 'Healthcare', 'Edtech'],
+  role: ['Frontend Developer', 'Backend Developer', 'Fullstack', 'DevOps', 'Data Science'],
+  freshness: ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Time'],
 };
 
 const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({ 
@@ -54,19 +70,38 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   onFilterSelect, 
   activeFilter, 
   colors,
-  headerTranslateY
+  headerTranslateY,
+  top = 120
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { categories, cities, loading: metaLoading } = useSelector((state: RootState) => state.meta);
+  const { completion } = useSelector((state: RootState) => state.profile);
+  
   const [selectedCategory, setSelectedCategory] = useState('jobType');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSwitching, setIsSwitching] = useState(false);
   const [quickFilters, setQuickFilters] = useState<string[]>([]);
   const [selectedFilters, setSelectedFilters] = useState<any>({
-    jobType: ['Full-time'],
-    salary: [],
-    experience: [],
-    location: [],
-    sortBy: ['Relevance'],
+    jobType: [],
+    category: null,
+    city: null,
   });
+
+  useEffect(() => {
+    if (visible) {
+      if (categories.length === 0) dispatch(fetchMetaCategories());
+      if (cities.length === 0) dispatch(fetchMetaCities());
+      dispatch(fetchProfileCompletion());
+    }
+  }, [visible, dispatch, categories.length, cities.length]);
+
+  const CATEGORIES_LIST = [
+    { id: 'jobType', label: 'Job Type', icon: 'bolt' },
+    { id: 'category', label: 'Category', icon: 'th-large' },
+    { id: 'city', label: 'City', icon: 'map-marker' },
+  ];
+
+  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
 
   const slideAnim = useRef(new Animated.Value(-300)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -119,21 +154,46 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     setTimeout(() => setIsSwitching(false), 400); // Simulate processing/loading
   };
 
-  const toggleOption = (category: string, option: string) => {
-    const current = selectedFilters[category] || [];
-    const updated = current.includes(option) 
-      ? current.filter((i: string) => i !== option)
-      : [...current, option];
-    setSelectedFilters({ ...selectedFilters, [category]: updated });
+  const toggleOption = (category: string, option: any) => {
+    if (category === 'jobType') {
+      const current = selectedFilters.jobType || [];
+      const updated = current.includes(option) 
+        ? current.filter((i: string) => i !== option)
+        : [...current, option];
+      setSelectedFilters({ ...selectedFilters, jobType: updated });
+    } else {
+      // Single select for category and city to match API params category_id and city_id
+      setSelectedFilters({ 
+        ...selectedFilters, 
+        [category]: selectedFilters[category]?.id === option.id ? null : option 
+      });
+    }
   };
 
-  const getSelectionCount = (catId: string) => {
-    return selectedFilters[catId]?.length || 0;
+  const handleApply = () => {
+    const filters: any = {};
+    if (selectedFilters.category) filters.category_id = selectedFilters.category.id;
+    if (selectedFilters.city) filters.city_id = selectedFilters.city.id;
+    if (selectedFilters.jobType.length > 0) {
+      filters.job_type = selectedFilters.jobType[0].toLowerCase(); // API expects single job_type usually or we can join them
+    }
+    onFilterSelect(filters);
   };
 
-  const filteredOptions = OPTIONS[selectedCategory]?.filter((opt: string) => 
-    opt.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const getOptions = () => {
+    switch (selectedCategory) {
+      case 'jobType': return JOB_TYPES;
+      case 'category': return categories;
+      case 'city': return cities;
+      default: return [];
+    }
+  };
+
+  const options = getOptions() || [];
+  const filteredOptions = options.filter((opt: any) => {
+    const labelText = typeof opt === 'string' ? opt : (opt?.name || opt?.city || opt?.label || '');
+    return labelText.toLowerCase().includes((searchQuery || '').toLowerCase());
+  });
 
   const SkeletonItem = () => (
     <View style={styles.skeletonContainer}>
@@ -150,7 +210,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 
   return (
     <Animated.View 
-      style={[styles.container, { opacity: opacityAnim }]} 
+      style={[styles.container, { opacity: opacityAnim, top }]} 
       pointerEvents={visible ? 'auto' : 'none'}>
       <Pressable style={styles.backdrop} onPress={onClose} />
       <Animated.View 
@@ -190,63 +250,94 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
             })}
           </ScrollView>
         </View>
-
+        
+    
         <View style={styles.contentRow}>
           {/* Sidebar (Left) */}
           <View style={[styles.sidebar, { borderRightColor: colors.border, backgroundColor: colors.surfaceHighlight }]}>
-            {CATEGORIES.map((cat) => (
-              <Pressable
-                key={cat.id}
-                onPress={() => handleCategoryChange(cat.id)}
-                style={[
-                  styles.sideItem,
-                  selectedCategory === cat.id && { backgroundColor: colors.surface }
-                ]}>
-                <Icon 
-                  name={cat.icon} 
-                  size={14} 
-                  color={selectedCategory === cat.id ? colors.primary : colors.textPlaceholder} 
-                />
-                <Text 
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {CATEGORIES_LIST.map((cat) => (
+                <Pressable
+                  key={cat.id}
+                  onPress={() => handleCategoryChange(cat.id)}
                   style={[
-                    styles.sideText, 
-                    { color: selectedCategory === cat.id ? colors.textPrimary : colors.textSecondary },
-                    selectedCategory === cat.id && { fontWeight: '700' }
+                    styles.sideItem,
+                    selectedCategory === cat.id && { backgroundColor: colors.surface }
                   ]}>
-                  {cat.label}
-                </Text>
-              </Pressable>
-            ))}
+                  <Icon 
+                    name={cat.icon} 
+                    size={14} 
+                    color={selectedCategory === cat.id ? colors.primary : colors.textPlaceholder} 
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text 
+                      style={[
+                        styles.sideText, 
+                        { color: selectedCategory === cat.id ? colors.textPrimary : colors.textSecondary },
+                        selectedCategory === cat.id && { fontWeight: '700' }
+                      ]}>
+                      {cat.label}
+                    </Text>
+                    {cat.id === 'category' && selectedFilters.category && (
+                      <Text style={[styles.selectedSubtext, { color: colors.primary }]} numberOfLines={1}>
+                        {selectedFilters.category.name}
+                      </Text>
+                    )}
+                    {cat.id === 'city' && selectedFilters.city && (
+                      <Text style={[styles.selectedSubtext, { color: colors.primary }]} numberOfLines={1}>
+                        {selectedFilters.city.city || selectedFilters.city.name || selectedFilters.city.label}
+                      </Text>
+                    )}
+                    {cat.id === 'jobType' && selectedFilters.jobType.length > 0 && (
+                      <Text style={[styles.selectedSubtext, { color: colors.primary }]} numberOfLines={1}>
+                        {selectedFilters.jobType[0]}
+                      </Text>
+                    )}
+                  </View>
+                  {((cat.id === 'jobType' && selectedFilters.jobType.length > 0) || 
+                    (cat.id !== 'jobType' && selectedFilters[cat.id])) && (
+                    <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Options (Right) */}
           <View style={styles.optionsArea}>
             <View style={styles.titleRow}>
-                <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{selectedCategory}</Text>
-                {getSelectionCount(selectedCategory) > 0 && (
-                  <TouchableOpacity onPress={() => clearCategory(selectedCategory)}>
-                    <Text style={[styles.clearLink, { color: colors.primary }]}>Clear</Text>
-                  </TouchableOpacity>
-                )}
+                <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+                  {CATEGORIES_LIST.find(c => c.id === selectedCategory)?.label}
+                </Text>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {isSwitching ? <SkeletonItem /> : (
-                OPTIONS[selectedCategory].map((option: string) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => toggleOption(selectedCategory, option)}
-                    style={styles.optionItem}>
-                    <View style={[
-                      styles.radio, 
-                      { borderColor: selectedFilters[selectedCategory]?.includes(option) ? colors.primary : colors.border }
-                    ]}>
-                      {selectedFilters[selectedCategory]?.includes(option) && (
-                        <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />
-                      )}
-                    </View>
-                    <Text style={[styles.optionText, { color: colors.textPrimary }]}>{option}</Text>
-                  </Pressable>
-                ))
+              {isSwitching || metaLoading ? <SkeletonItem /> : (
+                filteredOptions.map((option: any) => {
+                  const isSelected = selectedCategory === 'jobType' 
+                    ? selectedFilters.jobType.includes(option)
+                    : selectedFilters[selectedCategory]?.id === option.id;
+                  const labelText = typeof option === 'string' ? option : (option.name || option.city || option.label || '');
+                  
+                  return (
+                    <Pressable
+                      key={typeof option === 'string' ? option : option.id}
+                      onPress={() => toggleOption(selectedCategory, option)}
+                      style={styles.optionItem}>
+                      <View style={[
+                        styles.radio, 
+                        { borderColor: isSelected ? colors.primary : colors.border }
+                      ]}>
+                        {isSelected && (
+                          <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />
+                        )}
+                      </View>
+                      <Text style={[styles.optionText, { color: colors.textPrimary }]}>{labelText}</Text>
+                    </Pressable>
+                  );
+                })
+              )}
+              {!(isSwitching || metaLoading) && filteredOptions.length === 0 && (
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No options available</Text>
               )}
             </ScrollView>
           </View>
@@ -254,13 +345,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 
         {/* Action Footer */}
         <View style={[styles.footer, { borderTopColor: colors.border, backgroundColor: colors.surface }]}>
-          <TouchableOpacity onPress={() => setSelectedFilters({})}>
+          <TouchableOpacity onPress={() => setSelectedFilters({ jobType: [], category: null, city: null })}>
             <Text style={[styles.resetText, { color: colors.primary }]}>RESET</Text>
           </TouchableOpacity>
           <View style={styles.footerRight}>
             <TouchableOpacity 
               style={[styles.applyBtn, { backgroundColor: colors.primary }]}
-              onPress={() => onFilterSelect(selectedFilters)}>
+              onPress={handleApply}>
               <Text style={styles.applyText}>APPLY</Text>
             </TouchableOpacity>
           </View>
@@ -273,7 +364,6 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 120,
     left: spacing.lg,
     right: spacing.lg,
     zIndex: 90,
@@ -287,7 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.15)',
   },
   dropdownCard: {
-    height: 320,
+    height: 420,
     borderRadius: radius.xxl,
     borderWidth: 1,
     overflow: 'hidden',
@@ -421,6 +511,48 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '800',
     fontSize: 12,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    right: 8,
+    top: 22,
+  },
+  selectedSubtext: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  profileBar: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  profileBarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  profileBarText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  profileBarPercent: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  profileProgressBase: {
+    height: 4,
+    borderRadius: 2,
+    width: '100%',
+    overflow: 'hidden',
+  },
+  profileProgressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });
 

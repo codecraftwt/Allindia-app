@@ -5,13 +5,15 @@ export type HomeStackParamList = {
   JobDetail: JobDetailParams;
   Notifications: undefined;
   SearchHome: undefined;
-  JobListing: { query?: string } | undefined;
+  JobListing: { query?: string; filters?: any } | undefined;
+  JobCategories: undefined;
 };
 
 export type SearchStackParamList = {
   SearchHome: undefined;
-  JobListing: { query?: string } | undefined;
+  JobListing: { query?: string; filters?: any } | undefined;
   JobDetail: JobDetailParams;
+  JobCategories: undefined;
 };
 
 export type SavedStackParamList = {
@@ -31,6 +33,7 @@ export type ProfileStackParamList = {
   ProfileExperience: undefined;
   ProfileJobPreferences: undefined;
   ProfileResume: undefined;
+  ProfileAccountSetting: undefined;
 };
 
 export type MainTabParamList = {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, Text, View, TextInput, ActivityIndicator } from 'react-native';
 import Animated, { 
   FadeInDown, 
   useAnimatedStyle, 
@@ -10,6 +10,7 @@ import Animated, {
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaQualifications } from '../../../redux/slice/metaSlice';
+import { fetchEducation, updateEducation } from '../../../redux/slice/profileSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../../components/auth';
@@ -28,20 +29,48 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
-  const { draft, updateDraft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
   const { qualifications } = useSelector((state: RootState) => state.meta);
+  const { loading, error, data } = useSelector((state: RootState) => state.profile);
+  
   const [open, setOpen] = useState(false);
+  const [selectedQual, setSelectedQual] = useState<any>(null);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
+    dispatch(fetchEducation());
     if (qualifications.length === 0) {
       dispatch(fetchMetaQualifications());
     }
   }, [dispatch, qualifications.length]);
 
-  const displayData = qualifications.length > 0 ? qualifications.map(q => q.name) : QUALIFICATIONS;
+  useEffect(() => {
+    if (data?.education) {
+      const edu = data.education;
+      // Handle both numeric ID and nested object cases
+      const qualId = typeof edu.qualification_id === 'object' ? edu.qualification_id?.id : edu.qualification_id;
+      
+      if (qualId && qualifications.length > 0) {
+        const currentQual = qualifications.find(q => q.id === qualId);
+        setSelectedQual(currentQual || null);
+      }
+      setNotes(edu.education_notes || '');
+    }
+  }, [data, qualifications]);
 
-  const canSave = draft.qualification.trim().length > 0;
+  const handleSave = async () => {
+    try {
+      await dispatch(updateEducation({
+        qualification_id: selectedQual?.id || null,
+        education_notes: notes,
+      })).unwrap();
+      navigation.goBack();
+    } catch (err) {
+      console.error('Failed to save education:', err);
+    }
+  };
+
+  const canSave = selectedQual !== null;
 
   const scale = useSharedValue(1);
   const selectStyle = useAnimatedStyle(() => ({
@@ -62,36 +91,75 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
       title="Education"
       subtitle="Your highest qualification helps match you to the right roles.">
       
-      {renderSection(
+      {loading && !data ? (
+        <View style={styles.centerLoader}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
         <>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
-          <AnimatedPressable
-            onPressIn={() => (scale.value = withSpring(0.97))}
-            onPressOut={() => (scale.value = withSpring(1))}
-            onPress={() => setOpen(true)}
-            style={[
-              styles.selectField,
-              selectStyle,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}>
-            <Icon name="graduation-cap" size={18} color={colors.primary} />
-            <Text
-              style={[
-                typography.body,
-                {
-                  color: draft.qualification ? colors.textPrimary : colors.textPlaceholder,
-                  flex: 1,
-                },
-              ]}>
-              {draft.qualification || 'Select qualification'}
+          {renderSection(
+            <>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
+              <AnimatedPressable
+                onPressIn={() => (scale.value = withSpring(0.97))}
+                onPressOut={() => (scale.value = withSpring(1))}
+                onPress={() => setOpen(true)}
+                style={[
+                  styles.selectField,
+                  selectStyle,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}>
+                <Icon name="graduation-cap" size={18} color={colors.primary} />
+                <Text
+                  style={[
+                    typography.body,
+                    {
+                      color: selectedQual ? colors.textPrimary : colors.textPlaceholder,
+                      flex: 1,
+                    },
+                  ]}>
+                  {selectedQual ? selectedQual.name : 'Select qualification'}
+                </Text>
+                <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+              </AnimatedPressable>
+            </>,
+            0
+          )}
+
+          {renderSection(
+            <>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
+                Education Notes
+              </Text>
+              <TextInput
+                multiline
+                numberOfLines={4}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Describe your education background..."
+                placeholderTextColor={colors.textPlaceholder}
+                style={[
+                  styles.textArea,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.textPrimary,
+                  }
+                ]}
+              />
+            </>,
+            1
+          )}
+
+          {error && (
+            <Text style={[styles.errorText, { color: colors.error }]}>
+              {typeof error === 'string' ? error : (error.message || 'An error occurred')}
             </Text>
-            <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-          </AnimatedPressable>
-        </>,
-        0
+          )}
+        </>
       )}
 
       <Modal visible={open} animationType="slide" transparent>
@@ -108,25 +176,25 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
               </Pressable>
             </View>
             <FlatList
-              data={displayData}
-              keyExtractor={item => item}
+              data={qualifications}
+              keyExtractor={item => item.id.toString()}
               style={styles.list}
               renderItem={({ item, index }) => (
                 <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
                   <Pressable
                     onPress={() => {
-                      updateDraft({ qualification: item });
+                      setSelectedQual(item);
                       setOpen(false);
                     }}
                     style={[
                       styles.row,
                       {
                         backgroundColor:
-                          draft.qualification === item ? colors.surfaceHighlight : 'transparent',
+                          selectedQual?.id === item.id ? colors.surfaceHighlight : 'transparent',
                       },
                     ]}>
-                    <Text style={[typography.body, { color: colors.textPrimary }]}>{item}</Text>
-                    {draft.qualification === item ? (
+                    <Text style={[typography.body, { color: colors.textPrimary }]}>{item.name}</Text>
+                    {selectedQual?.id === item.id ? (
                       <Icon name="check" size={16} color={colors.primary} />
                     ) : null}
                   </Pressable>
@@ -137,8 +205,13 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
         </Pressable>
       </Modal>
 
-      <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-        <PrimaryButton title="Save" onPress={() => navigation.goBack()} disabled={!canSave} colors={colors} />
+      <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+        <PrimaryButton 
+          title={loading ? "Saving..." : "Save"} 
+          onPress={handleSave} 
+          disabled={!canSave || loading} 
+          colors={colors} 
+        />
       </Animated.View>
     </ProfileEditLayout>
   );
@@ -182,6 +255,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
+  textArea: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    height: 120,
+    textAlignVertical: 'top',
+    fontSize: 15,
+    marginTop: spacing.xs,
+  },
+  errorText: {
+    ...typography.small,
+    marginTop: spacing.sm,
+    textAlign: 'center',
+  },
+  centerLoader: {
+    paddingVertical: 50,
+    alignItems: 'center',
+  }
 });
 
 export default ProfileEducationEditScreen;

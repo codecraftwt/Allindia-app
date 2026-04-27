@@ -23,6 +23,48 @@ export const fetchJobs = createAsyncThunk(
   }
 );
 
+export const searchJobs = createAsyncThunk(
+  'jobs/searchJobs',
+  async (query: string, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/candidate/jobs/search', {
+        params: { q: query }
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to search jobs');
+    }
+  }
+);
+
+export const filterJobs = createAsyncThunk(
+  'jobs/filterJobs',
+  async (params: {
+    category_id?: number;
+    city_id?: number;
+    job_type?: string;
+  }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/candidate/jobs/filter', { params });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to filter jobs');
+    }
+  }
+);
+
+export const fetchHomeFeed = createAsyncThunk(
+  'jobs/fetchHomeFeed',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/candidate/jobs/home-feed');
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch home feed');
+    }
+  }
+);
+
 export const fetchJobDetail = createAsyncThunk(
   'jobs/fetchJobDetail',
   async (jobId: number | string, { rejectWithValue }) => {
@@ -96,6 +138,9 @@ const jobSlice = createSlice({
     recommended: [] as any[],
     nearby: [] as any[],
     trending: [] as any[],
+    latest: [] as any[],
+    searchResults: [] as any[],
+    filteredJobs: [] as any[],
     currentJob: null as any,
     loading: false,
     error: null as string | null,
@@ -123,6 +168,46 @@ const jobSlice = createSlice({
         state.meta = action.payload.meta;
       })
       .addCase(fetchJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(searchJobs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(searchJobs.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchResults = action.payload.data.jobs || [];
+        state.meta = action.payload.meta;
+      })
+      .addCase(searchJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(filterJobs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(filterJobs.fulfilled, (state, action) => {
+        state.loading = false;
+        state.filteredJobs = action.payload.data.jobs || [];
+        state.meta = action.payload.meta;
+      })
+      .addCase(filterJobs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchHomeFeed.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchHomeFeed.fulfilled, (state, action) => {
+        state.loading = false;
+        state.trending = action.payload.data.trending || [];
+        state.nearby = action.payload.data.nearby || [];
+        state.recommended = action.payload.data.recommended || [];
+        state.latest = action.payload.data.latest || [];
+      })
+      .addCase(fetchHomeFeed.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

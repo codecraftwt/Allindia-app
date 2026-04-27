@@ -161,10 +161,138 @@ export const fetchWishlist = createAsyncThunk(
   }
 );
 
+export const fetchEducation = createAsyncThunk(
+  'profile/fetchEducation',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/education', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch education');
+    }
+  }
+);
+
+export const updateEducation = createAsyncThunk(
+  'profile/updateEducation',
+  async (educationData: {
+    qualification_id: number | null;
+    education_notes: string | null;
+  }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.put('api/candidate/profile/education', educationData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      dispatch(fetchProfile());
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update education');
+    }
+  }
+);
+
+export const fetchExperience = createAsyncThunk(
+  'profile/fetchExperience',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/experience', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch experience');
+    }
+  }
+);
+
+export const updateExperience = createAsyncThunk(
+  'profile/updateExperience',
+  async (experienceData: {
+    experience_type: string;
+    total_experience_years: number | null;
+  }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.put('api/candidate/profile/experience', experienceData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      dispatch(fetchProfile());
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update experience');
+    }
+  }
+);
+
+export const updateProfilePicture = createAsyncThunk(
+  'profile/updateProfilePicture',
+  async (file: { uri: string; name: string; type: string }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      
+      const formData = new FormData();
+      formData.append('profile_picture', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type || 'image/jpeg',
+      } as any);
+
+      const response = await api.post('api/candidate/profile/picture', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      dispatch(fetchProfile());
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile picture');
+    }
+  }
+);
+
+export const fetchProfileCompletion = createAsyncThunk(
+  'profile/fetchProfileCompletion',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/completion', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch completion status');
+    }
+  }
+);
+
 const profileSlice = createSlice({
   name: 'profile',
   initialState: { 
     data: null as any, 
+    completion: null as any,
     appliedJobs: [] as any[],
     wishlistJobs: [] as any[],
     loading: false,
@@ -258,6 +386,72 @@ const profileSlice = createSlice({
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchEducation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchEducation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload.data;
+      })
+      .addCase(fetchEducation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateEducation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateEducation.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateEducation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchExperience.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchExperience.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload.data;
+      })
+      .addCase(fetchExperience.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateExperience.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateExperience.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateExperience.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateProfilePicture.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfilePicture.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateProfilePicture.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchProfileCompletion.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchProfileCompletion.fulfilled, (state, action) => {
+        state.completion = action.payload.data.completion;
+      })
+      .addCase(fetchProfileCompletion.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

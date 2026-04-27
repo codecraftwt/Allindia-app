@@ -10,12 +10,14 @@ import {
   Animated,
   Easing,
   DeviceEventEmitter,
+  ActivityIndicator,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { logoutCandidate } from '../../../redux/slice/authSlice';
-import { fetchProfile } from '../../../redux/slice/profileSlice';
+import { fetchProfile, updateProfilePicture, fetchProfileCompletion } from '../../../redux/slice/profileSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { launchImageLibrary } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -124,9 +126,10 @@ const ProfileOverviewScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { draft } = useProfileSetup();
   const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
-  const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const { data: profileData, loading: profileLoading, error: profileError, completion } = useSelector((state: RootState) => state.profile);
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Animation Values
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -134,6 +137,7 @@ const ProfileOverviewScreen: React.FC = () => {
 
   React.useEffect(() => {
     dispatch(fetchProfile());
+    dispatch(fetchProfileCompletion());
 
     // Trigger Animations
     Animated.timing(fadeAnim, {
@@ -174,6 +178,39 @@ const ProfileOverviewScreen: React.FC = () => {
     }
   };
 
+  const handleUpdatePicture = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        quality: 0.8,
+      });
+
+      if (result.didCancel || !result.assets || result.assets.length === 0) return;
+
+      const asset = result.assets[0];
+      if (asset.uri) {
+        setIsUploading(true);
+        await dispatch(updateProfilePicture({
+          uri: asset.uri,
+          name: asset.fileName || 'profile.jpg',
+          type: asset.type || 'image/jpeg',
+        })).unwrap();
+        setIsUploading(false);
+      }
+    } catch (error) {
+      console.error('Failed to update picture:', error);
+      setIsUploading(false);
+    }
+  };
+
+  const getProfileImageUrl = (path: string | null) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const baseUrl = 'https://floralwhite-louse-700260.hostingersite.com';
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${normalizedPath}`;
+  };
+
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'Your profile';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
   const displayPhone = profile?.personal?.phone || user?.phone || draft.phone || '';
@@ -207,15 +244,22 @@ const ProfileOverviewScreen: React.FC = () => {
   }, [profile?.preferences, draft.jobCategoryIds]);
 
   const locationLine = useMemo(() => {
-    if (profile?.preferences?.current_city) {
-      return profile.preferences.current_city;
+    const city = profile?.preferences?.current_city;
+    if (city) {
+      return typeof city === 'object' ? (city.label || city.city) : city;
     }
     return draft.city || draft.area
       ? [draft.city, draft.area].filter(Boolean).join(' · ')
       : 'Add your location';
   }, [profile?.preferences, draft.city, draft.area]);
 
-  const qualificationText = profile?.education?.qualification || draft.qualification || 'Qualification not set';
+  const qualificationText = useMemo(() => {
+    const qual = profile?.education?.qualification;
+    if (qual) {
+      return typeof qual === 'object' ? qual.name : qual;
+    }
+    return draft.qualification || 'Qualification not set';
+  }, [profile?.education, draft.qualification]);
 
   const experienceText = useMemo(() => {
     if (profile?.experience?.experience_type) {
@@ -250,18 +294,22 @@ const ProfileOverviewScreen: React.FC = () => {
           { paddingBottom: 80 },
         ]}>
         <Animated.View style={[
-          styles.hero, 
-          { 
+          styles.hero,
+          {
             backgroundColor: 'transparent',
-            opacity: fadeAnim, 
-            transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] 
+            opacity: fadeAnim,
+            transform: [{ translateY: fadeAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }]
           }
         ]}>
           <View style={styles.avatarWrapper}>
-            <View style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}>
+            <Pressable
+              onPress={handleUpdatePicture}
+              disabled={isUploading}
+              style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}
+            >
               {user?.profile_picture_url ? (
                 <Image
-                  source={{ uri: `https://floralwhite-louse-700260.hostingersite.com${user.profile_picture_url}` }}
+                  source={{ uri: getProfileImageUrl(user.profile_picture_url) || '' }}
                   style={styles.avatarImage}
                 />
               ) : displayName.trim() ? (
@@ -271,7 +319,17 @@ const ProfileOverviewScreen: React.FC = () => {
               ) : (
                 <Icon name="user" size={40} color={colors.primary} />
               )}
-            </View>
+
+              <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
+                <Icon name="camera" size={12} color={colors.onPrimary} />
+              </View>
+
+              {isUploading && (
+                <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+                  <ActivityIndicator color={colors.onPrimary} size="small" />
+                </View>
+              )}
+            </Pressable>
           </View>
           <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center' }]}>
             {displayName}
@@ -280,7 +338,7 @@ const ProfileOverviewScreen: React.FC = () => {
             {displayEmail}
           </Text>
 
-          <AnimatedProgressBar colors={colors} progress={85} />
+          <AnimatedProgressBar colors={colors} progress={completion?.percentage || 0} />
 
           <PrimaryButton
             title="Edit profile"
@@ -388,6 +446,25 @@ const ProfileOverviewScreen: React.FC = () => {
               thumbColor={mode === 'dark' ? colors.onPrimary : colors.surfaceSecondary}
             />
           </View>
+          <Pressable
+            onPress={() => navigation.navigate('ProfileAccountSetting')}
+            style={({ pressed }) => [
+              styles.settingsRow,
+              { borderBottomColor: colors.border },
+              pressed && { backgroundColor: colors.surfaceSecondary }
+            ]}>
+            <View style={styles.settingsRowText}>
+              <Icon name="cog" size={18} color={colors.primary} style={styles.settingsIcon} />
+              <View>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Account Setting</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>
+                  Manage your personal information
+                </Text>
+              </View>
+            </View>
+            <Icon name="chevron-right" size={14} color={colors.textPlaceholder} />
+          </Pressable>
+
           <Pressable
             onPress={handleLogout}
             disabled={authLoading}
@@ -511,6 +588,23 @@ const styles = StyleSheet.create({
     height: 110,
     borderRadius: 55,
     borderWidth: 2,
+  },
+  cameraOverlay: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  uploadingOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   progressContainer: {
     width: '100%',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {  useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { 
   FadeInDown, 
@@ -12,6 +12,9 @@ import Animated, {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../../components/auth';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchExperience, updateExperience } from '../../../redux/slice/profileSlice';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
@@ -113,11 +116,37 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileExperience'>;
 
 const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
-  const { draft, updateDraft } = useProfileSetup();
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, data } = useSelector((state: RootState) => state.profile);
 
-  const yearsNum = parseInt(draft.experienceYears.replace(/\D/g, ''), 10);
-  const canSave =
-    draft.isFresher || (!Number.isNaN(yearsNum) && yearsNum >= 1 && yearsNum <= 50);
+  const [isFresher, setIsFresher] = useState(true);
+  const [years, setYears] = useState('');
+
+  React.useEffect(() => {
+    dispatch(fetchExperience());
+  }, [dispatch]);
+
+  React.useEffect(() => {
+    if (data?.experience) {
+      setIsFresher(data.experience.experience_type === 'fresher');
+      setYears(data.experience.total_experience_years?.toString() || '');
+    }
+  }, [data]);
+
+  const yearsNum = parseInt(years.replace(/\D/g, ''), 10);
+  const canSave = isFresher || (!Number.isNaN(yearsNum) && yearsNum >= 1 && yearsNum <= 50);
+
+  const handleSave = async () => {
+    try {
+      await dispatch(updateExperience({
+        experience_type: isFresher ? 'fresher' : 'experienced',
+        total_experience_years: isFresher ? null : yearsNum,
+      })).unwrap();
+      navigation.goBack();
+    } catch (err) {
+      console.error('Failed to update experience:', err);
+    }
+  };
 
   const renderSection = (children: React.ReactNode, index: number) => (
     <Animated.View 
@@ -140,15 +169,18 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
             <ExperienceCard 
               label="Fresher"
               icon="leaf"
-              selected={draft.isFresher}
-              onPress={() => updateDraft({ isFresher: true, experienceYears: '' })}
+              selected={isFresher}
+              onPress={() => {
+                setIsFresher(true);
+                setYears('');
+              }}
               colors={colors}
             />
             <ExperienceCard 
               label="Experienced"
               icon="briefcase"
-              selected={!draft.isFresher}
-              onPress={() => updateDraft({ isFresher: false })}
+              selected={!isFresher}
+              onPress={() => setIsFresher(false)}
               colors={colors}
             />
           </View>
@@ -156,7 +188,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
         0
       )}
 
-      {!draft.isFresher ? (
+      {!isFresher ? (
         <Animated.View entering={FadeIn.duration(400)}>
           {renderSection(
             <>
@@ -164,8 +196,8 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
                 Total years of experience
               </Text>
               <AnimatedInput
-                value={draft.experienceYears}
-                onChangeText={t => updateDraft({ experienceYears: t.replace(/\D/g, '').slice(0, 2) })}
+                value={years}
+                onChangeText={(t: string) => setYears(t.replace(/\D/g, '').slice(0, 2))}
                 placeholder="e.g. 3"
                 placeholderTextColor={colors.textPlaceholder}
                 keyboardType="number-pad"
@@ -183,8 +215,19 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
         </Animated.View>
       ) : null}
 
+      {error && (
+        <Text style={[styles.errorText, { color: colors.error }]}>
+          {typeof error === 'string' ? error : (error.message || 'An error occurred')}
+        </Text>
+      )}
+
       <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-        <PrimaryButton title="Save" onPress={() => navigation.goBack()} disabled={!canSave} colors={colors} />
+        <PrimaryButton 
+          title={loading ? "Saving..." : "Save"} 
+          onPress={handleSave} 
+          disabled={!canSave || loading} 
+          colors={colors} 
+        />
       </Animated.View>
     </ProfileEditLayout>
   );
@@ -213,6 +256,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: typography.body.fontFamily,
   },
+  errorText: {
+    ...typography.small,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  }
 });
 
 export default ProfileExperienceEditScreen;

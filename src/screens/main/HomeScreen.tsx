@@ -8,11 +8,13 @@ import {
   StyleSheet,
   Text,
   View,
+  Share,
+  TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { fetchMetaCategories } from '../../redux/slice/metaSlice';
-import { fetchJobs } from '../../redux/slice/jobSlice';
+import { fetchHomeFeed, fetchJobs, filterJobs } from '../../redux/slice/jobSlice';
 import { fetchProfile } from '../../redux/slice/profileSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
@@ -32,9 +34,6 @@ import HeaderFilterGrid from '../../components/HeaderFilterGrid';
 import type { HomeJob } from './homeMockData';
 import {
   HOME_CATEGORIES,
-  NEARBY_JOBS,
-  RECOMMENDED_JOBS,
-  TRENDING_JOBS,
 } from './homeMockData';
 
 const H_CARD_W = Math.min(Dimensions.get('window').width * 0.78, 300);
@@ -83,11 +82,13 @@ function SectionHeader({
   icon,
   iconColor,
   colors,
+  onPress,
 }: {
   title: string;
   icon?: string;
   iconColor?: string;
   colors: ThemeColors;
+  onPress?: () => void;
 }) {
   return (
     <View style={styles.sectionHeader}>
@@ -95,7 +96,7 @@ function SectionHeader({
         <Icon name={icon} size={18} color={iconColor ?? colors.primary} style={styles.sectionIcon} />
       ) : null}
       <Text style={[typography.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
-      <Pressable hitSlop={8}>
+      <Pressable hitSlop={8} onPress={onPress}>
         <Text style={[typography.labelMedium, { color: colors.primary }]}>See all</Text>
       </Pressable>
     </View>
@@ -107,10 +108,16 @@ function JobTrendCard({
   colors,
   onPress,
 }: {
-  job: HomeJob;
+  job: any;
   colors: ThemeColors;
   onPress?: () => void;
 }) {
+  const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
+  const locationLabel = job.location?.label || job.location || 'Remote';
+  const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
+  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
+
   return (
     <Pressable
       onPress={onPress}
@@ -133,21 +140,21 @@ function JobTrendCard({
         {job.title}
       </Text>
       <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-        {job.company}
+        {companyName}
       </Text>
       <View style={styles.cardMetaRow}>
         <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
         <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
-          {job.location}
+          {locationLabel}
         </Text>
       </View>
       <View style={styles.cardFooter}>
-        <Text style={[typography.labelMedium, { color: colors.success }]}>{job.salary}</Text>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{job.postedLabel}</Text>
+        <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
       </View>
       <View style={[styles.typePill, { backgroundColor: colors.surfaceHighlight }]}>
         <Text style={[typography.small, { color: colors.primary, fontFamily: typography.labelMedium.fontFamily }]}>
-          {job.employmentType}
+          {jobType}
         </Text>
       </View>
     </Pressable>
@@ -272,7 +279,7 @@ const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
-  const { recommended, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
+  const { trending, nearby, recommended, latest, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
   const { data: profileData } = useSelector((state: RootState) => state.profile);
   const isAnyLoading = jobsLoading || metaLoading;
 
@@ -342,7 +349,7 @@ const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     dispatch(fetchMetaCategories());
-    dispatch(fetchJobs({ sort: 'recommended' }));
+    dispatch(fetchHomeFeed());
     dispatch(fetchProfile());
   }, [dispatch]);
 
@@ -362,19 +369,25 @@ const HomeScreen: React.FC = () => {
     tab?.navigate('Profile');
   };
 
-  const openJob = (jobId: string) => {
-    navigation.navigate('JobDetail', { jobId });
+  const openJob = (job: any) => {
+    navigation.navigate('JobDetail', { jobId: job.slug || job.id });
   };
 
   const applyAdvancedFilters = (filters: any) => {
-    setActiveFilter(filters.jobType || 'All');
     setShowFilterGrid(false);
-    // Dispatch filtered fetch with all selected values
-    dispatch(fetchJobs({
-      sort: filters.jobType?.toLowerCase(),
-      salary: filters.salary,
-      experience: filters.experience
-    }));
+    // Navigate directly to JobListing with filters
+    navigation.navigate('JobListing', { filters });
+  };
+
+  const handleRefer = async () => {
+    try {
+      await Share.share({
+        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://jobindia.app/refer',
+        title: 'Refer JobIndia',
+      });
+    } catch (error: any) {
+      console.log(error.message);
+    }
   };
 
   const headerTranslateY = scrollY.interpolate({
@@ -429,6 +442,14 @@ const HomeScreen: React.FC = () => {
               </View>
             </Pressable>
             <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={handleRefer}
+                style={[styles.referBtn, { backgroundColor: colors.primary + '15' }]}
+              >
+                <Icon name="gift" size={16} color={colors.primary} />
+                <Text style={[styles.referText, { color: colors.primary }]}>Refer</Text>
+              </TouchableOpacity>
+
               {showNotifyHint && (
                 <Animated.View
                   style={[
@@ -621,7 +642,11 @@ const HomeScreen: React.FC = () => {
               </View>
             </Pressable>
 
-            <SectionHeader title="Categories" colors={colors} />
+            <SectionHeader 
+              title="Categories" 
+              colors={colors} 
+              onPress={() => navigation.navigate('JobCategories')}
+            />
 
             <ScrollView
               horizontal
@@ -631,6 +656,7 @@ const HomeScreen: React.FC = () => {
               {categories.map(cat => (
                 <Pressable
                   key={cat.id}
+                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: cat.id } })}
                   style={[
                     styles.categoryChip,
                     {
@@ -650,6 +676,7 @@ const HomeScreen: React.FC = () => {
               {categories.length === 0 && HOME_CATEGORIES.map(cat => (
                 <Pressable
                   key={cat.id}
+                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: cat.id } })}
                   style={[
                     styles.categoryChip,
                     {
@@ -668,55 +695,72 @@ const HomeScreen: React.FC = () => {
               ))}
             </ScrollView>
 
-            <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
+            {trending && trending.length > 0 && (
+              <>
+                <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.trendingScroll}
+                  decelerationRate="fast">
+                  {trending.map((job: any) => (
+                    <JobTrendCard
+                      key={job.id}
+                      job={job}
+                      colors={colors}
+                      onPress={() => openJob(job)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.trendingScroll}
-              decelerationRate="fast">
-              {TRENDING_JOBS.map(job => (
-                <JobTrendCard
-                  key={job.id}
-                  job={job}
-                  colors={colors}
-                  onPress={() => openJob(job.id)}
-                />
-              ))}
-            </ScrollView>
+            {nearby && nearby.length > 0 && (
+              <>
+                <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
+                <View style={styles.verticalList}>
+                  {nearby.map((job: any) => (
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                  ))}
+                </View>
+              </>
+            )}
 
-            <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
+            {recommended && recommended.length > 0 && (
+              <>
+                <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
+                <View style={styles.verticalList}>
+                  {recommended.map((job: any) => (
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                  ))}
+                </View>
+              </>
+            )}
 
-            <View style={styles.verticalList}>
-              {NEARBY_JOBS.map(job => (
-                <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
-              ))}
-            </View>
+            {latest && latest.length > 0 && (
+              <>
+                <SectionHeader title="Latest jobs" icon="clock-o" iconColor={colors.success} colors={colors} />
+                <View style={styles.verticalList}>
+                  {latest.map((job: any) => (
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                  ))}
+                </View>
+              </>
+            )}
 
-            <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
-
-            <View style={styles.verticalList}>
-              {jobsLoading && recommended.length === 0 ? (
-                <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-              ) : (
-                recommended.map((job: any) => (
-                  <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
-                ))
-              )}
-              {!jobsLoading && recommended.length === 0 && (
-                <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
-                  No recommendations found yet.
-                </Text>
-              )}
-            </View>
+            {!jobsLoading && trending.length === 0 && nearby.length === 0 && recommended.length === 0 && latest.length === 0 && (
+              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
+                No jobs found at the moment.
+              </Text>
+            )}
           </>
         )}
       </Animated.ScrollView>
 
-      <ProfileStrengthAssistant 
-        profile={profileData} 
-        colors={colors} 
-        navigation={navigation} 
+      <ProfileStrengthAssistant
+        profile={profileData}
+        colors={colors}
+        navigation={navigation}
         scrollY={scrollY} // Pass scroll for auto-hide
       />
 
@@ -791,6 +835,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  referBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    gap: 6,
+    marginRight: 4,
+  },
+  referText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   notifyBtnCircle: {
     width: 46,

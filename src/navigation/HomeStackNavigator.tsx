@@ -6,6 +6,7 @@ import JobDetailScreen from '../screens/main/JobDetailScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import JobListingScreen from '../screens/main/JobListingScreen';
+import JobCategoriesScreen from '../screens/main/JobCategoriesScreen';
 import type { HomeStackParamList } from './types';
 
 const Stack = createStackNavigator<HomeStackParamList>();
@@ -24,6 +25,7 @@ const HomeStackNavigator: React.FC = () => {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="SearchHome" component={SearchScreen} />
       <Stack.Screen name="JobListing" component={JobListingScreen} />
+      <Stack.Screen name="JobCategories" component={JobCategoriesScreen} />
     </Stack.Navigator>
   );
 };

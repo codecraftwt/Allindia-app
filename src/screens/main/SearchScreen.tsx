@@ -22,20 +22,32 @@ import { INITIAL_RECENT_SEARCHES, SUGGESTED_KEYWORDS } from './searchMockData';
 
 type SearchNav = StackNavigationProp<SearchStackParamList, 'SearchHome'>;
 
-function SectionHeader({ title, colors }: { title: string; colors: ThemeColors }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
-    </View>
-  );
-}
+const SKILL_SUGGESTIONS = ['React Native', 'React JS', 'Java Developer', 'Python Expert', 'Sales Executive', 'Marketing Manager', 'UI/UX Designer', 'Backend Engineer', 'Data Scientist', 'HR Generalist'];
+const LOCATION_SUGGESTIONS = ['Mumbai, Maharashtra', 'Pune, Maharashtra', 'Bangalore, Karnataka', 'Delhi, NCR', 'Hyderabad, Telangana', 'Remote', 'Noida, UP', 'Chennai, Tamil Nadu', 'Gurgaon, Haryana', 'Ahmedabad, Gujarat'];
+
+const SectionHeader: React.FC<{ title: string; colors: ThemeColors }> = ({ title, colors }) => (
+  <View style={styles.sectionHeader}>
+    <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 }]}>
+      {title}
+    </Text>
+  </View>
+);
 
 const SearchScreen: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<SearchNav>();
   const [query, setQuery] = useState('');
+  const [location, setLocation] = useState('');
+  const [experience, setExperience] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>(INITIAL_RECENT_SEARCHES);
+  
+  // Suggestion States
+  const [filteredSkills, setFilteredSkills] = useState<string[]>([]);
+  const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
+  const [activeInput, setActiveInput] = useState<'skill' | 'location' | null>(null);
+
+  const EXP_OPTIONS = ['Fresher', '1-2 Years', '3-5 Years', '5-10 Years', '10+ Years'];
 
   const goToResults = useCallback(
     (q: string) => {
@@ -56,6 +68,42 @@ const SearchScreen: React.FC = () => {
     setRecent(prev => prev.filter(x => x !== item));
   }, []);
 
+  const handleSkillChange = (text: string) => {
+    setQuery(text);
+    if (text.trim().length > 0) {
+      const filtered = SKILL_SUGGESTIONS.filter(s => s.toLowerCase().includes(text.toLowerCase()));
+      setFilteredSkills(filtered);
+      setActiveInput('skill');
+    } else {
+      setFilteredSkills([]);
+      setActiveInput(null);
+    }
+  };
+
+  const handleLocationChange = (text: string) => {
+    setLocation(text);
+    if (text.trim().length > 0) {
+      const filtered = LOCATION_SUGGESTIONS.filter(l => l.toLowerCase().includes(text.toLowerCase()));
+      setFilteredLocations(filtered);
+      setActiveInput('location');
+    } else {
+      setFilteredLocations([]);
+      setActiveInput(null);
+    }
+  };
+
+  const selectSkill = (skill: string) => {
+    setQuery(skill);
+    setFilteredSkills([]);
+    setActiveInput(null);
+  };
+
+  const selectLocation = (loc: string) => {
+    setLocation(loc);
+    setFilteredLocations([]);
+    setActiveInput(null);
+  };
+
   const onChipPress = useCallback(
     (text: string) => {
       setQuery(text);
@@ -71,35 +119,99 @@ const SearchScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 0 },
+          { paddingBottom: 20 },
         ]}>
-        <View style={[styles.searchRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name="search" size={18} color={colors.textPlaceholder} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.textPrimary }]}
-            placeholder="Search jobs, companies, skills…"
-            placeholderTextColor={colors.textPlaceholder}
-            value={query}
-            onChangeText={setQuery}
-            returnKeyType="search"
-            onSubmitEditing={() => goToResults(query)}
-            accessibilityLabel="Search jobs"
-          />
-          {query.length > 0 ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Clear search">
-              <Icon name="times-circle" size={20} color={colors.textPlaceholder} />
-            </Pressable>
-          ) : null}
+        
+        {/* Naukri Style Search Container */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Role Input */}
+          <View style={[styles.inputRow, { borderBottomColor: colors.border }]}>
+            <Icon name="briefcase" size={16} color={colors.primary} style={styles.inputIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.textPrimary }]}
+              placeholder="Skills, Designations, Companies"
+              placeholderTextColor={colors.textPlaceholder}
+              value={query}
+              onChangeText={handleSkillChange}
+              onFocus={() => query.length > 0 && setActiveInput('skill')}
+            />
+            {query.length > 0 && (
+              <Pressable onPress={() => { setQuery(''); setFilteredSkills([]); setActiveInput(null); }}>
+                <Icon name="times-circle" size={18} color={colors.textPlaceholder} />
+              </Pressable>
+            )}
+          </View>
+
+          {/* Location Input */}
+          <View style={styles.inputRow}>
+            <Icon name="map-marker" size={18} color={colors.primary} style={styles.inputIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.textPrimary }]}
+              placeholder="Enter location"
+              placeholderTextColor={colors.textPlaceholder}
+              value={location}
+              onChangeText={handleLocationChange}
+              onFocus={() => location.length > 0 && setActiveInput('location')}
+            />
+            {location.length > 0 && (
+              <Pressable onPress={() => { setLocation(''); setFilteredLocations([]); setActiveInput(null); }}>
+                <Icon name="times-circle" size={18} color={colors.textPlaceholder} />
+              </Pressable>
+            )}
+          </View>
         </View>
+
+        {/* Suggestion Dropdown */}
+        {(activeInput === 'skill' && filteredSkills.length > 0) && (
+          <View style={[styles.suggestionDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {filteredSkills.map((item, index) => (
+              <Pressable key={index} style={styles.suggestionItem} onPress={() => selectSkill(item)}>
+                <Icon name="search" size={14} color={colors.textPlaceholder} style={{ marginRight: 10 }} />
+                <Text style={{ color: colors.textPrimary }}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {(activeInput === 'location' && filteredLocations.length > 0) && (
+          <View style={[styles.suggestionDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {filteredLocations.map((item, index) => (
+              <Pressable key={index} style={styles.suggestionItem} onPress={() => selectLocation(item)}>
+                <Icon name="map-marker" size={14} color={colors.textPlaceholder} style={{ marginRight: 10 }} />
+                <Text style={{ color: colors.textPrimary }}>{item}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {/* Experience Selection */}
+        <SectionHeader title="Work experience" colors={colors} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expScroll}>
+          {EXP_OPTIONS.map(exp => (
+            <Pressable 
+              key={exp}
+              onPress={() => setExperience(exp === experience ? null : exp)}
+              style={[
+                styles.expChip, 
+                { 
+                  backgroundColor: experience === exp ? colors.primary : colors.surfaceHighlight,
+                  borderColor: experience === exp ? colors.primary : colors.border
+                }
+              ]}
+            >
+              <Text style={[styles.expText, { color: experience === exp ? '#fff' : colors.textPrimary }]}>{exp}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
 
         <Pressable
           style={[styles.searchCta, { backgroundColor: colors.primary }]}
           onPress={() => goToResults(query)}
-          disabled={!query.trim()}>
+          disabled={!query.trim() && !location.trim()}>
           <Text
             style={[
-              typography.labelMedium,
-              { color: colors.onPrimary, opacity: query.trim() ? 1 : 0.5 },
+              styles.searchCtaText,
+              { color: colors.onPrimary, opacity: (query.trim() || location.trim()) ? 1 : 0.6 },
             ]}>
             Search jobs
           </Text>
@@ -174,31 +286,83 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  searchRow: {
+  searchContainer: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    padding: spacing.sm,
+    marginBottom: spacing.lg,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+  },
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    ...components.searchBar,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  inputIcon: {
+    marginRight: 12,
+    width: 20,
+    textAlign: 'center',
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    fontFamily: typography.body.fontFamily,
+    fontSize: 16,
+    fontWeight: '600',
     paddingVertical: 0,
-    minHeight: 24,
+  },
+  expScroll: {
+    paddingBottom: spacing.lg,
+    gap: 10,
+  },
+  expChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  expText: {
+    fontSize: 13,
+    fontWeight: 'bold',
   },
   searchCta: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
-    borderRadius: radius.button,
+    minHeight: 52,
+    borderRadius: radius.lg,
+    marginBottom: spacing.xl,
+    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+  },
+  searchCtaText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  suggestionDropdown: {
+    marginTop: -spacing.lg,
     marginBottom: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingVertical: 4,
+    elevation: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   sectionHeader: {
     marginBottom: spacing.md,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   recentList: {
     gap: spacing.sm,

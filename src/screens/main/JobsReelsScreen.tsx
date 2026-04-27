@@ -40,6 +40,47 @@ const CATEGORIES = [
   { id: '5', name: 'Finance', img: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=200' },
 ];
 
+const STORY_DATA = [
+  {
+    id: '1',
+    name: 'Software',
+    slides: [
+      { id: 's1-1', type: 'image', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800', title: 'Full Stack Developer', company: 'Google', location: 'Remote' },
+      { id: 's1-2', type: 'image', url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800', title: 'React Native Expert', company: 'Facebook', location: 'USA' },
+      { id: 's1-3', type: 'image', url: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?q=80&w=800', title: 'Backend Engineer', company: 'Amazon', location: 'Bangalore' },
+    ]
+  },
+  {
+    id: '2',
+    name: 'Design',
+    slides: [
+      { id: 's2-1', type: 'image', url: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800', title: 'Senior UX Designer', company: 'Apple', location: 'California' },
+      { id: 's2-2', type: 'image', url: 'https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?q=80&w=800', title: 'Visual Artist', company: 'Adobe', location: 'Remote' },
+    ]
+  },
+  {
+    id: '3',
+    name: 'Marketing',
+    slides: [
+      { id: 's3-1', type: 'image', url: 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=800', title: 'Growth Hacker', company: 'Netflix', location: 'Mumbai' },
+    ]
+  },
+  {
+    id: '4',
+    name: 'Sales',
+    slides: [
+      { id: 's4-1', type: 'image', url: 'https://images.unsplash.com/photo-1552581234-261207845094?q=80&w=800', title: 'Enterprise Sales', company: 'Salesforce', location: 'Delhi' },
+    ]
+  },
+  {
+    id: '5',
+    name: 'Finance',
+    slides: [
+      { id: 's5-1', type: 'image', url: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=800', title: 'Financial Analyst', company: 'Goldman Sachs', location: 'Pune' },
+    ]
+  }
+];
+
 const REELS_DATA = [
   {
     id: 'r1',
@@ -231,6 +272,13 @@ const JobsReelsScreen: React.FC = () => {
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
   const [comments, setComments] = useState(MOCK_COMMENTS);
 
+  // Story Viewer States
+  const [isStoryVisible, setIsStoryVisible] = useState(false);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const storyProgress = useRef(new Animated.Value(0)).current;
+  const timerRef = useRef<any>(null);
+
   // Handle Hardware Back Button
   useEffect(() => {
     const backAction = () => {
@@ -270,12 +318,23 @@ const JobsReelsScreen: React.FC = () => {
     setFollowedCompanies(newFollowed);
   };
 
-  const handlePress = (id: string) => {
+  const handlePress = (id: string, type: 'story' | 'reel' = 'reel') => {
     setLoadingId(id);
-    setTimeout(() => {
-      setLoadingId(null);
-      setViewMode('full');
-    }, 1500);
+    
+    if (type === 'story') {
+      const index = STORY_DATA.findIndex(s => s.id === id);
+      setTimeout(() => {
+        setLoadingId(null);
+        setCurrentStoryIndex(index !== -1 ? index : 0);
+        setCurrentSlideIndex(0);
+        setIsStoryVisible(true);
+      }, 800);
+    } else {
+      setTimeout(() => {
+        setLoadingId(null);
+        setViewMode('full');
+      }, 1500);
+    }
   };
 
   const handleShare = async () => {
@@ -301,6 +360,52 @@ const JobsReelsScreen: React.FC = () => {
     setActiveReelId(id);
     setShowShare(true);
   };
+
+  // Story Navigation Logic
+  const nextSlide = useCallback(() => {
+    const story = STORY_DATA[currentStoryIndex];
+    if (currentSlideIndex < story.slides.length - 1) {
+      setCurrentSlideIndex(prev => prev + 1);
+      storyProgress.setValue(0);
+    } else if (currentStoryIndex < STORY_DATA.length - 1) {
+      setCurrentStoryIndex(prev => prev + 1);
+      setCurrentSlideIndex(0);
+      storyProgress.setValue(0);
+    } else {
+      setIsStoryVisible(false);
+    }
+  }, [currentStoryIndex, currentSlideIndex]);
+
+  const prevSlide = useCallback(() => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(prev => prev - 1);
+      storyProgress.setValue(0);
+    } else if (currentStoryIndex > 0) {
+      const prevStory = STORY_DATA[currentStoryIndex - 1];
+      setCurrentStoryIndex(prev => prev - 1);
+      setCurrentSlideIndex(prevStory.slides.length - 1);
+      storyProgress.setValue(0);
+    } else {
+      setCurrentSlideIndex(0);
+      storyProgress.setValue(0);
+    }
+  }, [currentStoryIndex, currentSlideIndex]);
+
+  useEffect(() => {
+    if (isStoryVisible) {
+      storyProgress.setValue(0);
+      Animated.timing(storyProgress, {
+        toValue: 1,
+        duration: 5000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (finished) nextSlide();
+      });
+    } else {
+      storyProgress.stopAnimation();
+    }
+  }, [isStoryVisible, currentStoryIndex, currentSlideIndex, nextSlide]);
 
   const renderFullReel = ({ item }: any) => (
     <View style={styles.fullReel}>
@@ -529,7 +634,7 @@ const JobsReelsScreen: React.FC = () => {
         {/* Stories with Rotating Border Loading */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyScroll}>
           {CATEGORIES.map(cat => (
-            <Pressable key={cat.id} style={styles.storyWrap} onPress={() => handlePress(cat.id)}>
+            <Pressable key={cat.id} style={styles.storyWrap} onPress={() => handlePress(cat.id, 'story')}>
               <View style={styles.storyOuter}>
                 {loadingId === cat.id && <RotatingBorder colors={colors} />}
                 <View style={[styles.storyBorder, { borderColor: loadingId === cat.id ? 'transparent' : colors.primary }]}>
@@ -767,6 +872,85 @@ const JobsReelsScreen: React.FC = () => {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Instagram Style Story Viewer */}
+      <Modal
+        visible={isStoryVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsStoryVisible(false)}
+      >
+        <View style={styles.storyViewerContainer}>
+          <StatusBar hidden />
+          
+          {/* Progress Bars */}
+          <View style={styles.progressBarContainer}>
+            {STORY_DATA[currentStoryIndex].slides.map((_, index) => (
+              <View key={index} style={[styles.progressBarBase, { backgroundColor: 'rgba(255,255,255,0.3)' }]}>
+                <Animated.View 
+                  style={[
+                    styles.progressBarFill, 
+                    { 
+                      backgroundColor: '#fff',
+                      width: index === currentSlideIndex 
+                        ? storyProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] })
+                        : index < currentSlideIndex ? '100%' : '0%'
+                    }
+                  ]} 
+                />
+              </View>
+            ))}
+          </View>
+
+          {/* Header */}
+          <View style={styles.storyHeader}>
+            <View style={styles.storyUserInfo}>
+              <View style={[styles.miniStoryAvatar, { borderColor: colors.primary }]}>
+                <Image source={{ uri: CATEGORIES[currentStoryIndex].img }} style={styles.miniAvatarImg} />
+              </View>
+              <View>
+                <Text style={styles.storyUserName}>{STORY_DATA[currentStoryIndex].name}</Text>
+                <Text style={styles.storyUserTime}>Sponsored • 2h</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => setIsStoryVisible(false)} style={styles.closeStoryBtn}>
+              <Icon name="times" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Content */}
+          <View style={styles.storyContentWrap}>
+            <Image 
+              source={{ uri: STORY_DATA[currentStoryIndex].slides[currentSlideIndex].url }} 
+              style={styles.storyFullImage} 
+              resizeMode="cover" 
+            />
+            
+            {/* Info Overlay */}
+            <View style={styles.storyInfoOverlay}>
+              <Animated.View style={styles.storyDetailsCard}>
+                <Text style={styles.storyJobTitle}>{STORY_DATA[currentStoryIndex].slides[currentSlideIndex].title}</Text>
+                <View style={styles.storyMetaRow}>
+                  <Text style={styles.storyCompanyName}>{STORY_DATA[currentStoryIndex].slides[currentSlideIndex].company}</Text>
+                  <View style={styles.dot} />
+                  <Text style={styles.storyLocation}>{STORY_DATA[currentStoryIndex].slides[currentSlideIndex].location}</Text>
+                </View>
+                
+                <TouchableOpacity style={[styles.storyApplyBtn, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.storyApplyText}>View Details</Text>
+                  <Icon name="arrow-right" size={14} color="#fff" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          </View>
+
+          {/* Navigation Tap Areas */}
+          <View style={styles.touchContainer}>
+            <Pressable style={styles.touchLeft} onPress={prevSlide} />
+            <Pressable style={styles.touchRight} onPress={nextSlide} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1142,6 +1326,145 @@ const styles = StyleSheet.create({
   cancelShareText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+
+  // Story Viewer Styles
+  storyViewerContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    left: 10,
+    right: 10,
+    zIndex: 10,
+    gap: 5,
+  },
+  progressBarBase: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+  },
+  storyHeader: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 70 : 40,
+    left: 15,
+    right: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  storyUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  miniStoryAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 2,
+  },
+  miniAvatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 15,
+  },
+  storyUserName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  storyUserTime: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+  },
+  closeStoryBtn: {
+    padding: 5,
+  },
+  storyContentWrap: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  storyFullImage: {
+    width: width,
+    height: height,
+    position: 'absolute',
+  },
+  storyInfoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 30,
+    paddingBottom: 60,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  storyDetailsCard: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    padding: 20,
+    borderRadius: 20,
+    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  storyJobTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  storyMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  storyCompanyName: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  storyLocation: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+  },
+  storyApplyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  storyApplyText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  touchContainer: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'row',
+    zIndex: 5,
+  },
+  touchLeft: {
+    flex: 1,
+  },
+  touchRight: {
+    flex: 2,
   },
 });
 

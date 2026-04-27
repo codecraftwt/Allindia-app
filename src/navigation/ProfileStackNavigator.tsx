@@ -7,6 +7,7 @@ import ProfileEducationEditScreen from '../screens/main/profile/ProfileEducation
 import ProfileExperienceEditScreen from '../screens/main/profile/ProfileExperienceEditScreen';
 import ProfileJobPreferencesEditScreen from '../screens/main/profile/ProfileJobPreferencesEditScreen';
 import ProfileResumeEditScreen from '../screens/main/profile/ProfileResumeEditScreen';
+import ProfileAccountSetting from '../screens/main/profile/ProfileAccountSetting';
 import type { ProfileStackParamList } from './types';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
@@ -27,6 +28,7 @@ const ProfileStackNavigator: React.FC = () => {
       <Stack.Screen name="ProfileExperience" component={ProfileExperienceEditScreen} />
       <Stack.Screen name="ProfileJobPreferences" component={ProfileJobPreferencesEditScreen} />
       <Stack.Screen name="ProfileResume" component={ProfileResumeEditScreen} />
+      <Stack.Screen name="ProfileAccountSetting" component={ProfileAccountSetting} />
     </Stack.Navigator>
   );
 };

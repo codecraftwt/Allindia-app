@@ -15,6 +15,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/typography';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../redux/store';
+import { fetchProfileCompletion } from '../redux/slice/profileSlice';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -31,6 +34,14 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
   const [showAutoHint, setShowAutoHint] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const [frame, setFrame] = useState(0);
+  const dispatch = useDispatch<AppDispatch>();
+  const { completion } = useSelector((state: RootState) => state.profile);
+
+  useEffect(() => {
+    if (!completion) {
+      dispatch(fetchProfileCompletion());
+    }
+  }, [dispatch, completion]);
 
   // Manual Animation fallback for Rocket
   useEffect(() => {
@@ -59,19 +70,7 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
   const autoHintAnim = useRef(new RNAnimated.Value(0)).current;
   const tooltipOpacity = useRef(new RNAnimated.Value(1)).current;
 
-  const strength = useMemo(() => {
-    if (!profile) return 0;
-    let score = 0;
-    if (profile.name) score += 10;
-    if (profile.email) score += 10;
-    if (profile.phone) score += 10;
-    if (profile.current_city_id) score += 10;
-    if (profile.job_category_id) score += 10;
-    if (profile.qualification_id) score += 10;
-    if (profile.experience_type) score += 20;
-    if (profile.resume_url) score += 20;
-    return score;
-  }, [profile]);
+  const strength = completion?.percentage || 0;
 
   useEffect(() => {
     let animation: Animated.CompositeAnimation | null = null;
