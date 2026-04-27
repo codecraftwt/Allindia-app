@@ -720,7 +720,7 @@ const HomeScreen: React.FC = () => {
                 <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
                 <View style={styles.verticalList}>
                   {nearby.map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
                   ))}
                 </View>
               </>
@@ -731,7 +731,7 @@ const HomeScreen: React.FC = () => {
                 <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
                 <View style={styles.verticalList}>
                   {recommended.map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
                   ))}
                 </View>
               </>
@@ -742,7 +742,7 @@ const HomeScreen: React.FC = () => {
                 <SectionHeader title="Latest jobs" icon="clock-o" iconColor={colors.success} colors={colors} />
                 <View style={styles.verticalList}>
                   {latest.map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job.id)} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
                   ))}
                 </View>
               </>
