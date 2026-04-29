@@ -24,13 +24,14 @@ export const loginCandidate = createAsyncThunk(
   'auth/loginCandidate',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-
+      console.log("credentials ", credentials)
       const response = await api.post('api/candidate/login', credentials);
-   
-      return response.data;
+      console.log("response ", response)
+      return response?.data;
     } catch (error: any) {
-    
-   
+
+      console.log(error?.response?.data)
+      console.log("sssss", error)
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
   }
@@ -50,7 +51,7 @@ export const logoutCandidate = createAsyncThunk(
           },
         });
       }
-      
+
       dispatch(logout());
       dispatch(clearProfile());
       return true;

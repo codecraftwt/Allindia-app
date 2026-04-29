@@ -64,19 +64,19 @@ const OPTIONS: any = {
   freshness: ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days', 'All Time'],
 };
 
-const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({ 
-  visible, 
-  onClose, 
-  onFilterSelect, 
-  activeFilter, 
+const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
+  visible,
+  onClose,
+  onFilterSelect,
+  activeFilter,
   colors,
   headerTranslateY,
-  top = 120
+  top = 130
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { categories, cities, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { completion } = useSelector((state: RootState) => state.profile);
-  
+
   const [selectedCategory, setSelectedCategory] = useState('jobType');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSwitching, setIsSwitching] = useState(false);
@@ -138,7 +138,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   }, [visible]);
 
   const toggleQuickFilter = (id: string) => {
-    setQuickFilters(prev => 
+    setQuickFilters(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -157,15 +157,15 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   const toggleOption = (category: string, option: any) => {
     if (category === 'jobType') {
       const current = selectedFilters.jobType || [];
-      const updated = current.includes(option) 
+      const updated = current.includes(option)
         ? current.filter((i: string) => i !== option)
         : [...current, option];
       setSelectedFilters({ ...selectedFilters, jobType: updated });
     } else {
       // Single select for category and city to match API params category_id and city_id
-      setSelectedFilters({ 
-        ...selectedFilters, 
-        [category]: selectedFilters[category]?.id === option.id ? null : option 
+      setSelectedFilters({
+        ...selectedFilters,
+        [category]: selectedFilters[category]?.id === option.id ? null : option
       });
     }
   };
@@ -175,7 +175,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     if (selectedFilters.category) filters.category_id = selectedFilters.category.id;
     if (selectedFilters.city) filters.city_id = selectedFilters.city.id;
     if (selectedFilters.jobType.length > 0) {
-      filters.job_type = selectedFilters.jobType[0].toLowerCase(); // API expects single job_type usually or we can join them
+      filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace('-', '_')).join(',');
     }
     onFilterSelect(filters);
   };
@@ -198,9 +198,9 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   const SkeletonItem = () => (
     <View style={styles.skeletonContainer}>
       {[1, 2, 3, 4].map(i => (
-        <Animated.View 
-          key={i} 
-          style={[styles.skeletonChip, { backgroundColor: colors.surfaceSecondary }]} 
+        <Animated.View
+          key={i}
+          style={[styles.skeletonChip, { backgroundColor: colors.surfaceSecondary }]}
         />
       ))}
     </View>
@@ -209,22 +209,22 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   if (!visible && opacityAnim._value === 0) return null;
 
   return (
-    <Animated.View 
-      style={[styles.container, { opacity: opacityAnim, top }]} 
+    <Animated.View
+      style={[styles.container, { opacity: opacityAnim, top }]}
       pointerEvents={visible ? 'auto' : 'none'}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <Animated.View 
+      <Animated.View
         style={[
-          styles.dropdownCard, 
-          { 
-            backgroundColor: colors.surface, 
+          styles.dropdownCard,
+          {
+            backgroundColor: colors.surface,
             borderColor: colors.border,
             transform: [
               { translateY: Animated.add(slideAnim, headerTranslateY || 0) }
-            ] 
+            ]
           }
         ]}>
-        
+
         {/* Top Quick Filters */}
         <View style={[styles.quickBar, { borderBottomColor: colors.border }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickBarContent}>
@@ -236,7 +236,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                   onPress={() => toggleQuickFilter(qf.id)}
                   style={[
                     styles.quickChip,
-                    { 
+                    {
                       backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
                       borderColor: isSelected ? colors.primary : colors.border
                     }
@@ -250,8 +250,8 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
             })}
           </ScrollView>
         </View>
-        
-    
+
+
         <View style={styles.contentRow}>
           {/* Sidebar (Left) */}
           <View style={[styles.sidebar, { borderRightColor: colors.border, backgroundColor: colors.surfaceHighlight }]}>
@@ -264,15 +264,15 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                     styles.sideItem,
                     selectedCategory === cat.id && { backgroundColor: colors.surface }
                   ]}>
-                  <Icon 
-                    name={cat.icon} 
-                    size={14} 
-                    color={selectedCategory === cat.id ? colors.primary : colors.textPlaceholder} 
+                  <Icon
+                    name={cat.icon}
+                    size={14}
+                    color={selectedCategory === cat.id ? colors.primary : colors.textPlaceholder}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text 
+                    <Text
                       style={[
-                        styles.sideText, 
+                        styles.sideText,
                         { color: selectedCategory === cat.id ? colors.textPrimary : colors.textSecondary },
                         selectedCategory === cat.id && { fontWeight: '700' }
                       ]}>
@@ -294,10 +294,10 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                       </Text>
                     )}
                   </View>
-                  {((cat.id === 'jobType' && selectedFilters.jobType.length > 0) || 
+                  {((cat.id === 'jobType' && selectedFilters.jobType.length > 0) ||
                     (cat.id !== 'jobType' && selectedFilters[cat.id])) && (
-                    <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
-                  )}
+                      <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+                    )}
                 </Pressable>
               ))}
             </ScrollView>
@@ -306,29 +306,32 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
           {/* Options (Right) */}
           <View style={styles.optionsArea}>
             <View style={styles.titleRow}>
-                <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
-                  {CATEGORIES_LIST.find(c => c.id === selectedCategory)?.label}
-                </Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+                {CATEGORIES_LIST.find(c => c.id === selectedCategory)?.label}
+              </Text>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
               {isSwitching || metaLoading ? <SkeletonItem /> : (
                 filteredOptions.map((option: any) => {
-                  const isSelected = selectedCategory === 'jobType' 
+                  const isSelected = selectedCategory === 'jobType'
                     ? selectedFilters.jobType.includes(option)
                     : selectedFilters[selectedCategory]?.id === option.id;
                   const labelText = typeof option === 'string' ? option : (option.name || option.city || option.label || '');
-                  
+
                   return (
                     <Pressable
                       key={typeof option === 'string' ? option : option.id}
                       onPress={() => toggleOption(selectedCategory, option)}
                       style={styles.optionItem}>
                       <View style={[
-                        styles.radio, 
+                        selectedCategory === 'jobType' ? styles.checkbox : styles.radio,
                         { borderColor: isSelected ? colors.primary : colors.border }
                       ]}>
                         {isSelected && (
-                          <View style={[styles.radioInner, { backgroundColor: colors.primary }]} />
+                          <View style={[
+                            selectedCategory === 'jobType' ? styles.checkboxInner : styles.radioInner,
+                            { backgroundColor: colors.primary }
+                          ]} />
                         )}
                       </View>
                       <Text style={[styles.optionText, { color: colors.textPrimary }]}>{labelText}</Text>
@@ -349,7 +352,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
             <Text style={[styles.resetText, { color: colors.primary }]}>RESET</Text>
           </TouchableOpacity>
           <View style={styles.footerRight}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.applyBtn, { backgroundColor: colors.primary }]}
               onPress={handleApply}>
               <Text style={styles.applyText}>APPLY</Text>
@@ -432,6 +435,19 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
   },
   optionText: {
     fontSize: 14,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, Alert, ToastAndroid, Platform } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Alert, ToastAndroid, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { uploadResume, deleteResume } from '../../../redux/slice/profileSlice';
@@ -22,6 +22,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { draft, updateDraft } = useProfileSetup();
   const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
   const resume = profileData?.profile?.resume;
 
@@ -79,35 +80,27 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDelete = async () => {
-    Alert.alert(
-      'Delete Resume',
-      'Are you sure you want to remove your resume?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const resultAction = await dispatch(deleteResume());
-              if (deleteResume.fulfilled.match(resultAction)) {
-                updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
-                if (Platform.OS === 'android') {
-                  ToastAndroid.show('Resume removed successfully 🗑️', ToastAndroid.SHORT);
-                } else {
-                  Alert.alert('Deleted', 'Resume removed successfully 🗑️');
-                }
-              } else {
-                Alert.alert('Error', resultAction.payload as string || 'Failed to delete resume.');
-              }
-            } catch (err) {
-            
-            }
-          }
-        },
-      ]
-    );
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
+    try {
+      const resultAction = await dispatch(deleteResume());
+      if (deleteResume.fulfilled.match(resultAction)) {
+        updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Resume removed successfully 🗑️', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Deleted', 'Resume removed successfully 🗑️');
+        }
+      } else {
+        Alert.alert('Error', resultAction.payload as string || 'Failed to delete resume.');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    }
   };
 
   const skip = () => {
@@ -192,6 +185,43 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
         colors={colors}
         iconRight={<Icon name="check" size={16} color={colors.onPrimary} />}
       />
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setShowDeleteModal(false)}
+        >
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.deleteIconWrap, { backgroundColor: colors.error + '15' }]}>
+              <Icon name="trash" size={28} color={colors.error} />
+            </View>
+            <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.xs }]}>
+              Delete Resume?
+            </Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.lg }]}>
+              Are you sure you want to remove your resume? This action cannot be undone.
+            </Text>
+            <View style={styles.modalActions}>
+              <Pressable 
+                style={[styles.modalBtn, { backgroundColor: colors.surfaceSecondary }]} 
+                onPress={() => setShowDeleteModal(false)}
+              >
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Cancel</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalBtn, { backgroundColor: colors.error }]} 
+                onPress={confirmDelete}
+              >
+                <Text style={[typography.labelMedium, { color: '#FFF' }]}>Delete</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </ProfileEditLayout>
   );
 };
@@ -229,6 +259,40 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     borderWidth: 2,
     marginBottom: spacing.md,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 24,
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  deleteIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

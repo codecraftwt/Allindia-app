@@ -7,8 +7,9 @@ import {
   Text,
   View,
   TextInput,
-  Alert,
   Pressable,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -24,7 +25,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
-import { loginCandidate, clearError } from '../../redux/slice/authSlice';
+import { loginCandidate } from '../../redux/slice/authSlice';
 import type { RootState, AppDispatch } from '../../redux/store';
 
 type Props = StackScreenProps<AuthStackParamList, 'EmailLogin'>;
@@ -35,19 +36,38 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading } = useSelector((state: RootState) => state.auth);
+
+  // Status Modal State
+  const [statusModal, setStatusModal] = useState({
+    visible: false,
+    type: 'error' as 'error' | 'success',
+    title: '',
+    message: '',
+  });
+
+  const showStatus = (type: 'error' | 'success', title: string, message: string) => {
+    setStatusModal({
+      visible: true,
+      type,
+      title,
+      message,
+    });
+  };
 
   const onLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password');
+      showStatus('error', 'Required Field', 'Please enter both email and password');
       return;
     }
 
     const resultAction = await dispatch(loginCandidate({ email, password }));
+    console.log("resultAction ", resultAction)
+
     if (loginCandidate.fulfilled.match(resultAction)) {
       navigation.replace('Main');
     } else {
-      Alert.alert('Login Failed', resultAction.payload as string || 'Invalid credentials');
+      showStatus('error', 'Login Failed', (resultAction.payload as string) || 'Invalid credentials');
     }
   };
 
@@ -103,10 +123,10 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
                   secureTextEntry={!showPassword}
                 />
                 <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={12}>
-                  <Icon 
-                    name={showPassword ? "eye" : "eye-slash"} 
-                    size={18} 
-                    color={colors.textPlaceholder} 
+                  <Icon
+                    name={showPassword ? "eye" : "eye-slash"}
+                    size={18}
+                    color={colors.textPlaceholder}
                   />
                 </Pressable>
               </View>
@@ -133,6 +153,34 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Custom Status Modal */}
+      <Modal
+        visible={statusModal.visible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.statusOverlay}>
+          <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.statusIcon, { backgroundColor: statusModal.type === 'success' ? colors.success + '20' : colors.error + '20' }]}>
+              <Icon
+                name={statusModal.type === 'success' ? "check-circle" : "exclamation-circle"}
+                size={36}
+                color={statusModal.type === 'success' ? colors.success : colors.error}
+              />
+            </View>
+            <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: 8 }]}>{statusModal.title}</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>{statusModal.message}</Text>
+
+            <TouchableOpacity
+              onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+              style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
+            >
+              <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -187,6 +235,41 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.xl,
     gap: spacing.xs,
+  },
+  statusOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  statusCard: {
+    width: '90%',
+    maxWidth: 400,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+  },
+  statusIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  statusBtn: {
+    width: '100%',
+    height: 52,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
   },
 });
 

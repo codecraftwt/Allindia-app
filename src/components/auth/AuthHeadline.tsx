@@ -6,7 +6,7 @@ import { typography } from '../../theme/typography';
 
 type Props = {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   colors: ThemeColors;
   /** Optional icon or illustration above the title */
   decor?: React.ReactNode;
@@ -26,9 +26,11 @@ export const AuthHeadline: React.FC<Props> = ({
       <View style={[styles.decor, centerDecor && styles.decorCenter]}>{decor}</View>
     ) : null}
     <Text style={[typography.appTitle, { color: colors.textPrimary }]}>{title}</Text>
-    <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary }]}>
-      {subtitle}
-    </Text>
+    {subtitle ? (
+      <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary }]}>
+        {subtitle}
+      </Text>
+    ) : null}
   </View>
 );
 

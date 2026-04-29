@@ -11,13 +11,16 @@ import {
   Easing,
   DeviceEventEmitter,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { logoutCandidate } from '../../../redux/slice/authSlice';
 import { fetchProfile, updateProfilePicture, fetchProfileCompletion } from '../../../redux/slice/profileSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -120,20 +123,25 @@ const AnimatedProgressBar = ({ colors, progress }: { colors: ThemeColors; progre
 
 
 const ProfileOverviewScreen: React.FC = () => {
-  const { colors, mode, setMode } = useTheme();
+  const { colors, mode, setMode, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch<AppDispatch>();
   const { draft } = useProfileSetup();
   const { user, loading: authLoading } = useSelector((state: RootState) => state.auth);
   const { data: profileData, loading: profileLoading, error: profileError, completion } = useSelector((state: RootState) => state.profile);
+  
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageTimestamp, setImageTimestamp] = useState(Date.now());
 
   // Animation Values
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const staggerAnims = React.useRef([...Array(6)].map(() => new Animated.Value(0))).current;
+
+  const profile = profileData;
 
   React.useEffect(() => {
     dispatch(fetchProfile());
@@ -145,8 +153,6 @@ const ProfileOverviewScreen: React.FC = () => {
       duration: 800,
       useNativeDriver: true,
     }).start();
-
-
 
     // Staggered Entrance for rows
     const animations = staggerAnims.map((anim, i) =>
@@ -160,8 +166,6 @@ const ProfileOverviewScreen: React.FC = () => {
     );
     Animated.parallel(animations).start();
   }, [dispatch]);
-
-  const profile = profileData?.profile;
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -178,12 +182,22 @@ const ProfileOverviewScreen: React.FC = () => {
     }
   };
 
-  const handleUpdatePicture = async () => {
+  const handleUpdatePicture = () => {
+    setShowImagePicker(true);
+  };
+
+  const processImage = async (type: 'camera' | 'gallery') => {
+    setShowImagePicker(false);
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
+      const options = {
+        mediaType: 'photo' as const,
         quality: 0.8,
-      });
+        saveToPhotos: true,
+      };
+
+      const result = type === 'camera' 
+        ? await launchCamera(options) 
+        : await launchImageLibrary(options);
 
       if (result.didCancel || !result.assets || result.assets.length === 0) return;
 
@@ -196,19 +210,31 @@ const ProfileOverviewScreen: React.FC = () => {
           type: asset.type || 'image/jpeg',
         })).unwrap();
         setIsUploading(false);
+        setImageTimestamp(Date.now()); // Update timestamp after successful upload
       }
     } catch (error) {
       console.error('Failed to update picture:', error);
       setIsUploading(false);
+      Alert.alert('Error', 'Failed to capture or select image');
     }
   };
 
   const getProfileImageUrl = (path: string | null) => {
     if (!path) return null;
-    if (path.startsWith('http')) return path;
-    const baseUrl = 'https://floralwhite-louse-700260.hostingersite.com';
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    return `${baseUrl}${normalizedPath}`;
+    
+    if (path.startsWith('http')) {
+      return path.includes('?') ? `${path}&t=${imageTimestamp}` : `${path}?t=${imageTimestamp}`;
+    }
+    
+    const baseUrl = 'https://arpeggioed-anaya-nonostensively.ngrok-free.dev';
+    let normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // Most Laravel/PHP backends serve files from the storage directory
+    if (!normalizedPath.startsWith('/storage/') && !normalizedPath.startsWith('/public/')) {
+      normalizedPath = `/storage${normalizedPath}`;
+    }
+
+    return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
   };
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'Your profile';
@@ -305,30 +331,32 @@ const ProfileOverviewScreen: React.FC = () => {
             <Pressable
               onPress={handleUpdatePicture}
               disabled={isUploading}
-              style={[styles.avatar, { backgroundColor: colors.surfaceHighlight }]}
+              style={styles.avatarContainer}
             >
-              {user?.profile_picture_url ? (
-                <Image
-                  source={{ uri: getProfileImageUrl(user.profile_picture_url) || '' }}
-                  style={styles.avatarImage}
-                />
-              ) : displayName.trim() ? (
-                <Text style={[typography.appTitle, { color: colors.primary, fontSize: 28 }]}>
-                  {profileInitials(displayName)}
-                </Text>
-              ) : (
-                <Icon name="user" size={40} color={colors.primary} />
-              )}
-
-              <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
-                <Icon name="camera" size={12} color={colors.onPrimary} />
+              <View style={[styles.avatarCircle, { backgroundColor: colors.surfaceHighlight }]}>
+                {profile?.personal?.profile_picture_url ? (
+                  <Image
+                    source={{ uri: getProfileImageUrl(profile.personal.profile_picture_url) || '' }}
+                    style={styles.avatarImage}
+                  />
+                ) : displayName.trim() ? (
+                  <Text style={[typography.appTitle, { color: colors.primary, fontSize: 28 }]}>
+                    {profileInitials(displayName)}
+                  </Text>
+                ) : (
+                  <Icon name="user" size={40} color={colors.primary} />
+                )}
+                
+                {isUploading && (
+                  <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+                    <ActivityIndicator color={colors.onPrimary} size="small" />
+                  </View>
+                )}
               </View>
 
-              {isUploading && (
-                <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
-                  <ActivityIndicator color={colors.onPrimary} size="small" />
-                </View>
-              )}
+              <View style={[styles.cameraOverlay, { backgroundColor: colors.primary }]}>
+                <Icon name="camera" size={10} color={colors.onPrimary} />
+              </View>
             </Pressable>
           </View>
           <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center' }]}>
@@ -477,6 +505,47 @@ const ProfileOverviewScreen: React.FC = () => {
         </View>
       </ScrollView>
 
+      <Modal
+        visible={showImagePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowImagePicker(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setShowImagePicker(false)}
+        >
+          <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
+            <View style={[styles.pickerLine, { backgroundColor: colors.border }]} />
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 20 }]}>
+              Update Profile Picture
+            </Text>
+            
+            <View style={styles.pickerOptions}>
+              <Pressable 
+                style={styles.pickerItem} 
+                onPress={() => processImage('camera')}
+              >
+                <View style={[styles.pickerIconWrap, { backgroundColor: colors.primary + '15' }]}>
+                  <Icon name="camera" size={24} color={colors.primary} />
+                </View>
+                <Text style={[typography.small, { color: colors.textPrimary }]}>Camera</Text>
+              </Pressable>
+
+              <Pressable 
+                style={styles.pickerItem} 
+                onPress={() => processImage('gallery')}
+              >
+                <View style={[styles.pickerIconWrap, { backgroundColor: '#8B5CF6' + '15' }]}>
+                  <Icon name="image" size={24} color="#8B5CF6" />
+                </View>
+                <Text style={[typography.small, { color: colors.textPrimary }]}>Gallery</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
       <LogoutModal
         visible={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
@@ -503,14 +572,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  avatar: {
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  avatarCircle: {
     width: 96,
     height: 96,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   avatarImage: {
     width: '100%',
@@ -591,15 +668,19 @@ const styles = StyleSheet.create({
   },
   cameraOverlay: {
     position: 'absolute',
-    bottom: 4,
-    right: 4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    bottom: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#FFF',
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   uploadingOverlay: {
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -630,6 +711,42 @@ const styles = StyleSheet.create({
   bubble: {
     position: 'absolute',
     opacity: 0.6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  pickerLine: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    marginBottom: 20,
+  },
+  pickerOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  pickerItem: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  pickerIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
 });
 

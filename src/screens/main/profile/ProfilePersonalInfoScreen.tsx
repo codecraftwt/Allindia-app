@@ -65,6 +65,7 @@ function formatDobDisplay(iso: string) {
     'Oct',
     'Nov',
     'Dec',
+    'Inter',
   ];
   return `${d} ${months[mi]} ${y}`;
 }
@@ -82,8 +83,7 @@ const GenderChip: React.FC<{
   const animatedStyle = useAnimatedStyle(() => {
     const bgColor = selected ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
     const borderColor = selected ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
-    const textColor = selected ? (colors?.primary || '#2563EB') : (colors?.textSecondary || '#6B7280');
-    
+
     return {
       transform: [{ scale: scale.value }],
       backgroundColor: withTiming(bgColor, { duration: 250 }),
@@ -140,28 +140,28 @@ const SkeletonItem: React.FC<{ width?: any; height: number; borderRadius?: numbe
   });
 
   return (
-    <View 
+    <View
       style={[
-        { 
-          width, 
-          height, 
-          borderRadius, 
-          backgroundColor: colors.surfaceSecondary, 
-          overflow: 'hidden' 
-        }, 
+        {
+          width,
+          height,
+          borderRadius,
+          backgroundColor: colors.surfaceSecondary,
+          overflow: 'hidden'
+        },
         style
       ]}
     >
-      <Animated.View 
+      <Animated.View
         style={[
-          shimmerStyle, 
-          { 
-            width: '50%', 
-            height: '100%', 
-            backgroundColor: 'rgba(255,255,255,0.3)', 
-            position: 'absolute' 
+          shimmerStyle,
+          {
+            width: '50%',
+            height: '100%',
+            backgroundColor: 'rgba(255,255,255,0.3)',
+            position: 'absolute'
           }
-        ]} 
+        ]}
       />
     </View>
   );
@@ -191,7 +191,7 @@ const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const bColor = colors?.border || '#E5E7EB';
     const pColor = colors?.primary || '#2563EB';
-    
+
     return {
       borderColor: interpolateColor(
         focusValue.value,
@@ -277,11 +277,16 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   }, [dispatch, cities.length]);
 
   React.useEffect(() => {
-    if (profileData?.profile?.personal) {
-      const p = profileData.profile.personal;
-      const pref = profileData.profile.preferences;
+    if (profileData?.personal) {
+      const p = profileData.personal;
+      const pref = profileData.preferences;
 
-      let city = pref?.current_city || '';
+      let city = '';
+      if (typeof pref?.current_city === 'object' && pref.current_city !== null) {
+        city = pref.current_city.city || '';
+      } else {
+        city = pref?.current_city || '';
+      }
       let area = '';
       if (p.address && p.address.includes(',')) {
         const parts = p.address.split(',');
@@ -297,6 +302,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         dateOfBirth: p.date_of_birth || '',
         city: city,
         area: area,
+        boundary: '',
         bio: p.bio || '',
       });
     }
@@ -307,11 +313,8 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const phone = user?.phone || '';
 
   const canSave =
-    draft.fullName.trim().length >= 2 &&
-    draft.gender !== '' &&
-    draft.dateOfBirth !== '' &&
+    (draft.fullName.trim() || user?.name || '').length >= 2 &&
     draft.city.trim().length > 0 &&
-    draft.area.trim().length >= 2 &&
     !profileLoading;
 
   const handleSave = async () => {
@@ -341,9 +344,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ProfileEditLayout
-      title="Personal info"
-      subtitle="Your name, identity, and where you’re based — used across job matches.">
-
+      title="Personal info">
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Full name</Text>
@@ -497,27 +498,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         5
       )}
 
-      {renderSection(
-        <>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Area / locality
-          </Text>
-          <AnimatedInput
-            value={draft.area}
-            onChangeText={t => updateDraft({ area: t })}
-            placeholder="e.g. Koramangala, Andheri West"
-            placeholderTextColor={colors.textPlaceholder}
-            style={[
-              styles.input,
-              {
-                color: colors.textPrimary,
-                backgroundColor: colors.surface,
-              },
-            ]}
-          />
-        </>,
-        6
-      )}
+
 
       {renderSection(
         <>
@@ -798,9 +779,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    fontSize: 16,
-    fontFamily: typography.body.fontFamily,
-    height: 120,
+    minHeight: 100,
     textAlignVertical: 'top',
   },
 });

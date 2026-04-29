@@ -251,7 +251,7 @@ export const updateProfilePicture = createAsyncThunk(
       const formData = new FormData();
       formData.append('profile_picture', {
         uri: file.uri,
-        name: file.name,
+        name: file.name || `profile_${Date.now()}.jpg`,
         type: file.type || 'image/jpeg',
       } as any);
 
@@ -262,6 +262,7 @@ export const updateProfilePicture = createAsyncThunk(
         },
       });
       
+      // Refresh profile data after image upload
       dispatch(fetchProfile());
       return response.data;
     } catch (error: any) {
@@ -288,6 +289,68 @@ export const fetchProfileCompletion = createAsyncThunk(
   }
 );
 
+export const fetchApplicationCounts = createAsyncThunk(
+  'profile/fetchApplicationCounts',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/application-counts', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch application counts');
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  'profile/changePassword',
+  async (passwordData: {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+  }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.post('api/candidate/change-password', passwordData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.response?.data?.message || 'Failed to change password');
+    }
+  }
+);
+
+export const deleteAccount = createAsyncThunk(
+  'profile/deleteAccount',
+  async (deleteData: {
+    password: string;
+    deletion_reason: string;
+  }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.delete('api/candidate/account', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: deleteData, // DELETE request body
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.response?.data?.message || 'Failed to delete account');
+    }
+  }
+);
+
 const profileSlice = createSlice({
   name: 'profile',
   initialState: { 
@@ -295,7 +358,9 @@ const profileSlice = createSlice({
     completion: null as any,
     appliedJobs: [] as any[],
     wishlistJobs: [] as any[],
+    applicationCounts: null as any,
     loading: false,
+    countsLoading: false,
     error: null as string | null
   },
   reducers: {
@@ -314,7 +379,8 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload.data;
+        state.data = action.payload.data.profile; // Map to .profile for easier access
+        state.completion = action.payload.data.profile.completion;
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
@@ -438,8 +504,12 @@ const profileSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateProfilePicture.fulfilled, (state) => {
+      .addCase(updateProfilePicture.fulfilled, (state, action) => {
         state.loading = false;
+        // Update local state immediately with new image from response
+        if (state.data && action.payload.data?.user?.profile_picture_url) {
+          state.data.personal.profile_picture_url = action.payload.data.user.profile_picture_url;
+        }
       })
       .addCase(updateProfilePicture.rejected, (state, action) => {
         state.loading = false;
@@ -453,6 +523,41 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfileCompletion.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+      .addCase(fetchApplicationCounts.pending, (state) => {
+        state.countsLoading = true;
+      })
+      .addCase(fetchApplicationCounts.fulfilled, (state, action) => {
+        state.countsLoading = false;
+        state.applicationCounts = action.payload.data.counts;
+      })
+      .addCase(fetchApplicationCounts.rejected, (state) => {
+        state.countsLoading = false;
+      })
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        // Handle nested error messages if available
+        const errorData = action.payload as any;
+        state.error = errorData?.message || 'Failed to change password';
+      })
+      .addCase(deleteAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAccount.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(deleteAccount.rejected, (state, action) => {
+        state.loading = false;
+        const errorData = action.payload as any;
+        state.error = errorData?.message || 'Failed to delete account';
       });
   },
 });

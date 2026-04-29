@@ -77,7 +77,7 @@ const MainTabNavigator: React.FC = () => {
           tabBarIcon: ({ color, focused }) => <TabItem name="home" color={color} focused={focused} colors={colors} />,
         }}
       />
-      
+
       <Tab.Screen
         name="Applications"
         component={ApplicationsScreen}
@@ -96,14 +96,14 @@ const MainTabNavigator: React.FC = () => {
         }}
       />
 
-      <Tab.Screen
+      {/* <Tab.Screen
         name="JobReels"
         component={JobReelsStackNavigator}
         options={{
           tabBarLabel: 'Reels',
           tabBarIcon: ({ color, focused }) => <TabItem name="play-circle" color={color} focused={focused} colors={colors} />,
         }}
-      />
+      /> */}
 
       <Tab.Screen
         name="Profile"

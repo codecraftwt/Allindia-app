@@ -130,12 +130,24 @@ function JobTrendCard({
           shadowColor: colors.shadow,
         },
       ]}>
-      <View style={[styles.hotBadge, { backgroundColor: colors.warningBackground }]}>
-        <Icon name="fire" size={11} color={colors.warning} />
-        <Text style={[typography.small, { color: colors.warning, fontFamily: typography.labelMedium.fontFamily }]}>
-          Trending
-        </Text>
-      </View>
+      {job.tags && job.tags.length > 0 && (
+        <View style={[
+          styles.hotBadge, 
+          { backgroundColor: colors.primary + '15' }
+        ]}>
+          <Icon name="tag" size={11} color={colors.primary} />
+          <Text style={[
+            typography.small, 
+            { 
+              color: colors.primary, 
+              fontFamily: typography.labelMedium.fontFamily,
+              marginLeft: 4
+            }
+          ]}>
+            {job.tags[0]}
+          </Text>
+        </View>
+      )}
       <Text style={[typography.jobTitle, styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={2}>
         {job.title}
       </Text>
@@ -291,6 +303,10 @@ const HomeScreen: React.FC = () => {
   // Filter Grid States
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // List Visibility States
+  const [showAllNearby, setShowAllNearby] = useState(false);
+  const [showAllRecommended, setShowAllRecommended] = useState(false);
 
   const scrollY = useMemo(() => new Animated.Value(0), []);
 
@@ -642,9 +658,9 @@ const HomeScreen: React.FC = () => {
               </View>
             </Pressable>
 
-            <SectionHeader 
-              title="Categories" 
-              colors={colors} 
+            <SectionHeader
+              title="Categories"
+              colors={colors}
               onPress={() => navigation.navigate('JobCategories')}
             />
 
@@ -695,6 +711,26 @@ const HomeScreen: React.FC = () => {
               ))}
             </ScrollView>
 
+            {latest && latest.length > 0 && (
+              <>
+                <SectionHeader title="Latest jobs" icon="clock-o" iconColor={colors.success} colors={colors} />
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.trendingScroll}
+                  decelerationRate="fast">
+                  {latest.map((job: any) => (
+                    <JobTrendCard
+                      key={job.id}
+                      job={{ ...job, isLatest: true }}
+                      colors={colors}
+                      onPress={() => openJob(job)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
             {trending && trending.length > 0 && (
               <>
                 <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
@@ -719,10 +755,19 @@ const HomeScreen: React.FC = () => {
               <>
                 <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
                 <View style={styles.verticalList}>
-                  {nearby.map((job: any) => (
+                  {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
                     <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
                   ))}
                 </View>
+                {nearby.length > 5 && !showAllNearby && (
+                  <TouchableOpacity 
+                    onPress={() => setShowAllNearby(true)}
+                    style={styles.viewMoreVertical}
+                  >
+                    <Text style={[typography.labelMedium, { color: colors.primary }]}>View {nearby.length - 5} More Nearby Jobs</Text>
+                    <Icon name="chevron-down" size={14} color={colors.primary} />
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
@@ -730,21 +775,19 @@ const HomeScreen: React.FC = () => {
               <>
                 <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
                 <View style={styles.verticalList}>
-                  {recommended.map((job: any) => (
+                  {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
                     <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
                   ))}
                 </View>
-              </>
-            )}
-
-            {latest && latest.length > 0 && (
-              <>
-                <SectionHeader title="Latest jobs" icon="clock-o" iconColor={colors.success} colors={colors} />
-                <View style={styles.verticalList}>
-                  {latest.map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
-                  ))}
-                </View>
+                {recommended.length > 5 && !showAllRecommended && (
+                  <TouchableOpacity 
+                    onPress={() => setShowAllRecommended(true)}
+                    style={styles.viewMoreVertical}
+                  >
+                    <Text style={[typography.labelMedium, { color: colors.primary }]}>View {recommended.length - 5} More Recommendations</Text>
+                    <Icon name="chevron-down" size={14} color={colors.primary} />
+                  </TouchableOpacity>
+                )}
               </>
             )}
 
@@ -965,6 +1008,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
+    marginTop: spacing.md,
     overflow: 'hidden',
     ...components.jobCard,
     shadowOpacity: 0.2,
@@ -1039,7 +1083,7 @@ const styles = StyleSheet.create({
     paddingRight: spacing.lg,
   },
   trendCard: {
-    padding: spacing.md,
+    padding: spacing.sm,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
@@ -1052,7 +1096,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
-    marginBottom: spacing.sm,
+    marginBottom: 6,
   },
   cardTitle: {
     minHeight: 44,
@@ -1061,17 +1105,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: spacing.sm,
+    marginTop: 4,
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   typePill: {
     alignSelf: 'flex-start',
-    marginTop: spacing.sm,
+    marginTop: 4,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
@@ -1152,6 +1196,15 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: radius.card,
     marginBottom: spacing.md,
+  },
+  viewMoreVertical: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: 8,
+    marginTop: -spacing.xs,
+    marginBottom: spacing.sm,
   },
 });
 
