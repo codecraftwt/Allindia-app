@@ -75,7 +75,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">
           <Icon name="chevron-left" size={22} color={colors.textPrimary} />
@@ -97,7 +97,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
         SectionSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         contentContainerStyle={[
           styles.listContent,
-          { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+          { paddingBottom: spacing.md },
         ]}
         showsVerticalScrollIndicator={false}
         stickySectionHeadersEnabled={false}

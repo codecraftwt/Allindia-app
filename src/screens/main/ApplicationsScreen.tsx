@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   RefreshControl,
   Image,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -125,6 +127,15 @@ const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const { appliedJobs, applicationCounts, loading, countsLoading } = useSelector((state: RootState) => state.profile);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAppliedJobs = React.useMemo(() => {
+    if (!searchQuery) return appliedJobs;
+    return appliedJobs.filter((job: any) => 
+      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.employer?.company?.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [appliedJobs, searchQuery]);
 
   const onRefresh = React.useCallback(() => {
     dispatch(fetchAppliedJobs());
@@ -256,20 +267,36 @@ const ApplicationsScreen: React.FC = () => {
           <Text style={{ color: colors.primary, fontWeight: '700' }}>{appliedJobs.length} Jobs</Text>
         </View>
 
+        {/* Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="search" size={16} color={colors.textPlaceholder} />
+          <TextInput
+            placeholder="Search applications..."
+            placeholderTextColor={colors.textPlaceholder}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={styles.list}>
-          {appliedJobs.length > 0 ? (
-            appliedJobs.map((job: any) => (
+          {filteredAppliedJobs.length > 0 ? (
+            filteredAppliedJobs.map((job: any) => (
               <AppliedJobCard key={job.id} job={job} colors={colors} />
             ))
           ) : !loading ? (
             <View style={styles.emptyContainer}>
-              <Icon name="file-text-o" size={48} color={colors.border} />
+              <Icon name={searchQuery ? "search-minus" : "file-text-o"} size={48} color={colors.border} />
               <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-                No applications yet
+                {searchQuery ? "No matching applications" : "No applications yet"}
               </Text>
               <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-                Applied jobs will appear here
+                {searchQuery ? "Try a different search term" : "Applied jobs will appear here"}
               </Text>
             </View>
           ) : null}
@@ -442,6 +469,21 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    height: 48,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    padding: 0,
   },
 });
 

@@ -5,8 +5,10 @@ export type HomeStackParamList = {
   JobDetail: JobDetailParams;
   Notifications: undefined;
   SearchHome: undefined;
-  JobListing: { query?: string; filters?: any } | undefined;
-  JobCategories: undefined;
+  JobListing: { query?: string; filters?: any };
+  SearchResults: { query: string };
+  JobDetail: { jobId: string };
+  CategoryJobs: { categoryId?: string; section?: string } | undefined;
 };
 
 export type SearchStackParamList = {
@@ -14,6 +16,7 @@ export type SearchStackParamList = {
   JobListing: { query?: string; filters?: any } | undefined;
   JobDetail: JobDetailParams;
   JobCategories: undefined;
+  CategoryJobs: { categoryId?: number; categoryName?: string } | undefined;
 };
 
 export type SavedStackParamList = {

@@ -1,5 +1,17 @@
-import React from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View, Image, RefreshControl, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { 
+  FlatList, 
+  Pressable, 
+  StyleSheet, 
+  Text, 
+  View, 
+  Image, 
+  RefreshControl, 
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  Dimensions
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../redux/store';
 import { fetchWishlist } from '../../redux/slice/profileSlice';
@@ -8,7 +20,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { PrimaryButton } from '../../components/auth/PrimaryButton';
 import { useTheme } from '../../context/ThemeContext';
 import type { SavedStackParamList } from '../../navigation/types';
 import type { ThemeColors } from '../../theme/colors';
@@ -16,6 +27,8 @@ import { components } from '../../theme/components';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+
+const { width } = Dimensions.get('window');
 
 type SavedNav = StackNavigationProp<SavedStackParamList, 'SavedJobs'>;
 
@@ -30,7 +43,6 @@ function SavedJobCard({
   onRemove: () => void;
   onOpenDetail: () => void;
 }) {
-
   const company = job.employer?.company || {};
   const location = job.location?.label || 'Remote';
 
@@ -65,10 +77,7 @@ function SavedJobCard({
         </Pressable>
         
         <TouchableOpacity 
-          onPress={() => {
-       
-            onRemove();
-          }} 
+          onPress={onRemove} 
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           style={styles.removeBtn}
           activeOpacity={0.6}
@@ -82,12 +91,6 @@ function SavedJobCard({
           <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
           <Text style={[typography.tiny, { color: colors.textSecondary }]}>{location}</Text>
         </View>
-        {/* <View style={styles.footerItem}>
-          <Icon name="money" size={12} color={colors.textPlaceholder} />
-          <Text style={[typography.tiny, { color: colors.textSecondary }]}>
-            ₹{job.salary_min?.toLocaleString()} - ₹{job.salary_max?.toLocaleString()}
-          </Text>
-        </View> */}
         <View style={[styles.typeBadge, { backgroundColor: colors.surfaceHighlight }]}>
           <Text style={[typography.tiny, { color: colors.primary }]}>
             {job.job_type === 'full_time' ? 'Full Time' : job.job_type || 'Part Time'}
@@ -105,15 +108,30 @@ const SavedJobsScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { wishlistJobs, loading } = useSelector((state: RootState) => state.profile);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; jobId: number | null }>({
+    visible: false,
+    jobId: null,
+  });
+
   React.useEffect(() => {
     dispatch(fetchWishlist());
   }, [dispatch]);
 
-  const handleRemove = React.useCallback((jobId: number) => {
-   
-    // Directly dispatching for testing to see if API hits
-    dispatch(toggleWishlist({ jobId, isWishlisted: true }));
-  }, [dispatch]);
+  const filteredJobs = useMemo(() => {
+    if (!searchQuery) return wishlistJobs;
+    return wishlistJobs.filter((job: any) => 
+      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.employer?.company?.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [wishlistJobs, searchQuery]);
+
+  const handleConfirmRemove = () => {
+    if (confirmModal.jobId) {
+      dispatch(toggleWishlist({ jobId: confirmModal.jobId, isWishlisted: true }));
+      setConfirmModal({ visible: false, jobId: null });
+    }
+  };
 
   const handleOpenDetail = (jobId: number) => {
     navigation.navigate('JobDetail', { jobId: jobId.toString() });
@@ -122,39 +140,56 @@ const SavedJobsScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
-        <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Saved jobs</Text>
-        <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>
-          Jobs you have bookmarked
-        </Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Saved jobs</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>
+              {wishlistJobs.length} jobs bookmarked
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.searchContainer, { backgroundColor: colors.surfaceHighlight }]}>
+          <Icon name="search" size={16} color={colors.textPlaceholder} />
+          <TextInput
+            placeholder="Search saved jobs..."
+            placeholderTextColor={colors.textPlaceholder}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery !== '' && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+
       <FlatList
-        data={wishlistJobs}
+        data={filteredJobs}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
           <SavedJobCard
             job={item}
             colors={colors}
-            onRemove={() => {
-          
-              handleRemove(item.id);
-            }}
+            onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
             onOpenDetail={() => handleOpenDetail(item.id)}
           />
         )}
         contentContainerStyle={[
           styles.listContent,
-          wishlistJobs.length === 0 && styles.listEmpty,
-          { paddingBottom: 0 },
+          filteredJobs.length === 0 && styles.listEmpty,
         ]}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListEmptyComponent={!loading ? (
           <View style={styles.emptyContainer}>
-            <Icon name="heart-o" size={48} color={colors.border} />
+            <Icon name={searchQuery ? "search-minus" : "heart-o"} size={48} color={colors.border} />
             <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-              No saved jobs yet
+              {searchQuery ? "No matching jobs" : "No saved jobs yet"}
             </Text>
             <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-              Jobs you wishlist will appear here
+              {searchQuery ? "Try a different search term" : "Jobs you wishlist will appear here"}
             </Text>
           </View>
         ) : null}
@@ -167,6 +202,42 @@ const SavedJobsScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={confirmModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmModal({ visible: false, jobId: null })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIcon, { backgroundColor: colors.error + '20' }]}>
+              <Icon name="trash" size={24} color={colors.error} />
+            </View>
+            <Text style={[typography.labelLarge, { color: colors.textPrimary, marginBottom: 8 }]}>
+              Remove Saved Job?
+            </Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>
+              Are you sure you want to remove this job from your bookmarks?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                onPress={() => setConfirmModal({ visible: false, jobId: null })}
+                style={[styles.modalBtn, { backgroundColor: colors.surfaceHighlight }]}
+              >
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleConfirmRemove}
+                style={[styles.modalBtn, { backgroundColor: colors.error }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -182,9 +253,36 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
+    gap: spacing.md,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filterBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    height: 48,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    padding: 0,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
@@ -192,7 +290,6 @@ const styles = StyleSheet.create({
   listEmpty: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingVertical: spacing.xl,
   },
   card: {
     ...components.jobCard,
@@ -244,7 +341,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxl * 2,
+    paddingVertical: spacing.xxl,
     flex: 1,
   },
   removeBtn: {
@@ -254,6 +351,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(239, 68, 68, 0.08)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    width: width - spacing.xl * 2,
+    maxWidth: 400,
+    padding: spacing.xl,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -132,14 +133,14 @@ function JobTrendCard({
       ]}>
       {job.tags && job.tags.length > 0 && (
         <View style={[
-          styles.hotBadge, 
+          styles.hotBadge,
           { backgroundColor: colors.primary + '15' }
         ]}>
           <Icon name="tag" size={11} color={colors.primary} />
           <Text style={[
-            typography.small, 
-            { 
-              color: colors.primary, 
+            typography.small,
+            {
+              color: colors.primary,
               fontFamily: typography.labelMedium.fontFamily,
               marginLeft: 4
             }
@@ -672,7 +673,7 @@ const HomeScreen: React.FC = () => {
               {categories.map(cat => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: cat.id } })}
+                  onPress={() => navigation.navigate('CategoryJobs', { categoryId: cat.id, categoryName: cat.name })}
                   style={[
                     styles.categoryChip,
                     {
@@ -692,7 +693,7 @@ const HomeScreen: React.FC = () => {
               {categories.length === 0 && HOME_CATEGORIES.map(cat => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: cat.id } })}
+                  onPress={() => navigation.navigate('CategoryJobs', { categoryId: undefined, categoryName: cat.label })}
                   style={[
                     styles.categoryChip,
                     {
@@ -713,7 +714,13 @@ const HomeScreen: React.FC = () => {
 
             {latest && latest.length > 0 && (
               <>
-                <SectionHeader title="Latest jobs" icon="clock-o" iconColor={colors.success} colors={colors} />
+                <SectionHeader
+                  title="Latest jobs"
+                  icon="clock-o"
+                  iconColor={colors.success}
+                  colors={colors}
+                  onPress={() => navigation.navigate('CategoryJobs')}
+                />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -733,7 +740,13 @@ const HomeScreen: React.FC = () => {
 
             {trending && trending.length > 0 && (
               <>
-                <SectionHeader title="Trending jobs" icon="fire" iconColor={colors.warning} colors={colors} />
+                <SectionHeader
+                  title="Trending jobs"
+                  icon="fire"
+                  iconColor={colors.warning}
+                  colors={colors}
+                  onPress={() => navigation.navigate('CategoryJobs')}
+                />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -760,7 +773,7 @@ const HomeScreen: React.FC = () => {
                   ))}
                 </View>
                 {nearby.length > 5 && !showAllNearby && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setShowAllNearby(true)}
                     style={styles.viewMoreVertical}
                   >
@@ -780,7 +793,7 @@ const HomeScreen: React.FC = () => {
                   ))}
                 </View>
                 {recommended.length > 5 && !showAllRecommended && (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setShowAllRecommended(true)}
                     style={styles.viewMoreVertical}
                   >
@@ -827,9 +840,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xs, // Reduced even more
-    maxWidth: 520,
+    maxWidth: '100%',
     width: '100%',
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -842,9 +855,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: 136,
-    maxWidth: 520,
+    maxWidth: '100%',
     width: '100%',
-    alignSelf: 'center',
+    alignSelf: 'stretch',
   },
   headerBlock: {
     gap: spacing.xs,
@@ -1006,8 +1019,8 @@ const styles = StyleSheet.create({
   },
   heroBanner: {
     borderRadius: radius.xl,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     marginTop: spacing.md,
     overflow: 'hidden',
     ...components.jobCard,
@@ -1046,8 +1059,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
-    marginTop: spacing.sm,
+    marginBottom: 4,
+    marginTop: 4,
   },
   sectionIcon: {
     marginRight: spacing.sm,
@@ -1060,12 +1073,12 @@ const styles = StyleSheet.create({
   categoryChip: {
     minWidth: 84,
     maxWidth: 104,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.card,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: 6,
+    borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 4,
     ...components.jobCard,
     shadowOpacity: 0.04,
     elevation: 1,
@@ -1083,8 +1096,8 @@ const styles = StyleSheet.create({
     paddingRight: spacing.lg,
   },
   trendCard: {
-    padding: spacing.sm,
-    borderRadius: radius.card,
+    padding: 8,
+    borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
   },
@@ -1105,7 +1118,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 4,
+    marginTop: 2,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -1125,8 +1138,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   listCard: {
-    padding: spacing.md,
-    borderRadius: radius.card,
+    padding: 10,
+    borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
   },
@@ -1148,8 +1161,8 @@ const styles = StyleSheet.create({
   listMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
-    marginTop: spacing.md,
+    gap: 12,
+    marginTop: 8,
   },
   metaItem: {
     flexDirection: 'row',
@@ -1161,7 +1174,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
+    marginTop: 8,
   },
   typePillSm: {
     paddingHorizontal: spacing.sm,

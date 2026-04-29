@@ -60,11 +60,19 @@ const metaSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(fetchMetaCities.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(fetchMetaCities.fulfilled, (state, action) => {
-        state.cities = action.payload.data.cities;
+        state.loading = false;
+        state.cities = action.payload.data.cities || [];
+      })
+      .addCase(fetchMetaCities.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       .addCase(fetchMetaQualifications.fulfilled, (state, action) => {
-        state.qualifications = action.payload.data.qualifications;
+        state.qualifications = action.payload.data.qualifications || [];
       });
   },
 });

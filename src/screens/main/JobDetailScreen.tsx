@@ -363,7 +363,7 @@ const JobDetailScreen: React.FC = () => {
           </Text>
         </View>
 
-        <View style={styles.keyHighlights}>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SectionTitle title="Key Highlights" colors={colors} />
           <View style={styles.infoGrid}>
             <InfoRow label="Gender" value={currentJob.gender || 'Any'} icon="venus-mars" colors={colors} />
@@ -379,7 +379,7 @@ const JobDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={{ marginTop: spacing.lg }}>
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title="Description" colors={colors} />
           <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
             {currentJob.description || 'No description provided.'}
@@ -387,7 +387,7 @@ const JobDetailScreen: React.FC = () => {
         </View>
 
         {currentJob.employer?.company && (
-          <View style={styles.companySection}>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title="About Company" colors={colors} />
             <View style={styles.companyHeader}>
               {currentJob.employer.company.company_logo_url ? (
@@ -430,7 +430,7 @@ const JobDetailScreen: React.FC = () => {
         )}
 
         {currentJob.questions && currentJob.questions.length > 0 && (
-          <View style={{ marginTop: spacing.lg }}>
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title="Screening Questions" colors={colors} />
             {currentJob.questions.map((q: any) => (
               <View key={q.id} style={styles.questionBlock}>
@@ -591,6 +591,12 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     marginTop: 7,
+  },
+  sectionCard: {
+    padding: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    marginTop: spacing.lg,
   },
   footer: {
     ...components.jobCard,

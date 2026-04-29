@@ -59,6 +59,12 @@ const Section = React.memo(({ title, subtitle, children, colors }: any) => (
 
 const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onToggle, onSelectSub, colors }: any) => {
   const rotation = useSharedValue(0);
+  
+  const hasSelection = useMemo(() => 
+    category.subcategories.some((sub: any) => selectedIds.includes(sub.id)),
+    [category.subcategories, selectedIds]
+  );
+
   useEffect(() => {
     rotation.value = withTiming(isExpanded ? 180 : 0);
   }, [isExpanded]);
@@ -68,11 +74,36 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
   }));
 
   return (
-    <View style={[styles.accordion, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Pressable onPress={() => onToggle(category.id.toString())} style={styles.accordionHeader}>
-        <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>{category.name}</Text>
+    <View style={[
+      styles.accordion, 
+      { 
+        backgroundColor: colors.surface, 
+        borderColor: hasSelection ? colors.primary : colors.border,
+        borderWidth: hasSelection ? 1.5 : 1
+      }
+    ]}>
+      <Pressable 
+        onPress={() => onToggle(category.id.toString())} 
+        style={[
+          styles.accordionHeader,
+          hasSelection && { backgroundColor: colors.primary + '08' }
+        ]}
+      >
+        <Text style={[
+          typography.body, 
+          { 
+            color: hasSelection ? colors.primary : colors.textPrimary, 
+            flex: 1,
+            fontWeight: hasSelection ? '700' : '400'
+          }
+        ]}>
+          {category.name}
+          {hasSelection && (
+            <Text style={[typography.small, { color: colors.primary }]}> (Selected)</Text>
+          )}
+        </Text>
         <Animated.View style={arrowStyle}>
-          <Icon name="chevron-down" size={18} color={colors.textPlaceholder} />
+          <Icon name="chevron-down" size={18} color={hasSelection ? colors.primary : colors.textPlaceholder} />
         </Animated.View>
       </Pressable>
       {isExpanded && (

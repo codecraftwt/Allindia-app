@@ -59,7 +59,7 @@ const SearchScreen: React.FC = () => {
         const next = [trimmed, ...prev.filter(x => x.toLowerCase() !== trimmed.toLowerCase())];
         return next.slice(0, 8);
       });
-      navigation.navigate('JobListing', { query: trimmed });
+      navigation.navigate('SearchResults', { query: trimmed });
     },
     [navigation],
   );

@@ -366,7 +366,9 @@ const ProfileOverviewScreen: React.FC = () => {
             {displayEmail}
           </Text>
 
-          <AnimatedProgressBar colors={colors} progress={completion?.percentage || 0} />
+          {completion?.percentage < 100 && (
+            <AnimatedProgressBar colors={colors} progress={completion?.percentage || 0} />
+          )}
 
           <PrimaryButton
             title="Edit profile"

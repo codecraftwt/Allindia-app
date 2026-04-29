@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View, Alert, ToastAndroid, Platform, Modal
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { uploadResume, deleteResume } from '../../../redux/slice/profileSlice';
-import { pick, isCancel, types } from '@react-native-documents/picker';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../../components/auth';
@@ -73,10 +73,10 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
       }
       
     } catch (err) {
-      if (!isCancel(err)) {
-    
-        Alert.alert('Error', 'Failed to pick file.');
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+        return;
       }
+      Alert.alert('Error', 'Failed to pick file.');
     }
   };
 
