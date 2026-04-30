@@ -14,7 +14,7 @@ export const AnimatedBackground = ({ colors }: { colors: ThemeColors }) => {
   React.useEffect(() => {
     anims.forEach((anim, i) => {
       const duration = 10000 + i * 2000;
-      
+
       const moveX = () => {
         Animated.sequence([
           Animated.timing(anim.x, { toValue: Math.random() * width, duration, useNativeDriver: true, easing: Easing.linear }),
@@ -37,22 +37,22 @@ export const AnimatedBackground = ({ colors }: { colors: ThemeColors }) => {
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: -1, backgroundColor: colors.background }]}>
       {anims.map((anim, i) => (
-        <Animated.View 
+        <Animated.View
           key={i}
           style={[
-            styles.bubble, 
-            { 
+            styles.bubble,
+            {
               backgroundColor: colors.primary + (i % 2 === 0 ? '08' : '04'),
               width: 150 + i * 50,
               height: 150 + i * 50,
               borderRadius: (150 + i * 50) / 2,
               transform: [
-                { translateX: anim.x }, 
+                { translateX: anim.x },
                 { translateY: anim.y },
                 { scale: anim.scale }
               ]
             }
-          ]} 
+          ]}
         />
       ))}
     </View>

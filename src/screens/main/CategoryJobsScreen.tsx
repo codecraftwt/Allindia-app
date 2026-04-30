@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { fetchJobs, fetchHomeFeed } from '../../redux/slice/jobSlice';
+import { fetchJobs, fetchHomeFeed, fetchJobsByCategory } from '../../redux/slice/jobSlice';
 import { fetchMetaCategories } from '../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../context/ThemeContext';
@@ -34,7 +34,7 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
   const tags = job.tags || [];
 
   return (
-    <Pressable 
+    <Pressable
       onPress={onPress}
       style={[styles.premiumCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
     >
@@ -93,31 +93,47 @@ const CategoryJobsScreen: React.FC = () => {
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const { latest, trending, nearby, recommended, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const { latest, trending, nearby, recommended, filteredJobs, jobsByCategory, loading } = useSelector((state: RootState) => state.jobs);
 
-  const [selectedId, setSelectedId] = useState<string>(route.params?.section || 'latest');
+  const categoryId = route.params?.categoryId;
+  const categoryName = route.params?.categoryName;
+
+  const [selectedId, setSelectedId] = useState<string>(route.params?.section || (categoryId ? 'all' : 'latest'));
   const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
-    if (selectedId === 'all') {
-      dispatch(fetchJobs({ per_page: 100 }));
+    if (categoryId) {
+      // Use the specific by-category API for industry categories
+      dispatch(fetchJobsByCategory({ 
+        category_id: categoryId,
+        jobs_per_category: 50 
+      }));
     } else {
-      // For other tabs, we use home feed data, but we can also fetch specifically if needed
-      dispatch(fetchHomeFeed());
+      if (selectedId === 'all') {
+        dispatch(fetchJobs({ per_page: 100 }));
+      } else {
+        dispatch(fetchHomeFeed());
+      }
     }
-  }, [dispatch, selectedId]);
+  }, [dispatch, selectedId, categoryId]);
 
   const applyAdvancedFilters = (filters: any) => {
     setActiveFilter(filters);
     setIsFiltered(true);
-    dispatch(fetchJobs({ 
+    dispatch(fetchJobs({
       ...filters,
-      per_page: 50 
+      per_page: 50
     }));
   };
 
   const jobsData = useMemo(() => {
     if (isFiltered) return recommended;
+    
+    // If in category mode, extract jobs from the first category in jobsByCategory
+    if (categoryId && jobsByCategory.length > 0) {
+      return jobsByCategory[0].jobs || [];
+    }
+
     switch (selectedId) {
       case 'all': return recommended;
       case 'latest': return latest;
@@ -126,7 +142,7 @@ const CategoryJobsScreen: React.FC = () => {
       case 'recommended': return recommended;
       default: return recommended;
     }
-  }, [selectedId, isFiltered, latest, trending, nearby, recommended]);
+  }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory]);
 
   const allTabs = useMemo(() => [
     { id: 'all', name: 'All Jobs' },
@@ -146,8 +162,8 @@ const CategoryJobsScreen: React.FC = () => {
         }}
         style={styles.tabContainer}>
         <Text style={[
-          isActive ? typography.labelMedium : typography.body, 
-          { 
+          isActive ? typography.labelMedium : typography.body,
+          {
             color: isActive ? colors.primary : colors.textSecondary,
             paddingHorizontal: spacing.sm,
           }
@@ -168,7 +184,7 @@ const CategoryJobsScreen: React.FC = () => {
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
         </Pressable>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center', marginRight: 40 }]}>
-          {allTabs.find(t => t.id === selectedId)?.name} Jobs
+          {categoryName || allTabs.find(t => t.id === selectedId)?.name} Jobs
         </Text>
       </View>
 
@@ -198,10 +214,10 @@ const CategoryJobsScreen: React.FC = () => {
           ]}
           ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           renderItem={({ item }) => (
-            <JobCard 
-              job={item} 
-              colors={colors} 
-              onPress={() => navigation.navigate('JobDetail', { jobId: item.id })} 
+            <JobCard
+              job={item}
+              colors={colors}
+              onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}
           ListEmptyComponent={() => (
@@ -215,7 +231,7 @@ const CategoryJobsScreen: React.FC = () => {
         />
       )}
 
-      <SideFilterHub 
+      <SideFilterHub
         colors={colors}
         activeFilter={activeFilter}
         onFilterSelect={applyAdvancedFilters}

@@ -22,11 +22,12 @@ import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
-import { logoutCandidate } from '../../../redux/slice/authSlice';
-import { changePassword, deleteAccount } from '../../../redux/slice/profileSlice';
+import { logoutCandidate, logout } from '../../../redux/slice/authSlice';
+import { changePassword, deleteAccount, clearProfile } from '../../../redux/slice/profileSlice';
 import { useNavigation } from '@react-navigation/native';
 import { logoutToLogin } from './logoutToLogin';
 import { PrimaryButton } from '../../../components/auth';
+import { useToast } from '../../../context/ToastContext';
 
 const AccountSettingItem = ({ 
   icon, 
@@ -66,6 +67,7 @@ const ProfileAccountSetting: React.FC = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { showToast } = useToast();
   
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
@@ -159,9 +161,11 @@ const ProfileAccountSetting: React.FC = () => {
         deletion_reason: deleteReason
       })).unwrap();
       
-      // Successfully deleted, now logout
-      await dispatch(logoutCandidate()).unwrap();
+      // Successfully deleted, now logout locally (don't call logout API as account is gone)
+      dispatch(logout());
+      dispatch(clearProfile());
       setShowDeleteModal(false);
+      showToast('Account deleted successfully', 'success');
       logoutToLogin(navigation);
     } catch (err: any) {
       let errorMessage = err.message || "Failed to delete account";

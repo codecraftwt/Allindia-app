@@ -10,7 +10,7 @@ import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const LOGO = require('../../assets/mainlogo.png');
+const LOGO = require('../../assets/logo/logo02.png');
 
 type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -57,16 +57,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         bounces={false}>
         <View style={styles.topBrand}>
           <Image source={LOGO} style={styles.smallLogo} resizeMode="contain" />
-          <Text style={[typography.small, { color: colors.textSecondary, letterSpacing: 1.2 }]}>
-            JOBINDIA
-          </Text>
+   
         </View>
 
         <Text style={[typography.appTitle, styles.headline, { color: colors.textPrimary }]}>
           Find your next job
         </Text>
         <Text style={[typography.body, styles.lead, { color: colors.textSecondary }]}>
-          Daily openings near you. Sign in with your mobile number—we'll text you a secure code.
+          Daily openings near you. Join us to find your dream job with ease.
         </Text>
 
         <View style={styles.featureList}>
@@ -119,7 +117,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.ctaBlock}>
-          <PrimaryButton
+          {/* <PrimaryButton
             title="Sign in with mobile"
             onPress={() => navigation.navigate('SignIn')}
             colors={colors}
@@ -129,22 +127,29 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             iconRight={
               <Icon name="arrow-right" size={20} color={colors.onPrimary} />
             }
-          />
+          /> */}
           <PrimaryButton
             title="Login"
             onPress={() => navigation.navigate('EmailLogin')}
             colors={colors}
             iconLeft={
-              <Icon name="mobile" size={22} color={colors.onPrimary} />
+              <Icon name="sign-in" size={22} color={colors.onPrimary} />
             }
-            iconRight={
-              <Icon name="arrow-right" size={20} color={colors.onPrimary} />
+    
+          />
+          <PrimaryButton
+            title="Register"
+            onPress={() => navigation.navigate('SignIn')}
+            colors={colors}
+            variant="outline"
+            iconLeft={
+              <Icon name="user-plus" size={20} color={colors.primary} />
             }
           />
           <View style={styles.trustRow}>
             <Icon name="lock" size={16} color={colors.textPlaceholder} />
             <Text style={[typography.small, { color: colors.textPlaceholder, flex: 1 }]}>
-              OTP verification — no password to remember
+              Secure login with email and password
             </Text>
           </View>
         </View>
@@ -174,8 +179,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   smallLogo: {
-    width: 52,
-    height: 52,
+    width: 202,
+    height: 102,
     marginBottom: spacing.sm,
   },
   headline: {

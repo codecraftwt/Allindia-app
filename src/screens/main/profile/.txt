@@ -366,3 +366,4 @@ export default ProfileJobPreferencesEditScreen;
 
 
 
+@contextScopeItemMention is profile view me na ek kam kar sakte he kya ?ki mere pass ke profile 

@@ -29,6 +29,7 @@ import { RootState, AppDispatch } from '../../redux/store';
 import { fetchAppliedJobs, fetchApplicationCounts } from '../../redux/slice/profileSlice';
 import { typography } from '../../theme/typography';
 import { AuthHeadline } from '../../components/auth';
+import GuestView from '../../components/GuestView';
 
 function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
   const application = job.application || {};
@@ -127,6 +128,7 @@ const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const { appliedJobs, applicationCounts, loading, countsLoading } = useSelector((state: RootState) => state.profile);
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredAppliedJobs = React.useMemo(() => {
@@ -148,7 +150,14 @@ const ApplicationsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView
+      {!isLoggedIn ? (
+        <GuestView 
+          title="Track Your Success"
+          subtitle="Register now to keep track of all your job applications and their current status."
+          icon="briefcase"
+        />
+      ) : (
+        <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -302,6 +311,7 @@ const ApplicationsScreen: React.FC = () => {
           ) : null}
         </View>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

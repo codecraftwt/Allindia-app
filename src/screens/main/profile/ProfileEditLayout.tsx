@@ -10,7 +10,7 @@ import {
   ListRenderItem,
   ScrollViewProps,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { AuthHeadline, AuthScreenHeader } from '../../../components/auth';
@@ -40,10 +40,11 @@ export const ProfileEditLayout: React.FC<Props> = ({
   scrollProps
 }) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
 
   const renderHeader = () => (
-    <View>
+    <View style={styles.headerWrap}>
       <AuthScreenHeader title="Profile" onBack={() => navigation.goBack()} colors={colors} />
       <AuthHeadline colors={colors} title={title} subtitle={subtitle} />
       {/* Inject additional header content if provided via scrollProps */}
@@ -61,7 +62,7 @@ export const ProfileEditLayout: React.FC<Props> = ({
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <View style={[styles.blob, { backgroundColor: `${colors.primary}0D`, top: -28, right: -40 }]} />
         <View style={[styles.blob, { backgroundColor: `${colors.primary}0A`, bottom: 72, left: -32 }]} />
@@ -69,7 +70,7 @@ export const ProfileEditLayout: React.FC<Props> = ({
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
 
         {useFlatList && flatListData && renderFlatItem ? (
@@ -108,13 +109,16 @@ export const ProfileEditLayout: React.FC<Props> = ({
 
       {/* Portals or Modals passed as children while in FlatList mode */}
       {useFlatList && children}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
+  headerWrap: {
+    marginBottom: spacing.xs,
+  },
   blob: {
     position: 'absolute',
     width: 160,
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.lg,
   },
   body: {

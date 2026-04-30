@@ -18,8 +18,9 @@ import Animated, {
   withRepeat,
   withSequence,
   interpolateColor,
-  interpolate
+  interpolate,
 } from 'react-native-reanimated';
+import { useToast } from '../../../context/ToastContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { updatePersonalProfile } from '../../../redux/slice/profileSlice';
@@ -46,28 +47,18 @@ const GENDERS: { id: Gender; label: string }[] = [
   { id: 'other', label: 'Other' },
 ];
 
+const MONTHS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+];
+
 function formatDobDisplay(iso: string) {
   if (!iso) {
     return '';
   }
   const [y, m, d] = iso.split('-');
   const mi = parseInt(m, 10) - 1;
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-    'Inter',
-  ];
-  return `${d} ${months[mi]} ${y}`;
+  return `${d} ${MONTHS[mi]} ${y}`;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -120,69 +111,7 @@ const GenderChip: React.FC<{
   );
 };
 
-const SkeletonItem: React.FC<{ width?: any; height: number; borderRadius?: number; style?: any }> = ({ width = '100%', height, borderRadius = radius.md, style }) => {
-  const { colors } = useTheme();
-  const shimmerValue = useSharedValue(-1);
 
-  React.useEffect(() => {
-    shimmerValue.value = withRepeat(
-      withTiming(1, { duration: 1500 }),
-      -1,
-      false
-    );
-  }, []);
-
-  const shimmerStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(shimmerValue.value, [-1, 1], [-200, 400]);
-    return {
-      transform: [{ translateX }],
-    };
-  });
-
-  return (
-    <View
-      style={[
-        {
-          width,
-          height,
-          borderRadius,
-          backgroundColor: colors.surfaceSecondary,
-          overflow: 'hidden'
-        },
-        style
-      ]}
-    >
-      <Animated.View
-        style={[
-          shimmerStyle,
-          {
-            width: '50%',
-            height: '100%',
-            backgroundColor: 'rgba(255,255,255,0.3)',
-            position: 'absolute'
-          }
-        ]}
-      />
-    </View>
-  );
-};
-
-const ProfileSkeleton = () => {
-  const { colors } = useTheme();
-  return (
-    <View style={{ gap: spacing.lg, paddingVertical: spacing.md }}>
-      <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
-        <SkeletonItem width={100} height={100} borderRadius={50} />
-      </View>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <View key={i} style={{ gap: spacing.xs }}>
-          <SkeletonItem width={120} height={16} />
-          <SkeletonItem height={50} borderRadius={radius.card} />
-        </View>
-      ))}
-    </View>
-  );
-};
 
 const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
   const focusValue = useSharedValue(0);
@@ -223,21 +152,263 @@ const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
   );
 };
 
+// --- Isolated DOB Picker Modal ---
+interface DobPickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (date: string) => void;
+  initialDate: string;
+  colors: any;
+  years: number[];
+}
+
+const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
+  visible,
+  onClose,
+  onSelect,
+  initialDate,
+  colors,
+  years,
+}) => {
+  const [currentDate, setCurrentDate] = useState(initialDate || new Date().toISOString().slice(0, 10));
+  const [viewMode, setViewMode] = useState<'calendar' | 'year' | 'month'>('calendar');
+
+  React.useEffect(() => {
+    if (visible) {
+      setCurrentDate(initialDate || new Date().toISOString().slice(0, 10));
+      setViewMode('calendar');
+    }
+  }, [visible, initialDate]);
+
+  const markedDates = useMemo(() => (
+    initialDate ? { [initialDate]: { selected: true, selectedColor: colors.primary } } : {}
+  ), [initialDate, colors.primary]);
+
+  const calendarTheme = useMemo(() => ({
+    backgroundColor: colors.surface,
+    calendarBackground: colors.surface,
+    textSectionTitleColor: colors.textSecondary,
+    selectedDayBackgroundColor: colors.primary,
+    selectedDayTextColor: colors.onPrimary,
+    todayTextColor: colors.primary,
+    dayTextColor: colors.textPrimary,
+    textDisabledColor: colors.textPlaceholder,
+    monthTextColor: colors.textPrimary,
+    arrowColor: colors.primary,
+    textDayFontFamily: typography.body.fontFamily,
+    textMonthFontFamily: typography.sectionTitle.fontFamily,
+    textDayHeaderFontFamily: typography.labelMedium.fontFamily,
+  }), [colors]);
+
+  const currentYear = currentDate.split('-')[0];
+  const currentMonthIdx = parseInt(currentDate.split('-')[1]) - 1;
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable
+          style={[styles.modalSheet, { backgroundColor: colors.surface }]}
+          onPress={e => e.stopPropagation()}>
+          <View style={styles.modalHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>DOB</Text>
+              <Pressable
+                onPress={() => setViewMode(viewMode === 'month' ? 'calendar' : 'month')}
+                style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
+              >
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>
+                  {MONTHS[currentMonthIdx]}
+                </Text>
+                <Icon name={viewMode === 'month' ? "chevron-up" : "chevron-down"} size={10} color={colors.primary} />
+              </Pressable>
+              <Pressable
+                onPress={() => setViewMode(viewMode === 'year' ? 'calendar' : 'year')}
+                style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
+              >
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>
+                  {currentYear}
+                </Text>
+                <Icon name={viewMode === 'year' ? "chevron-up" : "chevron-down"} size={10} color={colors.primary} />
+              </Pressable>
+            </View>
+            <Pressable 
+              onPress={() => {
+                onSelect(currentDate);
+                onClose();
+              }} 
+              hitSlop={12}
+            >
+              <Text style={[typography.labelMedium, { color: colors.primary }]}>Done</Text>
+            </Pressable>
+          </View>
+
+          {viewMode === 'year' ? (
+            <View style={{ height: 320 }}>
+              <FlatList
+                data={years}
+                keyExtractor={item => item.toString()}
+                initialScrollIndex={years.indexOf(parseInt(currentYear)) !== -1 ? years.indexOf(parseInt(currentYear)) : 0}
+                getItemLayout={(data, index) => ({ length: 50, offset: 50 * index, index })}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => {
+                      const parts = currentDate.split('-');
+                      setCurrentDate(`${item}-${parts[1]}-${parts[2]}`);
+                      setViewMode('calendar');
+                    }}
+                    style={[styles.yearRow, { borderBottomColor: colors.border }]}
+                  >
+                    <Text style={[
+                      typography.body,
+                      { color: currentYear === item.toString() ? colors.primary : colors.textPrimary, textAlign: 'center' }
+                    ]}>
+                      {item}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            </View>
+          ) : viewMode === 'month' ? (
+            <View style={{ padding: spacing.md, height: 320 }}>
+              <FlatList
+                data={MONTHS}
+                numColumns={3}
+                keyExtractor={item => item}
+                renderItem={({ item, index }) => (
+                  <Pressable
+                    onPress={() => {
+                      const parts = currentDate.split('-');
+                      setCurrentDate(`${parts[0]}-${String(index + 1).padStart(2, '0')}-${parts[2]}`);
+                      setViewMode('calendar');
+                    }}
+                    style={[
+                      styles.monthGridItem,
+                      {
+                        backgroundColor: currentMonthIdx === index ? colors.surfaceHighlight : colors.surface,
+                        borderColor: currentMonthIdx === index ? colors.primary : colors.border,
+                      }
+                    ]}
+                  >
+                    <Text style={[
+                      typography.labelMedium,
+                      { color: currentMonthIdx === index ? colors.primary : colors.textPrimary }
+                    ]}>
+                      {item}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            </View>
+          ) : (
+            <Calendar
+              current={currentDate}
+              onMonthChange={month => setCurrentDate(month.dateString)}
+              minDate="1950-01-01"
+              maxDate={new Date().toISOString().slice(0, 10)}
+              onDayPress={day => onSelect(day.dateString)}
+              markedDates={markedDates}
+              enableSwipeMonths
+              hideExtraDays
+              firstDay={1}
+              theme={calendarTheme}
+            />
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+});
+
+// --- Isolated City Picker Modal ---
+interface CityPickerModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (city: string) => void;
+  currentCity: string;
+  colors: any;
+  cities: any[];
+}
+
+const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
+  visible,
+  onClose,
+  onSelect,
+  currentCity,
+  colors,
+  cities,
+}) => {
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
+    if (!q) return source;
+    return source.filter(c => c.toLowerCase().includes(q));
+  }, [query, cities]);
+
+  React.useEffect(() => {
+    if (visible) setQuery('');
+  }, [visible]);
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable
+          style={[styles.citySheet, { backgroundColor: colors.surface }]}
+          onPress={e => e.stopPropagation()}>
+          <View style={styles.modalHeader}>
+            <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select city</Text>
+            <Pressable onPress={onClose} hitSlop={12}>
+              <Icon name="times" size={20} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Type to search…"
+            placeholderTextColor={colors.textPlaceholder}
+            style={[
+              styles.searchInput,
+              {
+                color: colors.textPrimary,
+                backgroundColor: colors.surfaceHighlight,
+                borderColor: colors.border,
+              },
+            ]}
+          />
+          <FlatList
+            data={filtered}
+            keyExtractor={item => item}
+            keyboardShouldPersistTaps="handled"
+            style={styles.cityList}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => onSelect(item)}
+                style={[
+                  styles.cityRow,
+                  { backgroundColor: currentCity === item ? colors.surfaceHighlight : 'transparent' },
+                ]}>
+                <Text style={[typography.body, { color: colors.textPrimary }]}>{item}</Text>
+              </Pressable>
+            )}
+          />
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+});
+
 const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
   const { draft, updateDraft } = useProfileSetup();
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const { cities } = useSelector((state: RootState) => state.meta);
-
-  // All State hooks
   const [dobOpen, setDobOpen] = useState(false);
-  const [yearPickerOpen, setYearPickerOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
-  const [cityQuery, setCityQuery] = useState('');
 
-  // All Memo hooks
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const yearList = [];
@@ -247,6 +418,16 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     return yearList;
   }, []);
 
+  const handleDaySelect = React.useCallback((date: string) => {
+    updateDraft({ dateOfBirth: date });
+    setDobOpen(false);
+  }, [updateDraft]);
+
+  const handleCitySelect = React.useCallback((city: string) => {
+    updateDraft({ city });
+    setCityOpen(false);
+  }, [updateDraft]);
+
   const markedDates = useMemo(
     () =>
       draft.dateOfBirth
@@ -255,26 +436,14 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     [colors.primary, draft.dateOfBirth],
   );
 
-  const filteredCities = useMemo(() => {
-    const q = cityQuery.trim().toLowerCase();
-    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
-    if (!q) {
-      return source;
-    }
-    return source.filter(c => c.toLowerCase().includes(q));
-  }, [cityQuery, cities]);
-
-  const calendarCurrent = useMemo(() => {
-    if (draft.dateOfBirth) return draft.dateOfBirth;
-    return new Date().toISOString().slice(0, 10);
-  }, [draft.dateOfBirth]);
-
-  // All Effect hooks
   React.useEffect(() => {
     if (cities.length === 0) {
       dispatch(fetchMetaCities());
     }
   }, [dispatch, cities.length]);
+
+
+
 
   React.useEffect(() => {
     if (profileData?.personal) {
@@ -327,9 +496,14 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         address: `${draft.city}, ${draft.area}`,
         bio: draft.bio,
       })).unwrap();
-      navigation.goBack();
-    } catch (error) {
-
+      
+      showToast('Profile updated successfully!', 'success');
+      
+      setTimeout(() => {
+        navigation.goBack();
+      }, 3000);
+    } catch (error: any) {
+       showToast(error || 'Failed to save profile', 'error');
     }
   };
 
@@ -345,7 +519,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <ProfileEditLayout
       title="Personal info">
-      {renderSection(
+        {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Full name</Text>
           <AnimatedInput
@@ -470,10 +644,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
             City
           </Text>
           <Pressable
-            onPress={() => {
-              setCityQuery('');
-              setCityOpen(true);
-            }}
+            onPress={() => setCityOpen(true)}
             style={[
               styles.selectField,
               {
@@ -533,139 +704,23 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         />
       </Animated.View>
 
-      <Modal visible={dobOpen} animationType="slide" transparent>
-        <Pressable style={styles.modalOverlay} onPress={() => setDobOpen(false)}>
-          <Pressable
-            style={[styles.modalSheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Date of birth</Text>
-                <Pressable
-                  onPress={() => setYearPickerOpen(!yearPickerOpen)}
-                  style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
-                >
-                  <Text style={[typography.labelMedium, { color: colors.primary }]}>
-                    {draft.dateOfBirth ? draft.dateOfBirth.split('-')[0] : new Date().getFullYear()}
-                  </Text>
-                  <Icon name={yearPickerOpen ? "chevron-up" : "chevron-down"} size={10} color={colors.primary} />
-                </Pressable>
-              </View>
-              <Pressable onPress={() => setDobOpen(false)} hitSlop={12}>
-                <Text style={[typography.labelMedium, { color: colors.primary }]}>Done</Text>
-              </Pressable>
-            </View>
+      <DobPickerModal
+        visible={dobOpen}
+        onClose={() => setDobOpen(false)}
+        onSelect={handleDaySelect}
+        initialDate={draft.dateOfBirth}
+        colors={colors}
+        years={years}
+      />
 
-            {yearPickerOpen ? (
-              <View style={{ height: 300 }}>
-                <FlatList
-                  data={years}
-                  keyExtractor={item => item.toString()}
-                  initialScrollIndex={years.indexOf(parseInt(draft.dateOfBirth?.split('-')[0] || new Date().getFullYear().toString()))}
-                  getItemLayout={(data, index) => ({ length: 50, offset: 50 * index, index })}
-                  renderItem={({ item }) => (
-                    <Pressable
-                      onPress={() => {
-                        const currentDob = draft.dateOfBirth || new Date().toISOString().slice(0, 10);
-                        const parts = currentDob.split('-');
-                        const newDob = `${item}-${parts[1] || '01'}-${parts[2] || '01'}`;
-                        updateDraft({ dateOfBirth: newDob });
-                        setYearPickerOpen(false);
-                      }}
-                      style={[
-                        styles.yearRow,
-                        { borderBottomColor: colors.border }
-                      ]}
-                    >
-                      <Text style={[
-                        typography.body,
-                        { color: (draft.dateOfBirth?.startsWith(item.toString())) ? colors.primary : colors.textPrimary, textAlign: 'center' }
-                      ]}>
-                        {item}
-                      </Text>
-                    </Pressable>
-                  )}
-                />
-              </View>
-            ) : (
-              <Calendar
-                current={calendarCurrent}
-                minDate="1950-01-01"
-                maxDate={new Date().toISOString().slice(0, 10)}
-                onDayPress={day => {
-                  updateDraft({ dateOfBirth: day.dateString });
-                  setDobOpen(false);
-                }}
-                markedDates={markedDates}
-                enableSwipeMonths
-                theme={{
-                  backgroundColor: colors.surface,
-                  calendarBackground: colors.surface,
-                  textSectionTitleColor: colors.textSecondary,
-                  selectedDayBackgroundColor: colors.primary,
-                  selectedDayTextColor: colors.onPrimary,
-                  todayTextColor: colors.primary,
-                  dayTextColor: colors.textPrimary,
-                  textDisabledColor: colors.textPlaceholder,
-                  monthTextColor: colors.textPrimary,
-                  arrowColor: colors.primary,
-                }}
-              />
-            )}
-          </Pressable>
-        </Pressable>
-      </Modal>
-
-      <Modal visible={cityOpen} animationType="slide" transparent>
-        <Pressable style={styles.modalOverlay} onPress={() => setCityOpen(false)}>
-          <Pressable
-            style={[styles.citySheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
-            <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select city</Text>
-              <Pressable onPress={() => setCityOpen(false)} hitSlop={12}>
-                <Icon name="times" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-            <TextInput
-              value={cityQuery}
-              onChangeText={setCityQuery}
-              placeholder="Type to search…"
-              placeholderTextColor={colors.textPlaceholder}
-              style={[
-                styles.searchInput,
-                {
-                  color: colors.textPrimary,
-                  backgroundColor: colors.surfaceHighlight,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <FlatList
-              data={filteredCities}
-              keyExtractor={item => item}
-              keyboardShouldPersistTaps="handled"
-              style={styles.cityList}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    updateDraft({ city: item });
-                    setCityOpen(false);
-                  }}
-                  style={[
-                    styles.cityRow,
-                    {
-                      backgroundColor:
-                        draft.city === item ? colors.surfaceHighlight : 'transparent',
-                    },
-                  ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item}</Text>
-                </Pressable>
-              )}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <CityPickerModal
+        visible={cityOpen}
+        onClose={() => setCityOpen(false)}
+        onSelect={handleCitySelect}
+        currentCity={draft.city}
+        colors={colors}
+        cities={cities}
+      />
     </ProfileEditLayout>
   );
 };

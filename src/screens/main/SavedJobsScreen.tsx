@@ -27,6 +27,7 @@ import { components } from '../../theme/components';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import GuestView from '../../components/GuestView';
 
 const { width } = Dimensions.get('window');
 
@@ -107,6 +108,7 @@ const SavedJobsScreen: React.FC = () => {
   const navigation = useNavigation<SavedNav>();
   const dispatch = useDispatch<AppDispatch>();
   const { wishlistJobs, loading } = useSelector((state: RootState) => state.profile);
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmModal, setConfirmModal] = useState<{ visible: boolean; jobId: number | null }>({
@@ -139,7 +141,15 @@ const SavedJobsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.header}>
+      {!isLoggedIn ? (
+        <GuestView 
+          title="Save Your Favorites"
+          subtitle="Register now to bookmark the jobs you like and never lose track of a great opportunity."
+          icon="heart"
+        />
+      ) : (
+        <>
+        <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
             <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Saved jobs</Text>
@@ -238,6 +248,8 @@ const SavedJobsScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      </>
+      )}
     </SafeAreaView>
   );
 };

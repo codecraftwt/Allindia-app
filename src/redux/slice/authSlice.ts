@@ -33,6 +33,19 @@ export const loginCandidate = createAsyncThunk(
   }
 );
 
+export const registerCandidate = createAsyncThunk(
+  'auth/registerCandidate',
+  async (userData: any, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/register', userData);
+      return response?.data;
+    } catch (error: any) {
+      console.log("Registration Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
+  }
+);
+
 export const logoutCandidate = createAsyncThunk(
   'auth/logoutCandidate',
   async (_, { getState, dispatch, rejectWithValue }) => {
@@ -91,6 +104,21 @@ const authSlice = createSlice({
         state.tokenType = action.payload.data?.token_type;
       })
       .addCase(loginCandidate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(registerCandidate.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerCandidate.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isLoggedIn = true;
+        state.user = action.payload.data?.user;
+        state.token = action.payload.data?.token;
+        state.tokenType = action.payload.data?.token_type;
+      })
+      .addCase(registerCandidate.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

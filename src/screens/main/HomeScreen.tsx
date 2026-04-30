@@ -673,7 +673,7 @@ const HomeScreen: React.FC = () => {
               {categories.map(cat => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => navigation.navigate('CategoryJobs', { categoryId: cat.id, categoryName: cat.name })}
+                  onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
                   style={[
                     styles.categoryChip,
                     {
@@ -693,7 +693,7 @@ const HomeScreen: React.FC = () => {
               {categories.length === 0 && HOME_CATEGORIES.map(cat => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => navigation.navigate('CategoryJobs', { categoryId: undefined, categoryName: cat.label })}
+                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: undefined }, categoryName: cat.label })}
                   style={[
                     styles.categoryChip,
                     {

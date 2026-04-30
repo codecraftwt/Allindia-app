@@ -151,7 +151,7 @@ const JobListingScreen: React.FC = () => {
 
   const jobsData = query ? searchResults : (filters ? filteredJobs : recommended);
 
-  const headerTitle = query ? `"${query}"` : (filters ? 'Filtered results' : 'All jobs');
+  const headerTitle = query ? `"${query}"` : (route.params?.categoryName || (filters ? 'Filtered results' : 'All jobs'));
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>

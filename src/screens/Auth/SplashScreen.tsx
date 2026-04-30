@@ -16,7 +16,7 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 const LOGO = require('../../assets/mainlogo.png');
-const SPLASH_DELAY_MS = 4000;
+const SPLASH_DELAY_MS = 40000;
 const PROGRESS_BAR_W = 200;
 
 type Props = StackScreenProps<AuthStackParamList, 'Splash'>;

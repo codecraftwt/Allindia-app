@@ -11,6 +11,7 @@ import {
   Modal,
   FlatList,
   ScrollView,
+  Animated as RNAnimated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Animated, {
@@ -27,6 +28,7 @@ import {
   fetchMetaQualifications,
 } from '../../../redux/slice/metaSlice';
 import type { StackScreenProps } from '@react-navigation/stack';
+import { useToast } from '../../../context/ToastContext';
 import { PrimaryButton } from '../../../components/auth';
 import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
@@ -198,12 +200,79 @@ const WFHCard = ({ active, onToggle, colors }: any) => (
   </Pressable>
 );
 
+// ─── Skeleton Components ───────────────────────────────────────────────────
+
+const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
+  const opacity = useMemo(() => new RNAnimated.Value(0.3), []);
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
+        RNAnimated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [opacity]);
+
+  return <RNAnimated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
+};
+
+const PreferencesSkeleton = ({ colors }: any) => (
+  <View style={{ gap: spacing.lg, paddingHorizontal: 4 }}>
+    {/* Current City Skeleton */}
+    <View style={{ gap: spacing.xs }}>
+      <SkeletonPulse style={{ width: 100, height: 16, borderRadius: 4, marginBottom: 4 }} />
+      <SkeletonPulse style={{ width: '100%', height: 52, borderRadius: radius.md }} />
+    </View>
+
+    {/* Preferred Locations Skeleton */}
+    <View style={{ gap: spacing.xs }}>
+      <SkeletonPulse style={{ width: 120, height: 16, borderRadius: 4, marginBottom: 4 }} />
+      <SkeletonPulse style={{ width: '100%', height: 52, borderRadius: radius.md }} />
+    </View>
+
+    {/* Job Category Search Skeleton */}
+    <View style={{ gap: spacing.xs }}>
+      <SkeletonPulse style={{ width: 90, height: 16, borderRadius: 4, marginBottom: 4 }} />
+      <SkeletonPulse style={{ width: '100%', height: 44, borderRadius: radius.md }} />
+    </View>
+
+    {/* Categories Skeleton List */}
+    <View style={{ gap: spacing.sm }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <SkeletonPulse key={i} style={{ width: '100%', height: 48, borderRadius: radius.md }} />
+      ))}
+    </View>
+
+    {/* Salary Skeleton */}
+    <View style={{ gap: spacing.xs }}>
+      <SkeletonPulse style={{ width: 110, height: 16, borderRadius: 4, marginBottom: 4 }} />
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <SkeletonPulse style={{ flex: 1, height: 52, borderRadius: radius.md }} />
+        <SkeletonPulse style={{ flex: 1, height: 52, borderRadius: radius.md }} />
+      </View>
+      <SkeletonPulse style={{ width: '100%', height: 6, borderRadius: 3, marginTop: 8 }} />
+    </View>
+
+    {/* WFH Skeleton */}
+    <View style={{ gap: spacing.xs }}>
+      <SkeletonPulse style={{ width: 100, height: 16, borderRadius: 4, marginBottom: 4 }} />
+      <SkeletonPulse style={{ width: '100%', height: 76, borderRadius: radius.lg }} />
+    </View>
+
+    {/* Button Skeleton */}
+    <SkeletonPulse style={{ width: '100%', height: 52, borderRadius: radius.md, marginTop: spacing.md }} />
+  </View>
+);
+
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferencesEdit'>;
 
 export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
 
   // Redux Data
@@ -274,44 +343,54 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         expected_salary_max: maxSalary * 100000,
         work_from_home: workFromHome,
       })).unwrap();
-      navigation.goBack();
-    } catch (err) {
+      showToast('Job preferences saved!', 'success');
+      setTimeout(() => navigation.goBack(), 3000);
+    } catch (err: any) {
+      showToast(err?.message || 'Save failed', 'error');
       console.error('Save failed', err);
     } finally {
       setSaving(false);
     }
   };
 
+  const isInitialLoading = (profileLoading || metaLoading) && categories.length === 0;
+
   // ── Section Data for FlatList ──────────────────────────────────────────────
   const sections = useMemo(() => {
-    const list: any[] = [];
-    if (metaLoading && categories.length === 0) {
-      list.push({ id: 'cat_loading', type: 'loading' });
-    } else {
-      // Logic for View More
-      const limit = 6;
-      const shouldTruncate = !showAllCats && catSearch.length === 0 && filteredCategories.length > limit;
-      const displayCats = shouldTruncate ? filteredCategories.slice(0, limit) : filteredCategories;
-
-      displayCats.forEach((cat: any) => {
-        list.push({ id: `cat_${cat.id}`, type: 'category', data: cat });
-      });
-
-      if (shouldTruncate) {
-        list.push({ id: 'view_more', type: 'view_more' });
-      }
+    if (isInitialLoading) {
+      return [{ id: 'skeleton', type: 'skeleton' }];
     }
+
+    const list: any[] = [];
+    // Logic for View More
+    const limit = 6;
+    const shouldTruncate = !showAllCats && catSearch.length === 0 && filteredCategories.length > limit;
+    const displayCats = shouldTruncate ? filteredCategories.slice(0, limit) : filteredCategories;
+
+    displayCats.forEach((cat: any) => {
+      list.push({ id: `cat_${cat.id}`, type: 'category', data: cat });
+    });
+
+    if (shouldTruncate) {
+      list.push({ id: 'view_more', type: 'view_more' });
+    }
+
     list.push(
       { id: 'salary', type: 'section', title: 'Expected salary' },
       { id: 'wfh', type: 'section', title: 'Work from home' }
     );
-    list.push({ id: 'save', type: 'button' });
+
+    if (!profileLoading && !metaLoading) {
+      list.push({ id: 'button', type: 'button' });
+    }
     return list;
-  }, [filteredCategories, metaLoading, showAllCats, catSearch]);
+  }, [filteredCategories, metaLoading, profileLoading, showAllCats, catSearch, isInitialLoading]);
 
   // ── Stable Header ─────────────────────────────────────────────────────────
-  const ListHeader = useMemo(() => (
-    <View style={{ paddingBottom: spacing.sm }}>
+  const ListHeader = useMemo(() => {
+    if (isInitialLoading) return null;
+    return (
+      <View style={{ paddingBottom: spacing.sm }}>
       <Section title="Current city" colors={colors}>
         <Pressable
           onPress={() => {
@@ -388,7 +467,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         </View>
       </View>
     </View>
-  ), [colors, currentCityId, currentCityLabel, preferredCityIds, catSearch]);
+    );
+  }, [colors, currentCityId, currentCityLabel, preferredCityIds, catSearch, isInitialLoading]);
 
   const renderFlatItem = useCallback(({ item }: { item: any }) => {
     switch (item.type) {
@@ -445,14 +525,16 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
             <Icon name="chevron-down" size={16} color={colors.primary} />
           </TouchableOpacity>
         );
+      case 'skeleton':
+        return <PreferencesSkeleton colors={colors} />;
       case 'loading':
-        return <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} />;
+        return null;
       case 'button':
         return <View style={{ padding: 14 }}><PrimaryButton title={saving ? 'Saving...' : 'Save Preferences'} onPress={handleSave} colors={colors} /></View>;
       default:
         return null;
     }
-  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats]);
+  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats, profileLoading, metaLoading]);
 
   return (
     <ProfileEditLayout

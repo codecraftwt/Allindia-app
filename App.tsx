@@ -8,6 +8,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/redux/store';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { ToastProvider } from './src/context/ToastContext';
 import { AnimatedBackground } from './src/components/AnimatedBackground';
 
 function App() {
@@ -17,7 +18,9 @@ function App() {
         <PersistGate loading={null} persistor={persistor}>
           <SafeAreaProvider>
             <ThemeProvider>
-              <AppNavigation />
+              <ToastProvider>
+                <AppNavigation />
+              </ToastProvider>
             </ThemeProvider>
           </SafeAreaProvider>
         </PersistGate>

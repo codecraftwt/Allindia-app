@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
+import { useToast } from '../../../context/ToastContext';
 import { PrimaryButton } from '../../../components/auth';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
@@ -116,6 +117,7 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileExperience'>;
 
 const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error, data } = useSelector((state: RootState) => state.profile);
 
@@ -142,8 +144,10 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
         experience_type: isFresher ? 'fresher' : 'experienced',
         total_experience_years: isFresher ? null : yearsNum,
       })).unwrap();
-      navigation.goBack();
-    } catch (err) {
+      showToast('Experience updated successfully!', 'success');
+      setTimeout(() => navigation.goBack(), 3000);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to update experience', 'error');
       console.error('Failed to update experience:', err);
     }
   };

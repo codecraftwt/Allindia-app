@@ -65,6 +65,18 @@ export const fetchHomeFeed = createAsyncThunk(
   }
 );
 
+export const fetchJobsByCategory = createAsyncThunk(
+  'jobs/fetchJobsByCategory',
+  async (params: { category_id?: number; limit?: number; jobs_per_category?: number }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/candidate/jobs/by-category', { params });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs by category');
+    }
+  }
+);
+
 export const fetchJobDetail = createAsyncThunk(
   'jobs/fetchJobDetail',
   async (jobId: number | string, { rejectWithValue }) => {
@@ -141,6 +153,7 @@ const jobSlice = createSlice({
     latest: [] as any[],
     searchResults: [] as any[],
     filteredJobs: [] as any[],
+    jobsByCategory: [] as any[],
     currentJob: null as any,
     loading: false,
     error: null as string | null,
@@ -208,6 +221,18 @@ const jobSlice = createSlice({
         state.latest = action.payload.data.latest || [];
       })
       .addCase(fetchHomeFeed.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchJobsByCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchJobsByCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.jobsByCategory = action.payload.data.categories || [];
+      })
+      .addCase(fetchJobsByCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

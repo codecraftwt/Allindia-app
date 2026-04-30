@@ -9,6 +9,7 @@ import JobListingScreen from '../screens/main/JobListingScreen';
 import JobCategoriesScreen from '../screens/main/JobCategoriesScreen';
 import CategoryJobsScreen from '../screens/main/CategoryJobsScreen';
 import SearchResultsScreen from '../screens/main/SearchResultsScreen';
+import IndustryCategoryScreen from '../screens/main/IndustryCategoryScreen';
 import type { HomeStackParamList } from './types';
 
 const Stack = createStackNavigator<HomeStackParamList>();
@@ -29,6 +30,7 @@ const HomeStackNavigator: React.FC = () => {
       <Stack.Screen name="JobListing" component={JobListingScreen} />
       <Stack.Screen name="JobCategories" component={JobCategoriesScreen} />
       <Stack.Screen name="CategoryJobs" component={CategoryJobsScreen} />
+      <Stack.Screen name="IndustryCategory" component={IndustryCategoryScreen} />
       <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
     </Stack.Navigator>
   );

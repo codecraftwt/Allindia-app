@@ -107,6 +107,7 @@ const JobDetailScreen: React.FC = () => {
   const jobId = route.params?.jobId ?? '';
   const dispatch = useDispatch<AppDispatch>();
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     if (jobId) {
@@ -135,6 +136,7 @@ const JobDetailScreen: React.FC = () => {
     type: 'success',
   });
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const toastAnim = useRef(new Animated.Value(-100)).current;
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -173,6 +175,11 @@ const JobDetailScreen: React.FC = () => {
 
   const handleToggleWishlist = useCallback(async () => {
 
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!currentJob || isWishlisting) return;
 
     setIsWishlisting(true);
@@ -186,7 +193,7 @@ const JobDetailScreen: React.FC = () => {
     } finally {
       setIsWishlisting(false);
     }
-  }, [currentJob, saved, isWishlisting, dispatch]);
+  }, [currentJob, saved, isWishlisting, dispatch, isLoggedIn, navigation]);
 
   const callEmployer = useCallback(() => {
     if (!telHref) {
@@ -198,6 +205,11 @@ const JobDetailScreen: React.FC = () => {
   }, [telHref]);
 
   const applyNow = useCallback(async () => {
+    if (!isLoggedIn) {
+      setShowAuthModal(true);
+      return;
+    }
+
     if (!currentJob) return;
 
     // Validate required questions
@@ -224,7 +236,7 @@ const JobDetailScreen: React.FC = () => {
     } finally {
       setIsApplying(false);
     }
-  }, [currentJob, answers, dispatch, showToast]);
+  }, [currentJob, answers, dispatch, showToast, isLoggedIn, navigation]);
 
   const companyName = currentJob?.employer?.company?.company_name || currentJob?.employer?.name || 'Unknown Company';
   const locationLabel = currentJob?.location?.label || 'Remote';
@@ -521,6 +533,48 @@ const JobDetailScreen: React.FC = () => {
               onPress={() => setShowValidationModal(false)}>
               <Text style={[typography.labelMedium, { color: '#FFFFFF', fontWeight: '700' }]}>Got it</Text>
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Auth Prompt Modal */}
+      <Modal
+        visible={showAuthModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAuthModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowAuthModal(false)} />
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIconBox, { backgroundColor: colors.primary + '15' }]}>
+              <Icon name="user-circle-o" size={28} color={colors.primary} />
+            </View>
+            <Text style={[typography.h4, { color: colors.textPrimary, marginTop: spacing.md, textAlign: 'center' }]}>
+              Registration Required
+            </Text>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}>
+              Please register or log in to apply for jobs and unlock all features.
+            </Text>
+            
+            <View style={{ width: '100%', gap: spacing.sm, marginTop: spacing.xl }}>
+              <PrimaryButton 
+                title="Register Now" 
+                onPress={() => {
+                  setShowAuthModal(false);
+                  navigation.navigate('SignIn');
+                }} 
+                colors={colors} 
+              />
+              <Pressable 
+                onPress={() => {
+                  setShowAuthModal(false);
+                  navigation.navigate('EmailLogin');
+                }}
+                style={{ alignItems: 'center', paddingVertical: 12 }}
+              >
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>Already have an account? Log In</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
