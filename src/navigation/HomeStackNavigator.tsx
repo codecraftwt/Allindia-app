@@ -1,15 +1,15 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
-import HomeScreen from '../screens/main/HomeScreen';
-import JobDetailScreen from '../screens/main/JobDetailScreen';
-import NotificationsScreen from '../screens/main/NotificationsScreen';
-import SearchScreen from '../screens/main/SearchScreen';
-import JobListingScreen from '../screens/main/JobListingScreen';
-import JobCategoriesScreen from '../screens/main/JobCategoriesScreen';
-import CategoryJobsScreen from '../screens/main/CategoryJobsScreen';
-import SearchResultsScreen from '../screens/main/SearchResultsScreen';
-import IndustryCategoryScreen from '../screens/main/IndustryCategoryScreen';
+import HomeScreen from '../screens/main/home/HomeScreen';
+import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
+import NotificationsScreen from '../screens/main/notifications/NotificationsScreen';
+import SearchScreen from '../screens/main/search/SearchScreen';
+import JobListingScreen from '../screens/main/jobs/JobListingScreen';
+import JobCategoriesScreen from '../screens/main/jobs/JobCategoriesScreen';
+import CategoryJobsScreen from '../screens/main/jobs/CategoryJobsScreen';
+import SearchResultsScreen from '../screens/main/search/SearchResultsScreen';
+import IndustryCategoryScreen from '../screens/main/jobs/IndustryCategoryScreen';
 import type { HomeStackParamList } from './types';
 
 const Stack = createStackNavigator<HomeStackParamList>();

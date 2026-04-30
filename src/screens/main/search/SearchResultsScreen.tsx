@@ -13,15 +13,15 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { searchJobs, fetchJobs } from '../../redux/slice/jobSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { searchJobs, fetchJobs } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import { typography } from '../../theme/typography';
-import { spacing } from '../../theme/spacing';
-import { radius } from '../../theme/radius';
-import type { ThemeColors } from '../../theme/colors';
-import SideFilterHub from '../../components/SideFilterHub';
+import { useTheme } from '../../../context/ThemeContext';
+import { typography } from '../../../theme/typography';
+import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
+import type { ThemeColors } from '../../../theme/colors';
+import SideFilterHub from '../../../components/SideFilterHub';
 
 function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const company = job.employer?.company || {};

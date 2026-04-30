@@ -11,14 +11,14 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { fetchJobsByCategory } from '../../redux/slice/jobSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchJobsByCategory } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import { typography } from '../../theme/typography';
-import { spacing } from '../../theme/spacing';
-import { radius } from '../../theme/radius';
-import type { ThemeColors } from '../../theme/colors';
+import { useTheme } from '../../../context/ThemeContext';
+import { typography } from '../../../theme/typography';
+import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
+import type { ThemeColors } from '../../../theme/colors';
 
 // ─── Job Card ───────────────────────────────────────────────────────────────
 function JobCard({

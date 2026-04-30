@@ -1,7 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import JobsReelsScreen from '../screens/main/JobsReelsScreen';
-import SavedPostScreen from '../screens/main/SavedPostScreen';
+import JobsReelsScreen from '../screens/main/reels/JobsReelsScreen';
+import SavedPostScreen from '../screens/main/saved/SavedPostScreen';
 import type { JobReelsStackParamList } from './types';
 
 const Stack = createStackNavigator<JobReelsStackParamList>();

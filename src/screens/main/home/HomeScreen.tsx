@@ -13,25 +13,25 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { fetchMetaCategories } from '../../redux/slice/metaSlice';
-import { fetchHomeFeed, fetchJobs, filterJobs } from '../../redux/slice/jobSlice';
-import { fetchProfile } from '../../redux/slice/profileSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
+import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
+import { fetchProfile } from '../../../redux/slice/profileSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useProfileSetup } from '../../context/ProfileSetupContext';
-import { useTheme } from '../../context/ThemeContext';
-import type { HomeStackParamList, MainTabParamList } from '../../navigation/types';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
-import ProfileStrengthAssistant from '../../components/ProfileStrengthAssistant';
-import HeaderFilterGrid from '../../components/HeaderFilterGrid';
+import { useProfileSetup } from '../../../context/ProfileSetupContext';
+import { useTheme } from '../../../context/ThemeContext';
+import type { HomeStackParamList, MainTabParamList } from '../../../navigation/types';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
+import { typography } from '../../../theme/typography';
+import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssistant';
+import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
 import type { HomeJob } from './homeMockData';
 import {
   HOME_CATEGORIES,

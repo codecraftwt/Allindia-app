@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import { typography } from '../../theme/typography';
-import { spacing } from '../../theme/spacing';
-import { radius } from '../../theme/radius';
+import { useTheme } from '../../../context/ThemeContext';
+import { typography } from '../../../theme/typography';
+import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
 import { useNavigation } from '@react-navigation/native';
 
 const SAVED_DATA = [

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  PanResponder,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
@@ -17,8 +18,10 @@ import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/typography';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
 const DRAWER_WIDTH = 280;
+const DRAWER_HEIGHT = 450;
+const HANDLE_HEIGHT = 50;
 
 interface SideFilterHubProps {
   colors: any;
@@ -38,23 +41,78 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
     city: null,
   });
 
+  // Drawer horizontal animation
   const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  
+  // Handle vertical position animation
+  const panY = useRef(new Animated.Value(SCREEN_HEIGHT * 0.3)).current;
+  const lastPanY = useRef(SCREEN_HEIGHT * 0.3);
 
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchMetaCategories());
     if (cities.length === 0) dispatch(fetchMetaCities());
   }, [dispatch]);
 
-  const toggleDrawer = () => {
-    const toValue = isOpen ? -DRAWER_WIDTH : 0;
-    Animated.spring(drawerAnim, {
-      toValue,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 8,
-    }).start();
-    setIsOpen(!isOpen);
-  };
+  const toggleDrawer = useCallback(() => {
+    setIsOpen(prev => {
+      const newState = !prev;
+      const toValue = newState ? 0 : -DRAWER_WIDTH;
+      Animated.spring(drawerAnim, {
+        toValue,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 8,
+      }).start();
+      return newState;
+    });
+  }, [drawerAnim]);
+
+  // PanResponder for vertical dragging
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only set responder if there is significant vertical movement
+        return Math.abs(gestureState.dy) > 2;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        let nextY = lastPanY.current + gestureState.dy;
+        // Keep within screen bounds, staying above the bottom tab bar (approx 120px)
+        if (nextY < 10) nextY = 10;
+        if (nextY > SCREEN_HEIGHT - 160) nextY = SCREEN_HEIGHT - 160;
+        panY.setValue(nextY);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // Tap Detection: If movement is very small, toggle the drawer
+        const isTap = Math.abs(gestureState.dx) < 12 && Math.abs(gestureState.dy) < 12;
+        
+        if (isTap) {
+          toggleDrawer();
+        } else {
+          // It was a drag, update the last position
+          let finalY = lastPanY.current + gestureState.dy;
+          if (finalY < 10) finalY = 10;
+          if (finalY > SCREEN_HEIGHT - 160) finalY = SCREEN_HEIGHT - 160;
+          lastPanY.current = finalY;
+        }
+      },
+    })
+  ).current;
+
+  // Calculate dynamic drawer offset
+  // If handle is in bottom half, shift drawer up so it doesn't go off screen
+  const drawerTranslateY = panY.interpolate({
+    inputRange: [0, SCREEN_HEIGHT * 0.5, SCREEN_HEIGHT],
+    outputRange: [0, -DRAWER_HEIGHT * 0.5, -DRAWER_HEIGHT - 40], // Further shift UP
+    extrapolate: 'clamp',
+  });
+
+  // Handle position relative to drawer
+  const handleTranslateY = panY.interpolate({
+    inputRange: [0, SCREEN_HEIGHT * 0.5, SCREEN_HEIGHT],
+    outputRange: [20, DRAWER_HEIGHT / 2 - HANDLE_HEIGHT / 2, DRAWER_HEIGHT - HANDLE_HEIGHT + 40],
+    extrapolate: 'clamp',
+  });
 
   const SECTIONS = [
     { id: 'jobType', label: 'Type', icon: 'bolt' },
@@ -111,16 +169,25 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
           { 
             backgroundColor: colors.surface, 
             borderColor: colors.border,
-            transform: [{ translateX: drawerAnim }] 
+            transform: [
+              { translateX: drawerAnim },
+              { translateY: Animated.add(panY, drawerTranslateY) },
+            ],
           }
         ]}>
         
-        {/* Toggle Button */}
-        <Pressable 
-          onPress={toggleDrawer}
-          style={[styles.handle, { backgroundColor: colors.primary }]}>
+        {/* Draggable Toggle Button (Handle) */}
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.handle, 
+            { 
+              backgroundColor: colors.primary,
+              transform: [{ translateY: handleTranslateY }]
+            }
+          ]}>
           <Icon name={isOpen ? "chevron-left" : "sliders"} size={18} color="#fff" />
-        </Pressable>
+        </Animated.View>
 
         <View style={styles.content}>
           <View style={[styles.sidebar, { backgroundColor: colors.surfaceHighlight }]}>
@@ -212,8 +279,8 @@ const styles = StyleSheet.create({
   drawer: {
     position: 'absolute',
     left: 0,
-    top: '20%',
-    bottom: '8%',
+    top: 0,
+    height: 450,
     width: DRAWER_WIDTH,
     borderTopRightRadius: radius.xxl,
     borderBottomRightRadius: radius.xxl,
@@ -229,8 +296,7 @@ const styles = StyleSheet.create({
   handle: {
     position: 'absolute',
     right: -44,
-    top: '50%',
-    marginTop: -25, // Center the 50px high handle
+    top: 0,
     width: 44,
     height: 50,
     borderTopRightRadius: 25,
@@ -238,6 +304,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   content: {
     flex: 1,
@@ -245,7 +315,7 @@ const styles = StyleSheet.create({
   },
   sidebar: {
     width: 80,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.lg,
   },
   sideItem: {
     alignItems: 'center',
@@ -259,7 +329,7 @@ const styles = StyleSheet.create({
   optionsArea: {
     flex: 1,
     padding: spacing.md,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.lg,
   },
   sectionTitle: {
     fontSize: 11,

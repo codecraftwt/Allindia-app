@@ -15,8 +15,8 @@ import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const LOGO = require('../../assets/mainlogo.png');
-const SPLASH_DELAY_MS = 40000;
+const LOGO = require('../../assets/logo/logo02.png');
+const SPLASH_DELAY_MS = 4000;
 const PROGRESS_BAR_W = 200;
 
 type Props = StackScreenProps<AuthStackParamList, 'Splash'>;
@@ -164,20 +164,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
                 transform: [{ translateY: logoLift }, { scale: logoScale }],
               },
             ]}>
-            <View style={[styles.logoGlow, { backgroundColor: `${colors.primary}18` }]} />
-            <View
-              style={[
-                styles.logoCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: `${colors.primary}2E`,
-                  shadowColor: colors.shadow,
-                },
-              ]}>
-              <View style={[styles.logoInnerRing, { borderColor: `${colors.primary}1F` }]}>
-                <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-              </View>
-            </View>
+            <Image source={LOGO} style={styles.logo} resizeMode="contain" />
           </Animated.View>
 
           <Animated.Text
@@ -189,7 +176,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
                 color: colors.primary,
               },
             ]}>
-            JOBINDIA
+
           </Animated.Text>
 
           <Animated.Text
@@ -261,28 +248,28 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   orbPrimary: {
-    width: 320,
-    height: 320,
-    top: -120,
-    right: -100,
+    width: 400,
+    height: 400,
+    top: -150,
+    right: -120,
   },
   orbSecondary: {
-    width: 260,
-    height: 260,
-    bottom: -80,
-    left: -90,
+    width: 300,
+    height: 300,
+    bottom: -100,
+    left: -100,
   },
   orbAccent: {
-    width: 140,
-    height: 140,
-    top: '42%',
-    left: -50,
+    width: 180,
+    height: 180,
+    top: '35%',
+    left: -80,
   },
   horizon: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: '18%',
+    bottom: '22%',
     height: 1,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
@@ -294,73 +281,61 @@ const styles = StyleSheet.create({
   logoStack: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  logoGlow: {
-    position: 'absolute',
-    width: 124,
-    height: 124,
-    borderRadius: 40,
-    transform: [{ scale: 1.15 }],
-  },
-  logoCard: {
-    padding: spacing.sm + 2,
-    borderRadius: radius.xl + 4,
-    borderWidth: 1,
+    marginBottom: spacing.xl,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 8,
-  },
-  logoInnerRing: {
-    padding: spacing.sm,
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
   },
   logo: {
-    width: 88,
-    height: 88,
+    width: 280,
+    height: 280,
   },
   eyebrow: {
-    letterSpacing: 3.5,
-    fontSize: 11,
+    letterSpacing: 4,
+    fontSize: 10,
     marginBottom: spacing.sm,
     textTransform: 'uppercase',
+    fontWeight: '700',
   },
   title: {
     textAlign: 'center',
-    fontSize: 24,
-    letterSpacing: -0.4,
-    lineHeight: 30,
+    fontSize: 26,
+    letterSpacing: -0.5,
+    lineHeight: 32,
+    fontWeight: '900',
     marginBottom: spacing.md,
   },
   tagline: {
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 300,
+    fontSize: 14,
+    fontWeight: '500',
+    opacity: 0.7,
   },
   footer: {
     position: 'absolute',
-    bottom: spacing.xl,
-    left: spacing.lg,
-    right: spacing.lg,
+    bottom: spacing.xxl,
     alignItems: 'center',
   },
   track: {
     width: PROGRESS_BAR_W,
-    height: 4,
-    borderRadius: 2,
+    height: 3,
+    borderRadius: 1.5,
     overflow: 'hidden',
+    marginBottom: spacing.md,
   },
   trackFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 1.5,
   },
   footerHint: {
-    marginTop: spacing.md,
-    letterSpacing: 0.2,
+    fontSize: 10,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    fontWeight: '700',
   },
 });
 

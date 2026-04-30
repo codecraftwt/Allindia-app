@@ -22,17 +22,17 @@ import {
 } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { PrimaryButton } from '../../components/auth';
-import { useTheme } from '../../context/ThemeContext';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { PrimaryButton } from '../../../components/auth';
+import { useTheme } from '../../../context/ThemeContext';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
+import { typography } from '../../../theme/typography';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist } from '../../redux/slice/jobSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist } from '../../../redux/slice/jobSlice';
 
 export type JobDetailRouteParams = { jobId: string };
 

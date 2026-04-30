@@ -13,17 +13,17 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { fetchJobs, fetchHomeFeed, fetchJobsByCategory } from '../../redux/slice/jobSlice';
-import { fetchMetaCategories } from '../../redux/slice/metaSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchJobs, fetchHomeFeed, fetchJobsByCategory } from '../../../redux/slice/jobSlice';
+import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import { typography } from '../../theme/typography';
-import { spacing } from '../../theme/spacing';
-import { radius } from '../../theme/radius';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import SideFilterHub from '../../components/SideFilterHub';
+import { useTheme } from '../../../context/ThemeContext';
+import { typography } from '../../../theme/typography';
+import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import SideFilterHub from '../../../components/SideFilterHub';
 
 const { width } = Dimensions.get('window');
 

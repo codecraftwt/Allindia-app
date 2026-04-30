@@ -19,17 +19,17 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
+import { useTheme } from '../../../context/ThemeContext';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store';
-import { fetchAppliedJobs, fetchApplicationCounts } from '../../redux/slice/profileSlice';
-import { typography } from '../../theme/typography';
-import { AuthHeadline } from '../../components/auth';
-import GuestView from '../../components/GuestView';
+import { RootState, AppDispatch } from '../../../redux/store';
+import { fetchAppliedJobs, fetchApplicationCounts } from '../../../redux/slice/profileSlice';
+import { typography } from '../../../theme/typography';
+import { AuthHeadline } from '../../../components/auth';
+import GuestView from '../../../components/GuestView';
 
 function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
   const application = job.application || {};

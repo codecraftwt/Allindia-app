@@ -3,13 +3,13 @@ import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import type { HomeStackParamList } from '../../navigation/types';
-import { useTheme } from '../../context/ThemeContext';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import type { HomeStackParamList } from '../../../navigation/types';
+import { useTheme } from '../../../context/ThemeContext';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
+import { typography } from '../../../theme/typography';
 import type { AppNotification } from './notificationsMockData';
 import {
   EMPLOYER_ACTIVITY_NOTIFICATIONS,

@@ -13,21 +13,21 @@ import {
   Dimensions
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../redux/store';
-import { fetchWishlist } from '../../redux/slice/profileSlice';
-import { toggleWishlist } from '../../redux/slice/jobSlice';
+import { RootState, AppDispatch } from '../../../redux/store';
+import { fetchWishlist } from '../../../redux/slice/profileSlice';
+import { toggleWishlist } from '../../../redux/slice/jobSlice';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import type { SavedStackParamList } from '../../navigation/types';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
-import GuestView from '../../components/GuestView';
+import { useTheme } from '../../../context/ThemeContext';
+import type { SavedStackParamList } from '../../../navigation/types';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
+import { typography } from '../../../theme/typography';
+import GuestView from '../../../components/GuestView';
 
 const { width } = Dimensions.get('window');
 

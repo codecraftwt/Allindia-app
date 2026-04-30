@@ -11,22 +11,22 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import { fetchJobs, searchJobs, filterJobs } from '../../redux/slice/jobSlice';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchJobs, searchJobs, filterJobs } from '../../../redux/slice/jobSlice';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useTheme } from '../../context/ThemeContext';
-import type { SearchStackParamList } from '../../navigation/types';
-import type { ThemeColors } from '../../theme/colors';
-import { components } from '../../theme/components';
-import { radius } from '../../theme/radius';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
-import HeaderFilterGrid from '../../components/HeaderFilterGrid';
-import type { HomeJob } from './homeMockData';
-import { ALL_LISTED_JOBS } from './homeMockData';
+import { useTheme } from '../../../context/ThemeContext';
+import type { SearchStackParamList } from '../../../navigation/types';
+import type { ThemeColors } from '../../../theme/colors';
+import { components } from '../../../theme/components';
+import { radius } from '../../../theme/radius';
+import { spacing } from '../../../theme/spacing';
+import { typography } from '../../../theme/typography';
+import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
+import type { HomeJob } from '../home/homeMockData';
+import { ALL_LISTED_JOBS } from '../home/homeMockData';
 
 type JobListingNav = StackNavigationProp<SearchStackParamList, 'JobListing'>;
 type JobListingRoute = RouteProp<SearchStackParamList, 'JobListing'>;

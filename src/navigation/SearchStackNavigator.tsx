@@ -1,11 +1,11 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
-import JobDetailScreen from '../screens/main/JobDetailScreen';
-import JobListingScreen from '../screens/main/JobListingScreen';
-import SearchScreen from '../screens/main/SearchScreen';
-import SearchResultsScreen from '../screens/main/SearchResultsScreen';
-import CategoryJobsScreen from '../screens/main/CategoryJobsScreen';
+import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
+import JobListingScreen from '../screens/main/jobs/JobListingScreen';
+import SearchScreen from '../screens/main/search/SearchScreen';
+import SearchResultsScreen from '../screens/main/search/SearchResultsScreen';
+import CategoryJobsScreen from '../screens/main/jobs/CategoryJobsScreen';
 import type { SearchStackParamList } from './types';
 
 const Stack = createStackNavigator<SearchStackParamList>();

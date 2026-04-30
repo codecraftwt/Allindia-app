@@ -1,8 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
-import JobDetailScreen from '../screens/main/JobDetailScreen';
-import SavedJobsScreen from '../screens/main/SavedJobsScreen';
+import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
+import SavedJobsScreen from '../screens/main/saved/SavedJobsScreen';
 import type { SavedStackParamList } from './types';
 
 const Stack = createStackNavigator<SavedStackParamList>();
