@@ -9,6 +9,7 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -19,6 +20,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { ApplicationsStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
@@ -27,11 +31,12 @@ import { spacing } from '../../../theme/spacing';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchAppliedJobs, fetchApplicationCounts } from '../../../redux/slice/profileSlice';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography } from '../../../theme/typography';
 import { AuthHeadline } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
 
-function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
+function AppliedJobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const application = job.application || {};
   const status = application.status || 'submitted';
   const isContacted = status === 'contacted';
@@ -47,6 +52,7 @@ function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
 
   return (
     <Pressable
+      onPress={onPress}
       style={[
         styles.card,
         {
@@ -98,6 +104,31 @@ function AppliedJobCard({ job, colors }: { job: any; colors: ThemeColors }) {
   );
 }
 
+const ApplicationsSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.md }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <View key={i} style={[styles.skeletonCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.cardHeader}>
+            <SkeletonPulse style={styles.skeletonLogo} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <SkeletonPulse style={{ height: 16, width: '60%', borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: '40%', borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={{ height: 20, width: 60, borderRadius: 10 }} />
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 4 }} />
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+            <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const StatShimmer = ({ colors }: { colors: ThemeColors }) => {
   const shimmerValue = useSharedValue(0.3);
 
@@ -130,6 +161,11 @@ const ApplicationsScreen: React.FC = () => {
   const { appliedJobs, applicationCounts, loading, countsLoading } = useSelector((state: RootState) => state.profile);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
+  const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
+
+  const openJobDetail = (job: any) => {
+    navigation.navigate('JobDetail', { jobId: job.slug || job.id });
+  };
 
   const filteredAppliedJobs = React.useMemo(() => {
     if (!searchQuery) return appliedJobs;
@@ -144,6 +180,18 @@ const ApplicationsScreen: React.FC = () => {
     dispatch(fetchApplicationCounts());
   }, [dispatch]);
 
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Icon name={searchQuery ? "search-minus" : "file-text-o"} size={48} color={colors.border} />
+      <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
+        {searchQuery ? "No matching applications" : "No applications yet"}
+      </Text>
+      <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+        {searchQuery ? "Try a different search term" : "Applied jobs will appear here"}
+      </Text>
+    </View>
+  );
+
   React.useEffect(() => {
     onRefresh();
   }, [onRefresh]);
@@ -157,160 +205,159 @@ const ApplicationsScreen: React.FC = () => {
           icon="briefcase"
         />
       ) : (
-        <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-          />
-        }
-      >
-        <AuthHeadline
-          colors={colors}
-          title="Applications"
-          subtitle="Track the status of your job applications"
-        />
-
-        {/* Job Application Stats Dashboard - Horizontal Scroll */}
-        <View style={[styles.dashboardCard, { backgroundColor: colors.surface, shadowColor: colors.primary }]}>
-          <View style={styles.dashboardHeader}>
-            <Text style={[styles.dashboardTitle, { color: colors.textSecondary }]}>APPLICATION STATS</Text>
-            <View style={styles.swipeHint}>
-              <Text style={[styles.swipeText, { color: colors.textPlaceholder }]}>Swipe</Text>
-              <Icon name="chevron-right" size={8} color={colors.textPlaceholder} />
-            </View>
-          </View>
-
-          <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.statsHorizontalScroll}
-            snapToInterval={90 + spacing.md}
-            decelerationRate="fast"
-          >
-            {countsLoading || !applicationCounts ? (
-              Array(6).fill(0).map((_, i) => <StatShimmer key={i} colors={colors} />)
-            ) : (
-              <>
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: colors.primary }]}>
-                      <Icon name="briefcase" size={10} color={colors.onPrimary} />
-                    </View>
-                    <Text style={[styles.statValue, { color: colors.primary }]}>
-                      {String(applicationCounts.total_applied).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Applied</Text>
-                </View>
-
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.warning + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: colors.warning }]}>
-                      <Icon name="clock-o" size={10} color="#000" />
-                    </View>
-                    <Text style={[styles.statValue, { color: colors.warning }]}>
-                      {String(applicationCounts.pending).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
-                </View>
-
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: (colors.info || colors.primary) + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: colors.info || colors.primary }]}>
-                      <Icon name="check-circle-o" size={10} color="#fff" />
-                    </View>
-                    <Text style={[styles.statValue, { color: colors.info || colors.primary }]}>
-                      {String(applicationCounts.shortlisted).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Shortlisted</Text>
-                </View>
-
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: '#6366f1' + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: '#6366f1' }]}>
-                      <Icon name="calendar-check-o" size={10} color="#fff" />
-                    </View>
-                    <Text style={[styles.statValue, { color: '#6366f1' }]}>
-                      {String(applicationCounts.interview_scheduled).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interview</Text>
-                </View>
-
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.success + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: colors.success }]}>
-                      <Icon name="trophy" size={10} color="#fff" />
-                    </View>
-                    <Text style={[styles.statValue, { color: colors.success }]}>
-                      {String(applicationCounts.selected).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Selected</Text>
-                </View>
-
-                <View style={styles.statItemHorizontal}>
-                  <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.error + '40' }]}>
-                    <View style={[styles.floatingIcon, { backgroundColor: colors.error }]}>
-                      <Icon name="times-circle-o" size={10} color="#fff" />
-                    </View>
-                    <Text style={[styles.statValue, { color: colors.error }]}>
-                      {String(applicationCounts.rejected).padStart(2, '0')}
-                    </Text>
-                  </View>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rejected</Text>
-                </View>
-              </>
-            )}
-          </ScrollView>
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
-          <Text style={{ color: colors.primary, fontWeight: '700' }}>{appliedJobs.length} Jobs</Text>
-        </View>
-
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name="search" size={16} color={colors.textPlaceholder} />
-          <TextInput
-            placeholder="Search applications..."
-            placeholderTextColor={colors.textPlaceholder}
-            style={[styles.searchInput, { color: colors.textPrimary }]}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
-            </TouchableOpacity>
+        <FlatList
+          data={filteredAppliedJobs}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <AppliedJobCard
+              job={item}
+              colors={colors}
+              onPress={() => openJobDetail(item)}
+            />
           )}
-        </View>
+          ListHeaderComponent={
+            <>
+              <AuthHeadline
+                colors={colors}
+                title="Applications"
+                subtitle="Track the status of your job applications"
+              />
 
-        <View style={styles.list}>
-          {filteredAppliedJobs.length > 0 ? (
-            filteredAppliedJobs.map((job: any) => (
-              <AppliedJobCard key={job.id} job={job} colors={colors} />
-            ))
-          ) : !loading ? (
-            <View style={styles.emptyContainer}>
-              <Icon name={searchQuery ? "search-minus" : "file-text-o"} size={48} color={colors.border} />
-              <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-                {searchQuery ? "No matching applications" : "No applications yet"}
-              </Text>
-              <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-                {searchQuery ? "Try a different search term" : "Applied jobs will appear here"}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      </ScrollView>
+              {/* Job Application Stats Dashboard - Horizontal Scroll */}
+              <View style={[styles.dashboardCard, { backgroundColor: colors.surface, shadowColor: colors.primary }]}>
+                <View style={styles.dashboardHeader}>
+                  <Text style={[styles.dashboardTitle, { color: colors.textSecondary }]}>APPLICATION STATS</Text>
+                  <View style={styles.swipeHint}>
+                    <Text style={[styles.swipeText, { color: colors.textPlaceholder }]}>Swipe</Text>
+                    <Icon name="chevron-right" size={8} color={colors.textPlaceholder} />
+                  </View>
+                </View>
+
+                <ScrollView 
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.statsHorizontalScroll}
+                  snapToInterval={90 + spacing.md}
+                  decelerationRate="fast"
+                >
+                  {countsLoading || !applicationCounts ? (
+                    Array(6).fill(0).map((_, i) => <StatShimmer key={i} colors={colors} />)
+                  ) : (
+                    <>
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: colors.primary }]}>
+                            <Icon name="briefcase" size={10} color={colors.onPrimary} />
+                          </View>
+                          <Text style={[styles.statValue, { color: colors.primary }]}>
+                            {String(applicationCounts.total_applied).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Applied</Text>
+                      </View>
+
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.warning + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: colors.warning }]}>
+                            <Icon name="clock-o" size={10} color="#000" />
+                          </View>
+                          <Text style={[styles.statValue, { color: colors.warning }]}>
+                            {String(applicationCounts.pending).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
+                      </View>
+
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: (colors.info || colors.primary) + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: colors.info || colors.primary }]}>
+                            <Icon name="check-circle-o" size={10} color="#fff" />
+                          </View>
+                          <Text style={[styles.statValue, { color: colors.info || colors.primary }]}>
+                            {String(applicationCounts.shortlisted).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Shortlisted</Text>
+                      </View>
+
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: '#6366f1' + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: '#6366f1' }]}>
+                            <Icon name="calendar-check-o" size={10} color="#fff" />
+                          </View>
+                          <Text style={[styles.statValue, { color: '#6366f1' }]}>
+                            {String(applicationCounts.interview_scheduled).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interview</Text>
+                      </View>
+
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.success + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: colors.success }]}>
+                            <Icon name="trophy" size={10} color="#fff" />
+                          </View>
+                          <Text style={[styles.statValue, { color: colors.success }]}>
+                            {String(applicationCounts.selected).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Selected</Text>
+                      </View>
+
+                      <View style={styles.statItemHorizontal}>
+                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.error + '40' }]}>
+                          <View style={[styles.floatingIcon, { backgroundColor: colors.error }]}>
+                            <Icon name="times-circle-o" size={10} color="#fff" />
+                          </View>
+                          <Text style={[styles.statValue, { color: colors.error }]}>
+                            {String(applicationCounts.rejected).padStart(2, '0')}
+                          </Text>
+                        </View>
+                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rejected</Text>
+                      </View>
+                    </>
+                  )}
+                </ScrollView>
+              </View>
+
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+                <Text style={{ color: colors.primary, fontWeight: '700' }}>{appliedJobs.length} Jobs</Text>
+              </View>
+
+              {/* Search Bar */}
+              <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Icon name="search" size={16} color={colors.textPlaceholder} />
+                <TextInput
+                  placeholder="Search applications..."
+                  placeholderTextColor={colors.textPlaceholder}
+                  style={[styles.searchInput, { color: colors.textPrimary }]}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery !== '' && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              {loading && filteredAppliedJobs.length === 0 && (
+                <ApplicationsSkeleton />
+              )}
+            </>
+          }
+          ListEmptyComponent={!loading ? renderEmpty() : null}
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading && filteredAppliedJobs.length > 0}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+            />
+          }
+        />
       )}
     </SafeAreaView>
   );
@@ -323,7 +370,7 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: 0,
+    paddingBottom: 120,
   },
   list: {
     gap: spacing.md,
@@ -494,6 +541,19 @@ const styles = StyleSheet.create({
     flex: 1,
     ...typography.body,
     padding: 0,
+  },
+  skeletonCard: {
+    padding: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.1)',
+    gap: spacing.md,
+    backgroundColor: '#fff',
+  },
+  skeletonLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
   },
 });
 

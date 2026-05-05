@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { fetchWishlist } from '../../../redux/slice/profileSlice';
-import { toggleWishlist } from '../../../redux/slice/jobSlice';
+import { fetchWishlist, toggleWishlist } from '../../../redux/slice/profileSlice';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -102,6 +102,30 @@ function SavedJobCard({
   );
 }
 
+const SavedJobsSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.md }}>
+      {[1, 2, 3, 4].map(i => (
+        <View key={i} style={[styles.skeletonCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.cardHeader}>
+            <SkeletonPulse style={styles.skeletonLogo} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 4 }} />
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+            <SkeletonPulse style={{ height: 12, width: 60, borderRadius: 10, marginLeft: 'auto' }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const SavedJobsScreen: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -177,7 +201,8 @@ const SavedJobsScreen: React.FC = () => {
       </View>
 
       <FlatList
-        data={filteredJobs}
+        data={loading && filteredJobs.length === 0 ? [] : filteredJobs}
+        ListHeaderComponent={loading && filteredJobs.length === 0 ? <SavedJobsSkeleton /> : null}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
           <SavedJobCard
@@ -205,7 +230,7 @@ const SavedJobsScreen: React.FC = () => {
         ) : null}
         refreshControl={
           <RefreshControl 
-            refreshing={loading} 
+            refreshing={loading && filteredJobs.length > 0} 
             onRefresh={() => dispatch(fetchWishlist())} 
             colors={[colors.primary]}
           />
@@ -294,7 +319,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: 120,
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
@@ -397,6 +422,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  skeletonCard: {
+    padding: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.1)',
+    gap: spacing.md,
+  },
+  skeletonLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
   },
 });
 

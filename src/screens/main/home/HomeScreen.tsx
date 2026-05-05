@@ -11,7 +11,9 @@ import {
   View,
   Share,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
+const BRAND_ICON = require('../../../assets/icons/icon2.2.png');
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
@@ -32,6 +34,8 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssistant';
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
+import HeroBanner from '../../../components/HeroBanner';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 import type { HomeJob } from './homeMockData';
 import {
   HOME_CATEGORIES,
@@ -41,7 +45,7 @@ const H_CARD_W = Math.min(Dimensions.get('window').width * 0.78, 300);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
 
-const COLLAPSE_DISTANCE = 110;
+
 
 function greetingLine(): string {
   const h = new Date().getHours();
@@ -239,24 +243,60 @@ function JobListCard({
   );
 }
 
-const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
-  const opacity = useMemo(() => new Animated.Value(0.3), []);
-  const { colors } = useTheme();
+const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
+  const suggestions = [
+    'Search for a job or company',
+    'Search for Graphic Designer',
+    'Search for Software Engineer',
+    'Search for Sales Executive',
+    'Search for Part-time jobs',
+    'Search for Remote opportunities'
+  ];
+  
+  const [index, setIndex] = useState(0);
+  const translateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [opacity]);
+    const timer = setInterval(() => {
+      // Slide up and out
+      Animated.timing(translateY, {
+        toValue: -30,
+        duration: 400,
+        useNativeDriver: true,
+      }).start(() => {
+        // Change text
+        setIndex((prev) => (prev + 1) % suggestions.length);
+        // Reset position to bottom
+        translateY.setValue(30);
+        // Slide up and in
+        Animated.spring(translateY, {
+          toValue: 0,
+          friction: 8,
+          tension: 40,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 3000);
 
-  return <Animated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
+    return () => clearInterval(timer);
+  }, [suggestions.length]);
+
+  return (
+    <View style={styles.tickerContainer}>
+      <Animated.Text 
+        style={[
+          styles.searchPlaceholderWide, 
+          { color: colors.textPlaceholder, transform: [{ translateY }] }
+        ]} 
+        numberOfLines={1}
+      >
+        {suggestions[index]}
+      </Animated.Text>
+    </View>
+  );
 };
 
 const HomeSkeleton: React.FC = () => {
-  const { colors } = useTheme();
   return (
     <View style={{ gap: spacing.lg }}>
       {/* Hero Skeleton */}
@@ -310,6 +350,38 @@ const HomeScreen: React.FC = () => {
   const [showAllRecommended, setShowAllRecommended] = useState(false);
 
   const scrollY = useMemo(() => new Animated.Value(0), []);
+  const lastScrollY = useRef(0);
+  const isTabBarVisible = useRef(true);
+
+  const handleScroll = (event: any) => {
+    const currentOffset = event.nativeEvent.contentOffset.y;
+    
+    // Header animation
+    scrollY.setValue(currentOffset);
+
+    // Tab bar hide/show logic
+    const diff = currentOffset - lastScrollY.current;
+    if (currentOffset <= 0) {
+      // At the top
+      if (!isTabBarVisible.current) {
+        isTabBarVisible.current = true;
+        navigation.setParams({ tabBarHidden: false });
+      }
+    } else if (Math.abs(diff) > 15) {
+      if (diff > 0 && isTabBarVisible.current && currentOffset > 100) {
+        // Scrolling down
+        isTabBarVisible.current = false;
+        navigation.setParams({ tabBarHidden: true });
+      } else if (diff < 0 && !isTabBarVisible.current) {
+        // Scrolling up
+        isTabBarVisible.current = true;
+        navigation.setParams({ tabBarHidden: false });
+      }
+      lastScrollY.current = currentOffset;
+    }
+  };
+
+
 
   const shakeBell = useCallback(() => {
     // Shake the bell
@@ -365,10 +437,10 @@ const HomeScreen: React.FC = () => {
   }, [shakeBell]);
 
   useEffect(() => {
-    dispatch(fetchMetaCategories());
-    dispatch(fetchHomeFeed());
-    dispatch(fetchProfile());
-  }, [dispatch]);
+    if (categories.length === 0) dispatch(fetchMetaCategories());
+    if (recommended.length === 0 && trending.length === 0) dispatch(fetchHomeFeed());
+    if (!profileData) dispatch(fetchProfile());
+  }, [dispatch, categories.length, recommended.length, trending.length, profileData]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
@@ -396,6 +468,12 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('JobListing', { filters });
   };
 
+  const onRefresh = useCallback(() => {
+    dispatch(fetchMetaCategories());
+    dispatch(fetchHomeFeed());
+    dispatch(fetchProfile());
+  }, [dispatch]);
+
   const handleRefer = async () => {
     try {
       await Share.share({
@@ -407,9 +485,11 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  const COLLAPSE_DISTANCE = 80;
+
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: [0, -COLLAPSE_DISTANCE + 40], // Stick 40px from the top
+    outputRange: [0, -COLLAPSE_DISTANCE + 10], // Reduced from 40 to 10 to move it higher
     extrapolate: 'clamp',
   });
 
@@ -418,9 +498,8 @@ const HomeScreen: React.FC = () => {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
-
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <Animated.View
         style={[
           styles.fixedHeader,
@@ -437,14 +516,8 @@ const HomeScreen: React.FC = () => {
               style={styles.headerLeft}
               accessibilityRole="button"
               accessibilityLabel="Open profile">
-              <View style={[styles.headerAvatar, { backgroundColor: colors.surfaceHighlight }]}>
-                {draft.fullName.trim() ? (
-                  <Text style={[typography.labelMedium, { color: colors.primary, fontSize: 16 }]}>
-                    {avatarInitials}
-                  </Text>
-                ) : (
-                  <Icon name="user" size={22} color={colors.primary} />
-                )}
+              <View style={styles.headerAvatar}>
+                <Image source={BRAND_ICON} style={styles.avatarImage} />
               </View>
               <View style={styles.headerGreeting}>
                 <Text style={[typography.small, { color: colors.textSecondary }]}>
@@ -536,9 +609,7 @@ const HomeScreen: React.FC = () => {
               accessibilityRole="search"
               accessibilityLabel="Search for a job or company">
               <Icon name="search" size={18} color={colors.textPlaceholder} />
-              <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder }]} numberOfLines={1}>
-                Search for a job or company
-              </Text>
+              <SearchTicker colors={colors} />
             </Pressable>
 
             <Pressable
@@ -558,12 +629,6 @@ const HomeScreen: React.FC = () => {
                   size={14}
                   color={showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary}
                 />
-                {/* <Text style={[
-                  styles.filterLabelText, 
-                  { color: showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary }
-                ]}>
-                  Filter
-                </Text> */}
                 {(activeFilter !== 'All' && activeFilter !== null) && (
                   <View style={[styles.filterActiveBadgeWhite, { backgroundColor: '#fff' }]} />
                 )}
@@ -574,90 +639,30 @@ const HomeScreen: React.FC = () => {
       </Animated.View>
 
       <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={handleScroll}
         scrollEventThrottle={16}
         style={styles.scrollMain}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: spacing.md },
-        ]}>
+          { paddingBottom: 120 },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isAnyLoading && recommended.length > 0}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            progressViewOffset={140}
+          />
+        }>
         {isAnyLoading && recommended.length === 0 ? (
           <HomeSkeleton />
         ) : (
           <>
-            <Pressable
+            <HeroBanner
+              colors={colors}
               onPress={goSearch}
-              style={[
-                styles.heroBanner,
-                {
-                  backgroundColor: colors.primary,
-                  shadowColor: colors.primaryDark,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityHint="Opens search">
-              <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                <View
-                  style={[
-                    styles.heroBlob,
-                    { backgroundColor: colors.onPrimary, opacity: 0.12, top: -24, right: -32 },
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.heroBlob,
-                    { backgroundColor: colors.onPrimary, opacity: 0.08, bottom: -28, left: -16 },
-                  ]}
-                />
-              </View>
-              <View style={styles.heroInner}>
-                <View style={styles.heroCopy}>
-                  <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 20, lineHeight: 26 }]}>
-                    See how you can find a job quickly!
-                  </Text>
-                  <Text
-                    style={[
-                      typography.small,
-                      {
-                        color: colors.onPrimary,
-                        opacity: 0.92,
-                        marginTop: spacing.sm,
-                        lineHeight: 18,
-                      },
-                    ]}>
-                    Discover roles that match your skills and apply in minutes.
-                  </Text>
-                  <Pressable
-                    onPress={goSearch}
-                    style={[
-                      styles.heroCta,
-                      {
-                        backgroundColor: colors.onPrimary,
-                        marginTop: spacing.md,
-                      },
-                    ]}>
-                    <Text style={[typography.labelMedium, { color: colors.primary }]}>Read more</Text>
-                  </Pressable>
-                </View>
-                <View style={styles.heroVisual}>
-                  <View
-                    style={[
-                      StyleSheet.absoluteFill,
-                      {
-                        backgroundColor: colors.onPrimary,
-                        opacity: 0.2,
-                        borderRadius: radius.lg,
-                      },
-                    ]}
-                  />
-                  <Icon name="briefcase" size={42} color={colors.onPrimary} />
-                </View>
-              </View>
-            </Pressable>
+            />
 
             <SectionHeader
               title="Categories"
@@ -719,7 +724,7 @@ const HomeScreen: React.FC = () => {
                   icon="clock-o"
                   iconColor={colors.success}
                   colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs')}
+                  onPress={() => navigation.navigate('CategoryJobs', { section: 'latest' })}
                 />
                 <ScrollView
                   horizontal
@@ -745,7 +750,7 @@ const HomeScreen: React.FC = () => {
                   icon="fire"
                   iconColor={colors.warning}
                   colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs')}
+                  onPress={() => navigation.navigate('CategoryJobs', { section: 'trending' })}
                 />
                 <ScrollView
                   horizontal
@@ -766,7 +771,12 @@ const HomeScreen: React.FC = () => {
 
             {nearby && nearby.length > 0 && (
               <>
-                <SectionHeader title="Nearby jobs" icon="map-marker" colors={colors} />
+                <SectionHeader
+                  title="Nearby jobs"
+                  icon="map-marker"
+                  colors={colors}
+                  onPress={() => navigation.navigate('CategoryJobs', { section: 'nearby' })}
+                />
                 <View style={styles.verticalList}>
                   {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
                     <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
@@ -786,7 +796,13 @@ const HomeScreen: React.FC = () => {
 
             {recommended && recommended.length > 0 && (
               <>
-                <SectionHeader title="Recommended for you" icon="bullseye" iconColor={colors.primary} colors={colors} />
+                <SectionHeader
+                  title="Recommended for you"
+                  icon="bullseye"
+                  iconColor={colors.primary}
+                  colors={colors}
+                  onPress={() => navigation.navigate('CategoryJobs', { section: 'recommended' })}
+                />
                 <View style={styles.verticalList}>
                   {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
                     <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
@@ -813,12 +829,14 @@ const HomeScreen: React.FC = () => {
         )}
       </Animated.ScrollView>
 
-      <ProfileStrengthAssistant
-        profile={profileData}
-        colors={colors}
-        navigation={navigation}
-        scrollY={scrollY} // Pass scroll for auto-hide
-      />
+      {user && (
+        <ProfileStrengthAssistant
+          profile={profileData}
+          colors={colors}
+          navigation={navigation}
+          scrollY={scrollY}
+        />
+      )}
 
       <HeaderFilterGrid
         visible={showFilterGrid}
@@ -837,7 +855,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fixedHeader: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xs, // Reduced even more
     maxWidth: '100%',
@@ -853,7 +871,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: 136,
     maxWidth: '100%',
     width: '100%',
@@ -879,9 +897,13 @@ const styles = StyleSheet.create({
   headerAvatar: {
     width: 52,
     height: 52,
-    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
   headerGreeting: {
     flex: 1,
@@ -1017,45 +1039,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
   },
-  heroBanner: {
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-    overflow: 'hidden',
-    ...components.jobCard,
-    shadowOpacity: 0.2,
-    elevation: 4,
-  },
-  heroBlob: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  heroInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  heroCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  heroCta: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.button,
-  },
-  heroVisual: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
+
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1068,7 +1052,7 @@ const styles = StyleSheet.create({
   categoriesScroll: {
     gap: spacing.sm,
     paddingBottom: spacing.lg,
-    paddingRight: spacing.lg,
+    paddingRight: spacing.md,
   },
   categoryChip: {
     minWidth: 84,
@@ -1093,7 +1077,7 @@ const styles = StyleSheet.create({
   trendingScroll: {
     gap: spacing.md,
     paddingBottom: spacing.lg,
-    paddingRight: spacing.lg,
+    paddingRight: spacing.md,
   },
   trendCard: {
     padding: 8,
@@ -1113,6 +1097,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     minHeight: 44,
+  },
+  tickerContainer: {
+    flex: 1,
+    height: 30,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    marginLeft: spacing.xs,
   },
   cardMetaRow: {
     flexDirection: 'row',

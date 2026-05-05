@@ -33,6 +33,7 @@ import { logoutToLogin } from './logoutToLogin';
 import LogoutModal from '../../../components/LogoutModal';
 import { PrimaryButton } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 
 type Nav = StackNavigationProp<ProfileStackParamList, 'ProfileOverview'>;
 
@@ -51,7 +52,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
-  const { data: profileData, completion } = useSelector((state: RootState) => state.profile);
+  const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -94,8 +95,11 @@ const ProfileOverviewScreen: React.FC = () => {
     }
   }, [dispatch, isLoggedIn]);
 
+  const { resetDraft } = useProfileSetup();
+
   const confirmLogout = () => {
     dispatch(logoutCandidate());
+    resetDraft();
     setShowLogoutModal(false);
     logoutToLogin(navigation);
   };
@@ -211,6 +215,36 @@ const ProfileOverviewScreen: React.FC = () => {
     );
   };
 
+  const ProfileSkeleton = () => (
+    <View style={styles.scroll}>
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <SkeletonPulse style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37 }]} />
+          <View style={styles.headerInfo}>
+            <SkeletonPulse style={{ height: 24, width: '60%', borderRadius: 4, marginBottom: 8 }} />
+            <SkeletonPulse style={{ height: 16, width: '40%', borderRadius: 4 }} />
+          </View>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <SkeletonPulse style={{ height: 40, width: '100%', borderRadius: 12 }} />
+        </View>
+      </View>
+      <View style={styles.menuContainer}>
+        <SkeletonPulse style={{ height: 15, width: 100, borderRadius: 4, marginBottom: 15, marginTop: 10 }} />
+        <View style={styles.tilesRow}>
+          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
+          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
+        </View>
+        <View style={styles.tilesRow}>
+          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
+          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
+        </View>
+        <SkeletonPulse style={{ height: 15, width: 100, borderRadius: 4, marginBottom: 15, marginTop: 20 }} />
+        <SkeletonPulse style={{ height: 70, width: '100%', borderRadius: 20, marginBottom: 10 }} />
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       {!isLoggedIn ? (
@@ -219,6 +253,8 @@ const ProfileOverviewScreen: React.FC = () => {
           subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations."
           icon="user-plus"
         />
+      ) : profileLoading && !profileData ? (
+        <ProfileSkeleton />
       ) : (
         <>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -250,15 +286,17 @@ const ProfileOverviewScreen: React.FC = () => {
               </Pressable>
             </View>
           </View>
-          <View style={styles.strengthContainer}>
-            <View style={styles.strengthHeader}>
-              <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>Profile Strength</Text>
-              <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
+          {completion && completion.percentage < 100 && (
+            <View style={styles.strengthContainer}>
+              <View style={styles.strengthHeader}>
+                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>Profile Strength</Text>
+                <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
+              </View>
+              <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
+                <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
+              </View>
             </View>
-            <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
-              <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
-            </View>
-          </View>
+          )}
         </View>
 
         <View style={styles.menuContainer}>
@@ -344,7 +382,7 @@ const ProfileOverviewScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 40 },
+  scroll: { paddingBottom: 160 },
   header: { padding: spacing.md, paddingBottom: spacing.xs },
   headerTop: { flexDirection: 'row', alignItems: 'center' },
   avatarWrapper: { position: 'relative' },
@@ -371,7 +409,7 @@ const styles = StyleSheet.create({
   menuTextContainer: { flex: 1, marginLeft: 12 },
   settingsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
-  logoutBtn: { marginTop: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 20, borderWidth: 1, borderStyle: 'dashed' },
+  logoutBtn: { marginTop: 24, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 20, borderWidth: 1, borderStyle: 'dashed' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },

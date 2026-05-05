@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   SafeAreaView,
   TextInput,
+  
+  FlatList,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -18,6 +20,7 @@ import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 
 const JobCategoriesScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -54,6 +57,21 @@ const JobCategoriesScreen: React.FC = () => {
     return 'briefcase';
   };
 
+  const CategoriesSkeleton = () => (
+    <View style={styles.scrollContent}>
+      {[1, 2, 3, 4, 5, 6].map(i => (
+        <View key={i} style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <SkeletonPulse style={styles.iconBox} />
+          <View style={styles.cardContent}>
+            <SkeletonPulse style={{ height: 18, width: '60%', borderRadius: 4, marginBottom: 6 }} />
+            <SkeletonPulse style={{ height: 12, width: '30%', borderRadius: 4 }} />
+          </View>
+          <SkeletonPulse style={styles.arrowBox} />
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -84,20 +102,13 @@ const JobCategoriesScreen: React.FC = () => {
       </View>
 
       {loading && categories.length === 0 ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
-            Exploring sectors...
-          </Text>
-        </View>
+        <CategoriesSkeleton />
       ) : (
-        <ScrollView 
-          style={styles.scroll} 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          {filteredCategories.map((cat) => (
+        <FlatList
+          data={filteredCategories}
+          keyExtractor={(cat) => cat.id.toString()}
+          renderItem={({ item: cat }) => (
             <Pressable
-              key={cat.id}
               onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
               style={[
                 styles.listCard,
@@ -118,23 +129,29 @@ const JobCategoriesScreen: React.FC = () => {
                 <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
               </View>
             </Pressable>
-          ))}
-          
-          {filteredCategories.length === 0 && (
-            <View style={styles.emptyResults}>
-              <Icon name="search-minus" size={40} color={colors.border} />
-              <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
-                No categories matching "{searchQuery}"
-              </Text>
-            </View>
           )}
-
-          <View style={styles.footer}>
-            <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>
-              Finding more industries for you...
-            </Text>
-          </View>
-        </ScrollView>
+          ListEmptyComponent={
+            filteredCategories.length === 0 && !loading ? (
+              <View style={styles.emptyResults}>
+                <Icon name="search-minus" size={40} color={colors.border} />
+                <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
+                  No categories matching "{searchQuery}"
+                </Text>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            filteredCategories.length > 0 ? (
+              <View style={styles.footer}>
+                <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>
+                  Finding more industries for you...
+                </Text>
+              </View>
+            ) : null
+          }
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        />
       )}
     </SafeAreaView>
   );

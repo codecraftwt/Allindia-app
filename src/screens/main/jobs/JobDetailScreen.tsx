@@ -29,10 +29,12 @@ import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist } from '../../../redux/slice/jobSlice';
+import { fetchWishlist } from '../../../redux/slice/profileSlice';
 
 export type JobDetailRouteParams = { jobId: string };
 
@@ -45,7 +47,6 @@ function SectionTitle({ title, colors }: { title: string; colors: ThemeColors })
     </Text>
   );
 }
-
 function InfoRow({ label, value, icon, colors }: { label: string; value: string; icon: string; colors: ThemeColors }) {
   return (
     <View style={styles.infoRow}>
@@ -59,22 +60,6 @@ function InfoRow({ label, value, icon, colors }: { label: string; value: string;
     </View>
   );
 }
-
-const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
-  const opacity = useMemo(() => new Animated.Value(0.3), []);
-  const { colors } = useTheme();
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-  }, [opacity]);
-
-  return <Animated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
-};
 
 const JobDetailSkeleton: React.FC = () => {
   return (
@@ -108,21 +93,30 @@ const JobDetailScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+  const { wishlistJobs } = useSelector((state: RootState) => state.profile);
 
   useEffect(() => {
     if (jobId) {
       dispatch(fetchJobDetail(jobId));
     }
+    if (isLoggedIn && wishlistJobs.length === 0) {
+      dispatch(fetchWishlist());
+    }
     return () => {
       dispatch(clearCurrentJob());
     };
-  }, [dispatch, jobId]);
+  }, [dispatch, jobId, isLoggedIn]);
 
   useEffect(() => {
     if (currentJob) {
-      setSaved(!!currentJob.is_wishlisted);
+      const isWishlisted = !!(
+        currentJob.is_wishlisted || 
+        currentJob.wishlisted || 
+        wishlistJobs.some((j: any) => j.id === currentJob.id)
+      );
+      setSaved(isWishlisted);
     }
-  }, [currentJob]);
+  }, [currentJob, wishlistJobs]);
 
   const [saved, setSaved] = useState(false);
   const [isWishlisting, setIsWishlisting] = useState(false);
@@ -489,7 +483,7 @@ const JobDetailScreen: React.FC = () => {
           {
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
-            paddingBottom: spacing.md,
+            paddingBottom: 60,
           },
         ]}>
         <PrimaryButton
@@ -660,6 +654,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     shadowOpacity: 0.08,
     elevation: 8,
+    paddingBottom: 100,
   },
   footerRow: {
     flexDirection: 'row',

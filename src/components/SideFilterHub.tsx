@@ -32,7 +32,7 @@ interface SideFilterHubProps {
 const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { categories, cities, loading } = useSelector((state: RootState) => state.meta);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState('jobType');
   const [selectedFilters, setSelectedFilters] = useState<any>({
@@ -43,7 +43,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
 
   // Drawer horizontal animation
   const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-  
+
   // Handle vertical position animation
   const panY = useRef(new Animated.Value(SCREEN_HEIGHT * 0.3)).current;
   const lastPanY = useRef(SCREEN_HEIGHT * 0.3);
@@ -85,7 +85,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
       onPanResponderRelease: (_, gestureState) => {
         // Tap Detection: If movement is very small, toggle the drawer
         const isTap = Math.abs(gestureState.dx) < 12 && Math.abs(gestureState.dy) < 12;
-        
+
         if (isTap) {
           toggleDrawer();
         } else {
@@ -162,12 +162,12 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
       {isOpen && (
         <Pressable style={styles.backdrop} onPress={toggleDrawer} />
       )}
-      
-      <Animated.View 
+
+      <Animated.View
         style={[
-          styles.drawer, 
-          { 
-            backgroundColor: colors.surface, 
+          styles.drawer,
+          {
+            backgroundColor: colors.surface,
             borderColor: colors.border,
             transform: [
               { translateX: drawerAnim },
@@ -175,13 +175,13 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
             ],
           }
         ]}>
-        
+
         {/* Draggable Toggle Button (Handle) */}
         <Animated.View
           {...panResponder.panHandlers}
           style={[
-            styles.handle, 
-            { 
+            styles.handle,
+            {
               backgroundColor: colors.primary,
               transform: [{ translateY: handleTranslateY }]
             }
@@ -199,13 +199,13 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
                   styles.sideItem,
                   selectedSection === sec.id && { backgroundColor: colors.surface }
                 ]}>
-                <Icon 
-                  name={sec.icon} 
-                  size={18} 
-                  color={selectedSection === sec.id ? colors.primary : colors.textPlaceholder} 
+                <Icon
+                  name={sec.icon}
+                  size={18}
+                  color={selectedSection === sec.id ? colors.primary : colors.textPlaceholder}
                 />
                 <Text style={[
-                  styles.sideText, 
+                  styles.sideText,
                   { color: selectedSection === sec.id ? colors.textPrimary : colors.textSecondary }
                 ]}>
                   {sec.label}
@@ -218,7 +218,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
             <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
               Select {SECTIONS.find(s => s.id === selectedSection)?.label}
             </Text>
-            
+
             {loading ? (
               <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
             ) : (
@@ -227,10 +227,10 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
                   const isSelected = selectedSection === 'jobType'
                     ? selectedFilters.jobType.includes(opt)
                     : selectedFilters[selectedSection]?.id === opt.id;
-                  
+
                   // Extract label more reliably
-                  const label = typeof opt === 'string' 
-                    ? opt 
+                  const label = typeof opt === 'string'
+                    ? opt
                     : (opt.city || opt.name || opt.label || 'Unknown');
 
                   return (
@@ -259,7 +259,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
         </View>
 
         <View style={[styles.footer, { borderTopColor: colors.border }]}>
-          <Pressable 
+          <Pressable
             style={[styles.applyBtn, { backgroundColor: colors.primary }]}
             onPress={handleApply}>
             <Text style={styles.applyText}>Apply Filters</Text>

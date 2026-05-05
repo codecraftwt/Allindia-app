@@ -19,6 +19,9 @@ import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import type { ThemeColors } from '../../../theme/colors';
+import SideFilterHub from '../../../components/SideFilterHub';
+import SkeletonPulse from '../../../components/SkeletonPulse';
+
 
 // ─── Job Card ───────────────────────────────────────────────────────────────
 function JobCard({
@@ -92,6 +95,34 @@ function JobCard({
   );
 }
 
+const IndustryJobsSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.md, paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <View key={i} style={[styles.card, { backgroundColor: colors.surface }]}>
+          <View style={styles.cardTop}>
+            <SkeletonPulse style={styles.logoBox} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={styles.arrowBox} />
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={{ height: 18, width: 60, borderRadius: 6 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 const IndustryCategoryScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -131,6 +162,9 @@ const IndustryCategoryScreen: React.FC = () => {
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
         </Pressable>
+        
+
+
         <View style={styles.headerText}>
           <Text style={[typography.appTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {categoryName}
@@ -145,12 +179,7 @@ const IndustryCategoryScreen: React.FC = () => {
 
       {/* Job List */}
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
-            Loading {categoryName} jobs...
-          </Text>
-        </View>
+        <IndustryJobsSkeleton />
       ) : (
         <FlatList
           data={jobs}
@@ -186,6 +215,16 @@ const IndustryCategoryScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
+      <SideFilterHub 
+        colors={colors} 
+        onFilterSelect={(filters) => {
+          dispatch(fetchJobsByCategory({
+            category_id: categoryId,
+            jobs_per_category: 50,
+            ...filters
+          }));
+        }} 
+      />
     </SafeAreaView>
   );
 };
@@ -203,10 +242,21 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.xs,
+  },
+  headerLogoContainer: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
+  },
+  headerLogo: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
   headerText: {
     flex: 1,
@@ -236,15 +286,13 @@ const styles = StyleSheet.create({
   logoBox: {
     width: 48,
     height: 48,
-    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   logoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   titleInfo: { flex: 1 },
   arrowBox: {

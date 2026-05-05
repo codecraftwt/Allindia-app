@@ -24,6 +24,7 @@ import { radius } from '../../../theme/radius';
 import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import SideFilterHub from '../../../components/SideFilterHub';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 
 const { width } = Dimensions.get('window');
 
@@ -83,6 +84,34 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
   );
 }
 
+const CategoryJobsSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.md, paddingHorizontal: 6 }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <View key={i} style={[styles.premiumCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.cardTop}>
+            <SkeletonPulse style={styles.skeletonLogo} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={{ height: 24, width: 24, borderRadius: 12 }} />
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={{ height: 18, width: 60, borderRadius: 6 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const CategoryJobsScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
@@ -103,19 +132,26 @@ const CategoryJobsScreen: React.FC = () => {
 
   useEffect(() => {
     if (categoryId) {
-      // Use the specific by-category API for industry categories
-      dispatch(fetchJobsByCategory({ 
-        category_id: categoryId,
-        jobs_per_category: 50 
-      }));
+      // Only fetch if we don't have jobs for this category yet
+      if (jobsByCategory.length === 0) {
+        dispatch(fetchJobsByCategory({ 
+          category_id: categoryId,
+          jobs_per_category: 50 
+        }));
+      }
     } else {
       if (selectedId === 'all') {
-        dispatch(fetchJobs({ per_page: 100 }));
+        if (recommended.length === 0) {
+          dispatch(fetchJobs({ per_page: 100 }));
+        }
       } else {
-        dispatch(fetchHomeFeed());
+        // If we're missing any of the main feed lists, fetch them
+        if (latest.length === 0 || trending.length === 0 || nearby.length === 0) {
+          dispatch(fetchHomeFeed());
+        }
       }
     }
-  }, [dispatch, selectedId, categoryId]);
+  }, [dispatch, selectedId, categoryId, recommended.length, latest.length, trending.length, nearby.length, jobsByCategory.length]);
 
   const applyAdvancedFilters = (filters: any) => {
     setActiveFilter(filters);
@@ -200,10 +236,7 @@ const CategoryJobsScreen: React.FC = () => {
       </View>
 
       {loading && jobsData.length === 0 ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>Updating feed...</Text>
-        </View>
+        <CategoryJobsSkeleton />
       ) : (
         <FlatList
           data={jobsData}
@@ -357,6 +390,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 100,
+  },
+  skeletonLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
   },
 });
 

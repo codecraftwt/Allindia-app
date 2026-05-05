@@ -25,6 +25,7 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 import type { HomeJob } from '../home/homeMockData';
 import { ALL_LISTED_JOBS } from '../home/homeMockData';
 
@@ -95,6 +96,33 @@ function JobListCard({
     </Pressable>
   );
 }
+
+const JobListingSkeleton: React.FC = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={{ gap: spacing.md, paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <View key={i} style={[styles.listCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.listCardTop}>
+            <SkeletonPulse style={styles.listIconWrap} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+            </View>
+            <SkeletonPulse style={{ height: 18, width: 60, borderRadius: 6 }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
 
 function FilterSelectRow({
   label,
@@ -176,12 +204,7 @@ const JobListingScreen: React.FC = () => {
         </View>
 
         {loading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
-              Finding the best jobs for you...
-            </Text>
-          </View>
+          <JobListingSkeleton />
         ) : (
           <FlatList
             data={jobsData}

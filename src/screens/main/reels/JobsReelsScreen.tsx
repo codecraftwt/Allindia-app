@@ -20,7 +20,7 @@ import {
   TouchableOpacity,
   BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
@@ -254,10 +254,55 @@ const RotatingBorder = ({ colors }: any) => {
   );
 };
 
+const ShimmerLoader: React.FC<{ style?: any }> = ({ style }) => {
+  const { colors } = useTheme();
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [animatedValue]);
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.3, 0.7],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          backgroundColor: colors.surfaceHighlight,
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
 const JobsReelsScreen: React.FC = () => {
   const { colors, mode } = useTheme();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid');
+  const [loading, setLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   
   // Interaction States
@@ -278,6 +323,13 @@ const JobsReelsScreen: React.FC = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const storyProgress = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<any>(null);
+  
+  // Dynamic Tab Bar Visibility via Params
+  useEffect(() => {
+    navigation.setParams({ 
+      isFullScreen: viewMode === 'full' || isStoryVisible 
+    });
+  }, [viewMode, isStoryVisible, navigation]);
 
   // Handle Hardware Back Button
   useEffect(() => {
@@ -336,6 +388,12 @@ const JobsReelsScreen: React.FC = () => {
       }, 1500);
     }
   };
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleShare = async () => {
     try {
@@ -423,7 +481,7 @@ const JobsReelsScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={styles.sideActions}>
+        <View style={[styles.sideActions, { bottom: 120 + insets.bottom }]}>
           <Pressable style={styles.actionItem} onPress={() => toggleLike(item.id)}>
             <View style={[styles.iconCircle, likedReels.has(item.id) && { backgroundColor: 'rgba(255, 75, 43, 0.3)', borderColor: '#ff4b2b' }]}>
               <Icon name={likedReels.has(item.id) ? "heart" : "heart-o"} size={24} color={likedReels.has(item.id) ? "#ff4b2b" : "#fff"} />
@@ -453,7 +511,7 @@ const JobsReelsScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        <View style={styles.bottomDetails}>
+        <View style={[styles.bottomDetails, { bottom: 40 + insets.bottom }]}>
           <View style={styles.companyRow}>
             <Image source={{ uri: item.logo }} style={styles.miniLogo} />
             <Text style={styles.companyName}>{item.company}</Text>
@@ -479,9 +537,77 @@ const JobsReelsScreen: React.FC = () => {
     </View>
   );
 
+  const renderSkeletonGrid = () => (
+    <View style={{ paddingBottom: 100 }}>
+      {/* Stories Skeleton */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyScroll}>
+        {[1, 2, 3, 4, 5].map(i => (
+          <View key={i} style={styles.storyWrap}>
+            <ShimmerLoader style={[styles.storyOuter, { borderRadius: 35, width: 70, height: 70 }]} />
+            <ShimmerLoader style={{ width: 50, height: 10, borderRadius: 4, marginTop: 8, alignSelf: 'center' }} />
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Section 1: Trending Now */}
+      <View style={styles.section}>
+        <View style={styles.sectionHead}>
+          <ShimmerLoader style={{ width: 120, height: 20, borderRadius: 4 }} />
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalGrid}>
+          {[1, 2, 3].map(i => (
+            <View key={i} style={[styles.premiumCard, { backgroundColor: colors.surfaceHighlight, overflow: 'hidden' }]}>
+              <ShimmerLoader style={{ width: '100%', height: '100%' }} />
+              <View style={[StyleSheet.absoluteFill, { padding: 12, justifyContent: 'flex-end' }]}>
+                <ShimmerLoader style={{ width: '80%', height: 14, borderRadius: 4, marginBottom: 6, opacity: 0.6 }} />
+                <ShimmerLoader style={{ width: '50%', height: 10, borderRadius: 4, opacity: 0.4 }} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Section 2: Threads */}
+      <View style={styles.section}>
+        <View style={styles.sectionHead}>
+          <ShimmerLoader style={{ width: 150, height: 20, borderRadius: 4 }} />
+        </View>
+        <View style={styles.threadsContainer}>
+          {[1, 2].map(i => (
+            <View key={i} style={[styles.threadCard, { borderBottomColor: colors.border }]}>
+              <ShimmerLoader style={[styles.threadAvatar, { borderRadius: 20 }]} />
+              <View style={{ flex: 1, marginLeft: 12, gap: 8 }}>
+                <ShimmerLoader style={{ width: 100, height: 14, borderRadius: 4 }} />
+                <ShimmerLoader style={{ width: '100%', height: 40, borderRadius: 8 }} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Section 3: Videos */}
+      <View style={styles.section}>
+        <View style={styles.sectionHead}>
+          <ShimmerLoader style={{ width: 100, height: 20, borderRadius: 4 }} />
+        </View>
+        <View style={styles.videosContainer}>
+          {[1, 2].map(i => (
+            <View key={i} style={styles.videoCard}>
+              <ShimmerLoader style={[styles.videoThumb, { borderRadius: radius.xl }]} />
+              <View style={{ marginTop: 10, gap: 6 }}>
+                <ShimmerLoader style={{ width: '90%', height: 16, borderRadius: 4 }} />
+                <ShimmerLoader style={{ width: '60%', height: 12, borderRadius: 4 }} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
   if (viewMode === 'full') {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: '#000' }]}>
         <StatusBar hidden />
         <FlatList
           data={REELS_DATA}
@@ -614,9 +740,12 @@ const JobsReelsScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]} edges={['top', 'left', 'right', 'bottom']}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+      >
 
         <View style={styles.premiumHeader}>
           <View>
@@ -631,7 +760,11 @@ const JobsReelsScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        {/* Stories with Rotating Border Loading */}
+        {loading ? (
+          renderSkeletonGrid()
+        ) : (
+          <>
+            {/* Stories with Rotating Border Loading */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storyScroll}>
           {CATEGORIES.map(cat => (
             <Pressable key={cat.id} style={styles.storyWrap} onPress={() => handlePress(cat.id, 'story')}>
@@ -815,7 +948,7 @@ const JobsReelsScreen: React.FC = () => {
                   <View style={[
                     styles.pollProgressFill, 
                     { 
-                      width: opt.votes, 
+                      width: opt.votes as any, 
                       backgroundColor: selectedPoll === idx ? colors.primary : (opt.isLeading ? colors.textPlaceholder + '60' : colors.textPlaceholder + '40') 
                     }
                   ]} />
@@ -871,6 +1004,8 @@ const JobsReelsScreen: React.FC = () => {
         </View>
 
         <View style={{ height: 100 }} />
+          </>
+        )}
       </ScrollView>
 
       {/* Instagram Style Story Viewer */}
@@ -927,7 +1062,7 @@ const JobsReelsScreen: React.FC = () => {
             />
             
             {/* Info Overlay */}
-            <View style={styles.storyInfoOverlay}>
+            <View style={[styles.storyInfoOverlay, { paddingBottom: 60 + insets.bottom }]}>
               <Animated.View style={styles.storyDetailsCard}>
                 <Text style={styles.storyJobTitle}>{STORY_DATA[currentStoryIndex].slides[currentSlideIndex].title}</Text>
                 <View style={styles.storyMetaRow}>

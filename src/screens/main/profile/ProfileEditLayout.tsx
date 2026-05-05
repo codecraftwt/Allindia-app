@@ -62,7 +62,7 @@ export const ProfileEditLayout: React.FC<Props> = ({
   );
 
   return (
-    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <View style={[styles.blob, { backgroundColor: `${colors.primary}0D`, top: -28, right: -40 }]} />
         <View style={[styles.blob, { backgroundColor: `${colors.primary}0A`, bottom: 72, left: -32 }]} />
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: spacing.lg,
+    paddingBottom: 120,
   },
   body: {
     maxWidth: 800,

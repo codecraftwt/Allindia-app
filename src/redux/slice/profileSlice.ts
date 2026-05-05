@@ -366,6 +366,8 @@ const profileSlice = createSlice({
   reducers: {
     clearProfile: (state) => {
       state.data = null;
+      state.completion = null;
+      state.applicationCounts = null;
       state.appliedJobs = [];
       state.wishlistJobs = [];
       state.error = null;

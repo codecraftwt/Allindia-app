@@ -25,6 +25,11 @@ export type SavedStackParamList = {
   JobDetail: JobDetailParams;
 };
 
+export type ApplicationsStackParamList = {
+  ApplicationsList: undefined;
+  JobDetail: JobDetailParams;
+};
+
 export type JobReelsStackParamList = {
   ReelsMain: undefined;
   SavedPost: undefined;

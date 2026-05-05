@@ -13,9 +13,12 @@ export const fetchJobs = createAsyncThunk(
     wishlisted?: boolean;
     per_page?: number;
     page?: number;
-  }, { rejectWithValue }) => {
+  }, { getState, rejectWithValue }) => {
     try {
-      const response = await api.get('api/candidate/jobs', { params });
+      const state = getState() as any;
+      const token = state.auth.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get('api/candidate/jobs', { params, headers });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs');
@@ -55,9 +58,12 @@ export const filterJobs = createAsyncThunk(
 
 export const fetchHomeFeed = createAsyncThunk(
   'jobs/fetchHomeFeed',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const response = await api.get('api/candidate/jobs/home-feed');
+      const state = getState() as any;
+      const token = state.auth.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get('api/candidate/jobs/home-feed', { headers });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch home feed');
@@ -67,9 +73,12 @@ export const fetchHomeFeed = createAsyncThunk(
 
 export const fetchJobsByCategory = createAsyncThunk(
   'jobs/fetchJobsByCategory',
-  async (params: { category_id?: number; limit?: number; jobs_per_category?: number }, { rejectWithValue }) => {
+  async (params: { category_id?: number; limit?: number; jobs_per_category?: number }, { getState, rejectWithValue }) => {
     try {
-      const response = await api.get('api/candidate/jobs/by-category', { params });
+      const state = getState() as any;
+      const token = state.auth.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get('api/candidate/jobs/by-category', { params, headers });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs by category');
@@ -79,9 +88,12 @@ export const fetchJobsByCategory = createAsyncThunk(
 
 export const fetchJobDetail = createAsyncThunk(
   'jobs/fetchJobDetail',
-  async (jobId: number | string, { rejectWithValue }) => {
+  async (jobId: number | string, { getState, rejectWithValue }) => {
     try {
-      const response = await api.get(`api/candidate/jobs/${jobId}`);
+      const state = getState() as any;
+      const token = state.auth.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get(`api/candidate/jobs/${jobId}`, { headers });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch job detail');
@@ -260,8 +272,19 @@ const jobSlice = createSlice({
       .addCase(toggleWishlist.pending, (state) => {
         // Handled locally
       })
-      .addCase(toggleWishlist.fulfilled, (state) => {
-        // Handled locally
+      .addCase(toggleWishlist.fulfilled, (state, action) => {
+        const { jobId, isWishlisted } = action.payload;
+        if (state.currentJob && state.currentJob.id === jobId) {
+          state.currentJob.is_wishlisted = isWishlisted;
+        }
+        // Also update in other lists if necessary
+        const updateJob = (job: any) => {
+          if (job.id === jobId) job.is_wishlisted = isWishlisted;
+        };
+        state.recommended.forEach(updateJob);
+        state.trending.forEach(updateJob);
+        state.nearby.forEach(updateJob);
+        state.latest.forEach(updateJob);
       })
       .addCase(toggleWishlist.rejected, (state, action) => {
         state.error = action.payload as string;

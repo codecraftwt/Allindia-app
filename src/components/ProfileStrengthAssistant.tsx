@@ -209,7 +209,7 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
   const rotation = (strength / 100) * 360;
 
   return (
-    <View style={[styles.container, { bottom: insets.bottom + spacing.lg }]}>
+    <View style={[styles.container, { bottom: insets.bottom + spacing.lg + 80 }]}>
       {/* Auto Hint Bubble */}
       {showAutoHint && !showTooltip && !isLaunching && (
         <RNAnimated.View

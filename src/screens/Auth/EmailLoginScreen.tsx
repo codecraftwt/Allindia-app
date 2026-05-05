@@ -56,12 +56,15 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const onLogin = async () => {
-    if (!email || !password) {
+    if (!email.trim() || !password.trim()) {
       showStatus('error', 'Required Field', 'Please enter both email and password');
       return;
     }
 
-    const resultAction = await dispatch(loginCandidate({ email, password }));
+    const resultAction = await dispatch(loginCandidate({ 
+      email: email.trim(), 
+      password: password.trim() 
+    }));
     console.log("resultAction ", resultAction)
 
     if (loginCandidate.fulfilled.match(resultAction)) {

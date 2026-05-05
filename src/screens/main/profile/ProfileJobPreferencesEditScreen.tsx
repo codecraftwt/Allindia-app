@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -218,6 +218,35 @@ const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
   return <RNAnimated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
 };
 
+// ─── Custom Animated Sheet Wrapper ───────────────────────────────────────
+const BottomSheetContent = ({ children, visible, colors }: any) => {
+  const translateY = useSharedValue(500); // Start off-screen
+
+  useEffect(() => {
+    if (visible) {
+      translateY.value = withTiming(0, { duration: 250 });
+    } else {
+      translateY.value = 500;
+    }
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.citySheet,
+        { backgroundColor: colors.surface },
+        animatedStyle,
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+};
+
 const PreferencesSkeleton = ({ colors }: any) => (
   <View style={{ gap: spacing.lg, paddingHorizontal: 4 }}>
     {/* Current City Skeleton */}
@@ -266,6 +295,29 @@ const PreferencesSkeleton = ({ colors }: any) => (
   </View>
 );
 
+// ── Category Search Component (Stable) ──────────────────────────────────────
+const CategorySearchField = React.memo(({ value, onChange, colors }: any) => (
+  <View style={{ paddingHorizontal: 14, marginTop: spacing.md, marginBottom: spacing.sm }}>
+    <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>Job category</Text>
+    <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Icon name="search" size={14} color={colors.textPlaceholder} />
+      <TextInput
+        placeholder="Search categories..."
+        placeholderTextColor={colors.textPlaceholder}
+        value={value}
+        onChangeText={onChange}
+        style={[typography.small, { color: colors.textPrimary, flex: 1, paddingVertical: 8 }]}
+        autoCorrect={false}
+      />
+      {value.length > 0 && (
+        <TouchableOpacity onPress={() => onChange('')}>
+          <Icon name="x-circle" size={14} color={colors.textPlaceholder} />
+        </TouchableOpacity>
+      )}
+    </View>
+  </View>
+));
+
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferencesEdit'>;
@@ -283,8 +335,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const [currentCityId, setCurrentCityId] = useState<number | null>(null);
   const [preferredCityIds, setPreferredCityIds] = useState<number[]>([]);
   const [jobCategoryIds, setJobCategoryIds] = useState<number[]>([]);
-  const [minSalary, setMinSalary] = useState(2);
-  const [maxSalary, setMaxSalary] = useState(5);
+  const [minSalary, setMinSalary] = useState<number>(2);
+  const [maxSalary, setMaxSalary] = useState<number>(5);
   const [workFromHome, setWorkFromHome] = useState(false);
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
   const [catSearch, setCatSearch] = useState('');
@@ -299,17 +351,19 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const [citySearch, setCitySearch] = useState('');
   const [prefCitySearch, setPrefCitySearch] = useState('');
 
-  // Initial Sync
+  const isInitialized = useRef(false);
+
+  // Fetch meta data on mount
   useEffect(() => {
-    if (!profile && !profileLoading) {
-      dispatch(fetchProfile());
-    }
     dispatch(fetchMetaCategories());
     dispatch(fetchMetaCities());
     dispatch(fetchMetaQualifications());
+  }, [dispatch]);
 
-    const pref = profile?.preferences;
-    if (pref) {
+  // Initial Sync from Profile
+  useEffect(() => {
+    if (profile?.preferences && !isInitialized.current) {
+      const pref = profile.preferences;
       setCurrentCityId(pref.current_city_id || null);
       setPreferredCityIds(pref.preferred_city_ids || []);
       const catIds = pref.job_category_id ? [pref.job_category_id] : (pref.job_category_ids || []);
@@ -317,6 +371,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       setMinSalary(Math.round((pref.expected_salary_min || 200000) / 100000));
       setMaxSalary(Math.round((pref.expected_salary_max || 500000) / 100000));
       setWorkFromHome(!!pref.work_from_home);
+      
+      isInitialized.current = true;
+    } else if (!profile && !profileLoading) {
+      dispatch(fetchProfile());
     }
   }, [dispatch, profile, profileLoading]);
 
@@ -333,14 +391,13 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
   const handleSave = async () => {
     setSaving(true);
-
     try {
       await dispatch(updatePreferencesProfile({
         current_city_id: currentCityId,
         preferred_city_ids: preferredCityIds,
         job_category_id: jobCategoryIds[0] || null,
-        expected_salary_min: minSalary * 100000,
-        expected_salary_max: maxSalary * 100000,
+        expected_salary_min: Number(minSalary) * 100000,
+        expected_salary_max: Number(maxSalary) * 100000,
         work_from_home: workFromHome,
       })).unwrap();
       showToast('Job preferences saved!', 'success');
@@ -362,7 +419,12 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     }
 
     const list: any[] = [];
-    // Logic for View More
+    list.push(
+      { id: 'current_city', type: 'city_selection' },
+      { id: 'preferred_locations', type: 'pref_locations' },
+      { id: 'search_bar', type: 'search_bar' }
+    );
+
     const limit = 6;
     const shouldTruncate = !showAllCats && catSearch.length === 0 && filteredCategories.length > limit;
     const displayCats = shouldTruncate ? filteredCategories.slice(0, limit) : filteredCategories;
@@ -384,120 +446,65 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       list.push({ id: 'button', type: 'button' });
     }
     return list;
-  }, [filteredCategories, metaLoading, profileLoading, showAllCats, catSearch, isInitialLoading]);
-
-  // ── Stable Header ─────────────────────────────────────────────────────────
-  const ListHeader = useMemo(() => {
-    if (isInitialLoading) return null;
-    return (
-      <View style={{ paddingBottom: spacing.sm }}>
-      <Section title="Current city" colors={colors}>
-        <Pressable
-          onPress={() => {
-            setCitySearch('');
-            setShowCityModal(true);
-          }}
-          style={[
-            styles.dropdownTrigger,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
-          ]}>
-          <Icon name="map-pin" size={18} color={colors.primary} />
-          <Text
-            style={[
-              typography.body,
-              {
-                color: currentCityId ? colors.textPrimary : colors.textPlaceholder,
-                flex: 1,
-              },
-            ]}>
-            {currentCityLabel || 'Select city'}
-          </Text>
-          <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-        </Pressable>
-      </Section>
-
-      <Section title="Preferred job locations" colors={colors}>
-        <Pressable
-          onPress={() => {
-            setPrefCitySearch('');
-            setShowPrefCityModal(true);
-          }}
-          style={[
-            styles.dropdownTrigger,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
-          ]}>
-          <Icon name="navigation" size={18} color={colors.primary} />
-          <Text
-            style={[
-              typography.body,
-              {
-                color: preferredCityIds.length ? colors.textPrimary : colors.textPlaceholder,
-                flex: 1,
-              },
-            ]}>
-            {preferredCityIds.length ? `${preferredCityIds.length} cities selected` : 'Select cities'}
-          </Text>
-          <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-        </Pressable>
-      </Section>
-
-      <View style={{ paddingHorizontal: 14, marginTop: spacing.md, marginBottom: spacing.sm }}>
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>Job category</Text>
-        <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Icon name="search" size={14} color={colors.textPlaceholder} />
-          <TextInput
-            placeholder="Search categories..."
-            placeholderTextColor={colors.textPlaceholder}
-            value={catSearch}
-            onChangeText={setCatSearch}
-            style={[typography.small, { color: colors.textPrimary, flex: 1, paddingVertical: 8 }]}
-            autoCorrect={false}
-          />
-          {catSearch.length > 0 && (
-            <TouchableOpacity onPress={() => setCatSearch('')}>
-              <Icon name="x-circle" size={14} color={colors.textPlaceholder} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </View>
-    );
-  }, [colors, currentCityId, currentCityLabel, preferredCityIds, catSearch, isInitialLoading]);
+  }, [filteredCategories, metaLoading, profileLoading, showAllCats, catSearch, isInitialLoading, currentCityId, preferredCityIds]);
 
   const renderFlatItem = useCallback(({ item }: { item: any }) => {
     switch (item.type) {
+      case 'city_selection':
+        return (
+          <Section title="Current city" colors={colors}>
+            <Pressable
+              onPress={() => {
+                setCitySearch('');
+                setShowCityModal(true);
+              }}
+              style={[
+                styles.dropdownTrigger,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}>
+              <Icon name="map-pin" size={18} color={colors.primary} />
+              <Text style={[typography.body, { color: currentCityId ? colors.textPrimary : colors.textPlaceholder, flex: 1 }]}>
+                {currentCityLabel || 'Select city'}
+              </Text>
+              <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+            </Pressable>
+          </Section>
+        );
+      case 'pref_locations':
+        return (
+          <Section title="Preferred job locations" colors={colors}>
+            <Pressable
+              onPress={() => {
+                setPrefCitySearch('');
+                setShowPrefCityModal(true);
+              }}
+              style={[
+                styles.dropdownTrigger,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}>
+              <Icon name="navigation" size={18} color={colors.primary} />
+              <Text style={[typography.body, { color: preferredCityIds.length ? colors.textPrimary : colors.textPlaceholder, flex: 1 }]}>
+                {preferredCityIds.length ? `${preferredCityIds.length} cities selected` : 'Select cities'}
+              </Text>
+              <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+            </Pressable>
+          </Section>
+        );
+      case 'search_bar':
+        return <CategorySearchField value={catSearch} onChange={setCatSearch} colors={colors} />;
       case 'section':
         let content = null;
         if (item.id === 'salary') content = (
           <View style={{ gap: spacing.sm }}>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <SalarySelectionField
-                label="Min Salary"
-                value={minSalary}
-                onPress={() => setShowMinSalaryModal(true)}
-                colors={colors}
-              />
-              <SalarySelectionField
-                label="Max Salary"
-                value={maxSalary}
-                onPress={() => setShowMaxSalaryModal(true)}
-                colors={colors}
-              />
+              <SalarySelectionField label="Min Salary" value={minSalary} onPress={() => setShowMinSalaryModal(true)} colors={colors} />
+              <SalarySelectionField label="Max Salary" value={maxSalary} onPress={() => setShowMaxSalaryModal(true)} colors={colors} />
             </View>
             <SalaryRangeIndicator min={minSalary} max={maxSalary} colors={colors} />
           </View>
         );
-        if (item.id === 'wfh') content = (
-          <WFHCard active={workFromHome} onToggle={setWorkFromHome} colors={colors} />
-        );
+        if (item.id === 'wfh') content = <WFHCard active={workFromHome} onToggle={setWorkFromHome} colors={colors} />;
         return <Section title={item.title} colors={colors}>{content}</Section>;
-
       case 'category':
         return (
           <View style={{ marginBottom: spacing.xs, paddingHorizontal: 14 }}>
@@ -517,24 +524,19 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         );
       case 'view_more':
         return (
-          <TouchableOpacity
-            onPress={() => setShowAllCats(true)}
-            style={styles.viewMoreBtn}
-          >
+          <TouchableOpacity onPress={() => setShowAllCats(true)} style={styles.viewMoreBtn}>
             <Text style={[typography.labelMedium, { color: colors.primary }]}>View More Categories</Text>
             <Icon name="chevron-down" size={16} color={colors.primary} />
           </TouchableOpacity>
         );
       case 'skeleton':
         return <PreferencesSkeleton colors={colors} />;
-      case 'loading':
-        return null;
       case 'button':
         return <View style={{ padding: 14 }}><PrimaryButton title={saving ? 'Saving...' : 'Save Preferences'} onPress={handleSave} colors={colors} /></View>;
       default:
         return null;
     }
-  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats, profileLoading, metaLoading]);
+  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats, currentCityId, currentCityLabel, preferredCityIds, catSearch]);
 
   return (
     <ProfileEditLayout
@@ -543,16 +545,17 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       useFlatList={true}
       flatListData={sections}
       renderFlatItem={renderFlatItem}
-      scrollProps={{
-        ListHeaderComponent: ListHeader
-      }}
     >
       {/* City Modals */}
-      <Modal visible={showCityModal} animationType="slide" transparent>
+      <Modal 
+        visible={showCityModal} 
+        animationType="fade" 
+        transparent 
+        statusBarTranslucent
+        onRequestClose={() => setShowCityModal(false)}
+      >
         <Pressable style={styles.modalOverlay} onPress={() => setShowCityModal(false)}>
-          <Pressable
-            style={[styles.citySheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
+          <BottomSheetContent visible={showCityModal} colors={colors}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Current City</Text>
               <Pressable onPress={() => setShowCityModal(false)} hitSlop={12}>
@@ -595,14 +598,18 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 </Pressable>
               )}
             />
-          </Pressable>
+          </BottomSheetContent>
         </Pressable>
       </Modal>
-      <Modal visible={showMinSalaryModal} animationType="slide" transparent>
+      <Modal 
+        visible={showMinSalaryModal} 
+        animationType="fade" 
+        transparent 
+        statusBarTranslucent
+        onRequestClose={() => setShowMinSalaryModal(false)}
+      >
         <Pressable style={styles.modalOverlay} onPress={() => setShowMinSalaryModal(false)}>
-          <Pressable
-            style={[styles.citySheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
+          <BottomSheetContent visible={showMinSalaryModal} colors={colors}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Min Salary (LPA)</Text>
               <Pressable onPress={() => setShowMinSalaryModal(false)} hitSlop={12}>
@@ -631,15 +638,19 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 </Pressable>
               )}
             />
-          </Pressable>
+          </BottomSheetContent>
         </Pressable>
       </Modal>
 
-      <Modal visible={showMaxSalaryModal} animationType="slide" transparent>
+      <Modal 
+        visible={showMaxSalaryModal} 
+        animationType="fade" 
+        transparent 
+        statusBarTranslucent
+        onRequestClose={() => setShowMaxSalaryModal(false)}
+      >
         <Pressable style={styles.modalOverlay} onPress={() => setShowMaxSalaryModal(false)}>
-          <Pressable
-            style={[styles.citySheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
+          <BottomSheetContent visible={showMaxSalaryModal} colors={colors}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Max Salary (LPA)</Text>
               <Pressable onPress={() => setShowMaxSalaryModal(false)} hitSlop={12}>
@@ -668,14 +679,18 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 </Pressable>
               )}
             />
-          </Pressable>
+          </BottomSheetContent>
         </Pressable>
       </Modal>
-      <Modal visible={showPrefCityModal} animationType="slide" transparent>
+      <Modal 
+        visible={showPrefCityModal} 
+        animationType="fade" 
+        transparent 
+        statusBarTranslucent
+        onRequestClose={() => setShowPrefCityModal(false)}
+      >
         <Pressable style={styles.modalOverlay} onPress={() => setShowPrefCityModal(false)}>
-          <Pressable
-            style={[styles.citySheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
+          <BottomSheetContent visible={showPrefCityModal} colors={colors}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Preferred Locations</Text>
               <Pressable onPress={() => setShowPrefCityModal(false)} hitSlop={12}>
@@ -726,7 +741,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 );
               }}
             />
-          </Pressable>
+          </BottomSheetContent>
         </Pressable>
       </Modal>
     </ProfileEditLayout>
@@ -798,32 +813,27 @@ const styles = StyleSheet.create({
   citySheet: {
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    maxHeight: '78%',
-    paddingBottom: spacing.md,
+    height: '70%',
+    padding: 24,
   },
   modalHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   searchInput: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: radius.search,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 15,
-    fontFamily: typography.body.fontFamily,
+    height: 48,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
-  cityList: {
-    maxHeight: 360,
-  },
+  cityList: { flex: 1 },
   cityRow: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: radius.sm,
   },
   miniSearch: {
     flexDirection: 'row',
@@ -837,10 +847,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    gap: 8,
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
+    paddingVertical: 12,
+    gap: 4,
   },
 });
 
