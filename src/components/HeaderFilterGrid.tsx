@@ -86,6 +86,17 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     category: null,
     city: null,
   });
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mount/unmount control — keep rendered during close animation
+  useEffect(() => {
+    if (visible) {
+      setIsMounted(true);
+    } else {
+      const t = setTimeout(() => setIsMounted(false), 300);
+      return () => clearTimeout(t);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (visible) {
@@ -103,34 +114,46 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 
   const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
 
-  const slideAnim = useRef(new Animated.Value(-300)).current;
+  const slideAnim = useRef(new Animated.Value(-20)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
         Animated.spring(slideAnim, {
-          toValue: 50,
-          tension: 60,
-          friction: 9,
+          toValue: 0,
+          tension: 70,
+          friction: 10,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 70,
+          friction: 10,
           useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: -400,
-          duration: 250,
+          toValue: -20,
+          duration: 200,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.95,
+          duration: 180,
           useNativeDriver: true,
         }),
       ]).start();
@@ -206,7 +229,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     </View>
   );
 
-  if (!visible && opacityAnim._value === 0) return null;
+  if (!visible && !isMounted) return null;
 
   return (
     <Animated.View
@@ -220,7 +243,8 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
             backgroundColor: colors.surface,
             borderColor: colors.border,
             transform: [
-              { translateY: Animated.add(slideAnim, headerTranslateY || 0) }
+              { translateY: slideAnim },
+              { scale: scaleAnim },
             ]
           }
         ]}>

@@ -352,12 +352,18 @@ const HomeScreen: React.FC = () => {
   const scrollY = useMemo(() => new Animated.Value(0), []);
   const lastScrollY = useRef(0);
   const isTabBarVisible = useRef(true);
+  const [headerHeight, setHeaderHeight] = useState(130);
+  const frozenScrollY = useRef(0);
 
   const handleScroll = (event: any) => {
+    // Don't update scroll position when filter is open
+    if (showFilterGrid) return;
+
     const currentOffset = event.nativeEvent.contentOffset.y;
     
     // Header animation
     scrollY.setValue(currentOffset);
+    frozenScrollY.current = currentOffset;
 
     // Tab bar hide/show logic
     const diff = currentOffset - lastScrollY.current;
@@ -464,8 +470,16 @@ const HomeScreen: React.FC = () => {
 
   const applyAdvancedFilters = (filters: any) => {
     setShowFilterGrid(false);
+    // Restore scroll animation to frozen position when filter closes
+    scrollY.setValue(frozenScrollY.current);
     // Navigate directly to JobListing with filters
     navigation.navigate('JobListing', { filters });
+  };
+
+  const handleCloseFilter = () => {
+    setShowFilterGrid(false);
+    // Restore scroll animation to frozen position when filter closes
+    scrollY.setValue(frozenScrollY.current);
   };
 
   const onRefresh = useCallback(() => {
@@ -501,6 +515,7 @@ const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <Animated.View
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
         style={[
           styles.fixedHeader,
           {
@@ -641,6 +656,7 @@ const HomeScreen: React.FC = () => {
       <Animated.ScrollView
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        scrollEnabled={!showFilterGrid}
         style={styles.scrollMain}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -840,11 +856,11 @@ const HomeScreen: React.FC = () => {
 
       <HeaderFilterGrid
         visible={showFilterGrid}
-        onClose={() => setShowFilterGrid(false)}
+        onClose={handleCloseFilter}
         onFilterSelect={applyAdvancedFilters}
         activeFilter={activeFilter}
         colors={colors}
-        headerTranslateY={headerTranslateY}
+        top={headerHeight}
       />
     </SafeAreaView>
   );
