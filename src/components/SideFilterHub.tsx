@@ -27,9 +27,10 @@ interface SideFilterHubProps {
   colors: any;
   onFilterSelect: (filters: any) => void;
   activeFilter?: any;
+  hiddenSections?: string[];
 }
 
-const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect }) => {
+const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, hiddenSections = [] }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { categories, cities, loading } = useSelector((state: RootState) => state.meta);
 
@@ -114,13 +115,20 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
     extrapolate: 'clamp',
   });
 
-  const SECTIONS = [
+  const ALL_SECTIONS = [
     { id: 'jobType', label: 'Type', icon: 'bolt' },
     { id: 'category', label: 'Category', icon: 'th-large' },
     { id: 'city', label: 'City', icon: 'map-marker' },
   ];
 
-  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+  const SECTIONS = ALL_SECTIONS.filter(s => !hiddenSections.includes(s.id));
+
+  // If current selected section is hidden, reset to first visible
+  const effectiveSection = SECTIONS.find(s => s.id === selectedSection)
+    ? selectedSection
+    : (SECTIONS[0]?.id ?? 'jobType');
+
+  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote', 'Work from office', 'Apprenticeship','Freelance', 'Work from home', 'Hybrid'];
 
   const toggleOption = (id: string, option: any) => {
     if (id === 'jobType') {
@@ -137,6 +145,14 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
     }
   };
 
+  const handleReset = () => {
+    setSelectedFilters({
+      jobType: [],
+      category: null,
+      city: null,
+    });
+  };
+
   const handleApply = () => {
     const filters: any = {};
     if (selectedFilters.category) filters.category_id = selectedFilters.category.id;
@@ -149,7 +165,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
   };
 
   const getOptions = () => {
-    switch (selectedSection) {
+    switch (effectiveSection) {
       case 'jobType': return JOB_TYPES;
       case 'category': return categories;
       case 'city': return cities;
@@ -197,16 +213,16 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
                 onPress={() => setSelectedSection(sec.id)}
                 style={[
                   styles.sideItem,
-                  selectedSection === sec.id && { backgroundColor: colors.surface }
+                  effectiveSection === sec.id && { backgroundColor: colors.surface }
                 ]}>
                 <Icon
                   name={sec.icon}
                   size={18}
-                  color={selectedSection === sec.id ? colors.primary : colors.textPlaceholder}
+                  color={effectiveSection === sec.id ? colors.primary : colors.textPlaceholder}
                 />
                 <Text style={[
                   styles.sideText,
-                  { color: selectedSection === sec.id ? colors.textPrimary : colors.textSecondary }
+                  { color: effectiveSection === sec.id ? colors.textPrimary : colors.textSecondary }
                 ]}>
                   {sec.label}
                 </Text>
@@ -216,7 +232,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
 
           <View style={styles.optionsArea}>
             <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
-              Select {SECTIONS.find(s => s.id === selectedSection)?.label}
+              Select {SECTIONS.find(s => s.id === effectiveSection)?.label}
             </Text>
 
             {loading ? (
@@ -224,9 +240,9 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
                 {getOptions().map((opt: any) => {
-                  const isSelected = selectedSection === 'jobType'
+                  const isSelected = effectiveSection === 'jobType'
                     ? selectedFilters.jobType.includes(opt)
-                    : selectedFilters[selectedSection]?.id === opt.id;
+                    : selectedFilters[effectiveSection]?.id === opt.id;
 
                   // Extract label more reliably
                   const label = typeof opt === 'string'
@@ -236,15 +252,15 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
                   return (
                     <Pressable
                       key={typeof opt === 'string' ? opt : (opt.id || label)}
-                      onPress={() => toggleOption(selectedSection, opt)}
+                      onPress={() => toggleOption(effectiveSection, opt)}
                       style={styles.optionItem}>
                       <View style={[
-                        selectedSection === 'jobType' ? styles.checkbox : styles.radio,
+                        effectiveSection === 'jobType' ? styles.checkbox : styles.radio,
                         { borderColor: isSelected ? colors.primary : colors.border }
                       ]}>
-                        {isSelected && (
+                      {isSelected && (
                           <View style={[
-                            selectedSection === 'jobType' ? styles.checkboxInner : styles.radioInner,
+                            effectiveSection === 'jobType' ? styles.checkboxInner : styles.radioInner,
                             { backgroundColor: colors.primary }
                           ]} />
                         )}
@@ -260,9 +276,14 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect })
 
         <View style={[styles.footer, { borderTopColor: colors.border }]}>
           <Pressable
+            style={[styles.resetBtn, { borderColor: colors.border }]}
+            onPress={handleReset}>
+            <Text style={[styles.resetText, { color: colors.textSecondary }]}>Reset All</Text>
+          </Pressable>
+          <Pressable
             style={[styles.applyBtn, { backgroundColor: colors.primary }]}
             onPress={handleApply}>
-            <Text style={styles.applyText}>Apply Filters</Text>
+            <Text style={styles.applyText}>Apply</Text>
           </Pressable>
         </View>
       </Animated.View>
@@ -377,10 +398,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   footer: {
+    flexDirection: 'row',
     padding: spacing.md,
     borderTopWidth: 1,
+    gap: 12,
+  },
+  resetBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resetText: {
+    fontWeight: '700',
+    fontSize: 14,
   },
   applyBtn: {
+    flex: 2,
     height: 48,
     borderRadius: radius.md,
     alignItems: 'center',

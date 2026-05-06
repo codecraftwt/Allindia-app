@@ -153,9 +153,17 @@ function JobTrendCard({
           </Text>
         </View>
       )}
-      <Text style={[typography.jobTitle, styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-        {job.title}
-      </Text>
+      <View style={[styles.cardTitle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }]}>
+        <Text style={[typography.jobTitle, { color: colors.textPrimary, flex: 1, marginRight: 8 }]} numberOfLines={2}>
+          {job.title}
+        </Text>
+        {job.employer?.company?.company_logo_url && (
+          <Image 
+            source={{ uri: job.employer.company.company_logo_url }} 
+            style={{ width: 32, height: 32, borderRadius: 8, marginTop: 2 }}
+          />
+        )}
+      </View>
       <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
         {companyName}
       </Text>
@@ -209,9 +217,17 @@ function JobListCard({
           <Icon name="briefcase" size={18} color={colors.primary} />
         </View>
         <View style={styles.listCardText}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-            {job.title}
-          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Text style={[typography.jobTitle, { color: colors.textPrimary, flex: 1, marginRight: 8 }]} numberOfLines={2}>
+              {job.title}
+            </Text>
+            {job.employer?.company?.company_logo_url && (
+              <Image 
+                source={{ uri: job.employer.company.company_logo_url }} 
+                style={{ width: 32, height: 32, borderRadius: 8 }}
+              />
+            )}
+          </View>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
             {companyName}
           </Text>
@@ -344,6 +360,7 @@ const HomeScreen: React.FC = () => {
   // Filter Grid States
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [filterTop, setFilterTop] = useState(130);
 
   // List Visibility States
   const [showAllNearby, setShowAllNearby] = useState(false);
@@ -354,6 +371,7 @@ const HomeScreen: React.FC = () => {
   const isTabBarVisible = useRef(true);
   const [headerHeight, setHeaderHeight] = useState(130);
   const frozenScrollY = useRef(0);
+  const COLLAPSE_DISTANCE = 80;
 
   const handleScroll = (event: any) => {
     // Don't update scroll position when filter is open
@@ -482,6 +500,19 @@ const HomeScreen: React.FC = () => {
     scrollY.setValue(frozenScrollY.current);
   };
 
+  const handleFilterOpen = () => {
+    if (!showFilterGrid) {
+      // Compute the actual visible bottom of the header at this scroll position
+      // headerTranslateY interpolates: scrollY [0,80] -> translateY [0,-70]
+      const COLLAPSE_MAX_SHIFT = COLLAPSE_DISTANCE - 10; // = 70
+      const clamped = Math.min(frozenScrollY.current, COLLAPSE_DISTANCE);
+      const headerShift = (clamped / COLLAPSE_DISTANCE) * COLLAPSE_MAX_SHIFT;
+      const computedTop = Math.max(0, headerHeight - headerShift);
+      setFilterTop(computedTop);
+    }
+    setShowFilterGrid(prev => !prev);
+  };
+
   const onRefresh = useCallback(() => {
     dispatch(fetchMetaCategories());
     dispatch(fetchHomeFeed());
@@ -498,8 +529,6 @@ const HomeScreen: React.FC = () => {
       console.log(error.message);
     }
   };
-
-  const COLLAPSE_DISTANCE = 80;
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, COLLAPSE_DISTANCE],
@@ -628,7 +657,7 @@ const HomeScreen: React.FC = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => setShowFilterGrid(!showFilterGrid)}
+              onPress={handleFilterOpen}
               style={({ pressed }) => [
                 styles.searchFilterBtnPremium,
                 {
@@ -860,7 +889,7 @@ const HomeScreen: React.FC = () => {
         onFilterSelect={applyAdvancedFilters}
         activeFilter={activeFilter}
         colors={colors}
-        top={headerHeight}
+        top={filterTop}
       />
     </SafeAreaView>
   );

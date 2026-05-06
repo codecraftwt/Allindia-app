@@ -12,6 +12,7 @@ import {
   Text,
   View,
   Modal,
+  StatusBar,
 } from 'react-native';
 import {
   useNavigation,
@@ -257,22 +258,24 @@ const JobDetailScreen: React.FC = () => {
     }
   }, [currentJob, companyName, locationLabel, salaryLabel]);
 
+  const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
+
   if (loading && !currentJob) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
         <View style={styles.topBar}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
           </Pressable>
         </View>
         <JobDetailSkeleton />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!currentJob) {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+      <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
         <View style={styles.topBar}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
@@ -284,14 +287,14 @@ const JobDetailScreen: React.FC = () => {
           </Text>
           <PrimaryButton title="Go back" onPress={() => navigation.goBack()} colors={colors} style={styles.emptyBtn} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
 
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
       {/* Animated Toast */}
       {toast.visible && (
         <Animated.View 
@@ -572,7 +575,7 @@ const JobDetailScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -585,6 +588,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
+    minHeight: 56, // Added minHeight for stability
     borderBottomWidth: StyleSheet.hairlineWidth,
     maxWidth: 520,
     width: '100%',

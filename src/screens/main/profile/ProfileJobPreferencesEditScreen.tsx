@@ -207,12 +207,14 @@ const SkeletonPulse: React.FC<{ style: any }> = ({ style }) => {
   const { colors } = useTheme();
 
   useEffect(() => {
-    RNAnimated.loop(
+    const loop = RNAnimated.loop(
       RNAnimated.sequence([
         RNAnimated.timing(opacity, { toValue: 0.7, duration: 800, useNativeDriver: true }),
         RNAnimated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    loop.start();
+    return () => loop.stop();
   }, [opacity]);
 
   return <RNAnimated.View style={[style, { backgroundColor: colors.border, opacity }]} />;
@@ -360,9 +362,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     dispatch(fetchMetaQualifications());
   }, [dispatch]);
 
-  // Initial Sync from Profile
+  // Initial Sync from Profile — wait for BOTH profile AND meta to be ready
   useEffect(() => {
-    if (profile?.preferences && !isInitialized.current) {
+    const metaReady = cities.length > 0 && categories.length > 0;
+    if (profile?.preferences && metaReady && !isInitialized.current) {
       const pref = profile.preferences;
       setCurrentCityId(pref.current_city_id || null);
       setPreferredCityIds(pref.preferred_city_ids || []);
@@ -376,7 +379,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     } else if (!profile && !profileLoading) {
       dispatch(fetchProfile());
     }
-  }, [dispatch, profile, profileLoading]);
+  }, [dispatch, profile, profileLoading, cities, categories]);
 
   // Filter Categories
   const filteredCategories = useMemo(() =>
@@ -401,7 +404,14 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         work_from_home: workFromHome,
       })).unwrap();
       showToast('Job preferences saved!', 'success');
-      setTimeout(() => navigation.goBack(), 3000);
+      setTimeout(() => {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+        } else {
+          // Fallback if no history (e.g. initial profile setup)
+          navigation.navigate('ProfileOverview' as any);
+        }
+      }, 3000);
     } catch (err: any) {
       showToast(err?.message || 'Save failed', 'error');
       console.error('Save failed', err);
@@ -545,6 +555,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       useFlatList={true}
       flatListData={sections}
       renderFlatItem={renderFlatItem}
+      flatListExtraData={[jobCategoryIds, expandedCatId, currentCityId, preferredCityIds, minSalary, maxSalary, workFromHome, saving, showAllCats]}
     >
       {/* City Modals */}
       <Modal 

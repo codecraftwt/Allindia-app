@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { searchJobs, fetchJobs } from '../../../redux/slice/jobSlice';
+import { searchJobs, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
@@ -86,9 +86,22 @@ const SearchResultsScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const insets = useSafeAreaInsets();
 
-  const { searchResults, loading } = useSelector((state: RootState) => state.jobs);
+  const { searchResults, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
   const [searchText, setSearchText] = useState(route.params?.query || '');
   const [activeFilter, setActiveFilter] = useState<any>(null);
+
+  const displayJobs = activeFilter ? filteredJobs : searchResults;
+
+  // Static/Local search filter
+  const visibleJobs = useMemo(() => {
+    if (!searchText.trim()) return displayJobs;
+    const query = searchText.toLowerCase();
+    return displayJobs.filter(job => 
+      job.title?.toLowerCase().includes(query) || 
+      job.employer?.company?.company_name?.toLowerCase().includes(query) ||
+      job.location?.label?.toLowerCase().includes(query)
+    );
+  }, [displayJobs, searchText]);
 
   useEffect(() => {
     if (searchText) {
@@ -104,10 +117,9 @@ const SearchResultsScreen: React.FC = () => {
 
   const applyAdvancedFilters = (filters: any) => {
     setActiveFilter(filters);
-    dispatch(fetchJobs({ 
+    dispatch(filterJobs({ 
       q: searchText,
-      ...filters,
-      per_page: 50 
+      ...filters
     }));
   };
 
@@ -143,7 +155,7 @@ const SearchResultsScreen: React.FC = () => {
         </View>
       ) : (
         <FlatList
-          data={searchResults}
+          data={visibleJobs}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={[
             styles.listContent,

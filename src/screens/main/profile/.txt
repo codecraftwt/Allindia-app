@@ -1,369 +1,605 @@
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { 
-  FadeInDown, 
-  FadeIn,
-  useAnimatedStyle, 
-  useSharedValue, 
-  withSpring, 
-  withTiming,
-  Layout,
-  interpolate,
-  interpolateColor
-} from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/Feather';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  Switch,
+  Alert,
+  Modal,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+} from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { updatePreferencesProfile } from '../../../redux/slice/profileSlice';
-import type { StackScreenProps } from '@react-navigation/stack';
-import { PrimaryButton } from '../../../components/auth';
-import { useProfileSetup } from '../../../context/ProfileSetupContext';
-import type { ProfileStackParamList } from '../../../navigation/types';
+import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../../context/ThemeContext';
-import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
-import { SALARY_OPTIONS } from '../../ProfileSetup/profileSetupConstants';
-import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { ProfileEditLayout } from './ProfileEditLayout';
+import { logoutCandidate, logout } from '../../../redux/slice/authSlice';
+import { changePassword, deleteAccount, clearProfile } from '../../../redux/slice/profileSlice';
+import { useNavigation } from '@react-navigation/native';
+import { logoutToLogin } from './logoutToLogin';
+import { PrimaryButton } from '../../../components/auth';
+import { useToast } from '../../../context/ToastContext';
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-const SelectionChip: React.FC<{
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  colors: any;
-  style?: any;
-  textStyle?: any;
-}> = ({ label, selected, onPress, colors, style, textStyle }) => {
-  const scale = useSharedValue(1);
-  
-  const animatedStyle = useAnimatedStyle(() => {
-    const bgColor = selected ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
-    const borderColor = selected ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
-    
-    return {
-      transform: [{ scale: withSpring(selected ? 1.05 : 1) }],
-      backgroundColor: withTiming(bgColor, { duration: 250 }),
-      borderColor: withTiming(borderColor, { duration: 250 }),
-    };
-  });
-
-  const textStyleAnimated = useAnimatedStyle(() => {
-    const textColor = selected ? (colors?.primary || '#2563EB') : (colors?.textSecondary || '#6B7280');
-    return {
-      color: withTiming(textColor, { duration: 250 }),
-    };
-  });
-
-  return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={() => (scale.value = withSpring(0.95))}
-      onPressOut={() => (scale.value = withSpring(1))}
-      style={[styles.chip, animatedStyle, style]}
-    >
-      <Animated.Text
-        style={[
-          typography.small,
-          textStyleAnimated,
-          textStyle
-        ]}>
-        {label}
-      </Animated.Text>
-    </AnimatedPressable>
-  );
-};
-
-const CategoryAccordion: React.FC<{
-  category: any;
-  selectedIds: string[];
-  isExpanded: boolean;
-  onToggle: (id: string, isParent: boolean) => void;
-  colors: any;
-}> = ({ category, selectedIds, isExpanded, onToggle, colors }) => {
-  const isParentSelected = selectedIds.includes(category.id.toString());
-  const hasSub = category.subcategories && category.subcategories.length > 0;
-  const rotation = useSharedValue(0);
-
-  React.useEffect(() => {
-    rotation.value = withSpring(isExpanded ? 1 : 0);
-  }, [isExpanded]);
-
-  const arrowStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${rotation.value * 180}deg` }],
-    };
-  });
-
-  const cardStyle = useAnimatedStyle(() => {
-    const bColor = isExpanded ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
-    const bg = isExpanded ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
-    return {
-      borderColor: withTiming(bColor),
-      backgroundColor: withTiming(bg),
-      borderWidth: isExpanded ? 1.5 : StyleSheet.hairlineWidth,
-    };
-  });
-
-  return (
-    <Animated.View layout={Layout.springify()} style={[styles.categoryCard, cardStyle]}>
-      <Pressable 
-        onPress={() => onToggle(category.id.toString(), true)}
-        style={styles.categoryHeader}
-      >
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <View style={[styles.iconDot, { backgroundColor: isExpanded ? colors.primary : colors.border }]} />
-          <Text style={[typography.labelMedium, { color: isExpanded ? colors.primary : colors.textPrimary }]}>
-            {category.name}
-          </Text>
-        </View>
-        {hasSub && (
-          <Animated.View style={arrowStyle}>
-            <Icon name="chevron-down" size={18} color={isExpanded ? colors.primary : colors.textSecondary} />
-          </Animated.View>
-        )}
-      </Pressable>
-
-      {isExpanded && hasSub && (
-        <Animated.View 
-          entering={FadeIn.duration(300)} 
-          style={[styles.subContent, { backgroundColor: colors.background + '50' }]}
-        >
-          <View style={styles.subGrid}>
-            {category.subcategories.map((sub: any) => {
-              const isSubSelected = selectedIds.includes(sub.id.toString());
-              return (
-                <SelectionChip 
-                  key={sub.id}
-                  label={sub.name}
-                  selected={isSubSelected}
-                  onPress={() => onToggle(sub.id.toString(), false)}
-                  colors={colors}
-                  style={styles.subChip}
-                  textStyle={{ fontSize: 12 }}
-                />
-              );
-            })}
-          </View>
-        </Animated.View>
+const AccountSettingItem = ({ 
+  icon, 
+  title, 
+  subtitle, 
+  onPress, 
+  rightElement,
+  isDanger = false,
+  colors 
+}: any) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.7}
+    style={[
+      styles.item,
+      { borderBottomColor: colors.border }
+    ]}>
+    <View style={styles.itemIconContainer}>
+      <Icon name={icon} size={18} color={isDanger ? colors.error : colors.primary} />
+    </View>
+    <View style={styles.itemTextContainer}>
+      <Text style={[typography.labelMedium, { color: isDanger ? colors.error : colors.textPrimary }]}>
+        {title}
+      </Text>
+      {subtitle && (
+        <Text style={[typography.small, { color: colors.textSecondary }]}>
+          {subtitle}
+        </Text>
       )}
-    </Animated.View>
-  );
-};
+    </View>
+    {rightElement || <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />}
+  </TouchableOpacity>
+);
 
-
-type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferences'>;
-
-const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
+const ProfileAccountSetting: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
-  const { draft, setDraft, updateDraft } = useProfileSetup();
-  const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
-  const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
-  const isInitialized = React.useRef(false);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { showToast } = useToast();
+  
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
-  React.useEffect(() => {
-    if (categories.length === 0) {
-      dispatch(fetchMetaCategories());
-    }
-  }, [categories.length, dispatch]);
+  // Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwdLoading, setPwdLoading] = useState(false);
 
-  React.useEffect(() => {
-    if (profileData?.profile?.preferences && !isInitialized.current) {
-      const p = profileData.profile.preferences;
-      updateDraft({
-        expectedSalary: p.expected_salary_min ? 'custom' : draft.expectedSalary,
-        jobCategoryIds: p.job_category_id ? [p.job_category_id.toString()] : draft.jobCategoryIds,
-      });
-      isInitialized.current = true;
-    }
-  }, [profileData, updateDraft]);
+  // Consolidated Password Visibility State
+  const [passwordVisibility, setPasswordVisibility] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
-  const toggleCategory = (id: string, isParent: boolean = false) => {
-    if (isParent) {
-      setExpandedId(prev => (prev === id ? null : id));
-      // Optionally, you can also clear selection if you want, but usually opening doesn't mean selecting
-    } else {
-      setDraft(prev => {
-        const isSelected = prev.jobCategoryIds.includes(id);
-        if (isSelected) {
-          return { ...prev, jobCategoryIds: prev.jobCategoryIds.filter(cid => cid !== id) };
-        } else {
-          return { ...prev, jobCategoryIds: [...prev.jobCategoryIds, id] };
-        }
-      });
-    }
+  // Custom Alert/Status/Confirmation Modal State
+  const [statusModal, setStatusModal] = useState({
+    visible: false,
+    type: 'error' as 'error' | 'success' | 'confirm',
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+
+  // Delete Account State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+
+  const [delLoading, setDelLoading] = useState(false);
+  const [showDelPwd, setShowDelPwd] = useState(false);
+
+  const showStatus = (type: 'error' | 'success' | 'confirm', title: string, message: string, onConfirm?: () => void) => {
+    setStatusModal({ visible: true, type, title, message, onConfirm: onConfirm || (() => {}) });
   };
 
-  const canSave = draft.jobCategoryIds.length >= 1 && draft.expectedSalary !== '' && !profileLoading;
+  const toggleVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setPasswordVisibility(prev => ({ 
+      ...prev, 
+      [field]: !prev?.[field] 
+    }));
+  };
 
-  const handleSave = async () => {
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showStatus('error', 'Validation Error', 'Please fill all password fields.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showStatus('error', 'Validation Error', 'New passwords do not match.');
+      return;
+    }
+
+    setPwdLoading(true);
     try {
-      // Mapping logic for Salary (simplified for demo)
-      let minSalary = 0;
-      let maxSalary = 0;
-      
-      switch(draft.expectedSalary) {
-        case 'below2': minSalary = 0; maxSalary = 16000; break;
-        case '2to4': minSalary = 16000; maxSalary = 33000; break;
-        case '4to6': minSalary = 33000; maxSalary = 50000; break;
-        case '6to10': minSalary = 50000; maxSalary = 83000; break;
-        default: minSalary = 0; maxSalary = 0;
-      }
-
-      await dispatch(updatePreferencesProfile({
-        job_category_id: parseInt(draft.jobCategoryIds[0]) || 1, 
-        expected_salary_min: minSalary,
-        expected_salary_max: maxSalary,
-        work_from_home: false,
+      await dispatch(changePassword({
+        current_password: currentPassword,
+        password: newPassword,
+        password_confirmation: confirmPassword
       })).unwrap();
-      navigation.goBack();
-    } catch (error) {
-     
+      
+      showStatus('success', 'Success', 'Password changed successfully.');
+      setShowPasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      let errorMessage = err.message || "Failed to change password";
+      if (err.errors) {
+        const errorList = Object.values(err.errors).flat();
+        errorMessage = errorList.join("\n• ");
+      }
+      showStatus('error', 'Change Failed', errorMessage);
+    } finally {
+      setPwdLoading(false);
     }
   };
 
-  const renderSection = (children: React.ReactNode, index: number) => (
-    <Animated.View 
-      entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
-      style={{ gap: spacing.xs }}
-    >
-      {children}
-    </Animated.View>
-  );
+  const handleDeleteConfirm = async () => {
+    if (!deletePassword || !deleteReason) {
+      showStatus('error', 'Required Fields', 'Please enter your password and a reason for leaving.');
+      return;
+    }
+
+    setDelLoading(true);
+    try {
+      await dispatch(deleteAccount({
+        password: deletePassword,
+        deletion_reason: deleteReason
+      })).unwrap();
+      
+      // Successfully deleted, now logout locally (don't call logout API as account is gone)
+      dispatch(logout());
+      dispatch(clearProfile());
+      setShowDeleteModal(false);
+      showToast('Account deleted successfully', 'success');
+      logoutToLogin(navigation);
+    } catch (err: any) {
+      let errorMessage = err.message || "Failed to delete account";
+      if (err.errors) {
+        const errorList = Object.values(err.errors).flat();
+        errorMessage = errorList.join("\n• ");
+      }
+      showStatus('error', 'Deletion Failed', errorMessage);
+    } finally {
+      setDelLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    showStatus(
+      'confirm', 
+      'Delete Account', 
+      'Are you sure you want to delete your account? This action is permanent and cannot be undone.',
+      () => {
+        setStatusModal(prev => ({ ...prev, visible: false }));
+        setShowDeleteModal(true);
+      }
+    );
+  };
 
   return (
-    <ProfileEditLayout
-      title="Job preferences"
-      subtitle="Categories you’re open to and your expected salary range.">
-      
-      {renderSection(
-        <>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Job categories</Text>
-          <Text style={[typography.small, { color: colors.textPlaceholder, marginTop: -spacing.xs }]}>
-            Choose your primary field
-          </Text>
-          <View style={styles.accordionList}>
-            {metaLoading && categories.length === 0 ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
-            ) : (
-              categories.map((cat: any) => (
-                <CategoryAccordion 
-                  key={cat.id}
-                  category={cat}
-                  selectedIds={draft.jobCategoryIds}
-                  isExpanded={expandedId === cat.id.toString()}
-                  onToggle={toggleCategory}
+    <View style={{ flex: 1 }}>
+      {/* Modals at the top for better reliability */}
+      <Modal
+        visible={showPasswordModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPasswordModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[typography.h3, { color: colors.textPrimary }]}>Change Password</Text>
+              <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}>
+                <Icon name="x" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Current Password</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <TextInput
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    secureTextEntry={!passwordVisibility?.current}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Enter current password"
+                    placeholderTextColor={colors.textPlaceholder}
+                  />
+                  <Pressable onPress={() => toggleVisibility('current')} style={styles.eyeIcon}>
+                    <Icon name={passwordVisibility?.current ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>New Password</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <TextInput
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    secureTextEntry={!passwordVisibility?.new}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="Enter new password"
+                    placeholderTextColor={colors.textPlaceholder}
+                  />
+                  <Pressable onPress={() => toggleVisibility('new')} style={styles.eyeIcon}>
+                    <Icon name={passwordVisibility?.new ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Confirm New Password</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <TextInput
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    secureTextEntry={!passwordVisibility?.confirm}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm new password"
+                    placeholderTextColor={colors.textPlaceholder}
+                  />
+                  <Pressable onPress={() => toggleVisibility('confirm')} style={styles.eyeIcon}>
+                    <Icon name={passwordVisibility?.confirm ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={{ marginTop: spacing.md }}>
+                <PrimaryButton 
+                  title={pwdLoading ? "Updating..." : "Update Password"} 
+                  onPress={handleChangePassword} 
+                  loading={pwdLoading}
                   colors={colors}
                 />
-              ))
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={showDeleteModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={[typography.h3, { color: colors.error }]}>Delete Account</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>This action cannot be undone</Text>
+              </View>
+              <Pressable onPress={() => setShowDeleteModal(false)} hitSlop={12}>
+                <Icon name="x" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Confirm Password</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <TextInput
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    secureTextEntry={!showDelPwd}
+                    value={deletePassword}
+                    onChangeText={setDeletePassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor={colors.textPlaceholder}
+                  />
+                  <Pressable onPress={() => setShowDelPwd(!showDelPwd)} style={styles.eyeIcon}>
+                    <Icon name={showDelPwd ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Reason for leaving</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, color: colors.textPrimary, height: 80, textAlignVertical: 'top', paddingTop: 12 }]}
+                  multiline
+                  numberOfLines={3}
+                  value={deleteReason}
+                  onChangeText={setDeleteReason}
+                  placeholder="Tell us why you are leaving..."
+                  placeholderTextColor={colors.textPlaceholder}
+                />
+              </View>
+
+              <View style={{ marginTop: spacing.md }}>
+                <TouchableOpacity 
+                  onPress={handleDeleteConfirm}
+                  disabled={delLoading}
+                  style={[styles.deleteBtn, { backgroundColor: colors.error }]}
+                >
+                  {delLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Permanently Delete My Account</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={statusModal.visible}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.statusOverlay}>
+          <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.statusIcon, { backgroundColor: statusModal.type === 'success' ? colors.success + '20' : statusModal.type === 'confirm' ? colors.error + '10' : colors.error + '20' }]}>
+              <Icon 
+                name={statusModal.type === 'success' ? "check-circle" : statusModal.type === 'confirm' ? "trash-2" : "alert-circle"} 
+                size={32} 
+                color={statusModal.type === 'success' ? colors.success : colors.error} 
+              />
+            </View>
+            <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: 8 }]}>{statusModal.title}</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>{statusModal.message}</Text>
+            
+            {statusModal.type === 'confirm' ? (
+              <View style={styles.modalFooter}>
+                <TouchableOpacity 
+                  onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+                  style={[styles.statusBtnSmall, { backgroundColor: colors.surfaceSecondary }]}
+                >
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>No, Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={statusModal.onConfirm}
+                  style={[styles.statusBtnSmall, { backgroundColor: colors.error }]}
+                >
+                  <Text style={[typography.labelMedium, { color: '#fff' }]}>Yes, Delete</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity 
+                onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+                style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+              </TouchableOpacity>
             )}
           </View>
-        </>,
-        0
-      )}
+        </View>
+      </Modal>
 
-      {renderSection(
-        <>
-          <Text
-            style={[
-              typography.labelMedium,
-              { color: colors.textPrimary, marginTop: spacing.md },
-            ]}>
-            Expected salary
-          </Text>
-          <View style={styles.salaryWrap}>
-            {SALARY_OPTIONS.map(opt => {
-              const selected = draft.expectedSalary === opt.id;
-              return (
-                <SelectionChip 
-                  key={opt.id}
-                  label={opt.label}
-                  selected={selected}
-                  onPress={() => updateDraft({ expectedSalary: opt.id })}
-                  colors={colors}
-                  style={styles.salaryChip}
-                />
-              );
-            })}
+      <ProfileEditLayout
+        title="Account Settings"
+        subtitle="Manage your security, privacy and account status.">
+        
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Security</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <AccountSettingItem
+              icon="lock"
+              title="Change Password"
+              subtitle="Secure your account with a new password"
+              onPress={() => setShowPasswordModal(true)}
+              colors={colors}
+            />
           </View>
-        </>,
-        1
-      )}
+        </View>
 
-      <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-        <PrimaryButton 
-          title={profileLoading ? "Saving..." : "Save"} 
-          onPress={handleSave} 
-          disabled={!canSave} 
-          colors={colors} 
-        />
-      </Animated.View>
-    </ProfileEditLayout>
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Privacy & Legal</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <AccountSettingItem
+              icon="file-text"
+              title="Privacy Policy"
+              onPress={() => {}}
+              colors={colors}
+            />
+            <AccountSettingItem
+              icon="file-text"
+              title="Terms of Service"
+              onPress={() => {}}
+              colors={colors}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.error }]}>Danger Zone</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.error + '40' }]}>
+            <AccountSettingItem
+              icon="trash"
+              title="Delete Account"
+              subtitle="Permanently remove your account and data"
+              onPress={handleDeleteAccount}
+              isDanger={true}
+              colors={colors}
+            />
+          </View>
+        </View>
+      </ProfileEditLayout>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  accordionList: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
+  section: {
+    marginBottom: spacing.lg,
   },
-  categoryCard: {
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+    marginLeft: spacing.xs,
+    letterSpacing: 1,
+  },
+  card: {
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
-  categoryHeader: {
+  item: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  itemIconContainer: {
+    width: 32,
+    alignItems: 'center',
+  },
+  itemTextContainer: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    padding: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
-  iconDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  modalContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
-  subContent: {
-    padding: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+  inputGroup: {
+    marginBottom: spacing.md,
   },
-  subGrid: {
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  inputWrapper: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  chip: {
-    paddingVertical: spacing.sm,
+  input: {
+    flex: 1,
+    height: 48,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.button,
-    borderWidth: StyleSheet.hairlineWidth,
+    fontSize: 14,
   },
-  subChip: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.sm,
+  eyeIcon: {
+    paddingHorizontal: spacing.md,
+    height: 48,
+    justifyContent: 'center',
   },
-  salaryWrap: {
+  errorText: {
+    color: '#FF5252',
+    fontSize: 11,
+    marginTop: 4,
+    marginLeft: 2,
+  },
+  statusOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  statusCard: {
+    width: '90%',
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+  },
+  statusIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  statusBtn: {
+    width: '100%',
+    height: 52,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  modalFooter: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
+    width: '100%',
+    gap: spacing.md,
   },
-  salaryChip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.button,
-    borderWidth: StyleSheet.hairlineWidth,
+  statusBtnSmall: {
+    flex: 1,
+    height: 52,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  deleteBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
 });
 
-export default ProfileJobPreferencesEditScreen;
-
-
-
-@contextScopeItemMention is profile view me na ek kam kar sakte he kya ?ki mere pass ke profile 
+export default ProfileAccountSetting;

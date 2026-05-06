@@ -112,47 +112,35 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     { id: 'city', label: 'City', icon: 'map-marker' },
   ];
 
-  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote', 'Work from office', 'Apprenticeship','Freelance', 'Work from home', 'Hybrid'];
 
-  const slideAnim = useRef(new Animated.Value(-20)).current;
+  const slideAnim = useRef(new Animated.Value(-300)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
-          tension: 70,
-          friction: 10,
+          tension: 60,
+          friction: 12,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 70,
-          friction: 10,
+          duration: 200,
           useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: -20,
-          duration: 200,
+          toValue: -300,
+          duration: 220,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: 0,
-          duration: 180,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.95,
           duration: 180,
           useNativeDriver: true,
         }),
@@ -244,7 +232,6 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
             borderColor: colors.border,
             transform: [
               { translateY: slideAnim },
-              { scale: scaleAnim },
             ]
           }
         ]}>

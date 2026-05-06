@@ -19,7 +19,7 @@ import { components } from '../theme/components';
 import type { ThemeColors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CAROUSEL_WIDTH = SCREEN_WIDTH - spacing.md * 2; 
+const CAROUSEL_WIDTH = SCREEN_WIDTH - spacing.md * 2;
 
 interface SlideData {
   id: string;
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radius.md,
     marginBottom: spacing.xs,
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
     overflow: 'hidden',
   },
   slide: {

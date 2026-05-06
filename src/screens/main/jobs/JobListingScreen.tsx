@@ -24,7 +24,7 @@ import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
-import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
+import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import type { HomeJob } from '../home/homeMockData';
 import { ALL_LISTED_JOBS } from '../home/homeMockData';
@@ -161,7 +161,7 @@ const JobListingScreen: React.FC = () => {
   const query = route.params?.query;
   const filters = route.params?.filters;
 
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const openJob = (job: any) => {
     navigation.navigate('JobDetail', { jobId: job.slug || job.id });
@@ -194,13 +194,7 @@ const JobListingScreen: React.FC = () => {
               {headerTitle}
             </Text>
           </View>
-          <Pressable
-            onPress={() => setFiltersOpen(true)}
-            hitSlop={8}
-            style={[styles.filterBtn, { backgroundColor: colors.surfaceHighlight }]}
-            accessibilityLabel="Open filters">
-            <Icon name="sliders" size={18} color={colors.primary} />
-          </Pressable>
+          <View style={{ width: 40 }} />
         </View>
 
         {loading ? (
@@ -233,16 +227,11 @@ const JobListingScreen: React.FC = () => {
         )}
       </View>
 
-      <HeaderFilterGrid
-        visible={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
+      <SideFilterHub
+        colors={colors}
         onFilterSelect={(f) => {
-          setFiltersOpen(false);
           dispatch(filterJobs(f));
         }}
-        activeFilter={null}
-        colors={colors}
-        top={50}
       />
     </SafeAreaView>
   );

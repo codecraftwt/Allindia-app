@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View, TextInput, ActivityIndicator } from 'react-native';
 import Animated, {
   FadeInDown,
+  SlideInDown,
+  SlideOutDown,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -172,11 +174,18 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
           </>
         )}
 
-        <Modal visible={open} animationType="slide" transparent>
+        <Modal 
+          visible={open} 
+          animationType="fade" 
+          transparent
+          onRequestClose={() => setOpen(false)}
+        >
           <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
-            <Pressable
+            <AnimatedPressable
+              entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
+              exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
               style={[styles.sheet, { backgroundColor: colors.surface }]}
-              onPress={e => e.stopPropagation()}>
+              onPress={(e: any) => e.stopPropagation()}>
               <View style={styles.modalHeader}>
                 <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
                   Qualification
@@ -211,7 +220,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
                   </Animated.View>
                 )}
               />
-            </Pressable>
+            </AnimatedPressable>
           </Pressable>
         </Modal>
 

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Pressable, View, StyleSheet, Text, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
@@ -46,7 +47,7 @@ const TabIcon = ({ name, color, focused, label }: any) => {
   return (
     <View style={styles.iconWrapper}>
       <Icon name={iconName} size={20} color={color} />
-      <Text 
+      <Text
         style={[styles.label, { color: color, fontWeight: focused ? '700' : '500' }]}
         numberOfLines={1}
         adjustsFontSizeToFit={true}
@@ -60,10 +61,11 @@ const TabIcon = ({ name, color, focused, label }: any) => {
 
 const MainTabNavigator: React.FC = () => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const getTabBarStyle = (route: any, isHidden?: boolean) => {
     const routeName = getFocusedRouteNameFromRoute(route) ?? '';
-    
+
     // Check for full screen param in the nested route state or direct params
     const routeState = route.state;
     const currentRoute = routeState?.routes ? routeState.routes[routeState.index ?? 0] : null;
@@ -86,17 +88,17 @@ const MainTabNavigator: React.FC = () => {
       'ProfileResume',
       'ProfileAccountSetting'
     ];
-    
+
     if (hideOnScreens.includes(routeName) || isFullScreen) {
       return { display: 'none' };
     }
 
     return {
       position: 'absolute',
-      bottom: Platform.OS === 'ios' ? 62 : 48,
+      bottom: Math.max(insets.bottom, 6) + (Platform.OS === 'ios' ? 10 : 2),
       left: 10,
       right: 10,
-      height: Platform.OS === 'ios' ? 70 : 55,
+      height: 64,
       borderRadius: 20,
       backgroundColor: colors.surface,
       borderTopWidth: 0,

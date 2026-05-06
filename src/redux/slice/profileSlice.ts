@@ -271,6 +271,25 @@ export const updateProfilePicture = createAsyncThunk(
   }
 );
 
+export const deleteProfilePicture = createAsyncThunk(
+  'profile/deleteProfilePicture',
+  async (_, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.delete('api/candidate/profile/picture', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      dispatch(fetchProfile());
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete profile picture');
+    }
+  }
+);
+
 export const fetchProfileCompletion = createAsyncThunk(
   'profile/fetchProfileCompletion',
   async (_, { getState, rejectWithValue }) => {
@@ -508,12 +527,26 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfilePicture.fulfilled, (state, action) => {
         state.loading = false;
-        // Update local state immediately with new image from response
-        if (state.data && action.payload.data?.user?.profile_picture_url) {
+        // Safe check for data and personal object before updating
+        if (state.data?.personal && action.payload.data?.user?.profile_picture_url) {
           state.data.personal.profile_picture_url = action.payload.data.user.profile_picture_url;
         }
       })
       .addCase(updateProfilePicture.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deleteProfilePicture.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProfilePicture.fulfilled, (state) => {
+        state.loading = false;
+        if (state.data?.personal) {
+          state.data.personal.profile_picture_url = null;
+        }
+      })
+      .addCase(deleteProfilePicture.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -153,27 +154,26 @@ const IndustryCategoryScreen: React.FC = () => {
     return [];
   }, [jobsByCategory]);
 
+  const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
+
   return (
-    <SafeAreaView
-      style={[styles.safe, { backgroundColor: colors.background }]}
-      edges={['top', 'left', 'right']}>
+    <View
+      style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
         </Pressable>
-        
+
 
 
         <View style={styles.headerText}>
           <Text style={[typography.appTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {categoryName}
           </Text>
-          {!loading && (
-            <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-              {jobs.length} jobs available
-            </Text>
-          )}
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+            {loading ? 'Finding jobs...' : `${jobs.length} jobs available`}
+          </Text>
         </View>
       </View>
 
@@ -215,17 +215,18 @@ const IndustryCategoryScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
-      <SideFilterHub 
-        colors={colors} 
+      <SideFilterHub
+        colors={colors}
+        hiddenSections={['category']}
         onFilterSelect={(filters) => {
           dispatch(fetchJobsByCategory({
             category_id: categoryId,
             jobs_per_category: 50,
             ...filters
           }));
-        }} 
+        }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -237,6 +238,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+    minHeight: 64, // Ensure header has a minimum height to prevent jumping
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backBtn: {

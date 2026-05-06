@@ -46,6 +46,7 @@ export const filterJobs = createAsyncThunk(
     category_id?: number;
     city_id?: number;
     job_type?: string;
+    q?: string;
   }, { rejectWithValue }) => {
     try {
       const response = await api.get('api/candidate/jobs/filter', { params });

@@ -17,7 +17,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { logoutCandidate } from '../../../redux/slice/authSlice';
-import { fetchProfile, updateProfilePicture, fetchProfileCompletion } from '../../../redux/slice/profileSlice';
+import { fetchProfile, updateProfilePicture, deleteProfilePicture, fetchProfileCompletion } from '../../../redux/slice/profileSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { Alert } from 'react-native';
@@ -31,6 +31,7 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { logoutToLogin } from './logoutToLogin';
 import LogoutModal from '../../../components/LogoutModal';
+import ConfirmationModal from '../../../components/ConfirmationModal';
 import { PrimaryButton } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
 import SkeletonPulse from '../../../components/SkeletonPulse';
@@ -50,6 +51,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { colors, mode, setMode } = useTheme();
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch<AppDispatch>();
+  const insets = useSafeAreaInsets();
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
@@ -57,8 +59,14 @@ const ProfileOverviewScreen: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [profile?.personal?.profile_picture_url, user?.profile_picture_url]);
 
   // Optimized Animation Values (Native Driver Compatible)
   const shimmerAnim = React.useRef(new Animated.Value(0)).current;
@@ -126,20 +134,38 @@ const ProfileOverviewScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to update picture');
     }
   };
+  
+  const handleDeletePicture = () => {
+    setShowImagePicker(false);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeletePicture = async () => {
+    try {
+      setIsUploading(true);
+      await dispatch(deleteProfilePicture()).unwrap();
+      setIsUploading(false);
+      setShowDeleteConfirm(false);
+      setImageTimestamp(Date.now());
+    } catch (error) {
+      setIsUploading(false);
+      Alert.alert('Error', 'Failed to remove picture');
+    }
+  };
 
   const getProfileImageUrl = (path: string | null) => {
     if (!path) return null;
     const baseUrl = 'https://jobindia.ai';
-    let normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    if (!normalizedPath.startsWith('/storage/') && !normalizedPath.startsWith('/public/')) {
-      normalizedPath = `/storage${normalizedPath}`;
-    }
+    if (path.startsWith('http')) return path;
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
   };
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
-  const profilePic = profile?.personal?.profile_picture_url ? getProfileImageUrl(profile.personal.profile_picture_url) : null;
+  const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url) 
+    ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url) 
+    : null;
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
@@ -216,16 +242,22 @@ const ProfileOverviewScreen: React.FC = () => {
   };
 
   const ProfileSkeleton = () => (
-    <View style={styles.scroll}>
+    <ScrollView 
+      showsVerticalScrollIndicator={false} 
+      contentContainerStyle={styles.scroll}
+    >
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <SkeletonPulse style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37 }]} />
+          <View style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
+            <Icon name="user" size={32} color={colors.border} />
+          </View>
           <View style={styles.headerInfo}>
             <SkeletonPulse style={{ height: 24, width: '60%', borderRadius: 4, marginBottom: 8 }} />
             <SkeletonPulse style={{ height: 16, width: '40%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ height: 28, width: 80, borderRadius: 14, marginTop: 12 }} />
           </View>
         </View>
-        <View style={{ marginTop: 20 }}>
+        <View style={styles.strengthContainer}>
           <SkeletonPulse style={{ height: 40, width: '100%', borderRadius: 12 }} />
         </View>
       </View>
@@ -242,30 +274,50 @@ const ProfileOverviewScreen: React.FC = () => {
         <SkeletonPulse style={{ height: 15, width: 100, borderRadius: 4, marginBottom: 15, marginTop: 20 }} />
         <SkeletonPulse style={{ height: 70, width: '100%', borderRadius: 20, marginBottom: 10 }} />
       </View>
-    </View>
+    </ScrollView>
   );
 
-  return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      {!isLoggedIn ? (
+  const renderContent = () => {
+    if (!isLoggedIn) {
+      return (
         <GuestView 
           title="Unlock Your Potential"
           subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations."
           icon="user-plus"
         />
-      ) : profileLoading && !profileData ? (
-        <ProfileSkeleton />
-      ) : (
-        <>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      );
+    }
+
+    if (profileLoading && !profileData) {
+      return <ProfileSkeleton />;
+    }
+
+    return (
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Pressable onPress={() => setShowImagePicker(true)} style={styles.avatarWrapper}>
               <View style={[styles.avatarCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                {profilePic ? (
-                  <Image source={{ uri: profilePic }} style={styles.avatarImage} />
+                {profilePic && !imageError ? (
+                  <Image 
+                    source={{ uri: profilePic }} 
+                    style={styles.avatarImage} 
+                    onError={() => setImageError(true)}
+                  />
                 ) : (
-                  <Text style={[typography.appTitle, { color: colors.primary, fontSize: 24 }]}>{profileInitials(displayName)}</Text>
+                  <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '10' }]}>
+                    {displayName && displayName !== 'User' ? (
+                      <Text style={[typography.h3, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+                        {profileInitials(displayName)}
+                      </Text>
+                    ) : (
+                      <Icon name="user" size={36} color={colors.primary} />
+                    )}
+                  </View>
                 )}
                 {isUploading && (
                   <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
@@ -337,8 +389,16 @@ const ProfileOverviewScreen: React.FC = () => {
           </Pressable>
         </View>
       </ScrollView>
+    );
+  };
 
-      {/* Modals same as before */}
+  return (
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
+      
+      {renderContent()}
+
+      {/* Modals placed outside main content for stability */}
       <Modal visible={showImagePicker} transparent animationType="fade" onRequestClose={() => setShowImagePicker(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowImagePicker(false)}>
           <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
@@ -358,13 +418,18 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.pickerIconWrapSmall, { backgroundColor: '#8B5CF610' }]}><Icon name="image" size={18} color="#8B5CF6" /></View>
               <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Choose from Gallery</Text>
             </Pressable>
+            {profilePic && (
+              <Pressable style={styles.pickerMenuRow} onPress={handleDeletePicture}>
+                <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.error + '10' }]}><Icon name="trash-2" size={18} color={colors.error} /></View>
+                <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 16 }]}>Remove Photo</Text>
+              </Pressable>
+            )}
           </View>
         </Pressable>
       </Modal>
 
       <Modal visible={showImageViewer} transparent animationType="slide" onRequestClose={() => setShowImageViewer(false)}>
         <View style={styles.viewerBackground}>
-          <StatusBar barStyle="light-content" />
           <Pressable style={styles.viewerClose} onPress={() => setShowImageViewer(false)}>
             <Icon name="x" size={24} color="#FFF" />
           </Pressable>
@@ -374,9 +439,20 @@ const ProfileOverviewScreen: React.FC = () => {
       </Modal>
 
       <LogoutModal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} colors={colors} loading={authLoading} />
-        </>
-      )}
-    </SafeAreaView>
+
+      <ConfirmationModal
+        visible={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeletePicture}
+        title="Remove Photo"
+        message="Are you sure you want to remove your profile picture? This action cannot be undone."
+        confirmText="Remove"
+        cancelText="Keep Photo"
+        colors={colors}
+        loading={isUploading}
+        type="danger"
+      />
+    </View>
   );
 };
 

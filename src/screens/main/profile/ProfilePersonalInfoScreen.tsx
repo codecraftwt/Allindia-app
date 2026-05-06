@@ -11,6 +11,8 @@ import {
 import Animated, {
   FadeInDown,
   FadeIn,
+  SlideInDown,
+  SlideOutDown,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -19,6 +21,7 @@ import Animated, {
   withSequence,
   interpolateColor,
   interpolate,
+  Easing,
 } from 'react-native-reanimated';
 import { useToast } from '../../../context/ToastContext';
 import { useSelector, useDispatch } from 'react-redux';
@@ -204,9 +207,16 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
   const currentMonthIdx = parseInt(currentDate.split('-')[1]) - 1;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal 
+      visible={visible} 
+      animationType="fade" 
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable
+        <AnimatedPressable
+          entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
+          exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
           style={[styles.modalSheet, { backgroundColor: colors.surface }]}
           onPress={e => e.stopPropagation()}>
           <View style={styles.modalHeader}>
@@ -245,6 +255,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
           {viewMode === 'year' ? (
             <View style={{ height: 320 }}>
               <FlatList
+                key="year-list"
                 data={years}
                 keyExtractor={item => item.toString()}
                 initialScrollIndex={years.indexOf(parseInt(currentYear)) !== -1 ? years.indexOf(parseInt(currentYear)) : 0}
@@ -271,6 +282,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
           ) : viewMode === 'month' ? (
             <View style={{ padding: spacing.md, height: 320 }}>
               <FlatList
+                key="month-grid"
                 data={MONTHS}
                 numColumns={3}
                 keyExtractor={item => item}
@@ -313,7 +325,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
               theme={calendarTheme}
             />
           )}
-        </Pressable>
+        </AnimatedPressable>
       </Pressable>
     </Modal>
   );
@@ -351,9 +363,16 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
   }, [visible]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal 
+      visible={visible} 
+      animationType="fade" 
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable
+        <AnimatedPressable
+          entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
+          exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
           style={[styles.citySheet, { backgroundColor: colors.surface }]}
           onPress={e => e.stopPropagation()}>
           <View style={styles.modalHeader}>
@@ -392,7 +411,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
               </Pressable>
             )}
           />
-        </Pressable>
+        </AnimatedPressable>
       </Pressable>
     </Modal>
   );

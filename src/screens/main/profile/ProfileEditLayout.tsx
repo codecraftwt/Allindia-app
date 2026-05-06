@@ -27,6 +27,7 @@ type Props = {
   useFlatList?: boolean;
   flatListData?: any[];
   renderFlatItem?: ListRenderItem<any>;
+  flatListExtraData?: any;
   scrollProps?: Partial<ScrollViewProps>;
 };
 
@@ -37,6 +38,7 @@ export const ProfileEditLayout: React.FC<Props> = ({
   useFlatList,
   flatListData,
   renderFlatItem,
+  flatListExtraData,
   scrollProps
 }) => {
   const { colors } = useTheme();
@@ -45,7 +47,17 @@ export const ProfileEditLayout: React.FC<Props> = ({
 
   const renderHeader = () => (
     <View style={styles.headerWrap}>
-      <AuthScreenHeader title="Profile" onBack={() => navigation.goBack()} colors={colors} />
+      <AuthScreenHeader 
+        title="Profile" 
+        onBack={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('ProfileOverview' as any);
+          }
+        }} 
+        colors={colors} 
+      />
       <AuthHeadline colors={colors} title={title} subtitle={subtitle} />
       {/* Inject additional header content if provided via scrollProps */}
       {scrollProps?.ListHeaderComponent && (
@@ -82,7 +94,8 @@ export const ProfileEditLayout: React.FC<Props> = ({
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            removeClippedSubviews={Platform.OS === 'android'}
+            extraData={flatListExtraData}
+            removeClippedSubviews={false}
             initialNumToRender={12}
             maxToRenderPerBatch={8}
             windowSize={5}
