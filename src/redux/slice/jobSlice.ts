@@ -13,6 +13,7 @@ export const fetchJobs = createAsyncThunk(
     wishlisted?: boolean;
     per_page?: number;
     page?: number;
+    section?: 'recommended' | 'latest' | 'trending' | 'nearby' | 'search' | 'filter';
   }, { getState, rejectWithValue }) => {
     try {
       const state = getState() as any;
@@ -184,12 +185,19 @@ const jobSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.meta.arg.sort === 'recommended') {
-          state.recommended = action.payload.data.jobs;
-        } else if (action.meta.arg.sort === 'latest') {
-          state.trending = action.payload.data.jobs;
+        const { section, sort } = action.meta.arg;
+        const jobs = action.payload.data.jobs;
+        
+        if (section === 'recommended' || sort === 'recommended') {
+          state.recommended = jobs;
+        } else if (section === 'latest' || sort === 'latest') {
+          state.latest = jobs;
+        } else if (section === 'trending' || sort === 'trending') {
+          state.trending = jobs;
+        } else if (section === 'nearby') {
+          state.nearby = jobs;
         } else {
-          state.recommended = action.payload.data.jobs;
+          state.searchResults = jobs;
         }
         state.meta = action.payload.meta;
       })

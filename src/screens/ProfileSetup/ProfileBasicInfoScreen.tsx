@@ -28,6 +28,16 @@ const GENDERS: { id: Gender; label: string }[] = [
   { id: 'other', label: 'Other' },
 ];
 
+const LANGUAGES = [
+  { id: 'english', label: 'English' },
+  { id: 'hindi', label: 'Hindi' },
+  { id: 'marathi', label: 'Marathi' },
+  { id: 'gujarati', label: 'Gujarati' },
+  { id: 'tamil', label: 'Tamil' },
+  { id: 'telugu', label: 'Telugu' },
+  { id: 'other', label: 'Other' },
+];
+
 function formatDobDisplay(iso: string) {
   if (!iso) {
     return '';
@@ -65,7 +75,10 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const canContinue =
-    draft.fullName.trim().length >= 2 && draft.gender !== '' && draft.dateOfBirth !== '';
+    draft.fullName.trim().length >= 2 && 
+    draft.gender !== '' && 
+    draft.dateOfBirth !== '' &&
+    draft.preferredLanguage !== '';
 
   return (
     <ProfileSetupLayout
@@ -145,6 +158,51 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
       </Pressable>
 
+      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
+        Preferred language
+      </Text>
+      <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.sm }]}>
+        <Icon name="type" size={16} color={colors.primary} />
+        <TextInput
+          placeholder="Type your language..."
+          placeholderTextColor={colors.textPlaceholder}
+          value={draft.preferredLanguage || ''}
+          onChangeText={(t) => updateDraft({ preferredLanguage: t })}
+          style={[typography.body, { color: colors.textPrimary, flex: 1, paddingVertical: 8, marginLeft: 8 }]}
+        />
+        {draft.preferredLanguage ? (
+          <TouchableOpacity onPress={() => updateDraft({ preferredLanguage: '' })}>
+            <Icon name="x-circle" size={16} color={colors.textPlaceholder} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <View style={styles.genderRow}>
+        {LANGUAGES.map(l => {
+          const selected = draft.preferredLanguage?.toLowerCase() === l.id;
+          return (
+            <Pressable
+              key={l.id}
+              onPress={() => updateDraft({ preferredLanguage: l.label })}
+              style={[
+                styles.genderChip,
+                {
+                  backgroundColor: selected ? colors.surfaceHighlight : colors.surface,
+                  borderColor: selected ? colors.primary : colors.border,
+                },
+              ]}>
+              <Text
+                style={[
+                  typography.labelMedium,
+                  { color: selected ? colors.primary : colors.textSecondary },
+                ]}>
+                {l.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <Modal visible={dobOpen} animationType="slide" transparent>
         <Pressable style={styles.modalOverlay} onPress={() => setDobOpen(false)}>
           <Pressable
@@ -204,6 +262,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 4,
     fontSize: 16,
     fontFamily: typography.body.fontFamily,
+  },
+  miniSearch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: 8,
   },
   genderRow: {
     flexDirection: 'row',

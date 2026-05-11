@@ -12,6 +12,8 @@ import {
   Share,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  TextInput,
 } from 'react-native';
 const BRAND_ICON = require('../../../assets/icons/icon2.2.png');
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,6 +21,7 @@ import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
 import { fetchProfile } from '../../../redux/slice/profileSlice';
+import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -82,6 +85,16 @@ function getCategoryIcon(name: string): string {
   return 'briefcase';
 }
 
+function getTagConfig(tag: string, colors: any) {
+  const t = tag.toLowerCase();
+  if (t.includes('urgent') || t.includes('hot')) return { icon: 'bolt', color: colors.warning };
+  if (t.includes('salary') || t.includes('high')) return { icon: 'money', color: colors.success };
+  if (t.includes('nearby') || t.includes('km')) return { icon: 'map-marker', color: colors.primary };
+  if (t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10b981' };
+  if (t.includes('new') || t.includes('recent')) return { icon: 'clock-o', color: colors.accent };
+  return { icon: 'tag', color: colors.primary };
+}
+
 function SectionHeader({
   title,
   icon,
@@ -107,6 +120,12 @@ function SectionHeader({
     </View>
   );
 }
+
+const cleanIconName = (iconStr: string) => {
+  if (!iconStr) return 'info-circle';
+  // Remove 'fas fa-', 'far fa-', etc.
+  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+};
 
 function JobTrendCard({
   job,
@@ -135,31 +154,59 @@ function JobTrendCard({
           shadowColor: colors.shadow,
         },
       ]}>
-      {job.tags && job.tags.length > 0 && (
-        <View style={[
-          styles.hotBadge,
-          { backgroundColor: colors.primary + '15' }
-        ]}>
-          <Icon name="tag" size={11} color={colors.primary} />
-          <Text style={[
-            typography.small,
-            {
-              color: colors.primary,
-              fontFamily: typography.labelMedium.fontFamily,
-              marginLeft: 4
-            }
-          ]}>
-            {job.tags[0]}
-          </Text>
-        </View>
-      )}
+      <View style={styles.trendTagsRow}>
+        {job.applied_tags && job.applied_tags.length > 0 ? (
+          job.applied_tags.map((tag: any, idx: number) => (
+            <View key={idx} style={[
+              styles.hotBadge,
+              { backgroundColor: (tag.icon_color || colors.primary) + '15', marginBottom: 4 }
+            ]}>
+              <Icon name={cleanIconName(tag.icon)} size={11} color={tag.icon_color || colors.primary} />
+              <Text style={[
+                typography.small,
+                {
+                  color: tag.icon_color || colors.primary,
+                  fontSize: 10,
+                  fontWeight: '700',
+                  marginLeft: 4,
+                },
+              ]}>
+                {tag.name}
+              </Text>
+            </View>
+          ))
+        ) : (
+          job.tags && job.tags.length > 0 && job.tags.slice(0, 2).map((tag: string, idx: number) => {
+            const config = getTagConfig(tag, colors);
+            return (
+              <View key={idx} style={[
+                styles.hotBadge,
+                { backgroundColor: config.color + '15' }
+              ]}>
+                <Icon name={config.icon} size={11} color={config.color} />
+                <Text style={[
+                  typography.small,
+                  {
+                    color: config.color,
+                    fontSize: 10,
+                    fontWeight: '700',
+                    marginLeft: 4,
+                  },
+                ]}>
+                  {tag}
+                </Text>
+              </View>
+            );
+          })
+        )}
+      </View>
       <View style={[styles.cardTitle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }]}>
         <Text style={[typography.jobTitle, { color: colors.textPrimary, flex: 1, marginRight: 8 }]} numberOfLines={2}>
           {job.title}
         </Text>
         {job.employer?.company?.company_logo_url && (
-          <Image 
-            source={{ uri: job.employer.company.company_logo_url }} 
+          <Image
+            source={{ uri: job.employer.company.company_logo_url }}
             style={{ width: 32, height: 32, borderRadius: 8, marginTop: 2 }}
           />
         )}
@@ -212,6 +259,30 @@ function JobListCard({
           shadowColor: colors.shadow,
         },
       ]}>
+      <View style={styles.listCardTags}>
+        {job.applied_tags && job.applied_tags.length > 0 ? (
+          job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
+            <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: (tag.icon_color || colors.primary) + '10' }]}>
+              <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+              <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary }]}>
+                {tag.name}
+              </Text>
+            </View>
+          ))
+        ) : (
+          job.tags && job.tags.length > 0 && job.tags.slice(0, 2).map((tag: string, idx: number) => {
+            const config = getTagConfig(tag, colors);
+            return (
+              <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: config.color + '10' }]}>
+                <Icon name={config.icon} size={10} color={config.color} />
+                <Text style={[styles.tagTextSm, { color: config.color }]}>
+                  {tag}
+                </Text>
+              </View>
+            );
+          })
+        )}
+      </View>
       <View style={styles.listCardTop}>
         <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
           <Icon name="briefcase" size={18} color={colors.primary} />
@@ -222,8 +293,8 @@ function JobListCard({
               {job.title}
             </Text>
             {job.employer?.company?.company_logo_url && (
-              <Image 
-                source={{ uri: job.employer.company.company_logo_url }} 
+              <Image
+                source={{ uri: job.employer.company.company_logo_url }}
                 style={{ width: 32, height: 32, borderRadius: 8 }}
               />
             )}
@@ -268,7 +339,7 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
     'Search for Part-time jobs',
     'Search for Remote opportunities'
   ];
-  
+
   const [index, setIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -299,11 +370,11 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
 
   return (
     <View style={styles.tickerContainer}>
-      <Animated.Text 
+      <Animated.Text
         style={[
-          styles.searchPlaceholderWide, 
+          styles.searchPlaceholderWide,
           { color: colors.textPlaceholder, transform: [{ translateY }] }
-        ]} 
+        ]}
         numberOfLines={1}
       >
         {suggestions[index]}
@@ -350,6 +421,7 @@ const HomeScreen: React.FC = () => {
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { trending, nearby, recommended, latest, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
   const { data: profileData } = useSelector((state: RootState) => state.profile);
+  const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
   const isAnyLoading = jobsLoading || metaLoading;
 
   const [showNotifyHint, setShowNotifyHint] = useState(false);
@@ -373,12 +445,17 @@ const HomeScreen: React.FC = () => {
   const frozenScrollY = useRef(0);
   const COLLAPSE_DISTANCE = 80;
 
+  // Search Overlay States
+  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState(profileData?.preferences?.current_city?.city || '');
+
   const handleScroll = (event: any) => {
     // Don't update scroll position when filter is open
     if (showFilterGrid) return;
 
     const currentOffset = event.nativeEvent.contentOffset.y;
-    
+
     // Header animation
     scrollY.setValue(currentOffset);
     frozenScrollY.current = currentOffset;
@@ -462,9 +539,20 @@ const HomeScreen: React.FC = () => {
 
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchMetaCategories());
-    if (recommended.length === 0 && trending.length === 0) dispatch(fetchHomeFeed());
+
+    // Fetch different sections using the main jobs API
+    dispatch(fetchJobs({ sort: 'recommended', per_page: 10, section: 'recommended' }));
+    dispatch(fetchJobs({ sort: 'latest', per_page: 10, section: 'latest' }));
+    dispatch(fetchJobs({ sort: 'trending', per_page: 10, section: 'trending' }));
+    dispatch(fetchHomeFeed());
+
+    if (profileData?.preferences?.current_city_id) {
+      dispatch(fetchJobs({ city_id: profileData.preferences.current_city_id, per_page: 10, section: 'nearby' }));
+    }
+
     if (!profileData) dispatch(fetchProfile());
-  }, [dispatch, categories.length, recommended.length, trending.length, profileData]);
+    dispatch(fetchAdminMedia({ media_section: 'home page', limit: 10 }));
+  }, [dispatch, categories.length, profileData]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
@@ -474,7 +562,7 @@ const HomeScreen: React.FC = () => {
   const avatarInitials = useMemo(() => profileInitials(displayName), [displayName]);
 
   const goSearch = () => {
-    navigation.navigate('SearchHome');
+    setShowSearchOverlay(true);
   };
 
   const goProfile = () => {
@@ -891,6 +979,89 @@ const HomeScreen: React.FC = () => {
         colors={colors}
         top={filterTop}
       />
+
+      {showSearchOverlay && (
+        <Modal
+          visible={showSearchOverlay}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowSearchOverlay(false)}>
+          <View style={[styles.overlayContainer, { backgroundColor: colors.background }]}>
+            <SafeAreaView style={{ flex: 1 }}>
+              <View style={[styles.overlayHeader, { borderBottomColor: colors.border }]}>
+                <Pressable onPress={() => setShowSearchOverlay(false)} style={styles.backBtn}>
+                  <Icon name="arrow-left" size={24} color={colors.textPrimary} />
+                </Pressable>
+                <View style={styles.dualInputContainer}>
+                  <View style={[styles.overlayInputRow, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                    <Icon name="search" size={18} color={colors.primary} />
+                    <TextInput
+                      autoFocus
+                      placeholder='Search "Delivery", "Sales"...'
+                      placeholderTextColor={colors.textPlaceholder}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                      style={[typography.body, { color: colors.textPrimary, flex: 1, marginLeft: 8, paddingVertical: 10 }]}
+                    />
+                  </View>
+                  <View style={[styles.overlayInputRow, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, marginTop: 12 }]}>
+                    <Icon name="map-pin" size={18} color={colors.textSecondary} />
+                    <TextInput
+                      placeholder="In which city?"
+                      placeholderTextColor={colors.textPlaceholder}
+                      value={searchLocation}
+                      onChangeText={setSearchLocation}
+                      style={[typography.body, { color: colors.textPrimary, flex: 1, marginLeft: 8, paddingVertical: 10 }]}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <ScrollView style={{ flex: 1, padding: spacing.md }}>
+                <Text style={[typography.labelMedium, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
+                  RECENT SEARCHES
+                </Text>
+                {['Delivery Boy', 'Graphic Designer', 'Ahmedabad'].map((item, index) => (
+                  <Pressable key={index} style={styles.recentItem} onPress={() => setSearchQuery(item)}>
+                    <Icon name="clock" size={16} color={colors.textPlaceholder} />
+                    <Text style={[typography.body, { color: colors.textPrimary, marginLeft: spacing.sm }]}>
+                      {item}
+                    </Text>
+                  </Pressable>
+                ))}
+
+                <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm }]}>
+                  POPULAR ROLES
+                </Text>
+                <View style={styles.popularTags}>
+                  {['Telecaller', 'Back Office', 'Sales', 'Driver', 'Cook'].map((tag, idx) => (
+                    <Pressable key={idx} onPress={() => setSearchQuery(tag)} style={[styles.popularTag, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <Text style={[typography.small, { color: colors.textPrimary }]}>{tag}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </ScrollView>
+
+              <View style={[styles.searchFooter, { borderTopColor: colors.border }]}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowSearchOverlay(false);
+                    navigation.navigate('JobListing', {
+                      filters: {
+                        q: searchQuery,
+                        city: searchLocation
+                      }
+                    });
+                  }}
+                  style={[styles.mainSearchBtn, { backgroundColor: colors.primary }]}>
+                  <Text style={[typography.button, { color: colors.onPrimary }]}>Search Jobs</Text>
+                  <Icon name="arrow-right" size={18} color={colors.onPrimary} style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
@@ -1124,21 +1295,28 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     paddingRight: spacing.md,
   },
+
   trendCard: {
-    padding: 8,
+    padding: 12,
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
+    width: H_CARD_W,
+    marginRight: spacing.md,
+  },
+  trendTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
   },
   hotBadge: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radius.sm,
-    marginBottom: 6,
+    borderRadius: radius.pill,
+    gap: 4,
   },
   cardTitle: {
     minHeight: 44,
@@ -1254,6 +1432,89 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
+  },
+  listCardTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  tagBadgeSm: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 4,
+  },
+  tagTextSm: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: typography.labelMedium.fontFamily,
+  },
+  tagTextSm: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: typography.labelMedium.fontFamily,
+  },
+  overlayContainer: {
+    flex: 1,
+  },
+  overlayHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: spacing.md,
+    borderBottomWidth: 1,
+    gap: spacing.md,
+  },
+  backBtn: {
+    padding: 4,
+    marginTop: 8,
+  },
+  dualInputContainer: {
+    flex: 1,
+  },
+  overlayInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  recentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+  },
+  popularTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  popularTag: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  searchFooter: {
+    padding: spacing.md,
+    borderTopWidth: 1,
+  },
+  mainSearchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: radius.md,
   },
 });
 

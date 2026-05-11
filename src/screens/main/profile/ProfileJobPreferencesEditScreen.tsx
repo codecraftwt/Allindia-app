@@ -42,8 +42,17 @@ const MAX_SALARY_LIMIT = 40;
 const SALARY_OPTIONS = Array.from({ length: MAX_SALARY_LIMIT + 1 }, (_, i) => i);
 
 const EXP_TYPES = [
-  { id: 'fresher', label: 'Fresher' },
   { id: 'experienced', label: 'Experienced' },
+];
+
+const LANGUAGES = [
+  { id: 'english', label: 'English' },
+  { id: 'hindi', label: 'Hindi' },
+  { id: 'marathi', label: 'Marathi' },
+  { id: 'gujarati', label: 'Gujarati' },
+  { id: 'tamil', label: 'Tamil' },
+  { id: 'telugu', label: 'Telugu' },
+  { id: 'other', label: 'Other' },
 ];
 
 // ─── Components ─────────────────────────────────────────────────────────────
@@ -61,8 +70,8 @@ const Section = React.memo(({ title, subtitle, children, colors }: any) => (
 
 const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onToggle, onSelectSub, colors }: any) => {
   const rotation = useSharedValue(0);
-  
-  const hasSelection = useMemo(() => 
+
+  const hasSelection = useMemo(() =>
     category.subcategories.some((sub: any) => selectedIds.includes(sub.id)),
     [category.subcategories, selectedIds]
   );
@@ -77,24 +86,24 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
 
   return (
     <View style={[
-      styles.accordion, 
-      { 
-        backgroundColor: colors.surface, 
+      styles.accordion,
+      {
+        backgroundColor: colors.surface,
         borderColor: hasSelection ? colors.primary : colors.border,
         borderWidth: hasSelection ? 1.5 : 1
       }
     ]}>
-      <Pressable 
-        onPress={() => onToggle(category.id.toString())} 
+      <Pressable
+        onPress={() => onToggle(category.id.toString())}
         style={[
           styles.accordionHeader,
           hasSelection && { backgroundColor: colors.primary + '08' }
         ]}
       >
         <Text style={[
-          typography.body, 
-          { 
-            color: hasSelection ? colors.primary : colors.textPrimary, 
+          typography.body,
+          {
+            color: hasSelection ? colors.primary : colors.textPrimary,
             flex: 1,
             fontWeight: hasSelection ? '700' : '400'
           }
@@ -160,7 +169,7 @@ const SalarySelectionField = ({ label, value, onPress, colors }: any) => (
 const SalaryRangeIndicator = ({ min, max, colors }: any) => {
   const minPos = (min / MAX_SALARY_LIMIT) * 100;
   const maxPos = (max / MAX_SALARY_LIMIT) * 100;
-  
+
   return (
     <View style={styles.rangeIndicatorContainer}>
       <View style={[styles.rangeTrack, { backgroundColor: colors.surfaceHighlight }]}>
@@ -175,13 +184,13 @@ const SalaryRangeIndicator = ({ min, max, colors }: any) => {
 };
 
 const WFHCard = ({ active, onToggle, colors }: any) => (
-  <Pressable 
+  <Pressable
     onPress={() => onToggle(!active)}
     style={[
-      styles.wfhCard, 
-      { 
-        backgroundColor: active ? colors.primary : colors.surface, 
-        borderColor: active ? colors.primary : colors.border 
+      styles.wfhCard,
+      {
+        backgroundColor: active ? colors.primary : colors.surface,
+        borderColor: active ? colors.primary : colors.border
       }
     ]}>
     <View style={[styles.wfhIconCircle, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
@@ -191,8 +200,8 @@ const WFHCard = ({ active, onToggle, colors }: any) => (
       <Text style={[typography.labelMedium, { color: active ? '#fff' : colors.textPrimary }]}>Remote / Work From Home</Text>
       <Text style={[typography.small, { color: active ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>Show jobs that don't require office visit</Text>
     </View>
-    <Switch 
-      value={active} 
+    <Switch
+      value={active}
       onValueChange={onToggle}
       trackColor={{ false: 'transparent', true: 'rgba(255,255,255,0.3)' }}
       thumbColor={active ? '#fff' : colors.textPlaceholder}
@@ -342,6 +351,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const [workFromHome, setWorkFromHome] = useState(false);
   const [expandedCatId, setExpandedCatId] = useState<string | null>(null);
   const [catSearch, setCatSearch] = useState('');
+  const [langInput, setLangInput] = useState('');
+  const [preferredLanguage, setPreferredLanguage] = useState<string | null>(null);
   const [showAllCats, setShowAllCats] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -374,7 +385,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       setMinSalary(Math.round((pref.expected_salary_min || 200000) / 100000));
       setMaxSalary(Math.round((pref.expected_salary_max || 500000) / 100000));
       setWorkFromHome(!!pref.work_from_home);
-      
+      setPreferredLanguage(pref.preferred_language || null);
+
       isInitialized.current = true;
     } else if (!profile && !profileLoading) {
       dispatch(fetchProfile());
@@ -394,15 +406,21 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
   const handleSave = async () => {
     setSaving(true);
+    const validCityIds = cities.map(c => Number(c.id));
+    const payload = {
+      current_city_id: currentCityId ? Number(currentCityId) : null,
+      preferred_city_ids: preferredCityIds
+        .map(id => Number(id))
+        .filter(id => validCityIds.includes(id) && id !== Number(currentCityId)),
+      job_category_id: jobCategoryIds[0] ? Number(jobCategoryIds[0]) : null,
+      expected_salary_min: Number(minSalary) * 100000,
+      expected_salary_max: Number(maxSalary) * 100000,
+      work_from_home: workFromHome,
+      preferred_language: preferredLanguage ? preferredLanguage.trim() : null,
+    };
+    console.log('Saving Job Preferences Payload:', JSON.stringify(payload, null, 2));
     try {
-      await dispatch(updatePreferencesProfile({
-        current_city_id: currentCityId,
-        preferred_city_ids: preferredCityIds,
-        job_category_id: jobCategoryIds[0] || null,
-        expected_salary_min: Number(minSalary) * 100000,
-        expected_salary_max: Number(maxSalary) * 100000,
-        work_from_home: workFromHome,
-      })).unwrap();
+      await dispatch(updatePreferencesProfile(payload)).unwrap();
       showToast('Job preferences saved!', 'success');
       setTimeout(() => {
         if (navigation.canGoBack()) {
@@ -449,6 +467,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
     list.push(
       { id: 'salary', type: 'section', title: 'Expected salary' },
+      { id: 'language', type: 'section', title: 'Preferred language' },
       { id: 'wfh', type: 'section', title: 'Work from home' }
     );
 
@@ -513,6 +532,72 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
             <SalaryRangeIndicator min={minSalary} max={maxSalary} colors={colors} />
           </View>
         );
+        if (item.id === 'language') content = (
+          <View style={{ gap: spacing.sm }}>
+            <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Icon name="type" size={16} color={colors.primary} />
+              <TextInput
+                placeholder="Type your language..."
+                placeholderTextColor={colors.textPlaceholder}
+                value={langInput}
+                onChangeText={setLangInput}
+                onSubmitEditing={() => {
+                  const val = langInput.trim();
+                  if (val) {
+                    let current = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()) : [];
+                    if (!current.map(s => s.toLowerCase()).includes(val.toLowerCase())) {
+                      current.push(val);
+                      setPreferredLanguage(current.join(', '));
+                    }
+                    setLangInput('');
+                  }
+                }}
+                style={[typography.body, { color: colors.textPrimary, flex: 1, paddingVertical: 8, marginLeft: 8 }]}
+              />
+            </View>
+
+            {/* Selected Languages as Removable Chips */}
+            <View style={[styles.chipWrap, { marginBottom: 4 }]}>
+              {preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()).filter(Boolean).map((lang, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => {
+                    const filtered = preferredLanguage.split(',').map(s => s.trim()).filter(s => s !== lang);
+                    setPreferredLanguage(filtered.join(', '));
+                  }}
+                  style={[styles.selectedLangChip, { backgroundColor: colors.primary + '15', borderColor: colors.primary }]}>
+                  <Text style={[typography.small, { color: colors.primary }]}>{lang}</Text>
+                  <Icon name="x" size={12} color={colors.primary} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+              )) : null}
+            </View>
+
+            <View style={styles.chipWrap}>
+              {LANGUAGES.filter(l => l.id !== 'other').map((l) => {
+                const languagesArray = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim().toLowerCase()) : [];
+                const isSelected = languagesArray.includes(l.id);
+
+                return (
+                  <Chip
+                    key={l.id}
+                    label={l.label}
+                    selected={isSelected}
+                    onPress={() => {
+                      let current = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()) : [];
+                      if (isSelected) {
+                        current = current.filter(s => s.toLowerCase() !== l.id);
+                      } else {
+                        current.push(l.label);
+                      }
+                      setPreferredLanguage(current.join(', '));
+                    }}
+                    colors={colors}
+                  />
+                );
+              })}
+            </View>
+          </View>
+        );
         if (item.id === 'wfh') content = <WFHCard active={workFromHome} onToggle={setWorkFromHome} colors={colors} />;
         return <Section title={item.title} colors={colors}>{content}</Section>;
       case 'category':
@@ -558,10 +643,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       flatListExtraData={[jobCategoryIds, expandedCatId, currentCityId, preferredCityIds, minSalary, maxSalary, workFromHome, saving, showAllCats]}
     >
       {/* City Modals */}
-      <Modal 
-        visible={showCityModal} 
-        animationType="fade" 
-        transparent 
+      <Modal
+        visible={showCityModal}
+        animationType="fade"
+        transparent
         statusBarTranslucent
         onRequestClose={() => setShowCityModal(false)}
       >
@@ -612,10 +697,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
           </BottomSheetContent>
         </Pressable>
       </Modal>
-      <Modal 
-        visible={showMinSalaryModal} 
-        animationType="fade" 
-        transparent 
+      <Modal
+        visible={showMinSalaryModal}
+        animationType="fade"
+        transparent
         statusBarTranslucent
         onRequestClose={() => setShowMinSalaryModal(false)}
       >
@@ -653,10 +738,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         </Pressable>
       </Modal>
 
-      <Modal 
-        visible={showMaxSalaryModal} 
-        animationType="fade" 
-        transparent 
+      <Modal
+        visible={showMaxSalaryModal}
+        animationType="fade"
+        transparent
         statusBarTranslucent
         onRequestClose={() => setShowMaxSalaryModal(false)}
       >
@@ -693,10 +778,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
           </BottomSheetContent>
         </Pressable>
       </Modal>
-      <Modal 
-        visible={showPrefCityModal} 
-        animationType="fade" 
-        transparent 
+      <Modal
+        visible={showPrefCityModal}
+        animationType="fade"
+        transparent
         statusBarTranslucent
         onRequestClose={() => setShowPrefCityModal(false)}
       >
@@ -794,6 +879,24 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'absolute',
     borderRadius: 3,
+  },
+  miniSearch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  selectedLangChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    marginRight: 4,
+    marginBottom: 4,
   },
   wfhCard: {
     flexDirection: 'row',

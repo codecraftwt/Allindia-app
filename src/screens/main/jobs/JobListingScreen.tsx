@@ -32,6 +32,21 @@ import { ALL_LISTED_JOBS } from '../home/homeMockData';
 type JobListingNav = StackNavigationProp<SearchStackParamList, 'JobListing'>;
 type JobListingRoute = RouteProp<SearchStackParamList, 'JobListing'>;
 
+const cleanIconName = (iconStr: string) => {
+  if (!iconStr) return 'check-circle';
+  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+};
+
+const getTagConfig = (tag: string, colors: any) => {
+  const t = tag.toLowerCase();
+  if (t.includes('urgent') || t.includes('hot')) return { icon: 'bolt', color: colors.warning };
+  if (t.includes('salary') || t.includes('high')) return { icon: 'money', color: colors.success };
+  if (t.includes('nearby') || t.includes('km')) return { icon: 'map-marker', color: colors.primary };
+  if (t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10b981' };
+  if (t.includes('new') || t.includes('recent')) return { icon: 'clock-o', color: colors.accent };
+  return { icon: 'tag', color: colors.primary };
+};
+
 function JobListCard({
   job,
   colors,
@@ -58,6 +73,30 @@ function JobListCard({
           shadowColor: colors.shadow,
         },
       ]}>
+      <View style={styles.listCardTags}>
+        {job.applied_tags && job.applied_tags.length > 0 ? (
+          job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
+            <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: (tag.icon_color || colors.primary) + '10' }]}>
+              <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+              <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary }]}>
+                {tag.name}
+              </Text>
+            </View>
+          ))
+        ) : (
+          job.tags && job.tags.length > 0 && job.tags.slice(0, 2).map((tag: string, idx: number) => {
+            const config = getTagConfig(tag, colors);
+            return (
+              <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: config.color + '10' }]}>
+                <Icon name={config.icon} size={10} color={config.color} />
+                <Text style={[styles.tagTextSm, { color: config.color }]}>
+                  {tag}
+                </Text>
+              </View>
+            );
+          })
+        )}
+      </View>
       <View style={styles.listCardTop}>
         <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
           <Icon name="briefcase" size={18} color={colors.primary} />
@@ -317,6 +356,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
+  },
+  listCardTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  tagBadgeSm: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    gap: 4,
+  },
+  tagTextSm: {
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: typography.labelMedium.fontFamily,
   },
   loaderContainer: {
     flex: 1,

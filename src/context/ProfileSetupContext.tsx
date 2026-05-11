@@ -18,6 +18,7 @@ export type ProfileSetupDraft = {
   resumeName: string | null;
   resumeSkipped: boolean;
   bio: string;
+  preferredLanguage: string;
 };
 
 const initialDraft: ProfileSetupDraft = {
@@ -35,6 +36,7 @@ const initialDraft: ProfileSetupDraft = {
   resumeName: null,
   resumeSkipped: false,
   bio: '',
+  preferredLanguage: '',
 };
 
 type ProfileSetupContextValue = {

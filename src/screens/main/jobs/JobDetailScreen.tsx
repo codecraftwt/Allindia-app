@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState,useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -41,6 +41,12 @@ export type JobDetailRouteParams = { jobId: string };
 
 type JobDetailRoute = RouteProp<{ JobDetail: JobDetailRouteParams }, 'JobDetail'>;
 
+const cleanIconName = (iconStr: string) => {
+  if (!iconStr) return 'check-circle';
+  // Remove 'fas fa-', 'far fa-', etc.
+  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+};
+
 function SectionTitle({ title, colors }: { title: string; colors: ThemeColors }) {
   return (
     <Text style={[typography.sectionTitle, { color: colors.textPrimary, marginBottom: spacing.sm }]}>
@@ -67,17 +73,17 @@ const JobDetailSkeleton: React.FC = () => {
     <View style={styles.skeletonContainer}>
       <SkeletonPulse style={styles.skeletonTitle} />
       <SkeletonPulse style={styles.skeletonSubTitle} />
-      
+
       <View style={styles.skeletonMetaRow}>
         <SkeletonPulse style={styles.skeletonPill} />
         <SkeletonPulse style={styles.skeletonPill} />
       </View>
-      
+
       <SkeletonPulse style={styles.skeletonSectionTitle} />
       <View style={styles.skeletonGrid}>
         {[1, 2, 3, 4].map(i => <SkeletonPulse key={i} style={styles.skeletonGridItem} />)}
       </View>
-      
+
       <SkeletonPulse style={styles.skeletonSectionTitle} />
       <SkeletonPulse style={styles.skeletonLongText} />
       <SkeletonPulse style={styles.skeletonLongText} />
@@ -111,8 +117,8 @@ const JobDetailScreen: React.FC = () => {
   useEffect(() => {
     if (currentJob) {
       const isWishlisted = !!(
-        currentJob.is_wishlisted || 
-        currentJob.wishlisted || 
+        currentJob.is_wishlisted ||
+        currentJob.wishlisted ||
         wishlistJobs.some((j: any) => j.id === currentJob.id)
       );
       setSaved(isWishlisted);
@@ -123,7 +129,7 @@ const JobDetailScreen: React.FC = () => {
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  
+
   // Toast State
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
     visible: false,
@@ -223,7 +229,7 @@ const JobDetailScreen: React.FC = () => {
       // Use API message or fallback
       const msg = resultAction.message || 'Application submitted successfully!';
       showToast(msg, msg.includes('already') ? 'info' : 'success');
-      
+
       // Refresh job detail to update application status
       dispatch(fetchJobDetail(currentJob.id));
     } catch (err: any) {
@@ -247,7 +253,7 @@ const JobDetailScreen: React.FC = () => {
       const jobLink = `https://jobindia.app/job/${currentJob.id}`;
       // Indeed-style clean format: Title - Location - Site
       const shareMessage = `${currentJob.title} - ${locationLabel} - JobIndia.app\n${companyName}\n\nApply here: ${jobLink}`;
-      
+
       await Share.share({
         message: shareMessage,
         url: jobLink, // For iOS to show the link preview correctly
@@ -297,18 +303,18 @@ const JobDetailScreen: React.FC = () => {
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
       {/* Animated Toast */}
       {toast.visible && (
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.toastContainer, 
-            { 
+            styles.toastContainer,
+            {
               transform: [{ translateY: toastAnim }],
               backgroundColor: toast.type === 'success' ? colors.success : (toast.type === 'error' ? colors.error : colors.primary)
             }
           ]}>
-          <Icon 
-            name={toast.type === 'success' ? 'check-circle' : (toast.type === 'error' ? 'exclamation-circle' : 'info-circle')} 
-            size={18} 
-            color="#FFFFFF" 
+          <Icon
+            name={toast.type === 'success' ? 'check-circle' : (toast.type === 'error' ? 'exclamation-circle' : 'info-circle')}
+            size={18}
+            color="#FFFFFF"
           />
           <Text style={[typography.labelMedium, { color: '#FFFFFF', marginLeft: spacing.sm, flexShrink: 1 }]}>
             {toast.message}
@@ -351,7 +357,28 @@ const JobDetailScreen: React.FC = () => {
           { paddingBottom: spacing.lg + Math.max(insets.bottom, spacing.md) },
         ]}
         showsVerticalScrollIndicator={false}>
-        <Text style={[typography.appTitle, { color: colors.textPrimary }]}>{currentJob.title}</Text>
+        
+        {/* Dynamic Tags Row */}
+        <View style={styles.tagsRow}>
+          {currentJob.applied_tags && currentJob.applied_tags.length > 0 ? (
+            currentJob.applied_tags.map((tag: any, idx: number) => (
+              <View key={idx} style={[styles.badge, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
+                <Icon name={cleanIconName(tag.icon)} size={12} color={tag.icon_color || colors.primary} />
+                <Text style={[typography.small, { color: tag.icon_color || colors.primary, fontWeight: '700', marginLeft: 6 }]}>
+                  {tag.name}
+                </Text>
+              </View>
+            ))
+          ) : (
+            currentJob.tags && currentJob.tags.length > 0 && currentJob.tags.map((tag: string, idx: number) => (
+              <View key={idx} style={[styles.badge, { backgroundColor: colors.primary + '10' }]}>
+                <Text style={[typography.small, { color: colors.primary }]}>{tag}</Text>
+              </View>
+            ))
+          )}
+        </View>
+
+        <Text style={[typography.appTitle, { color: colors.textPrimary, marginTop: spacing.xs }]}>{currentJob.title}</Text>
         <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>{companyName}</Text>
 
         <View style={styles.metaRow}>
@@ -525,8 +552,8 @@ const JobDetailScreen: React.FC = () => {
             <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm }]}>
               Please answer all required screening questions before applying for this job.
             </Text>
-            <Pressable 
-              style={[styles.modalBtn, { backgroundColor: colors.primary }]} 
+            <Pressable
+              style={[styles.modalBtn, { backgroundColor: colors.primary }]}
               onPress={() => setShowValidationModal(false)}>
               <Text style={[typography.labelMedium, { color: '#FFFFFF', fontWeight: '700' }]}>Got it</Text>
             </Pressable>
@@ -552,17 +579,17 @@ const JobDetailScreen: React.FC = () => {
             <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}>
               Please register or log in to apply for jobs and unlock all features.
             </Text>
-            
+
             <View style={{ width: '100%', gap: spacing.sm, marginTop: spacing.xl }}>
-              <PrimaryButton 
-                title="Register Now" 
+              <PrimaryButton
+                title="Register Now"
                 onPress={() => {
                   setShowAuthModal(false);
                   navigation.navigate('SignIn');
-                }} 
-                colors={colors} 
+                }}
+                colors={colors}
               />
-              <Pressable 
+              <Pressable
                 onPress={() => {
                   setShowAuthModal(false);
                   navigation.navigate('EmailLogin');
@@ -797,6 +824,19 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: radius.xs,
     marginTop: spacing.xs,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: spacing.sm,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
   },
   // Toast Styles
   toastContainer: {

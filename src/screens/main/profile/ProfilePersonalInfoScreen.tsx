@@ -688,8 +688,6 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         5
       )}
 
-
-
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>

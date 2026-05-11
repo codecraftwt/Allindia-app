@@ -28,6 +28,11 @@ import SkeletonPulse from '../../../components/SkeletonPulse';
 
 const { width } = Dimensions.get('window');
 
+const cleanIconName = (iconStr: string) => {
+  if (!iconStr) return 'check-circle';
+  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+};
+
 function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const company = job.employer?.company || {};
   const location = job.location?.label || 'Remote';
@@ -72,13 +77,26 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
             <Text style={[typography.tiny, { color: colors.textSecondary }]}>{salary}</Text>
           </View>
         </View>
-        {tags.length > 0 && (
-          <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
-            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
-              {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
-            </Text>
-          </View>
-        )}
+        <View style={styles.tagRow}>
+          {job.applied_tags && job.applied_tags.length > 0 ? (
+            job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
+              <View key={idx} style={[styles.tagPill, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
+                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+                <Text style={[typography.tiny, { color: tag.icon_color || colors.primary, fontWeight: 'bold', marginLeft: 4 }]} numberOfLines={1}>
+                  {tag.name}
+                </Text>
+              </View>
+            ))
+          ) : (
+            tags.length > 0 && (
+              <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
+                <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
+                  {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
+                </Text>
+              </View>
+            )
+          )}
+        </View>
       </View>
     </Pressable>
   );
@@ -384,6 +402,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
   },
   empty: {
     flex: 1,

@@ -59,6 +59,7 @@ export const updatePreferencesProfile = createAsyncThunk(
     education_notes?: string;
     experience_type?: string;
     total_experience_years?: number;
+    preferred_language?: string;
   }, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;

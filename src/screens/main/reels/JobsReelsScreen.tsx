@@ -27,6 +27,9 @@ import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../redux/store';
+import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 
 
 const { width, height } = Dimensions.get('window');
@@ -305,6 +308,13 @@ const JobsReelsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   
+  const dispatch = useDispatch<AppDispatch>();
+  const { reels, loading: apiLoading } = useSelector((state: RootState) => state.media);
+
+  useEffect(() => {
+    dispatch(fetchAdminMedia({ media_section: 'reel', limit: 20 }));
+  }, [dispatch]);
+  
   // Interaction States
   const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
   const [savedReels, setSavedReels] = useState<Set<string>>(new Set());
@@ -374,7 +384,7 @@ const JobsReelsScreen: React.FC = () => {
     setLoadingId(id);
     
     if (type === 'story') {
-      const index = STORY_DATA.findIndex(s => s.id === id);
+      const index = STORY_DATA.findIndex(s => String(s.id) === String(id));
       setTimeout(() => {
         setLoadingId(null);
         setCurrentStoryIndex(index !== -1 ? index : 0);
@@ -382,6 +392,7 @@ const JobsReelsScreen: React.FC = () => {
         setIsStoryVisible(true);
       }, 800);
     } else {
+      setActiveReelId(id);
       setTimeout(() => {
         setLoadingId(null);
         setViewMode('full');
@@ -467,7 +478,12 @@ const JobsReelsScreen: React.FC = () => {
 
   const renderFullReel = ({ item }: any) => (
     <View style={styles.fullReel}>
-      <Image source={{ uri: item.image }} style={styles.fullImage} resizeMode="cover" />
+      <Image source={{ uri: item.media_url || item.image }} style={styles.fullImage} resizeMode="cover" />
+      {item.media_type === 'video' && (
+        <View style={styles.playIconOverlay}>
+          <Icon name="play-circle" size={80} color="rgba(255,255,255,0.6)" />
+        </View>
+      )}
       <View style={styles.gradientOverlay} />
 
       <View style={styles.reelContent}>
@@ -481,19 +497,19 @@ const JobsReelsScreen: React.FC = () => {
           </View>
         </View>
 
-        <View style={[styles.sideActions, { bottom: 120 + insets.bottom }]}>
+        <View style={styles.sideActions}>
           <Pressable style={styles.actionItem} onPress={() => toggleLike(item.id)}>
             <View style={[styles.iconCircle, likedReels.has(item.id) && { backgroundColor: 'rgba(255, 75, 43, 0.3)', borderColor: '#ff4b2b' }]}>
               <Icon name={likedReels.has(item.id) ? "heart" : "heart-o"} size={24} color={likedReels.has(item.id) ? "#ff4b2b" : "#fff"} />
             </View>
-            <Text style={styles.actionValue}>{likedReels.has(item.id) ? 'Liked' : item.likes}</Text>
+            <Text style={styles.actionValue}>{likedReels.has(item.id) ? 'Liked' : (item.likes || '0')}</Text>
           </Pressable>
           
           <Pressable style={styles.actionItem} onPress={() => openComments(item.id)}>
             <View style={styles.iconCircle}>
               <Icon name="comment-o" size={24} color="#fff" />
             </View>
-            <Text style={styles.actionValue}>{item.comments}</Text>
+            <Text style={styles.actionValue}>{item.comments || '0'}</Text>
           </Pressable>
           
           <Pressable style={styles.actionItem} onPress={() => openShare(item.id)}>
@@ -513,20 +529,28 @@ const JobsReelsScreen: React.FC = () => {
 
         <View style={[styles.bottomDetails, { bottom: 40 + insets.bottom }]}>
           <View style={styles.companyRow}>
-            <Image source={{ uri: item.logo }} style={styles.miniLogo} />
-            <Text style={styles.companyName}>{item.company}</Text>
+            {item.logo || (item.employer?.company?.company_logo_url) ? (
+              <Image source={{ uri: item.logo || item.employer?.company?.company_logo_url }} style={styles.miniLogo} />
+            ) : (
+              <View style={[styles.miniLogo, { alignItems: 'center', justifyContent: 'center' }]}>
+                <Icon name="building" size={16} color="#000" />
+              </View>
+            )}
+            <Text style={styles.companyName}>{item.company || item.employer?.company?.company_name || 'JobIndia Partner'}</Text>
             <Icon name="check-circle" size={14} color="#0095f6" style={{ marginLeft: 6 }} />
             <Pressable 
-              style={[styles.followBtn, followedCompanies.has(item.company) && { backgroundColor: '#fff' }]} 
-              onPress={() => toggleFollow(item.company)}
+              style={[styles.followBtn, followedCompanies.has(item.company || item.employer?.company?.company_name) && { backgroundColor: '#fff' }]} 
+              onPress={() => toggleFollow(item.company || item.employer?.company?.company_name)}
             >
-              <Text style={[styles.followText, followedCompanies.has(item.company) && { color: '#000' }]}>
-                {followedCompanies.has(item.company) ? 'Following' : 'Follow'}
+              <Text style={[styles.followText, followedCompanies.has(item.company || item.employer?.company?.company_name) && { color: '#000' }]}>
+                {followedCompanies.has(item.company || item.employer?.company?.company_name) ? 'Following' : 'Follow'}
               </Text>
             </Pressable>
           </View>
-          <Text style={styles.fullJobTitle}>{item.title}</Text>
-          <Text style={styles.fullJobMeta}><Icon name="map-marker" size={12} /> {item.location}  •  <Icon name="money" size={12} /> {item.salary}</Text>
+          <Text style={styles.fullJobTitle}>{item.title && !item.title.includes('.jpg') ? item.title : (item.category?.name || 'Job Opportunity')}</Text>
+          <Text style={styles.fullJobMeta}>
+            <Icon name="map-marker" size={12} /> {item.location || item.category?.name || 'Nearby'}  •  <Icon name="money" size={12} /> {item.salary || 'Best in Industry'}
+          </Text>
 
           <Pressable style={[styles.mainApplyBtn, { backgroundColor: colors.primary }]}>
             <Text style={styles.applyBtnLabel}>Easy Apply</Text>
@@ -610,11 +634,15 @@ const JobsReelsScreen: React.FC = () => {
       <View style={[styles.container, { backgroundColor: '#000' }]}>
         <StatusBar hidden />
         <FlatList
-          data={REELS_DATA}
+          data={reels.length > 0 ? reels : REELS_DATA}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           keyExtractor={item => item.id}
           renderItem={renderFullReel}
+          initialScrollIndex={Math.max(0, reels.length > 0 ? reels.findIndex(r => String(r.id) === String(activeReelId)) : REELS_DATA.findIndex(r => String(r.id) === String(activeReelId)))}
+          getItemLayout={(data, index) => (
+            { length: REEL_HEIGHT, offset: REEL_HEIGHT * index, index }
+          )}
         />
 
         {/* Comment Modal */}
@@ -760,7 +788,7 @@ const JobsReelsScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        {loading ? (
+        {apiLoading ? (
           renderSkeletonGrid()
         ) : (
           <>
@@ -786,26 +814,37 @@ const JobsReelsScreen: React.FC = () => {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalGrid}>
-            {REELS_DATA.map(reel => (
+            {(reels.length > 0 ? reels : REELS_DATA).map((reel: any) => (
               <Pressable key={reel.id} style={styles.premiumCard} onPress={() => handlePress(reel.id)}>
-                <ImageBackground source={{ uri: reel.image }} style={styles.cardBg} imageStyle={{ borderRadius: radius.lg }}>
+                <ImageBackground 
+                  source={{ uri: reel.media_url || reel.image }} 
+                  style={styles.cardBg} 
+                  imageStyle={{ borderRadius: radius.lg, resizeMode: 'cover' }}
+                >
                   <View style={[styles.cardOverlay, loadingId === reel.id && { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+                    {reel.media_type === 'video' && (
+                      <View style={styles.videoBadge}>
+                        <Icon name="video-camera" size={12} color="#fff" />
+                      </View>
+                    )}
                     {loadingId === reel.id ? (
                       <View style={styles.fullCenter}>
                         <RotatingBorder colors={{ primary: '#fff' }} />
                       </View>
                     ) : (
                       <>
-                        {reel.isTrending && (
+                        {(reel.isTrending || reel.media_section === 'reel') && (
                           <View style={styles.trendingBadge}>
                             <Icon name="line-chart" size={10} color="#fff" />
-                            <Text style={styles.badgeText}>TRENDING</Text>
+                            <Text style={styles.badgeText}>{reel.category?.name || 'TRENDING'}</Text>
                           </View>
                         )}
                         <View style={{ flex: 1 }} />
                         <View style={styles.cardInfo}>
-                          <Text style={styles.cardTitle} numberOfLines={1}>{reel.title}</Text>
-                          <Text style={styles.cardCompany}>{reel.company}</Text>
+                          <Text style={styles.cardTitle} numberOfLines={1}>
+                            {reel.title && !reel.title.includes('.jpg') ? reel.title : (reel.category?.name || 'New Opportunity')}
+                          </Text>
+                          <Text style={styles.cardCompany}>{reel.company || 'JobIndia Partner'}</Text>
                         </View>
                       </>
                     )}
@@ -1601,6 +1640,20 @@ const styles = StyleSheet.create({
   touchRight: {
     flex: 2,
   },
+  videoBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 5,
+    borderRadius: 5,
+  },
+  playIconOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  }
 });
 
 export default JobsReelsScreen;
