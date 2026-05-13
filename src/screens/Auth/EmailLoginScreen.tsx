@@ -10,6 +10,8 @@ import {
   Pressable,
   Modal,
   TouchableOpacity,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -46,6 +48,8 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
     message: '',
   });
 
+  const scaleAnim = React.useRef(new Animated.Value(0)).current;
+
   const showStatus = (type: 'error' | 'success', title: string, message: string) => {
     setStatusModal({
       visible: true,
@@ -53,6 +57,14 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
       title,
       message,
     });
+    
+    scaleAnim.setValue(0);
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
   };
 
   const onLogin = async () => {
@@ -68,7 +80,10 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
     console.log("resultAction ", resultAction)
 
     if (loginCandidate.fulfilled.match(resultAction)) {
-      navigation.replace('Main');
+      showStatus('success', 'Success!', 'Redirecting to Your Job...');
+      setTimeout(() => {
+        navigation.replace('Main');
+      }, 1500);
     } else {
       showStatus('error', 'Login Failed', (resultAction.payload as string) || 'Invalid credentials');
     }
@@ -92,64 +107,76 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
             <AuthHeadline
               colors={colors}
               title="Welcome Back"
-              subtitle="Login with your email and password to continue your job search."
+              subtitle="Please enter your credentials to access your job dashboard."
               centerDecor
               decor={
-                <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}33` }]}>
-                  <Icon name="envelope" size={34} color={colors.primary} />
+                <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}40` }]}>
+                  <Icon name="user-circle" size={44} color={colors.primary} />
                 </View>
               }
             />
 
             <View style={styles.inputContainer}>
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Icon name="at" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
-                <TextInput
-                  placeholder="Email Address"
-                  placeholderTextColor={colors.textPlaceholder}
-                  style={[styles.input, { color: colors.textPrimary }]}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
+              <View style={[styles.inputGroup]}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email Address</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <Icon name="envelope-o" size={16} color={colors.primary} style={styles.inputIcon} />
+                  <TextInput
+                    placeholder="Enter your email"
+                    placeholderTextColor={colors.textPlaceholder}
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
               </View>
 
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Icon name="lock" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
-                <TextInput
-                  placeholder="Password"
-                  placeholderTextColor={colors.textPlaceholder}
-                  style={[styles.input, { color: colors.textPrimary }]}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                />
-                <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={12}>
-                  <Icon
-                    name={showPassword ? "eye" : "eye-slash"}
-                    size={18}
-                    color={colors.textPlaceholder}
+              <View style={[styles.inputGroup]}>
+                <View style={styles.passwordHeader}>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Password</Text>
+                  <Pressable onPress={() => {/* Handle Forgot Password */}}>
+                    <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
+                  </Pressable>
+                </View>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <Icon name="lock" size={16} color={colors.primary} style={styles.inputIcon} />
+                  <TextInput
+                    placeholder="Enter your password"
+                    placeholderTextColor={colors.textPlaceholder}
+                    style={[styles.input, { color: colors.textPrimary }]}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
                   />
-                </Pressable>
+                  <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={12}>
+                    <Icon
+                      name={showPassword ? "eye" : "eye-slash"}
+                      size={18}
+                      color={colors.textPlaceholder}
+                    />
+                  </Pressable>
+                </View>
               </View>
             </View>
 
             <PrimaryButton
-              title={loading ? "Logging in..." : "Login"}
+              title={loading ? "Authenticating..." : "Sign In"}
               onPress={onLogin}
               disabled={loading}
               colors={colors}
-              iconRight={!loading && <Icon name="sign-in" size={18} color={colors.onPrimary} />}
+              style={styles.loginBtn}
+              iconRight={!loading && <Icon name="arrow-right" size={16} color={colors.onPrimary} />}
             />
 
             <View style={styles.footer}>
               <Text style={[typography.body, { color: colors.textSecondary }]}>
-                Don't have an account?{' '}
+                New here?{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('SignIn')}>
-                <Text style={[typography.body, { color: colors.primary, fontWeight: '700' }]}>
-                  Sign Up
+                <Text style={[typography.body, { color: colors.primary, fontWeight: '800' }]}>
+                  Create Account
                 </Text>
               </Pressable>
             </View>
@@ -161,27 +188,46 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
       <Modal
         visible={statusModal.visible}
         transparent={true}
-        animationType="fade"
+        animationType="none"
       >
         <View style={styles.statusOverlay}>
-          <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
+          <Animated.View 
+            style={[
+              styles.statusCard, 
+              { 
+                backgroundColor: colors.surface,
+                transform: [{ scale: scaleAnim }],
+                opacity: scaleAnim
+              }
+            ]}
+          >
             <View style={[styles.statusIcon, { backgroundColor: statusModal.type === 'success' ? colors.success + '20' : colors.error + '20' }]}>
               <Icon
                 name={statusModal.type === 'success' ? "check-circle" : "exclamation-circle"}
-                size={36}
+                size={42}
                 color={statusModal.type === 'success' ? colors.success : colors.error}
               />
             </View>
             <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: 8 }]}>{statusModal.title}</Text>
-            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>{statusModal.message}</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: statusModal.type === 'success' ? 0 : 24 }]}>
+              {statusModal.message}
+            </Text>
 
-            <TouchableOpacity
-              onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
-              style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
-            >
-              <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
-            </TouchableOpacity>
-          </View>
+            {statusModal.type === 'error' && (
+              <TouchableOpacity
+                onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+                style={[styles.statusBtn, { backgroundColor: colors.primary }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+              </TouchableOpacity>
+            )}
+            
+            {statusModal.type === 'success' && (
+              <View style={styles.successLoader}>
+                <ActivityIndicator size="small" color={colors.success} style={{ marginTop: 16 }} />
+              </View>
+            )}
+          </Animated.View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -213,24 +259,47 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   inputContainer: {
-    gap: spacing.md,
+    gap: spacing.lg,
     marginBottom: spacing.xl,
+  },
+  inputGroup: {
+    gap: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  passwordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
     paddingHorizontal: spacing.md,
-    height: 56,
+    height: 58,
   },
   inputIcon: {
     marginRight: spacing.sm,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: typography.body.fontFamily,
+    fontWeight: '500',
+  },
+  loginBtn: {
+    marginTop: spacing.md,
+    height: 56,
+    borderRadius: radius.lg,
   },
   footer: {
     flexDirection: 'row',
@@ -273,6 +342,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
+    marginTop: 16,
+  },
+  successLoader: {
+    paddingBottom: 8,
   },
 });
 

@@ -30,6 +30,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { logoutToLogin } from './logoutToLogin';
+import { BASE_URL } from '../../../api/axiosInstance';
 import LogoutModal from '../../../components/LogoutModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import { PrimaryButton } from '../../../components/auth';
@@ -55,7 +56,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
@@ -134,7 +135,7 @@ const ProfileOverviewScreen: React.FC = () => {
       Alert.alert('Error', 'Failed to update picture');
     }
   };
-  
+
   const handleDeletePicture = () => {
     setShowImagePicker(false);
     setShowDeleteConfirm(true);
@@ -155,7 +156,7 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const getProfileImageUrl = (path: string | null) => {
     if (!path) return null;
-    const baseUrl = 'https://jobindia.ai';
+    const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
     if (path.startsWith('http')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
@@ -163,8 +164,8 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
-  const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url) 
-    ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url) 
+  const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url)
+    ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url)
     : null;
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
@@ -178,9 +179,16 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const ProfileTile = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
     const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
+
+    const handlePress = () => {
+      requestAnimationFrame(() => {
+        onPress();
+      });
+    };
+
     return (
-      <Pressable 
-        onPress={onPress}
+      <Pressable
+        onPress={handlePress}
         style={({ pressed }) => [
           styles.tile,
           { backgroundColor: colors.surface, borderColor: isMissing ? colors.error : colors.border },
@@ -191,7 +199,7 @@ const ProfileOverviewScreen: React.FC = () => {
           <Animated.View style={[styles.shimmerBeam, { backgroundColor: colors.primary + '25', transform: [{ translateX: shimmerTranslate }, { skewX: '-20deg' }] }]} />
         )}
         <Animated.View style={[
-          styles.tileIconContainer, 
+          styles.tileIconContainer,
           { backgroundColor: (isMissing ? colors.error : (color || colors.primary)) + '15' },
           isMissing && { transform: [{ translateY: floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }] }
         ]}>
@@ -212,9 +220,16 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const WideMenuItem = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
     const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-width, width] });
+
+    const handlePress = () => {
+      requestAnimationFrame(() => {
+        onPress();
+      });
+    };
+
     return (
-      <Pressable 
-        onPress={onPress}
+      <Pressable
+        onPress={handlePress}
         style={({ pressed }) => [
           styles.wideItem,
           { backgroundColor: colors.surface, borderColor: isMissing ? colors.error : colors.border },
@@ -242,8 +257,8 @@ const ProfileOverviewScreen: React.FC = () => {
   };
 
   const ProfileSkeleton = () => (
-    <ScrollView 
-      showsVerticalScrollIndicator={false} 
+    <ScrollView
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scroll}
     >
       <View style={styles.header}>
@@ -280,7 +295,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const renderContent = () => {
     if (!isLoggedIn) {
       return (
-        <GuestView 
+        <GuestView
           title="Unlock Your Potential"
           subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations."
           icon="user-plus"
@@ -293,19 +308,25 @@ const ProfileOverviewScreen: React.FC = () => {
     }
 
     return (
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <Pressable onPress={() => setShowImagePicker(true)} style={styles.avatarWrapper}>
+          <Pressable
+            onPress={() => navigation.navigate('ProfileDetails')}
+            style={({ pressed }) => [
+              styles.headerTop,
+              pressed && { opacity: 0.7 }
+            ]}
+          >
+            <View style={styles.avatarWrapper}>
               <View style={[styles.avatarCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                 {profilePic && !imageError ? (
-                  <Image 
-                    source={{ uri: profilePic }} 
-                    style={styles.avatarImage} 
+                  <Image
+                    source={{ uri: profilePic }}
+                    style={styles.avatarImage}
                     onError={() => setImageError(true)}
                   />
                 ) : (
@@ -325,21 +346,25 @@ const ProfileOverviewScreen: React.FC = () => {
                   </View>
                 )}
               </View>
-              <View style={[styles.cameraBadge, { backgroundColor: colors.primary }]}><Icon name="camera" size={12} color="#FFF" /></View>
-            </Pressable>
+              <Pressable onPress={() => setShowImagePicker(true)} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
+                <Icon name="camera" size={12} color="#FFF" />
+              </Pressable>
+            </View>
             <View style={styles.headerInfo}>
               <View style={styles.nameRow}>
                 <Text style={[typography.appTitle, { color: colors.textPrimary, fontSize: 22 }]} numberOfLines={1}>{displayName}</Text>
                 <Icon name="check-circle" size={14} color={colors.success} style={{ marginLeft: 4 }} />
               </View>
               <Text style={[typography.body, { color: colors.textSecondary }]} numberOfLines={1}>{displayEmail}</Text>
-              <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={[styles.editBadge, { backgroundColor: colors.primary + '10' }]}>
-                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>Edit Profile</Text>
-              </Pressable>
+              <View style={[styles.editBadge, { backgroundColor: colors.primary + '10' }]}>
+                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>View Profile Details</Text>
+              </View>
             </View>
-          </View>
+            <Icon name="chevron-right" size={24} color={colors.textPlaceholder} />
+          </Pressable>
+
           {completion && completion.percentage < 100 && (
-            <View style={styles.strengthContainer}>
+            <View style={[styles.strengthContainer, { marginTop: 20 }]}>
               <View style={styles.strengthHeader}>
                 <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>Profile Strength</Text>
                 <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
@@ -351,19 +376,67 @@ const ProfileOverviewScreen: React.FC = () => {
           )}
         </View>
 
-        <View style={styles.menuContainer}>
-          <SectionHeader title="Profile Details" />
-          <View style={styles.tilesRow}>
-            <ProfileTile title="Experience" subtitle="Work History" icon="briefcase" color="#3B82F6" onPress={() => navigation.navigate('ProfileExperience')} isMissing={isSectionMissing('experience')} />
-            <ProfileTile title="Education" subtitle="Degree/College" icon="book-open" color="#10B981" onPress={() => navigation.navigate('ProfileEducation')} isMissing={isSectionMissing('education')} />
-          </View>
-          <View style={styles.tilesRow}>
-            <ProfileTile title="Preferences" subtitle="Job & Salary" icon="target" color="#F59E0B" onPress={() => navigation.navigate('ProfileJobPreferences')} isMissing={isSectionMissing('preferences')} />
-            <ProfileTile title="Resume" subtitle="CV/Documents" icon="file-text" color="#8B5CF6" onPress={() => navigation.navigate('ProfileResume')} isMissing={isSectionMissing('resume')} />
-          </View>
+        {/* Action Dashboard */}
+        <View style={styles.dashboardGrid}>
+          <Pressable
+            onPress={() => navigation.navigate('Applications' as any)}
+            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#3B82F6' }]}
+          >
+            <View style={[styles.dashboardIconBox, { backgroundColor: '#3B82F610' }]}>
+              <Icon name="briefcase" size={20} color="#3B82F6" />
+            </View>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>My Activity</Text>
+          </Pressable>
 
-          <SectionHeader title="Other Information" />
-          <WideMenuItem title="Personal Info" subtitle="Email, Phone, Bio" icon="user" onPress={() => navigation.navigate('ProfilePersonalInfo')} isMissing={isSectionMissing('personal')} />
+          <Pressable
+            onPress={() => navigation.navigate('Home' as any, { screen: 'Saved' })}
+            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#F59E0B' }]}
+          >
+            <View style={[styles.dashboardIconBox, { backgroundColor: '#F59E0B10' }]}>
+              <Icon name="heart" size={20} color="#F59E0B" />
+            </View>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Saved</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => navigation.navigate('JobReels' as any)}
+            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#EC4899' }]}
+          >
+            <View style={[styles.dashboardIconBox, { backgroundColor: '#EC489910' }]}>
+              <Icon name="play-circle" size={20} color="#EC4899" />
+            </View>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Job Reels</Text>
+          </Pressable>
+        </View>
+        {/* Referral Section */}
+        <View style={styles.menuContainer}>
+          <SectionHeader title="Earn Rewards" />
+          <Pressable
+            style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <View style={[styles.menuIconContainer, { backgroundColor: '#8B5CF615' }]}>
+              <Icon name="gift" size={18} color="#8B5CF6" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Refer and Earn</Text>
+              <Text style={[typography.small, { color: colors.textSecondary }]}>Invite your friends and earn rewards</Text>
+            </View>
+            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+          </Pressable>
+
+          <SectionHeader title="Support" />
+          <Pressable
+            style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <View style={[styles.menuIconContainer, { backgroundColor: '#10B98115' }]}>
+              <Icon name="help-circle" size={18} color="#10B981" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Help & Support</Text>
+              <Text style={[typography.small, { color: colors.textSecondary }]}>Contact us for any queries or issues</Text>
+            </View>
+            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+          </Pressable>
 
           <SectionHeader title="Settings" />
           <View style={[styles.settingsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -395,7 +468,7 @@ const ProfileOverviewScreen: React.FC = () => {
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} />
-      
+
       {renderContent()}
 
       {/* Modals placed outside main content for stability */}
@@ -486,6 +559,9 @@ const styles = StyleSheet.create({
   settingsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
   logoutBtn: { marginTop: 24, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 20, borderWidth: 1, borderStyle: 'dashed' },
+  dashboardGrid: { flexDirection: 'row', gap: 10, paddingHorizontal: spacing.md, marginBottom: 20, marginTop: 10 },
+  dashboardCard: { flex: 1, padding: 12, borderRadius: 20, borderWidth: 1, alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 },
+  dashboardIconBox: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },

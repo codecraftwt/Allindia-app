@@ -9,6 +9,7 @@ import {
   Dimensions,
   ActivityIndicator,
   PanResponder,
+  TextInput,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
@@ -20,7 +21,7 @@ import { typography } from '../theme/typography';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
 const DRAWER_WIDTH = 280;
-const DRAWER_HEIGHT = 450;
+const DRAWER_HEIGHT = 500;
 const HANDLE_HEIGHT = 50;
 
 interface SideFilterHubProps {
@@ -40,6 +41,9 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     jobType: [],
     category: null,
     city: null,
+    salary: null,
+    freshness: null,
+    manualSalary: { min: '', max: '' },
   });
 
   // Drawer horizontal animation
@@ -119,6 +123,8 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     { id: 'jobType', label: 'Type', icon: 'bolt' },
     { id: 'category', label: 'Category', icon: 'th-large' },
     { id: 'city', label: 'City', icon: 'map-marker' },
+    { id: 'salary', label: 'Salary', icon: 'money' },
+    { id: 'freshness', label: 'Posted In', icon: 'clock-o' },
   ];
 
   const SECTIONS = ALL_SECTIONS.filter(s => !hiddenSections.includes(s.id));
@@ -128,7 +134,9 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     ? selectedSection
     : (SECTIONS[0]?.id ?? 'jobType');
 
-  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote', 'Work from office', 'Apprenticeship','Freelance', 'Work from home', 'Hybrid'];
+  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote', 'Work from office', 'Apprenticeship', 'Freelance', 'Work from home', 'Hybrid'];
+  const SALARY_OPTIONS = ['₹3L-6L', '₹6L-10L', '₹10L-20L', '₹20L+'];
+  const FRESHNESS_OPTIONS = ['All', 'Last 24 Hours', 'Last 3 Days', 'Last 7 Days'];
 
   const toggleOption = (id: string, option: any) => {
     if (id === 'jobType') {
@@ -140,7 +148,9 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     } else {
       setSelectedFilters({
         ...selectedFilters,
-        [id]: selectedFilters[id]?.id === option.id ? null : option
+        [id]: (id === 'salary' || id === 'freshness')
+          ? (selectedFilters[id] === option ? null : option)
+          : (selectedFilters[id]?.id === option.id ? null : option)
       });
     }
   };
@@ -150,6 +160,9 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
       jobType: [],
       category: null,
       city: null,
+      salary: null,
+      freshness: null,
+      manualSalary: { min: '', max: '' },
     });
   };
 
@@ -158,7 +171,28 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     if (selectedFilters.category) filters.category_id = selectedFilters.category.id;
     if (selectedFilters.city) filters.city_id = selectedFilters.city.id;
     if (selectedFilters.jobType.length > 0) {
-      filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace('-', '_')).join(',');
+      filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace(/[-\s]/g, '_')).join(',');
+    }
+    if (selectedFilters.manualSalary.min || selectedFilters.manualSalary.max) {
+      if (selectedFilters.manualSalary.min) filters.salary_min = parseInt(selectedFilters.manualSalary.min, 10);
+      if (selectedFilters.manualSalary.max) filters.salary_max = parseInt(selectedFilters.manualSalary.max, 10);
+    } else if (selectedFilters.salary) {
+      const salary = selectedFilters.salary;
+      if (salary === '₹3L-6L') {
+        filters.salary_min = 300000;
+        filters.salary_max = 600000;
+      } else if (salary === '₹6L-10L') {
+        filters.salary_min = 600000;
+        filters.salary_max = 1000000;
+      } else if (salary === '₹10L-20L') {
+        filters.salary_min = 1000000;
+        filters.salary_max = 2000000;
+      } else if (salary === '₹20L+') {
+        filters.salary_min = 2000000;
+      }
+    }
+    if (selectedFilters.freshness) {
+      filters.freshness = selectedFilters.freshness;
     }
     onFilterSelect(filters);
     toggleDrawer();
@@ -169,6 +203,8 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
       case 'jobType': return JOB_TYPES;
       case 'category': return categories;
       case 'city': return cities;
+      case 'salary': return SALARY_OPTIONS;
+      case 'freshness': return FRESHNESS_OPTIONS;
       default: return [];
     }
   };
@@ -207,27 +243,29 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
 
         <View style={styles.content}>
           <View style={[styles.sidebar, { backgroundColor: colors.surfaceHighlight }]}>
-            {SECTIONS.map(sec => (
-              <Pressable
-                key={sec.id}
-                onPress={() => setSelectedSection(sec.id)}
-                style={[
-                  styles.sideItem,
-                  effectiveSection === sec.id && { backgroundColor: colors.surface }
-                ]}>
-                <Icon
-                  name={sec.icon}
-                  size={18}
-                  color={effectiveSection === sec.id ? colors.primary : colors.textPlaceholder}
-                />
-                <Text style={[
-                  styles.sideText,
-                  { color: effectiveSection === sec.id ? colors.textPrimary : colors.textSecondary }
-                ]}>
-                  {sec.label}
-                </Text>
-              </Pressable>
-            ))}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              {SECTIONS.map(sec => (
+                <Pressable
+                  key={sec.id}
+                  onPress={() => setSelectedSection(sec.id)}
+                  style={[
+                    styles.sideItem,
+                    effectiveSection === sec.id && { backgroundColor: colors.surface }
+                  ]}>
+                  <Icon
+                    name={sec.icon}
+                    size={18}
+                    color={effectiveSection === sec.id ? colors.primary : colors.textPlaceholder}
+                  />
+                  <Text style={[
+                    styles.sideText,
+                    { color: effectiveSection === sec.id ? colors.textPrimary : colors.textSecondary }
+                  ]}>
+                    {sec.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
 
           <View style={styles.optionsArea}>
@@ -239,10 +277,44 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
               <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
+                {effectiveSection === 'salary' && (
+                  <View style={styles.manualSalaryRow}>
+                    <View style={styles.manualInputBox}>
+                      <Text style={styles.manualLabel}>Min</Text>
+                      <TextInput
+                        style={[styles.manualInput, { color: colors.textPrimary, borderColor: colors.border }]}
+                        placeholder="Min"
+                        placeholderTextColor={colors.textPlaceholder}
+                        keyboardType="numeric"
+                        value={selectedFilters.manualSalary.min}
+                        onChangeText={(val) => setSelectedFilters({
+                          ...selectedFilters,
+                          salary: null,
+                          manualSalary: { ...selectedFilters.manualSalary, min: val }
+                        })}
+                      />
+                    </View>
+                    <View style={styles.manualInputBox}>
+                      <Text style={styles.manualLabel}>Max</Text>
+                      <TextInput
+                        style={[styles.manualInput, { color: colors.textPrimary, borderColor: colors.border }]}
+                        placeholder="Max"
+                        placeholderTextColor={colors.textPlaceholder}
+                        keyboardType="numeric"
+                        value={selectedFilters.manualSalary.max}
+                        onChangeText={(val) => setSelectedFilters({
+                          ...selectedFilters,
+                          salary: null,
+                          manualSalary: { ...selectedFilters.manualSalary, max: val }
+                        })}
+                      />
+                    </View>
+                  </View>
+                )}
                 {getOptions().map((opt: any) => {
                   const isSelected = effectiveSection === 'jobType'
                     ? selectedFilters.jobType.includes(opt)
-                    : selectedFilters[effectiveSection]?.id === opt.id;
+                    : ((effectiveSection === 'salary' || effectiveSection === 'freshness') ? selectedFilters[effectiveSection] === opt : selectedFilters[effectiveSection]?.id === opt.id);
 
                   // Extract label more reliably
                   const label = typeof opt === 'string'
@@ -258,7 +330,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                         effectiveSection === 'jobType' ? styles.checkbox : styles.radio,
                         { borderColor: isSelected ? colors.primary : colors.border }
                       ]}>
-                      {isSelected && (
+                        {isSelected && (
                           <View style={[
                             effectiveSection === 'jobType' ? styles.checkboxInner : styles.radioInner,
                             { backgroundColor: colors.primary }
@@ -301,7 +373,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    height: 450,
+    height: DRAWER_HEIGHT,
     width: DRAWER_WIDTH,
     borderTopRightRadius: radius.xxl,
     borderBottomRightRadius: radius.xxl,
@@ -426,6 +498,28 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 14,
+  },
+  manualSalaryRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  manualInputBox: {
+    flex: 1,
+  },
+  manualLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#999',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  manualInput: {
+    height: 36,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    fontSize: 12,
   },
 });
 

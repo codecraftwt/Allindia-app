@@ -10,7 +10,7 @@ import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const LOGO = require('../../assets/logo/logo02.png');
+const LOGO = require('../../assets/logo/logo111.png');
 
 type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -41,115 +41,67 @@ const FEATURES: FeatureItem[] = [
   },
 ];
 
+
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <View style={[styles.blob, { backgroundColor: `${colors.primary}0D`, top: -40, right: -60 }]} />
-        <View style={[styles.blob, { backgroundColor: `${colors.primary}0A`, bottom: 120, left: -50 }]} />
+        <View style={[styles.blob, { backgroundColor: `${colors.primary}12`, top: -60, right: -80, width: 300, height: 300 }]} />
+        <View style={[styles.blob, { backgroundColor: `${colors.primary}08`, bottom: -40, left: -60, width: 250, height: 250 }]} />
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         bounces={false}>
-        <View style={styles.topBrand}>
+        <View style={styles.header}>
           <Image source={LOGO} style={styles.smallLogo} resizeMode="contain" />
-   
         </View>
 
-        <Text style={[typography.appTitle, styles.headline, { color: colors.textPrimary }]}>
-          Find your next job
-        </Text>
-        <Text style={[typography.body, styles.lead, { color: colors.textSecondary }]}>
-          Daily openings near you. Join us to find your dream job with ease.
-        </Text>
 
-        <View style={styles.featureList}>
-          {FEATURES.map(item => {
-            const cardColors = {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              shadowColor: colors.shadow,
-            };
-            const inner = (
-              <>
-                <View style={[styles.featureIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                  <Icon name={item.icon} size={22} color={colors.primary} />
-                </View>
-                <View style={styles.featureText}>
-                  <Text style={[typography.jobTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-                  <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                    {item.subtitle}
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={20} color={colors.tabInactive} />
-              </>
-            );
-
-            if (item.opensMain) {
-              return (
-                <Pressable
-                  key={item.title}
-                  accessibilityRole="button"
-                  accessibilityLabel="Apply in seconds, go to home"
-                  onPress={() =>
-                    navigation.reset({ index: 0, routes: [{ name: 'Main' }] })
-                  }
-                  style={({ pressed }) => [
-                    styles.featureCard,
-                    cardColors,
-                    pressed && { opacity: 0.92 },
-                  ]}>
-                  {inner}
-                </Pressable>
-              );
-            }
-
-            return (
-              <View key={item.title} style={[styles.featureCard, cardColors]}>
-                {inner}
-              </View>
-            );
-          })}
+        <View style={styles.content}>
+          <Text style={[typography.appTitle, styles.headline, { color: colors.textPrimary }]}>
+            Find your dream job{'\n'}in India
+          </Text>
         </View>
 
         <View style={styles.ctaBlock}>
-          {/* <PrimaryButton
-            title="Sign in with mobile"
-            onPress={() => navigation.navigate('SignIn')}
-            colors={colors}
-            iconLeft={
-              <Icon name="mobile" size={22} color={colors.onPrimary} />
-            }
-            iconRight={
-              <Icon name="arrow-right" size={20} color={colors.onPrimary} />
-            }
-          /> */}
           <PrimaryButton
-            title="Login"
+            title="Login with Email"
             onPress={() => navigation.navigate('EmailLogin')}
             colors={colors}
-            iconLeft={
-              <Icon name="sign-in" size={22} color={colors.onPrimary} />
-            }
-    
+            iconLeft={<Icon name="envelope" size={18} color={colors.onPrimary} />}
           />
           <PrimaryButton
-            title="Register"
+            title="Create New Account"
             onPress={() => navigation.navigate('SignIn')}
             colors={colors}
             variant="outline"
-            iconLeft={
-              <Icon name="user-plus" size={20} color={colors.primary} />
-            }
+            iconLeft={<Icon name="user-plus" size={18} color={colors.primary} />}
           />
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>OR</Text>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          </View>
+
+          <Pressable
+            onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Main' }] })}
+            style={({ pressed }) => [
+              styles.guestBtn,
+              { borderColor: colors.border },
+              pressed && { backgroundColor: colors.surfaceHighlight }
+            ]}>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Browse as Guest</Text>
+          </Pressable>
+
           <View style={styles.trustRow}>
-            <Icon name="lock" size={16} color={colors.textPlaceholder} />
-            <Text style={[typography.small, { color: colors.textPlaceholder, flex: 1 }]}>
-              Secure login with email and password
+            <Icon name="shield" size={14} color={colors.success} />
+            <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+              Verified Employers • Secure Privacy
             </Text>
           </View>
         </View>
@@ -162,71 +114,76 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   blob: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    borderRadius: 150,
   },
   scroll: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xl,
     paddingTop: spacing.md,
     maxWidth: 440,
     width: '100%',
     alignSelf: 'center',
   },
-  topBrand: {
+  header: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.xl,
   },
   smallLogo: {
-    width: 202,
-    height: 102,
-    marginBottom: spacing.sm,
+    width: 220,
+    height: 110,
+    marginBottom: spacing.md,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+  },
+  content: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   headline: {
-    fontSize: 26,
-    letterSpacing: -0.4,
-    marginBottom: spacing.sm,
+    fontSize: 28,
+    letterSpacing: -0.8,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+    lineHeight: 34,
   },
   lead: {
     lineHeight: 22,
-    marginBottom: spacing.xl,
-  },
-  featureList: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    gap: spacing.md,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureText: {
-    flex: 1,
+    textAlign: 'center',
+    maxWidth: 320,
+    opacity: 0.8,
   },
   ctaBlock: {
     gap: spacing.md,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.sm,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    opacity: 0.5,
+  },
+  guestBtn: {
+    height: 56,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderStyle: 'dashed',
   },
   trustRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingHorizontal: spacing.xs,
     justifyContent: 'center',
+    marginTop: spacing.sm,
+    opacity: 0.7,
   },
 });
 

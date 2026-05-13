@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
@@ -392,19 +393,33 @@ const JobsReelsScreen: React.FC = () => {
         setIsStoryVisible(true);
       }, 800);
     } else {
-      setActiveReelId(id);
-      setTimeout(() => {
-        setLoadingId(null);
-        setViewMode('full');
-      }, 1500);
+      const item = reels.find(r => String(r.id) === String(id));
+      if (item?.media_type === 'video') {
+        Alert.alert(
+          "Video Playback",
+          "To play this video, please install 'react-native-video' library in your project.",
+          [{ text: "OK", onPress: () => {
+            setActiveReelId(id);
+            setViewMode('full');
+            setLoadingId(null);
+          }}]
+        );
+      } else {
+        setActiveReelId(id);
+        setTimeout(() => {
+          setLoadingId(null);
+          setViewMode('full');
+        }, 1500);
+      }
     }
   };
 
-  // Simulate initial loading
+  // Only use internal loading for very fast transitions
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!apiLoading) {
+      setLoading(false);
+    }
+  }, [apiLoading]);
 
   const handleShare = async () => {
     try {
@@ -481,7 +496,11 @@ const JobsReelsScreen: React.FC = () => {
       <Image source={{ uri: item.media_url || item.image }} style={styles.fullImage} resizeMode="cover" />
       {item.media_type === 'video' && (
         <View style={styles.playIconOverlay}>
-          <Icon name="play-circle" size={80} color="rgba(255,255,255,0.6)" />
+          <View style={styles.videoPlayerPlaceholder}>
+            <Icon name="play" size={40} color="#fff" />
+            <Text style={styles.videoPlaceholderText}>Tap to play video</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, marginTop: 4 }}>(Native Player Required)</Text>
+          </View>
         </View>
       )}
       <View style={styles.gradientOverlay} />
@@ -634,12 +653,12 @@ const JobsReelsScreen: React.FC = () => {
       <View style={[styles.container, { backgroundColor: '#000' }]}>
         <StatusBar hidden />
         <FlatList
-          data={reels.length > 0 ? reels : REELS_DATA}
+          data={reels}
           pagingEnabled
           showsVerticalScrollIndicator={false}
-          keyExtractor={item => item.id}
+          keyExtractor={item => String(item.id)}
           renderItem={renderFullReel}
-          initialScrollIndex={Math.max(0, reels.length > 0 ? reels.findIndex(r => String(r.id) === String(activeReelId)) : REELS_DATA.findIndex(r => String(r.id) === String(activeReelId)))}
+          initialScrollIndex={activeReelId ? Math.max(0, reels.findIndex(r => String(r.id) === String(activeReelId))) : 0}
           getItemLayout={(data, index) => (
             { length: REEL_HEIGHT, offset: REEL_HEIGHT * index, index }
           )}
@@ -788,7 +807,7 @@ const JobsReelsScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        {apiLoading ? (
+        {loading ? (
           renderSkeletonGrid()
         ) : (
           <>
@@ -814,7 +833,7 @@ const JobsReelsScreen: React.FC = () => {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalGrid}>
-            {(reels.length > 0 ? reels : REELS_DATA).map((reel: any) => (
+            {reels.map((reel: any) => (
               <Pressable key={reel.id} style={styles.premiumCard} onPress={() => handlePress(reel.id)}>
                 <ImageBackground 
                   source={{ uri: reel.media_url || reel.image }} 
@@ -1653,6 +1672,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  videoPlayerPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 20,
+    borderRadius: 20,
+  },
+  videoPlaceholderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
   }
 });
 

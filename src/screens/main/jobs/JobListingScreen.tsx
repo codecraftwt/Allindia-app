@@ -201,6 +201,7 @@ const JobListingScreen: React.FC = () => {
   const filters = route.params?.filters;
 
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
 
   const openJob = (job: any) => {
     navigation.navigate('JobDetail', { jobId: job.slug || job.id });
@@ -216,7 +217,7 @@ const JobListingScreen: React.FC = () => {
     }
   }, [dispatch, query, filters]);
 
-  const jobsData = query ? searchResults : (filters ? filteredJobs : recommended);
+  const jobsData = query ? searchResults : (isFiltered || filters ? filteredJobs : recommended);
 
   const headerTitle = query ? `"${query}"` : (route.params?.categoryName || (filters ? 'Filtered results' : 'All jobs'));
 
@@ -269,6 +270,7 @@ const JobListingScreen: React.FC = () => {
       <SideFilterHub
         colors={colors}
         onFilterSelect={(f) => {
+          setIsFiltered(Object.keys(f).length > 0);
           dispatch(filterJobs(f));
         }}
       />

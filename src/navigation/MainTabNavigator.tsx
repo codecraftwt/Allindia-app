@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import ApplicationsStackNavigator from './ApplicationsStackNavigator';
 import HomeStackNavigator from './HomeStackNavigator';
+import AllJobsStackNavigator from './AllJobsStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SavedStackNavigator from './SavedStackNavigator';
 import JobReelsStackNavigator from './JobReelsStackNavigator';
@@ -145,6 +146,12 @@ const MainTabNavigator: React.FC = () => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
 
+          // Skip rendering if the tab is hidden
+          if (options.tabBarButton && typeof options.tabBarButton === 'function') {
+            const button = options.tabBarButton({ children: null });
+            if (button === null) return null;
+          }
+
           const onPress = () => {
             const event = navigation.emit({
               type: 'tabPress',
@@ -160,10 +167,10 @@ const MainTabNavigator: React.FC = () => {
           return (
             <React.Fragment key={route.key}>
               {options.tabBarButton({
-                children: options.tabBarIcon({
+                children: options.tabBarIcon ? options.tabBarIcon({
                   color: isFocused ? colors.primary : colors.tabInactive,
                   focused: isFocused,
-                }),
+                }) : null,
                 onPress,
               })}
             </React.Fragment>
@@ -193,12 +200,16 @@ const MainTabNavigator: React.FC = () => {
         }}
       />
 
+
+
+
+
       <Tab.Screen
-        name="Applications"
-        component={ApplicationsStackNavigator}
+        name="AllJobs"
+        component={AllJobsStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="briefcase" color={color} focused={focused} label="Apply" />
+            <TabIcon name="grid" color={color} focused={focused} label="All Jobs" />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}
@@ -208,23 +219,37 @@ const MainTabNavigator: React.FC = () => {
         name="JobReels"
         component={JobReelsStackNavigator}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <Icon name="play" size={28} color="#FFF" style={{ marginLeft: 3 }} />
-          ),
-          tabBarButton: (props) => <CustomTabBarButton {...props} isReels />
+          tabBarButton: () => null,
+          tabBarVisible: false,
         }}
       />
 
+
       <Tab.Screen
-        name="Saved"
-        component={SavedStackNavigator}
+        name="Applications"
+        component={ApplicationsStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="heart" color={color} focused={focused} label="Saved" />
+            <TabIcon name="briefcase" color={color} focused={focused} label="My Activity" />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}
       />
+
+      <Tab.Screen
+        name="AIAssistant"
+        component={HomeStackNavigator}
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name="sparkles" color={color} focused={focused} label="AI" />
+          ),
+          tabBarButton: (props) => <CustomTabBarButton {...props} />
+        }}
+      />
+
+
+
+      {/* //AI button */}
 
       <Tab.Screen
         name="Profile"

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { fetchJobsByCategory } from '../../../redux/slice/jobSlice';
+import { fetchJobsByCategory, filterJobs } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
@@ -135,7 +135,8 @@ const IndustryCategoryScreen: React.FC = () => {
   const categoryId: number = route.params?.categoryId;
   const categoryName: string = route.params?.categoryName || 'Category';
 
-  const { jobsByCategory, loading } = useSelector((state: RootState) => state.jobs);
+  const { jobsByCategory, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
     dispatch(
@@ -148,11 +149,12 @@ const IndustryCategoryScreen: React.FC = () => {
 
   // by-category API returns: [{ category: { id, name }, jobs_count, jobs: [...] }]
   const jobs = useMemo(() => {
+    if (isFiltered) return filteredJobs;
     if (jobsByCategory.length > 0) {
       return jobsByCategory[0].jobs || [];
     }
     return [];
-  }, [jobsByCategory]);
+  }, [jobsByCategory, filteredJobs, isFiltered]);
 
   const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
 
@@ -219,11 +221,8 @@ const IndustryCategoryScreen: React.FC = () => {
         colors={colors}
         hiddenSections={['category']}
         onFilterSelect={(filters) => {
-          dispatch(fetchJobsByCategory({
-            category_id: categoryId,
-            jobs_per_category: 50,
-            ...filters
-          }));
+          setIsFiltered(Object.keys(filters).length > 0);
+          dispatch(filterJobs({ ...filters, category_id: categoryId }));
         }}
       />
     </View>

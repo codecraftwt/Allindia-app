@@ -14,6 +14,7 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Easing,
 } from 'react-native';
 const BRAND_ICON = require('../../../assets/icons/icon2.2.png');
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,6 +28,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import { useTheme } from '../../../context/ThemeContext';
 import type { HomeStackParamList, MainTabParamList } from '../../../navigation/types';
@@ -72,16 +74,59 @@ function profileInitials(name: string): string {
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
 }
 
-function getCategoryIcon(name: string): string {
+const getCategoryColor = (name: string) => {
   const n = name.toLowerCase();
-  if (n.includes('it') || n.includes('tech')) return 'laptop';
+  if (n.includes('beauty')) return '#FDE2E4'; // Soft Pink
+  if (n.includes('construction')) return '#E2E2E2'; // Gray
+  if (n.includes('content') || n.includes('journalism')) return '#FFF1E6'; // Cream
+  if (n.includes('data science') || n.includes('analytics')) return '#E0FBFC'; // Light Blue
+  if (n.includes('delivery') || n.includes('driver')) return '#FFDDD2'; // Peach
+  if (n.includes('design') || n.includes('architecture')) return '#EAF4F4'; // Mint
+  if (n.includes('hardware') || n.includes('network')) return '#D8E2DC'; // Sage
+  if (n.includes('fashion') || n.includes('tailoring')) return '#FAD2E1'; // Rose
+  if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) return '#FFADAD'; // Soft Red
+  if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) return '#FFE5B4'; // Peach/Yellow
+  if (n.includes('house help') || n.includes('worker')) return '#ECE4DB'; // Sand
+  if (n.includes('human resources') || n.includes('hr')) return '#B9FBC0'; // Soft Green
+  if (n.includes('it services') || n.includes('development')) return '#A0C4FF'; // Blue
+  if (n.includes('labour') || n.includes('factory')) return '#D7E3FC'; // Sky
+  if (n.includes('legal')) return '#E2ECE9'; // Pale Green
+  if (n.includes('marketing')) return '#FDFFB6'; // Lemon
+  if (n.includes('media') || n.includes('entertainment')) return '#BDB2FF'; // Purple
+  if (n.includes('operations')) return '#D0F4DE'; // Mint Green
+  if (n.includes('purchase') || n.includes('supply chain')) return '#FFC6FF'; // Magenta/Pink
+  if (n.includes('sales')) return '#CAFFBF'; // Lime
+  if (n.includes('security')) return '#E5E5E5'; // Silver
+  if (n.includes('sport') || n.includes('fitness')) return '#FFD6A5'; // Orange
+  if (n.includes('technician') || n.includes('vehicle')) return '#CFBCFF'; // Violet
+  return '#F1F5F9';
+};
+
+const getCategoryIcon = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes('beauty')) return 'magic';
+  if (n.includes('construction')) return 'building';
+  if (n.includes('content') || n.includes('journalism')) return 'pencil';
+  if (n.includes('data science') || n.includes('analytics')) return 'database';
+  if (n.includes('delivery') || n.includes('driver')) return 'truck';
+  if (n.includes('design') || n.includes('architecture')) return 'paint-brush';
+  if (n.includes('hardware') || n.includes('network')) return 'server';
+  if (n.includes('fashion') || n.includes('tailoring')) return 'scissors';
+  if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) return 'user-md';
+  if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) return 'coffee';
+  if (n.includes('house help') || n.includes('worker')) return 'home';
+  if (n.includes('human resources') || n.includes('hr')) return 'users';
+  if (n.includes('it services') || n.includes('development')) return 'code';
+  if (n.includes('labour') || n.includes('factory')) return 'industry';
+  if (n.includes('legal')) return 'balance-scale';
+  if (n.includes('marketing')) return 'bullhorn';
+  if (n.includes('media') || n.includes('entertainment')) return 'film';
+  if (n.includes('operations')) return 'cogs';
+  if (n.includes('purchase') || n.includes('supply chain')) return 'shopping-cart';
   if (n.includes('sales')) return 'line-chart';
-  if (n.includes('hr') || n.includes('people')) return 'users';
-  if (n.includes('finance') || n.includes('account')) return 'money';
-  if (n.includes('ops') || n.includes('operation')) return 'cogs';
-  if (n.includes('health')) return 'heartbeat';
-  if (n.includes('edu')) return 'book';
-  if (n.includes('hospitality')) return 'hotel';
+  if (n.includes('security')) return 'shield';
+  if (n.includes('sport') || n.includes('fitness')) return 'heartbeat';
+  if (n.includes('technician') || n.includes('vehicle')) return 'wrench';
   return 'briefcase';
 }
 
@@ -131,16 +176,21 @@ function JobTrendCard({
   job,
   colors,
   onPress,
+  tagRotation,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
+  tagRotation?: any;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
+
+  const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
+  const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
 
   return (
     <Pressable
@@ -149,7 +199,7 @@ function JobTrendCard({
         styles.trendCard,
         {
           width: H_CARD_W,
-          backgroundColor: colors.surface,
+          backgroundColor: hasAppliedTags ? primaryTagColor + '08' : colors.surface,
           borderColor: colors.border,
           shadowColor: colors.shadow,
         },
@@ -159,9 +209,14 @@ function JobTrendCard({
           job.applied_tags.map((tag: any, idx: number) => (
             <View key={idx} style={[
               styles.hotBadge,
-              { backgroundColor: (tag.icon_color || colors.primary) + '15', marginBottom: 4 }
+              {
+                backgroundColor: (tag.icon_color || colors.primary) + '20',
+                marginBottom: 4,
+              }
             ]}>
-              <Icon name={cleanIconName(tag.icon)} size={11} color={tag.icon_color || colors.primary} />
+              <Animated.View style={{ transform: [{ rotate: tagRotation || '0deg' }] }}>
+                <Icon name={cleanIconName(tag.icon)} size={11} color={tag.icon_color || colors.primary} />
+              </Animated.View>
               <Text style={[
                 typography.small,
                 {
@@ -237,10 +292,12 @@ function JobListCard({
   job,
   colors,
   onPress,
+  tagRotation,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
+  tagRotation?: any;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
@@ -248,13 +305,16 @@ function JobListCard({
   const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
 
+  const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
+  const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
+
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.listCard,
         {
-          backgroundColor: colors.surface,
+          backgroundColor: hasAppliedTags ? primaryTagColor + '08' : colors.surface,
           borderColor: colors.border,
           shadowColor: colors.shadow,
         },
@@ -262,8 +322,15 @@ function JobListCard({
       <View style={styles.listCardTags}>
         {job.applied_tags && job.applied_tags.length > 0 ? (
           job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
-            <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: (tag.icon_color || colors.primary) + '10' }]}>
-              <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+            <View key={idx} style={[
+              styles.tagBadgeSm,
+              {
+                backgroundColor: (tag.icon_color || colors.primary) + '15',
+              }
+            ]}>
+              <Animated.View style={{ transform: [{ rotate: tagRotation || '0deg' }] }}>
+                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+              </Animated.View>
               <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary }]}>
                 {tag.name}
               </Text>
@@ -332,12 +399,12 @@ function JobListCard({
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
   const suggestions = [
-    'Search for a job or company',
-    'Search for Graphic Designer',
-    'Search for Software Engineer',
-    'Search for Sales Executive',
-    'Search for Part-time jobs',
-    'Search for Remote opportunities'
+    'a job or company',
+    'Graphic Designer',
+    'Software Engineer',
+    'Sales Executive',
+    'Part-time jobs',
+    'Remote opportunities'
   ];
 
   const [index, setIndex] = useState(0);
@@ -370,10 +437,11 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
 
   return (
     <View style={styles.tickerContainer}>
+      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>Search for</Text>
       <Animated.Text
         style={[
           styles.searchPlaceholderWide,
-          { color: colors.textPlaceholder, transform: [{ translateY }] }
+          { color: colors.textPlaceholder, transform: [{ translateY }], marginLeft: 4, flex: 1 }
         ]}
         numberOfLines={1}
       >
@@ -422,12 +490,14 @@ const HomeScreen: React.FC = () => {
   const { trending, nearby, recommended, latest, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
   const { data: profileData } = useSelector((state: RootState) => state.profile);
   const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
+  const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
   const isAnyLoading = jobsLoading || metaLoading;
 
   const [showNotifyHint, setShowNotifyHint] = useState(false);
   const notifyHintAnim = useRef(new Animated.Value(0)).current;
   const bellAnim = useRef(new Animated.Value(0)).current;
   const badgeAnim = useRef(new Animated.Value(1)).current;
+  const tagShakeAnim = useRef(new Animated.Value(0)).current;
 
   // Filter Grid States
   const [showFilterGrid, setShowFilterGrid] = useState(false);
@@ -538,21 +608,33 @@ const HomeScreen: React.FC = () => {
   }, [shakeBell]);
 
   useEffect(() => {
+    // Shared tag shake animation (swinging like a bell)
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(tagShakeAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(tagShakeAnim, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, [tagShakeAnim]);
+
+  const tagRotation = tagShakeAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['-12deg', '12deg'],
+  });
+
+  // 1. Initial Load Effect (Static/Main Data) - Only run once or when categories missing
+  useEffect(() => {
     if (categories.length === 0) dispatch(fetchMetaCategories());
-
-    // Fetch different sections using the main jobs API
-    dispatch(fetchJobs({ sort: 'recommended', per_page: 10, section: 'recommended' }));
-    dispatch(fetchJobs({ sort: 'latest', per_page: 10, section: 'latest' }));
-    dispatch(fetchJobs({ sort: 'trending', per_page: 10, section: 'trending' }));
-    dispatch(fetchHomeFeed());
-
-    if (profileData?.preferences?.current_city_id) {
-      dispatch(fetchJobs({ city_id: profileData.preferences.current_city_id, per_page: 10, section: 'nearby' }));
-    }
-
-    if (!profileData) dispatch(fetchProfile());
+    dispatch(fetchHomeFeed()); // Keep feed fresh
     dispatch(fetchAdminMedia({ media_section: 'home page', limit: 10 }));
-  }, [dispatch, categories.length, profileData]);
+  }, [dispatch]);
+
+  // 2. Profile Data Effect
+  useEffect(() => {
+    if (!profileData) {
+      dispatch(fetchProfile());
+    }
+  }, [dispatch, profileData]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
@@ -620,7 +702,7 @@ const HomeScreen: React.FC = () => {
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: [0, -COLLAPSE_DISTANCE + 10], // Reduced from 40 to 10 to move it higher
+    outputRange: [0, -COLLAPSE_DISTANCE + 26], // Increased from 10 to 22 to move it lower when collapsed
     extrapolate: 'clamp',
   });
 
@@ -648,19 +730,26 @@ const HomeScreen: React.FC = () => {
               style={styles.headerLeft}
               accessibilityRole="button"
               accessibilityLabel="Open profile">
-              <View style={styles.headerAvatar}>
-                <Image source={BRAND_ICON} style={styles.avatarImage} />
-              </View>
               <View style={styles.headerGreeting}>
-                <Text style={[typography.small, { color: colors.textSecondary }]}>
-                  {greetingLine()} 👋
-                </Text>
-                <Text style={[typography.appTitle, { color: colors.textPrimary, marginTop: 2 }]} numberOfLines={1}>
-                  {displayName}
-                </Text>
-                <Text style={[typography.small, { color: colors.primary, marginTop: 4 }]} numberOfLines={2}>
-                  {"Let's find your dream job"}
-                </Text>
+                <Pressable
+                  onPress={() => navigation.navigate('LocationSelection')}
+                  style={styles.locationSelector}
+                >
+                  <View style={[styles.locationIconBox, { backgroundColor: colors.primary + '12' }]}>
+                    <Icon name="map-marker" size={16} color={colors.primary} />
+                  </View>
+                  <View style={styles.locationTextStack}>
+                    <View style={styles.cityRow}>
+                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
+                        {selectedCity || 'Mumbai'}
+                      </Text>
+                      <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                    </View>
+                    <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                      {selectedArea || 'Andheri East'}
+                    </Text>
+                  </View>
+                </Pressable>
               </View>
             </Pressable>
             <View style={styles.headerActions}>
@@ -692,6 +781,23 @@ const HomeScreen: React.FC = () => {
                 </Animated.View>
               )}
               <Pressable
+                onPress={() => navigation.navigate('Saved')}
+                hitSlop={8}
+                style={[
+                  styles.notifyBtnCircle,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    shadowColor: colors.shadow,
+                    marginRight: 4,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Saved jobs">
+                <IonIcon name="heart" size={24} color="#EF4444" />
+              </Pressable>
+
+              <Pressable
                 onPress={() => navigation.navigate('Notifications')}
                 hitSlop={8}
                 style={[
@@ -712,7 +818,7 @@ const HomeScreen: React.FC = () => {
                     })
                   }]
                 }}>
-                  <Icon name="bell-o" size={20} color={colors.textPrimary} />
+                  <IonIcon name="notifications" size={22} color={colors.primary} />
                 </Animated.View>
                 <Animated.View style={[
                   styles.notifyBadge,
@@ -815,15 +921,15 @@ const HomeScreen: React.FC = () => {
                   style={[
                     styles.categoryChip,
                     {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
+                      backgroundColor: getCategoryColor(cat.name),
+                      borderColor: 'rgba(0,0,0,0.05)',
                       shadowColor: colors.shadow,
                     },
                   ]}>
-                  <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Icon name={getCategoryIcon(cat.name)} size={16} color={colors.primary} />
+                  <View style={[styles.categoryIcon]}>
+                    <Icon name={getCategoryIcon(cat.name)} size={16} color="rgba(0,0,0,0.6)" />
                   </View>
-                  <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
+                  <Text style={[typography.small, { color: 'rgba(0,0,0,0.7)', fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
                     {cat.name}
                   </Text>
                 </Pressable>
@@ -835,15 +941,15 @@ const HomeScreen: React.FC = () => {
                   style={[
                     styles.categoryChip,
                     {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
+                      backgroundColor: getCategoryColor(cat.label),
+                      borderColor: 'rgba(0,0,0,0.05)',
                       shadowColor: colors.shadow,
                     },
                   ]}>
-                  <View style={[styles.categoryIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Icon name={cat.icon} size={16} color={colors.primary} />
+                  <View style={[styles.categoryIcon]}>
+                    <Icon name={cat.icon} size={16} color="rgba(0,0,0,0.6)" />
                   </View>
-                  <Text style={[typography.small, { color: colors.textPrimary, fontFamily: typography.labelMedium.fontFamily }]}>
+                  <Text style={[typography.small, { color: 'rgba(0,0,0,0.7)', fontFamily: typography.labelMedium.fontFamily }]}>
                     {cat.label}
                   </Text>
                 </Pressable>
@@ -870,6 +976,7 @@ const HomeScreen: React.FC = () => {
                       job={{ ...job, isLatest: true }}
                       colors={colors}
                       onPress={() => openJob(job)}
+                      tagRotation={tagRotation}
                     />
                   ))}
                 </ScrollView>
@@ -896,6 +1003,7 @@ const HomeScreen: React.FC = () => {
                       job={job}
                       colors={colors}
                       onPress={() => openJob(job)}
+                      tagRotation={tagRotation}
                     />
                   ))}
                 </ScrollView>
@@ -912,7 +1020,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} />
                   ))}
                 </View>
                 {nearby.length > 5 && !showAllNearby && (
@@ -938,7 +1046,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} />
                   ))}
                 </View>
                 {recommended.length > 5 && !showAllRecommended && (
@@ -1088,7 +1196,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: 136,
+    paddingTop: 118,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -1125,6 +1233,25 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  locationIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationTextStack: {
+    justifyContent: 'center',
+  },
+  cityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1144,14 +1271,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   notifyBtnCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
-    ...components.jobCard,
-    shadowOpacity: 0.08,
+    backgroundColor: '#fff',
+    overflow: 'visible',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   notifyBadge: {
@@ -1212,7 +1343,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   searchPlaceholderWide: {
-    flex: 1,
     fontSize: 15,
     fontFamily: typography.body.fontFamily,
   },
@@ -1325,8 +1455,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 30,
     overflow: 'hidden',
-    justifyContent: 'center',
-    marginLeft: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 6,
   },
   cardMetaRow: {
     flexDirection: 'row',

@@ -12,12 +12,9 @@ export const fetchAdminMedia = createAsyncThunk(
   'media/fetchAdminMedia',
   async (params: MediaParams, { rejectWithValue }) => {
     try {
-      console.log('Fetching Admin Media with params:', params);
       const response = await api.get('api/media', { params });
-      console.log('Admin Media Response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Admin Media Error:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch admin media');
     }
   }
@@ -41,9 +38,7 @@ const mediaSlice = createSlice({
       .addCase(fetchAdminMedia.fulfilled, (state, action) => {
         state.loading = false;
         const { media, media_section } = action.payload.data;
-        
-        // We can handle storage based on section if needed, 
-        // but typically the API call will be specific to a section.
+
         if (action.meta.arg.media_section === 'reel') {
           state.reels = action.payload.data.media;
         } else if (action.meta.arg.media_section === 'home page') {

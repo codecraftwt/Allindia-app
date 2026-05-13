@@ -1,7 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ProfileSetupProvider } from '../context/ProfileSetupContext';
-import { useTheme } from '../context/ThemeContext';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 import SplashScreen from '../screens/Auth/SplashScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import SignInScreen from '../screens/Auth/SignInScreen';
@@ -19,14 +20,16 @@ import type { AuthStackParamList } from './types';
 const Stack = createStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => {
-  const { colors } = useTheme();
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
   return (
     <ProfileSetupProvider>
       <Stack.Navigator
+        initialRouteName="Splash"
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: 'transparent' },
+          cardStyle: { backgroundColor: '#FFFFFF' }, // Solid color is faster on Android
+          animationEnabled: true,
         }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />

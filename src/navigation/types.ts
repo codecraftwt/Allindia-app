@@ -10,6 +10,8 @@ export type HomeStackParamList = {
   JobCategories: undefined;
   CategoryJobs: { section?: string } | undefined;
   IndustryCategory: { categoryId: number; categoryName: string };
+  Saved: undefined;
+  LocationSelection: undefined;
 };
 
 export type SearchStackParamList = {
@@ -37,6 +39,7 @@ export type JobReelsStackParamList = {
 
 export type ProfileStackParamList = {
   ProfileOverview: undefined;
+  ProfileDetails: undefined;
   ProfilePersonalInfo: undefined;
   ProfileEducation: undefined;
   ProfileExperience: undefined;
@@ -48,7 +51,7 @@ export type ProfileStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Applications: undefined;
-  Saved: undefined;
+  AllJobs: undefined;
   JobReels: undefined;
   Profile: undefined;
   SavedPost: undefined;

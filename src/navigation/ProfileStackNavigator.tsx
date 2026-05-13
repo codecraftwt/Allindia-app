@@ -8,7 +8,7 @@ import ProfileExperienceEditScreen from '../screens/main/profile/ProfileExperien
 import ProfileJobPreferencesEditScreen from '../screens/main/profile/ProfileJobPreferencesEditScreen';
 import ProfileResumeEditScreen from '../screens/main/profile/ProfileResumeEditScreen';
 import ProfileAccountSetting from '../screens/main/profile/ProfileAccountSetting';
-import type { ProfileStackParamList } from './types';
+import ProfileDetailsScreen from '../screens/main/profile/ProfileDetailsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -23,6 +23,7 @@ const ProfileStackNavigator: React.FC = () => {
         cardStyle: { backgroundColor: 'transparent' },
       }}>
       <Stack.Screen name="ProfileOverview" component={ProfileOverviewScreen} />
+      <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
       <Stack.Screen name="ProfilePersonalInfo" component={ProfilePersonalInfoScreen} />
       <Stack.Screen name="ProfileEducation" component={ProfileEducationEditScreen} />
       <Stack.Screen name="ProfileExperience" component={ProfileExperienceEditScreen} />

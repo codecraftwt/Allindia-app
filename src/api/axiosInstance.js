@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+export const BASE_URL = 'https://jobindia.ai/';
+
 const api = axios.create({
-  baseURL: 'https://jobindia.ai/',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

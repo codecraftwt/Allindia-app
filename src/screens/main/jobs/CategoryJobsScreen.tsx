@@ -14,7 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { fetchJobs, fetchHomeFeed, fetchJobsByCategory } from '../../../redux/slice/jobSlice';
+import { fetchJobs, fetchHomeFeed, fetchJobsByCategory, filterJobs } from '../../../redux/slice/jobSlice';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
@@ -173,15 +173,12 @@ const CategoryJobsScreen: React.FC = () => {
 
   const applyAdvancedFilters = (filters: any) => {
     setActiveFilter(filters);
-    setIsFiltered(true);
-    dispatch(fetchJobs({
-      ...filters,
-      per_page: 50
-    }));
+    setIsFiltered(Object.keys(filters).length > 0);
+    dispatch(filterJobs({ ...filters, category_id: categoryId }));
   };
 
   const jobsData = useMemo(() => {
-    if (isFiltered) return recommended;
+    if (isFiltered) return filteredJobs;
     
     // If in category mode, extract jobs from the first category in jobsByCategory
     if (categoryId && jobsByCategory.length > 0) {
@@ -196,7 +193,7 @@ const CategoryJobsScreen: React.FC = () => {
       case 'recommended': return recommended;
       default: return recommended;
     }
-  }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory]);
+  }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory, filteredJobs]);
 
   const allTabs = useMemo(() => [
     { id: 'all', name: 'All Jobs' },

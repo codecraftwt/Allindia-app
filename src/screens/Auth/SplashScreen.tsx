@@ -14,8 +14,10 @@ import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
-const LOGO = require('../../assets/logo/logo02.png');
+const LOGO = require('../../assets/logo/logo111.png');
 const SPLASH_DELAY_MS = 4000;
 const PROGRESS_BAR_W = 200;
 
@@ -114,8 +116,12 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- entrance runs once; Animated.Value refs are stable
   }, []);
 
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+
   useEffect(() => {
-    const t = setTimeout(() => navigation.replace('Login'), SPLASH_DELAY_MS);
+    const t = setTimeout(() => {
+      navigation.replace('Main');
+    }, SPLASH_DELAY_MS);
     return () => clearTimeout(t);
   }, [navigation]);
 
