@@ -1,4 +1,4 @@
-package com.jobindia
+package com.jobsindia
 
 import android.app.Application
 import com.facebook.react.PackageList

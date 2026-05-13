@@ -20,6 +20,7 @@ import {
   Share,
   TouchableOpacity,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -32,6 +33,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
+import SkeletonPulse from '../../../components/SkeletonPulse';
 
 const { width, height } = Dimensions.get('window');
 const REEL_HEIGHT = height - (Platform.OS === 'ios' ? 90 : 80);

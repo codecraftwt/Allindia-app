@@ -11,6 +11,7 @@ import AllJobsStackNavigator from './AllJobsStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SavedStackNavigator from './SavedStackNavigator';
 import JobReelsStackNavigator from './JobReelsStackNavigator';
+import AIAssistantScreen from '../screens/main/home/AIAssistantScreen';
 import { typography } from '../theme/typography';
 import type { MainTabParamList } from './types';
 
@@ -244,7 +245,7 @@ const MainTabNavigator: React.FC = () => {
 
       <Tab.Screen
         name="AIAssistant"
-        component={HomeStackNavigator}
+        component={AIAssistantScreen}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="sparkles" color={color} focused={focused} label="AI" />

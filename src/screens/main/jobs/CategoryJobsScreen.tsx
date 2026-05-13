@@ -44,6 +44,27 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
       onPress={onPress}
       style={[styles.premiumCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
     >
+      <View style={styles.tagRowTop}>
+        {job.applied_tags && job.applied_tags.length > 0 ? (
+          job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
+            <View key={idx} style={[styles.tagPill, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
+              <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+              <Text style={[typography.tiny, { color: tag.icon_color || colors.primary, fontWeight: 'bold', marginLeft: 4 }]} numberOfLines={1}>
+                {tag.name}
+              </Text>
+            </View>
+          ))
+        ) : (
+          tags.length > 0 && (
+            <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
+              <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
+                {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
+              </Text>
+            </View>
+          )
+        )}
+      </View>
+
       <View style={styles.cardTop}>
         <View style={[styles.logoBox, { backgroundColor: colors.surfaceHighlight }]}>
           {company.company_logo_url ? (
@@ -76,26 +97,6 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
             <Icon name="money" size={12} color={colors.success} />
             <Text style={[typography.tiny, { color: colors.textSecondary }]}>{salary}</Text>
           </View>
-        </View>
-        <View style={styles.tagRow}>
-          {job.applied_tags && job.applied_tags.length > 0 ? (
-            job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
-              <View key={idx} style={[styles.tagPill, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
-                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
-                <Text style={[typography.tiny, { color: tag.icon_color || colors.primary, fontWeight: 'bold', marginLeft: 4 }]} numberOfLines={1}>
-                  {tag.name}
-                </Text>
-              </View>
-            ))
-          ) : (
-            tags.length > 0 && (
-              <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
-                <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
-                  {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
-                </Text>
-              </View>
-            )
-          )}
         </View>
       </View>
     </Pressable>
@@ -406,6 +407,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     alignItems: 'center',
+  },
+  tagRowTop: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   empty: {
     flex: 1,

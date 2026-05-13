@@ -380,7 +380,7 @@ const ProfileOverviewScreen: React.FC = () => {
         <View style={styles.dashboardGrid}>
           {/* Left Large Card: Applied Jobs */}
           <Pressable
-            onPress={() => navigation.navigate('Applications' as any)}
+            onPress={() => navigation.getParent()?.navigate('Applications')}
             style={({ pressed }) => [
               styles.dashboardCardLarge,
               { backgroundColor: colors.surface, borderColor: colors.border },
@@ -416,7 +416,7 @@ const ProfileOverviewScreen: React.FC = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => navigation.navigate('JobReels' as any)}
+              onPress={() => navigation.getParent()?.navigate('JobReels')}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
                 { backgroundColor: colors.surface, borderColor: colors.border },

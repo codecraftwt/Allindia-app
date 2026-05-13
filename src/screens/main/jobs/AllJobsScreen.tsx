@@ -205,7 +205,7 @@ const AllJobsScreen = () => {
         />
       </View>
 
-      {!selectedQuickFilter && (activeTab === 'All' || activeTab === 'Nearest' || activeTab === 'Other Cities') && (
+      {(activeTab === 'All' || activeTab === 'Nearest' || activeTab === 'Other Cities') && (
         <View style={styles.actionRow}>
           <Pressable
             onPress={() => { setActiveTab('Nearest'); setSelectedQuickFilter(null); setIsFiltered(false); }}
