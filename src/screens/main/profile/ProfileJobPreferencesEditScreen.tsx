@@ -28,6 +28,7 @@ import {
   fetchMetaQualifications,
 } from '../../../redux/slice/metaSlice';
 import type { StackScreenProps } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { useToast } from '../../../context/ToastContext';
 import { PrimaryButton } from '../../../components/auth';
 import type { ProfileStackParamList } from '../../../navigation/types';
@@ -366,12 +367,15 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
   const isInitialized = useRef(false);
 
-  // Fetch meta data on mount
-  useEffect(() => {
-    dispatch(fetchMetaCategories());
-    dispatch(fetchMetaCities());
-    dispatch(fetchMetaQualifications());
-  }, [dispatch]);
+  // Fetch meta data whenever screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchMetaCategories());
+      dispatch(fetchMetaCities());
+      dispatch(fetchMetaQualifications());
+      dispatch(fetchProfile());
+    }, [dispatch])
+  );
 
   // Initial Sync from Profile — wait for BOTH profile AND meta to be ready
   useEffect(() => {

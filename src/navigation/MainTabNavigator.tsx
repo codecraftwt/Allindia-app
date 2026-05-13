@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Pressable, View, StyleSheet, Text, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import ApplicationsStackNavigator from './ApplicationsStackNavigator';
@@ -87,7 +87,8 @@ const MainTabNavigator: React.FC = () => {
       'ProfileEducation',
       'ProfileExperience',
       'ProfileResume',
-      'ProfileAccountSetting'
+      'ProfileAccountSetting',
+      'ProfileDetails'
     ];
 
     if (hideOnScreens.includes(routeName) || isFullScreen) {
@@ -159,8 +160,13 @@ const MainTabNavigator: React.FC = () => {
               canPreventDefault: true,
             });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+            if (!event.defaultPrevented) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: route.name }],
+                })
+              );
             }
           };
 

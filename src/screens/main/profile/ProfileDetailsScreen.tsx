@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Easing, Image, ActivityIndicator, Modal, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Easing, Image, ActivityIndicator, Modal, Dimensions, Alert, StatusBar, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchProfile, fetchProfileCompletion, updateProfilePicture, deleteProfilePicture } from '../../../redux/slice/profileSlice';
@@ -19,7 +20,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal';
 
 type Nav = StackNavigationProp<ProfileStackParamList, 'ProfileDetails'>;
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 function profileInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -29,13 +30,13 @@ function profileInitials(name: string): string {
 }
 
 const ProfileDetailsScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch<AppDispatch>();
   const insets = useSafeAreaInsets();
   const { draft } = useProfileSetup();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { data: profile, completion } = useSelector((state: RootState) => state.profile);
+  const { data: profile, completion, loading } = useSelector((state: RootState) => state.profile);
 
   const [imageError, setImageError] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
@@ -43,20 +44,24 @@ const ProfileDetailsScreen = () => {
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      dispatch(fetchProfile()),
+      dispatch(fetchProfileCompletion())
+    ]);
+    setRefreshing(false);
+  }, [dispatch]);
+
+  useEffect(() => {
+    onRefresh();
+  }, []);
 
   useEffect(() => {
     setImageError(false);
   }, [profile?.personal?.profile_picture_url, user?.profile_picture_url]);
-
-  const shimmerAnim = React.useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const shimmerLoop = Animated.loop(
-      Animated.timing(shimmerAnim, { toValue: 1, duration: 2200, easing: Easing.linear, useNativeDriver: true })
-    );
-    shimmerLoop.start();
-    return () => shimmerLoop.stop();
-  }, [shimmerAnim]);
 
   const getProfileImageUrl = (path: string | null) => {
     if (!path) return null;
@@ -68,9 +73,12 @@ const ProfileDetailsScreen = () => {
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
+  const displayPhone = profile?.personal?.phone || user?.phone || 'Add phone number';
   const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url)
     ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url)
     : null;
+
+  const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
   const processImage = async (type: 'camera' | 'gallery') => {
     setShowImagePicker(false);
@@ -95,11 +103,6 @@ const ProfileDetailsScreen = () => {
     }
   };
 
-  const handleDeletePicture = () => {
-    setShowImagePicker(false);
-    setShowDeleteConfirm(true);
-  };
-
   const confirmDeletePicture = async () => {
     try {
       setIsUploading(true);
@@ -113,75 +116,64 @@ const ProfileDetailsScreen = () => {
     }
   };
 
-  const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
-
-  const ProfileTile = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
-    const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-
-    return (
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.tile,
-          { backgroundColor: colors.surface, borderColor: isMissing ? colors.error : colors.border },
-          pressed && { opacity: 0.8 }
-        ]}
-      >
-        {isMissing && (
-          <Animated.View style={[styles.shimmerBeam, { backgroundColor: colors.primary + '25', transform: [{ translateX: shimmerTranslate }, { skewX: '-20deg' }] }]} />
-        )}
-        <View style={[
-          styles.tileIconContainer,
-          { backgroundColor: (isMissing ? colors.error : (color || colors.primary)) + '15' },
-        ]}>
-          <Icon name={icon} size={20} color={isMissing ? colors.error : (color || colors.primary)} />
-        </View>
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 12 }]} numberOfLines={1}>{title}</Text>
-        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-          {isMissing ? 'Missing' : subtitle}
+  const SectionItem = ({ title, subtitle, icon, onPress, isMissing, color }: any) => (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.sectionCard,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        pressed && { opacity: 0.7, backgroundColor: colors.surfaceHighlight }
+      ]}
+    >
+      <View style={[styles.sectionIconBox, { backgroundColor: (color || colors.primary) + '10' }]}>
+        <Icon name={icon} size={24} color={color || colors.primary} />
+      </View>
+      <View style={styles.sectionText}>
+        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>{title}</Text>
+        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 2 }]}>
+          {isMissing ? 'Not added yet' : subtitle}
         </Text>
-        {isMissing ? (
-          <View style={[styles.tileAddBadge, { backgroundColor: colors.error }]}><Icon name="plus" size={10} color="#FFF" /></View>
-        ) : (
-          <View style={[styles.tileDoneBadge, { backgroundColor: colors.success + '20' }]}><Icon name="check" size={10} color={colors.success} /></View>
-        )}
-      </Pressable>
-    );
-  };
+      </View>
+      {isMissing ? (
+        <View style={[styles.statusBadge, { backgroundColor: colors.error + '15' }]}>
+          <Text style={[typography.tiny, { color: colors.error, fontWeight: 'bold' }]}>ADD</Text>
+        </View>
+      ) : (
+        <FeatherIcon name="chevron-right" size={20} color={colors.textPlaceholder} />
+      )}
+    </Pressable>
+  );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="arrow-left" size={24} color={colors.textPrimary} />
-        </Pressable>
-        <Text style={[typography.h3, { color: colors.textPrimary }]}>Profile Details</Text>
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} />
+      
+      {/* Premium Header - WorkIndia Style */}
+      <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
+        <SafeAreaView edges={['top']}>
+          <View style={styles.topNav}>
+            <Pressable onPress={() => navigation.goBack()} style={styles.iconBtn}>
+              <FeatherIcon name="arrow-left" size={24} color="#FFFFFF" />
+            </Pressable>
+            <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold' }]}>My Profile</Text>
+            <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={styles.iconBtn}>
+              <FeatherIcon name="edit-3" size={22} color="#FFFFFF" />
+            </Pressable>
+          </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll}>
-        {/* Profile Header in Details Screen */}
-        <View style={styles.profileHeader}>
-          <View style={styles.headerTop}>
-            <View style={styles.avatarWrapper}>
+          <View style={styles.profileSummary}>
+            <View style={styles.avatarContainer}>
               <Pressable
                 onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
-                style={[styles.avatarCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}
+                style={[styles.avatarCircle, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }]}
               >
                 {profilePic && !imageError ? (
-                  <Image
-                    source={{ uri: profilePic }}
-                    style={styles.avatarImage}
-                    onError={() => setImageError(true)}
-                  />
+                  <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
                 ) : (
-                  <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '10' }]}>
-                    {displayName && displayName !== 'User' ? (
-                      <Text style={[typography.h3, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
-                        {profileInitials(displayName)}
-                      </Text>
-                    ) : (
-                      <Icon name="user" size={36} color={colors.primary} />
-                    )}
+                  <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[typography.h3, { color: colors.primary, fontSize: 32, fontWeight: 'bold' }]}>
+                      {profileInitials(displayName)}
+                    </Text>
                   </View>
                 )}
                 {isUploading && (
@@ -192,104 +184,171 @@ const ProfileDetailsScreen = () => {
               </Pressable>
               <Pressable
                 onPress={() => setShowImagePicker(true)}
-                style={[styles.cameraBadge, { backgroundColor: colors.primary }]}
+                style={styles.cameraIconBtn}
               >
-                <Icon name="camera" size={12} color="#FFF" />
+                <FeatherIcon name="camera" size={14} color={colors.primary} />
               </Pressable>
             </View>
-            <View style={styles.headerInfo}>
-              <View style={styles.nameRow}>
-                <Text style={[typography.appTitle, { color: colors.textPrimary, fontSize: 20 }]} numberOfLines={1}>{displayName}</Text>
-                <Icon name="check-circle" size={14} color={colors.success} style={{ marginLeft: 4 }} />
-              </View>
-              <Text style={[typography.body, { color: colors.textSecondary }]} numberOfLines={1}>{displayEmail}</Text>
-            </View>
-          </View>
 
-          {completion && completion.percentage < 100 && (
-            <View style={[styles.strengthContainer, { marginTop: 20 }]}>
-              <View style={styles.strengthHeader}>
-                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>Profile Strength</Text>
-                <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
+            <View style={styles.summaryText}>
+              <View style={styles.nameVerifiedRow}>
+                <Text style={[typography.h3, { color: '#FFFFFF' }]} numberOfLines={1}>{displayName}</Text>
+                <Icon name="check-decagram" size={20} color="#60A5FA" style={{ marginLeft: 6 }} />
               </View>
-              <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
-                <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
+              <Text style={[typography.body, { color: 'rgba(255,255,255,0.8)', marginTop: 2 }]} numberOfLines={1}>{displayEmail}</Text>
+              <View style={styles.phoneRow}>
+                <FeatherIcon name="phone" size={12} color="rgba(255,255,255,0.6)" />
+                <Text style={[typography.small, { color: 'rgba(255,255,255,0.8)', marginLeft: 6 }]}>{displayPhone}</Text>
               </View>
             </View>
-          )}
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[typography.labelMedium, { color: colors.textSecondary, letterSpacing: 1 }]}>PROFESSIONAL INFO</Text>
-        </View>
-
-        <View style={styles.tilesRow}>
-          <ProfileTile title="Experience" subtitle="Work History" icon="briefcase" color="#3B82F6" onPress={() => navigation.navigate('ProfileExperience')} isMissing={isSectionMissing('experience')} />
-          <ProfileTile title="Education" subtitle="Degree/College" icon="book-open" color="#10B981" onPress={() => navigation.navigate('ProfileEducation')} isMissing={isSectionMissing('education')} />
-        </View>
-
-        <View style={styles.tilesRow}>
-          <ProfileTile title="Job Preferences" subtitle="Role & Location" icon="target" color="#F59E0B" onPress={() => navigation.navigate('ProfileJobPreferences')} isMissing={isSectionMissing('preferences')} />
-          <ProfileTile title="Resume" subtitle="CV/Documents" icon="file-text" color="#8B5CF6" onPress={() => navigation.navigate('ProfileResume')} isMissing={isSectionMissing('resume')} />
-        </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={[typography.labelMedium, { color: colors.textSecondary, letterSpacing: 1, marginTop: 24 }]}>PERSONAL INFO</Text>
-        </View>
-
-        <Pressable
-          onPress={() => navigation.navigate('ProfilePersonalInfo')}
-          style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: isSectionMissing('personal') ? colors.error : colors.border }]}
-        >
-          <View style={[styles.menuIconContainer, { backgroundColor: (isSectionMissing('personal') ? colors.error : colors.primary) + '15' }]}>
-            <Icon name="user" size={18} color={isSectionMissing('personal') ? colors.error : colors.primary} />
           </View>
-          <View style={styles.menuTextContainer}>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Personal Details</Text>
-            <Text style={[typography.small, { color: colors.textSecondary }]}>Email, Phone, Bio, and more</Text>
-          </View>
-          <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-        </Pressable>
+        </SafeAreaView>
+      </View>
 
+      <ScrollView 
+        style={styles.scroll} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={[colors.primary]} 
+            tintColor={colors.primary}
+          />
+        }
+      >
+        {/* Profile Strength Card */}
+        {completion && (
+          <View style={[styles.strengthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.strengthInfo}>
+              <View>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Profile Completeness</Text>
+                <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: 2 }]}>
+                  {completion.percentage === 100 ? 'Your profile is perfect!' : 'Add missing details to get more job calls'}
+                </Text>
+              </View>
+              <Text style={[typography.h4, { color: colors.primary }]}>{completion.percentage}%</Text>
+            </View>
+            <View style={[styles.progressBase, { backgroundColor: colors.surfaceSecondary }]}>
+              <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${completion.percentage}%` }]} />
+            </View>
+          </View>
+        )}
+
+        <View style={styles.sectionTitleRow}>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PROFESSIONAL DETAILS</Text>
+        </View>
+
+        <SectionItem 
+          title="Work Experience" 
+          subtitle={profile?.experience?.length ? `${profile.experience.length} Experience added` : "Add your past jobs"}
+          icon="briefcase-variant-outline" 
+          color="#3B82F6" 
+          onPress={() => navigation.navigate('ProfileExperience')} 
+          isMissing={isSectionMissing('experience')} 
+        />
+
+        <SectionItem 
+          title="Education" 
+          subtitle={profile?.education?.length ? `${profile.education.length} Education added` : "Add your degree/college"}
+          icon="school-outline" 
+          color="#10B981" 
+          onPress={() => navigation.navigate('ProfileEducation')} 
+          isMissing={isSectionMissing('education')} 
+        />
+
+        <SectionItem 
+          title="Job Preferences" 
+          subtitle="Preferred roles & locations"
+          icon="bullseye-arrow" 
+          color="#F59E0B" 
+          onPress={() => navigation.navigate('ProfileJobPreferences')} 
+          isMissing={isSectionMissing('preferences')} 
+        />
+
+        <SectionItem 
+          title="Resume / CV" 
+          subtitle="Upload your resume to get hired fast"
+          icon="file-document-outline" 
+          color="#8B5CF6" 
+          onPress={() => navigation.navigate('ProfileResume')} 
+          isMissing={isSectionMissing('resume')} 
+        />
+
+        <View style={[styles.sectionTitleRow, { marginTop: 24 }]}>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PERSONAL DETAILS</Text>
+        </View>
+
+        <SectionItem 
+          title="Personal Info" 
+          subtitle="Name, DOB, Gender, Language"
+          icon="account-outline" 
+          color="#EC4899" 
+          onPress={() => navigation.navigate('ProfilePersonalInfo')} 
+          isMissing={isSectionMissing('personal')} 
+        />
+
+        <SectionItem 
+          title="My Documents" 
+          subtitle="ID proofs & other certifications"
+          icon="card-account-details-outline" 
+          color="#64748B" 
+          onPress={() => {}} 
+          isMissing={true} 
+        />
+
+        {/* Pro Tip */}
+        <View style={[styles.proTip, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30' }]}>
+          <Icon name="lightbulb-on-outline" size={24} color={colors.primary} />
+          <View style={styles.proTipText}>
+            <Text style={[typography.labelMedium, { color: colors.primary }]}>Pro Tip</Text>
+            <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+              Profiles with photos and resumes get 5x more attention from employers.
+            </Text>
+          </View>
+        </View>
       </ScrollView>
 
-      {/* Image Management Modals */}
-      <Modal visible={showImagePicker} transparent animationType="fade" onRequestClose={() => setShowImagePicker(false)}>
+      {/* Image Selection Modal */}
+      <Modal visible={showImagePicker} transparent animationType="slide" onRequestClose={() => setShowImagePicker(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowImagePicker(false)}>
-          <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
-            <View style={[styles.pickerLine, { backgroundColor: colors.border }]} />
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 24 }]}>Profile Picture</Text>
-            {profilePic && (
-              <Pressable style={styles.pickerMenuRow} onPress={() => { setShowImagePicker(false); setShowImageViewer(true); }}>
-                <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.primary + '10' }]}><Icon name="eye" size={18} color={colors.primary} /></View>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>View Profile Picture</Text>
+          <View style={[styles.bottomSheet, { backgroundColor: colors.surface }]}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
+            <Text style={[typography.h4, { color: colors.textPrimary, marginBottom: 20 }]}>Profile Photo</Text>
+            <View style={styles.pickerOptions}>
+              <Pressable style={styles.pickerOption} onPress={() => processImage('camera')}>
+                <View style={[styles.pickerIcon, { backgroundColor: colors.primary + '10' }]}>
+                  <FeatherIcon name="camera" size={24} color={colors.primary} />
+                </View>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Camera</Text>
               </Pressable>
-            )}
-            <Pressable style={styles.pickerMenuRow} onPress={() => processImage('camera')}>
-              <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.primary + '10' }]}><Icon name="camera" size={18} color={colors.primary} /></View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Take Photo</Text>
-            </Pressable>
-            <Pressable style={styles.pickerMenuRow} onPress={() => processImage('gallery')}>
-              <View style={[styles.pickerIconWrapSmall, { backgroundColor: '#8B5CF610' }]}><Icon name="image" size={18} color="#8B5CF6" /></View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Choose from Gallery</Text>
-            </Pressable>
-            {profilePic && (
-              <Pressable style={styles.pickerMenuRow} onPress={handleDeletePicture}>
-                <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.error + '10' }]}><Icon name="trash-2" size={18} color={colors.error} /></View>
-                <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 16 }]}>Remove Photo</Text>
+              <Pressable style={styles.pickerOption} onPress={() => processImage('gallery')}>
+                <View style={[styles.pickerIcon, { backgroundColor: '#10B98110' }]}>
+                  <FeatherIcon name="image" size={24} color="#10B981" />
+                </View>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Gallery</Text>
               </Pressable>
-            )}
+              {profilePic && (
+                <Pressable style={styles.pickerOption} onPress={() => { setShowImagePicker(false); setShowDeleteConfirm(true); }}>
+                  <View style={[styles.pickerIcon, { backgroundColor: colors.error + '10' }]}>
+                    <FeatherIcon name="trash-2" size={24} color={colors.error} />
+                  </View>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Remove</Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         </Pressable>
       </Modal>
 
-      <Modal visible={showImageViewer} transparent animationType="slide" onRequestClose={() => setShowImageViewer(false)}>
-        <View style={styles.viewerBackground}>
-          <Pressable style={styles.viewerClose} onPress={() => setShowImageViewer(false)}>
-            <Icon name="x" size={24} color="#FFF" />
+      {/* Image Viewer */}
+      <Modal visible={showImageViewer} transparent animationType="fade" onRequestClose={() => setShowImageViewer(false)}>
+        <View style={styles.viewerContainer}>
+          <Pressable style={styles.viewerCloseBtn} onPress={() => setShowImageViewer(false)}>
+            <FeatherIcon name="x" size={28} color="#FFF" />
           </Pressable>
           {profilePic && <Image source={{ uri: profilePic }} style={styles.fullImage} resizeMode="contain" />}
-          <View style={styles.viewerFooter}><Text style={[typography.labelMedium, { color: '#FFF' }]}>{displayName}</Text></View>
         </View>
       </Modal>
 
@@ -298,54 +357,57 @@ const ProfileDetailsScreen = () => {
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDeletePicture}
         title="Remove Photo"
-        message="Are you sure you want to remove your profile picture? This action cannot be undone."
+        message="Are you sure you want to remove your profile picture?"
         confirmText="Remove"
-        cancelText="Keep Photo"
+        cancelText="Cancel"
         colors={colors}
         loading={isUploading}
         type="danger"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  header: {
+  container: { flex: 1 },
+  headerContainer: {
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  topNav: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xs,
-    gap: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    height: 56,
   },
-  backBtn: {
-    padding: 4,
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  scroll: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  profileHeader: {
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: radius.xl,
-    backgroundColor: 'rgba(0,0,0,0.02)',
-  },
-  headerTop: {
+  profileSummary: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 10,
   },
-  avatarWrapper: {
+  avatarContainer: {
     position: 'relative',
   },
   avatarCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 1,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 4,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -355,177 +417,161 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  cameraBadge: {
+  cameraIconBtn: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    bottom: 0,
+    right: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#FFF'
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  uploadingOverlay: {
-    backgroundColor: 'rgba(0,0,0,0.4)',
+  summaryText: {
+    marginLeft: 20,
+    flex: 1,
+  },
+  nameVerifiedRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center'
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  scroll: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+    marginTop: 16,
+  },
+  strengthCard: {
+    padding: 16,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  strengthInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  progressBase: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  sectionTitleRow: {
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  sectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  sectionIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionText: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  proTip: {
+    flexDirection: 'row',
+    padding: 16,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    marginTop: 20,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  proTipText: {
+    flex: 1,
+    marginLeft: 16,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
   },
-  pickerContainer: {
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+  bottomSheet: {
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 24,
-    paddingBottom: 40
+    paddingBottom: 40,
   },
-  pickerLine: {
+  dragHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 24
+    marginBottom: 20,
   },
-  pickerMenuRow: {
+  pickerOptions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
-  pickerIconWrapSmall: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+  pickerOption: {
     alignItems: 'center',
-    justifyContent: 'center'
   },
-  viewerBackground: {
+  pickerIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewerContainer: {
     flex: 1,
     backgroundColor: '#000',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
-  viewerClose: {
+  viewerCloseBtn: {
     position: 'absolute',
-    top: 40,
+    top: 50,
     right: 20,
     zIndex: 10,
-    padding: 10
+    padding: 10,
   },
   fullImage: {
     width: width,
-    height: height * 0.8
+    height: width,
   },
-  viewerFooter: {
-    position: 'absolute',
-    bottom: 40,
-    width: '100%',
-    alignItems: 'center'
-  },
-  headerInfo: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 1,
-  },
-  strengthContainer: {
-    marginTop: 16,
-  },
-  strengthHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  strengthBarBase: {
-    height: 5,
-    borderRadius: 2.5,
-    overflow: 'hidden',
-  },
-  strengthBarFill: {
-    height: '100%',
-    borderRadius: 2.5,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  tilesRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  tile: {
-    flex: 1,
-    padding: 16,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  tileIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  uploadingOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tileAddBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tileDoneBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wideItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    marginBottom: 12,
-  },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuTextContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  shimmerBeam: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 100,
-    zIndex: 1,
-  },
-  tipCard: {
-    marginTop: 24,
-    padding: 16,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
   }
 });
 

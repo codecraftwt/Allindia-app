@@ -36,8 +36,14 @@ const QUICK_FILTERS_DATA = [
   { id: 'Contract', label: 'Contract', icon: 'file-text', color: '#6366F1' },
 ];
 
+const cleanIconName = (icon: string) => {
+  if (!icon) return 'check-circle';
+  // Remove 'fas fa-', 'fa-', etc.
+  return icon.replace(/fas fa-|fa-|fab fa-|far fa-/g, '').trim();
+};
+
 const AllJobsScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
@@ -80,17 +86,50 @@ const AllJobsScreen = () => {
     const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : 'Negotiable');
     const jobType = item.job_type_label || item.employmentType || item.job_type || 'Full Time';
 
+    const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
+    const hasAppliedTags = item.applied_tags && item.applied_tags.length > 0;
+
     return (
       <Pressable
         onPress={() => navigation.navigate('JobDetail', { jobId: item.slug || item.id })}
-        style={[styles.jobCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        style={[
+          styles.jobCard,
+          {
+            backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
+            borderColor: colors.border,
+            borderWidth: hasAppliedTags ? 0 : 1,
+            shadowOpacity: hasAppliedTags ? 0 : 0.05,
+            elevation: hasAppliedTags ? 0 : 2,
+          }
+        ]}
       >
+        {hasAppliedTags && (
+          <View style={styles.tagsRightContainer}>
+            {item.applied_tags.map((tag: any, idx: number) => (
+              <View key={idx} style={[
+                styles.cornerBadge,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: (tag.icon_color || colors.primary) + '60',
+                }
+              ]}>
+                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
+                <Text style={[
+                  styles.cornerBadgeText,
+                  { color: tag.icon_color || colors.primary }
+                ]}>
+                  {tag.name}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
         <View style={styles.cardHeader}>
-          <View style={[styles.iconBox, { backgroundColor: colors.primary + '10' }]}>
+          <View style={styles.iconBox}>
             <Icon name="briefcase" size={20} color={colors.primary} />
           </View>
           <View style={styles.titleBox}>
-            <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+            <Text style={[typography.jobTitle, { color: colors.textPrimary, paddingRight: 80 }]} numberOfLines={1}>
               {item.title}
             </Text>
             <Text style={[typography.small, { color: colors.textSecondary }]}>
@@ -118,7 +157,7 @@ const AllJobsScreen = () => {
           <Text style={[typography.labelMedium, { color: colors.success }]}>
             {salaryLabel}
           </Text>
-          <View style={[styles.typeBadge, { backgroundColor: colors.primary + '10' }]}>
+          <View style={[styles.typeBadge, { borderColor: colors.primary + '40', borderWidth: 1 }]}>
             <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>
               {jobType}
             </Text>
@@ -221,17 +260,17 @@ const AllJobsScreen = () => {
                 onPress={() => setSelectedQuickFilter(isSelected ? null : filter.id)}
                 style={[
                   styles.quickFilterChip,
-                  { 
+                  {
                     backgroundColor: bgColor,
                     borderColor: isSelected ? filter.color : colors.border,
                   }
                 ]}
               >
                 <View style={[styles.filterIconCircle, { backgroundColor: isSelected ? filter.color : colors.surfaceHighlight }]}>
-                  <Icon 
-                    name={filter.icon} 
-                    size={10} 
-                    color={isSelected ? '#fff' : colors.textPlaceholder} 
+                  <Icon
+                    name={filter.icon}
+                    size={10}
+                    color={isSelected ? '#fff' : colors.textPlaceholder}
                   />
                 </View>
                 <Text style={[
@@ -325,6 +364,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  tagsRightContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  cornerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cornerBadgeText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    marginLeft: 3,
+  },
   iconBox: {
     width: 44,
     height: 44,
@@ -337,9 +402,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.03)',
   },
   metaItem: {
     flexDirection: 'row',

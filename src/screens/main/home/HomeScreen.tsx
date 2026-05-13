@@ -46,7 +46,7 @@ import {
   HOME_CATEGORIES,
 } from './homeMockData';
 
-const H_CARD_W = Math.min(Dimensions.get('window').width * 0.78, 300);
+const H_CARD_W = Math.min(Dimensions.get('window').width * 0.72, 280);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
 
@@ -177,11 +177,13 @@ function JobTrendCard({
   colors,
   onPress,
   tagRotation,
+  isDark,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
   tagRotation?: any;
+  isDark: boolean;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
@@ -199,7 +201,8 @@ function JobTrendCard({
         styles.trendCard,
         {
           width: H_CARD_W,
-          backgroundColor: hasAppliedTags ? primaryTagColor + '08' : colors.surface,
+          backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
+          borderWidth: hasAppliedTags ? 0 : StyleSheet.hairlineWidth,
           borderColor: colors.border,
           shadowColor: colors.shadow,
         },
@@ -210,7 +213,14 @@ function JobTrendCard({
             <View key={idx} style={[
               styles.hotBadge,
               {
-                backgroundColor: (tag.icon_color || colors.primary) + '20',
+                backgroundColor: colors.surface,
+                borderColor: (tag.icon_color || colors.primary) + '80',
+                borderWidth: 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+                elevation: 2,
                 marginBottom: 4,
               }
             ]}>
@@ -222,7 +232,7 @@ function JobTrendCard({
                 {
                   color: tag.icon_color || colors.primary,
                   fontSize: 10,
-                  fontWeight: '700',
+                  fontWeight: 'bold',
                   marginLeft: 4,
                 },
               ]}>
@@ -244,7 +254,7 @@ function JobTrendCard({
                   {
                     color: config.color,
                     fontSize: 10,
-                    fontWeight: '700',
+                    fontWeight: 'bold',
                     marginLeft: 4,
                   },
                 ]}>
@@ -293,11 +303,13 @@ function JobListCard({
   colors,
   onPress,
   tagRotation,
+  isDark,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
   tagRotation?: any;
+  isDark: boolean;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
@@ -314,7 +326,8 @@ function JobListCard({
       style={[
         styles.listCard,
         {
-          backgroundColor: hasAppliedTags ? primaryTagColor + '08' : colors.surface,
+          backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
+          borderWidth: hasAppliedTags ? 0 : StyleSheet.hairlineWidth,
           borderColor: colors.border,
           shadowColor: colors.shadow,
         },
@@ -325,13 +338,19 @@ function JobListCard({
             <View key={idx} style={[
               styles.tagBadgeSm,
               {
-                backgroundColor: (tag.icon_color || colors.primary) + '15',
+                backgroundColor: colors.surface,
+                borderColor: (tag.icon_color || colors.primary) + '60',
+                borderWidth: 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 1,
               }
             ]}>
               <Animated.View style={{ transform: [{ rotate: tagRotation || '0deg' }] }}>
                 <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
               </Animated.View>
-              <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary }]}>
+              <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary, fontWeight: 'bold' }]}>
                 {tag.name}
               </Text>
             </View>
@@ -480,7 +499,7 @@ const HomeSkeleton: React.FC = () => {
 };
 
 const HomeScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<HomeNav>();
   const { draft } = useProfileSetup();
@@ -977,6 +996,7 @@ const HomeScreen: React.FC = () => {
                       colors={colors}
                       onPress={() => openJob(job)}
                       tagRotation={tagRotation}
+                      isDark={isDark}
                     />
                   ))}
                 </ScrollView>
@@ -1004,6 +1024,7 @@ const HomeScreen: React.FC = () => {
                       colors={colors}
                       onPress={() => openJob(job)}
                       tagRotation={tagRotation}
+                      isDark={isDark}
                     />
                   ))}
                 </ScrollView>
@@ -1020,7 +1041,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} isDark={isDark} />
                   ))}
                 </View>
                 {nearby.length > 5 && !showAllNearby && (
@@ -1046,7 +1067,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} isDark={isDark} />
                   ))}
                 </View>
                 {recommended.length > 5 && !showAllRecommended && (
@@ -1389,22 +1410,22 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-    marginTop: 4,
+    marginBottom: 2,
+    marginTop: 2,
   },
   sectionIcon: {
     marginRight: spacing.sm,
   },
   categoriesScroll: {
-    gap: spacing.sm,
-    paddingBottom: spacing.lg,
+    gap: 10,
+    paddingBottom: spacing.md,
     paddingRight: spacing.md,
   },
   categoryChip: {
     minWidth: 84,
     maxWidth: 104,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
@@ -1421,13 +1442,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   trendingScroll: {
-    gap: spacing.md,
-    paddingBottom: spacing.lg,
+    gap: 12,
+    paddingBottom: spacing.md,
     paddingRight: spacing.md,
   },
 
   trendCard: {
-    padding: 12,
+    padding: 10,
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
@@ -1437,19 +1458,19 @@ const styles = StyleSheet.create({
   trendTagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
+    gap: 4,
+    marginBottom: 6,
   },
   hotBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.pill,
+    borderRadius: 12,
     gap: 4,
   },
   cardTitle: {
-    minHeight: 44,
+    minHeight: 36,
   },
   tickerContainer: {
     flex: 1,
@@ -1469,7 +1490,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.sm,
+    marginTop: 6,
   },
   typePill: {
     alignSelf: 'flex-start',
@@ -1479,23 +1500,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   verticalList: {
-    gap: spacing.md,
+    gap: 12,
     marginBottom: 0,
   },
   listCard: {
-    padding: 10,
-    borderRadius: radius.md,
+    padding: 6,
+    borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
   },
   listCardTop: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: 10,
   },
   listIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1506,8 +1527,8 @@ const styles = StyleSheet.create({
   listMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
+    marginTop: 6,
   },
   metaItem: {
     flexDirection: 'row',
@@ -1519,7 +1540,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 8,
+    marginTop: 6,
   },
   typePillSm: {
     paddingHorizontal: spacing.sm,
@@ -1567,16 +1588,16 @@ const styles = StyleSheet.create({
   listCardTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 8,
+    gap: 4,
+    marginBottom: 6,
   },
   tagBadgeSm: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
-    gap: 4,
+    borderRadius: 10,
+    gap: 3,
   },
   tagTextSm: {
     fontSize: 10,

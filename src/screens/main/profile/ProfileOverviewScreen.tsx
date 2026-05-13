@@ -376,37 +376,59 @@ const ProfileOverviewScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Action Dashboard */}
+        {/* Action Dashboard - Modern Dynamic Layout */}
         <View style={styles.dashboardGrid}>
+          {/* Left Large Card: Applied Jobs */}
           <Pressable
             onPress={() => navigation.navigate('Applications' as any)}
-            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#3B82F6' }]}
+            style={({ pressed }) => [
+              styles.dashboardCardLarge,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              pressed && { opacity: 0.9, scale: 0.98 }
+            ]}
           >
-            <View style={[styles.dashboardIconBox, { backgroundColor: '#3B82F610' }]}>
-              <Icon name="briefcase" size={20} color="#3B82F6" />
+            <View style={[styles.dashboardIconBoxLarge, { backgroundColor: '#3B82F615' }]}>
+              <Icon name="briefcase" size={28} color="#3B82F6" />
             </View>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>My Activity</Text>
+            <View style={styles.dashboardCardContent}>
+              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>Applied</Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>Track your job status</Text>
+            </View>
+            <View style={[styles.cardTag, { backgroundColor: '#3B82F610' }]}>
+              <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: 'bold' }}>ACTIVITY</Text>
+            </View>
           </Pressable>
 
-          <Pressable
-            onPress={() => navigation.navigate('Home' as any, { screen: 'Saved' })}
-            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#F59E0B' }]}
-          >
-            <View style={[styles.dashboardIconBox, { backgroundColor: '#F59E0B10' }]}>
-              <Icon name="heart" size={20} color="#F59E0B" />
-            </View>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Saved</Text>
-          </Pressable>
+          {/* Right Stack: Saved & Reels */}
+          <View style={styles.dashboardStack}>
+            <Pressable
+              onPress={() => navigation.navigate('Home' as any, { screen: 'Saved' })}
+              style={({ pressed }) => [
+                styles.dashboardCardSmall,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                pressed && { opacity: 0.9 }
+              ]}
+            >
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#F59E0B15' }]}>
+                <Icon name="heart" size={18} color="#F59E0B" />
+              </View>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Saved</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={() => navigation.navigate('JobReels' as any)}
-            style={[styles.dashboardCard, { backgroundColor: colors.surface, borderTopWidth: 4, borderTopColor: '#EC4899' }]}
-          >
-            <View style={[styles.dashboardIconBox, { backgroundColor: '#EC489910' }]}>
-              <Icon name="play-circle" size={20} color="#EC4899" />
-            </View>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Job Reels</Text>
-          </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('JobReels' as any)}
+              style={({ pressed }) => [
+                styles.dashboardCardSmall,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                pressed && { opacity: 0.9 }
+              ]}
+            >
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#EC489915' }]}>
+                <Icon name="play-circle" size={18} color="#EC4899" />
+              </View>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Reels</Text>
+            </Pressable>
+          </View>
         </View>
         {/* Referral Section */}
         <View style={styles.menuContainer}>
@@ -559,9 +581,14 @@ const styles = StyleSheet.create({
   settingsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
   logoutBtn: { marginTop: 24, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 20, borderWidth: 1, borderStyle: 'dashed' },
-  dashboardGrid: { flexDirection: 'row', gap: 10, paddingHorizontal: spacing.md, marginBottom: 20, marginTop: 10 },
-  dashboardCard: { flex: 1, padding: 12, borderRadius: 20, borderWidth: 1, alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 },
-  dashboardIconBox: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  dashboardGrid: { flexDirection: 'row', gap: 12, paddingHorizontal: spacing.md, marginBottom: 25, marginTop: 15 },
+  dashboardCardLarge: { flex: 1.2, padding: 16, borderRadius: 24, borderWidth: 1, minHeight: 140, justifyContent: 'space-between', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 },
+  dashboardIconBoxLarge: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  dashboardCardContent: { marginTop: 12 },
+  cardTag: { position: 'absolute', top: 16, right: 16, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  dashboardStack: { flex: 1, gap: 12 },
+  dashboardCardSmall: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 20, borderWidth: 1, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
+  dashboardIconBoxSmall: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
