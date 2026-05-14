@@ -14,8 +14,17 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-  Easing,
 } from 'react-native';
+import ReAnimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  withSpring, 
+  withRepeat,
+  runOnJS,
+  interpolate as reInterpolate,
+  Easing,
+} from 'react-native-reanimated';
 const BRAND_ICON = require('../../../assets/icons/icon2.2.png');
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
@@ -41,6 +50,9 @@ import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssista
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
 import HeroBanner from '../../../components/HeroBanner';
 import SkeletonPulse from '../../../components/SkeletonPulse';
+import { QuickFilterCards } from './QuickFilterCards';
+import HomescreenHeader from './HomescreenHeader';
+import HomeCategoriesSection from './HomeCategoriesSection';
 import type { HomeJob } from './homeMockData';
 import {
   HOME_CATEGORIES,
@@ -49,19 +61,6 @@ import {
 const H_CARD_W = Math.min(Dimensions.get('window').width * 0.72, 280);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
-
-
-
-function greetingLine(): string {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) {
-    return 'Good morning';
-  }
-  if (h >= 12 && h < 17) {
-    return 'Good afternoon';
-  }
-  return 'Good evening';
-}
 
 function profileInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -172,17 +171,70 @@ const cleanIconName = (iconStr: string) => {
   return iconStr.replace(/fa[srlb]? fa-/, '').trim();
 };
 
+const TagCycling = ({ tags, colors, tagRotationStyle, isSmall = false }: { tags: any[], colors: any, tagRotationStyle: any, isSmall?: boolean }) => {
+  const [index, setIndex] = useState(0);
+  const fade = useSharedValue(1);
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    if (tags.length <= 1) return;
+    const interval = setInterval(() => {
+      fade.value = withTiming(0, { duration: 400 }, () => {
+        runOnJS(setIndex)((index + 1) % tags.length);
+        translateY.value = 10;
+        fade.value = withTiming(1, { duration: 400 });
+        translateY.value = withTiming(0, { duration: 400 });
+      });
+      translateY.value = withTiming(-10, { duration: 400 });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [tags.length, index]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: fade.value,
+    transform: [{ translateY: translateY.value }]
+  }));
+
+  const tag = tags[index];
+  const isApplied = typeof tag !== 'string';
+  const tagName = isApplied ? tag.name : tag;
+  const tagIcon = isApplied ? cleanIconName(tag.icon) : getTagConfig(tag, colors).icon;
+  const tagColor = isApplied ? (tag.icon_color || colors.primary) : getTagConfig(tag, colors).color;
+
+  return (
+    <ReAnimated.View style={[
+      isSmall ? styles.tagBadgeSm : styles.hotBadge,
+      {
+        backgroundColor: isSmall ? colors.surface : (isApplied ? colors.surface : tagColor + '15'),
+        borderColor: isSmall ? tagColor + '60' : (isApplied ? tagColor + '80' : 'transparent'),
+        borderWidth: isSmall || isApplied ? 1 : 0,
+      },
+      animatedStyle
+    ]}>
+      <ReAnimated.View style={tagRotationStyle}>
+        <Icon name={tagIcon} size={isSmall ? 13 : 16} color={tagColor} />
+      </ReAnimated.View>
+      <Text style={[
+        isSmall ? styles.tagTextSm : typography.small,
+        { color: tagColor, fontSize: isSmall ? 11 : 10, fontWeight: 'bold', marginLeft: 4 }
+      ]}>
+        {tagName}
+      </Text>
+    </ReAnimated.View>
+  );
+};
+
 function JobTrendCard({
   job,
   colors,
   onPress,
-  tagRotation,
+  tagRotationStyle,
   isDark,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
-  tagRotation?: any;
+  tagRotationStyle?: any;
   isDark: boolean;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
@@ -201,98 +253,62 @@ function JobTrendCard({
         styles.trendCard,
         {
           width: H_CARD_W,
-          backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
+          backgroundColor: hasAppliedTags ? primaryTagColor + '15' : colors.surface,
           borderWidth: hasAppliedTags ? 0 : StyleSheet.hairlineWidth,
           borderColor: colors.border,
-          shadowColor: colors.shadow,
+          paddingBottom: 40,
         },
       ]}>
-      <View style={styles.trendTagsRow}>
-        {job.applied_tags && job.applied_tags.length > 0 ? (
-          job.applied_tags.map((tag: any, idx: number) => (
-            <View key={idx} style={[
-              styles.hotBadge,
-              {
-                backgroundColor: colors.surface,
-                borderColor: (tag.icon_color || colors.primary) + '80',
-                borderWidth: 1,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-                marginBottom: 4,
-              }
-            ]}>
-              <Animated.View style={{ transform: [{ rotate: tagRotation || '0deg' }] }}>
-                <Icon name={cleanIconName(tag.icon)} size={11} color={tag.icon_color || colors.primary} />
-              </Animated.View>
-              <Text style={[
-                typography.small,
-                {
-                  color: tag.icon_color || colors.primary,
-                  fontSize: 10,
-                  fontWeight: 'bold',
-                  marginLeft: 4,
-                },
-              ]}>
-                {tag.name}
-              </Text>
-            </View>
-          ))
-        ) : (
-          job.tags && job.tags.length > 0 && job.tags.slice(0, 2).map((tag: string, idx: number) => {
-            const config = getTagConfig(tag, colors);
-            return (
-              <View key={idx} style={[
-                styles.hotBadge,
-                { backgroundColor: config.color + '15' }
-              ]}>
-                <Icon name={config.icon} size={11} color={config.color} />
-                <Text style={[
-                  typography.small,
-                  {
-                    color: config.color,
-                    fontSize: 10,
-                    fontWeight: 'bold',
-                    marginLeft: 4,
-                  },
-                ]}>
-                  {tag}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </View>
-      <View style={[styles.cardTitle, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }]}>
-        <Text style={[typography.jobTitle, { color: colors.textPrimary, flex: 1, marginRight: 8 }]} numberOfLines={2}>
-          {job.title}
-        </Text>
-        {job.employer?.company?.company_logo_url && (
+
+      {/* Top Section: Logo + Name */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+        {job.employer?.company?.company_logo_url ? (
           <Image
             source={{ uri: job.employer.company.company_logo_url }}
-            style={{ width: 32, height: 32, borderRadius: 8, marginTop: 2 }}
+            style={{ width: 40, height: 40, borderRadius: 8, marginRight: 10 }}
           />
+        ) : (
+          <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
+            <Icon name="briefcase" size={20} color={colors.primary} />
+          </View>
         )}
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+            {job.title}
+          </Text>
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+            {companyName}
+          </Text>
+        </View>
       </View>
-      <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-        {companyName}
-      </Text>
+
       <View style={styles.cardMetaRow}>
         <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
         <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
           {locationLabel}
         </Text>
       </View>
+
       <View style={styles.cardFooter}>
         <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
         <Text style={[typography.small, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
       </View>
-      <View style={[styles.typePill, { backgroundColor: colors.surfaceHighlight }]}>
-        <Text style={[typography.small, { color: colors.primary, fontFamily: typography.labelMedium.fontFamily }]}>
-          {jobType}
-        </Text>
+
+      {/* Bottom Section: Job Type (Left) + Tags (Right) */}
+      <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View style={[styles.typePill, { backgroundColor: colors.surfaceHighlight, marginTop: 0 }]}>
+          <Text style={[typography.small, { color: colors.primary, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+            {jobType}
+          </Text>
+        </View>
+
+        <View style={[styles.trendTagsRow, { marginBottom: 0 }]}>
+          {hasAppliedTags ? (
+            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} />
+          ) : job.tags && job.tags.length > 0 ? (
+            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} />
+          ) : null}
+        </View>
       </View>
     </Pressable>
   );
@@ -302,13 +318,13 @@ function JobListCard({
   job,
   colors,
   onPress,
-  tagRotation,
+  tagRotationStyle,
   isDark,
 }: {
   job: any;
   colors: ThemeColors;
   onPress?: () => void;
-  tagRotation?: any;
+  tagRotationStyle?: any;
   isDark: boolean;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
@@ -332,64 +348,34 @@ function JobListCard({
           shadowColor: colors.shadow,
         },
       ]}>
-      <View style={styles.listCardTags}>
-        {job.applied_tags && job.applied_tags.length > 0 ? (
-          job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
-            <View key={idx} style={[
-              styles.tagBadgeSm,
-              {
-                backgroundColor: colors.surface,
-                borderColor: (tag.icon_color || colors.primary) + '60',
-                borderWidth: 1,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 1,
-              }
-            ]}>
-              <Animated.View style={{ transform: [{ rotate: tagRotation || '0deg' }] }}>
-                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
-              </Animated.View>
-              <Text style={[styles.tagTextSm, { color: tag.icon_color || colors.primary, fontWeight: 'bold' }]}>
-                {tag.name}
-              </Text>
-            </View>
-          ))
-        ) : (
-          job.tags && job.tags.length > 0 && job.tags.slice(0, 2).map((tag: string, idx: number) => {
-            const config = getTagConfig(tag, colors);
-            return (
-              <View key={idx} style={[styles.tagBadgeSm, { backgroundColor: config.color + '10' }]}>
-                <Icon name={config.icon} size={10} color={config.color} />
-                <Text style={[styles.tagTextSm, { color: config.color }]}>
-                  {tag}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </View>
       <View style={styles.listCardTop}>
-        <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
-          <Icon name="briefcase" size={18} color={colors.primary} />
+        <View style={styles.listIconWrap}>
+          {job.employer?.company?.company_logo_url ? (
+            <Image
+              source={{ uri: job.employer.company.company_logo_url }}
+              style={{ width: 40, height: 40, borderRadius: 8 }}
+            />
+          ) : (
+            <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
+              <Icon name="briefcase" size={18} color={colors.primary} />
+            </View>
+          )}
         </View>
         <View style={styles.listCardText}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Text style={[typography.jobTitle, { color: colors.textPrimary, flex: 1, marginRight: 8 }]} numberOfLines={2}>
-              {job.title}
-            </Text>
-            {job.employer?.company?.company_logo_url && (
-              <Image
-                source={{ uri: job.employer.company.company_logo_url }}
-                style={{ width: 32, height: 32, borderRadius: 8 }}
-              />
-            )}
-          </View>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+            {job.title}
+          </Text>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
             {companyName}
           </Text>
         </View>
+        <View style={{ position: 'absolute', top: 0, right: 0 }}>
+          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
+            {postedLabel}
+          </Text>
+        </View>
       </View>
+
       <View style={styles.listMeta}>
         <View style={styles.metaItem}>
           <Icon name="map-marker" size={13} color={colors.textPlaceholder} />
@@ -397,24 +383,29 @@ function JobListCard({
             {locationLabel}
           </Text>
         </View>
-        <View style={styles.metaItem}>
-          <Icon name="clock-o" size={13} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textPlaceholder }]} numberOfLines={1}>
-            {postedLabel}
-          </Text>
-        </View>
       </View>
+
       <View style={styles.listFooter}>
-        <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
-        <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground }]}>
-          <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily }]}>
-            {jobType}
-          </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
+          <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground, alignSelf: 'flex-start', marginTop: 4 }]}>
+            <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+              {jobType}
+            </Text>
+          </View>
+        </View>
+        
+        <View style={{ alignItems: 'flex-end' }}>
+          {hasAppliedTags ? (
+            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
+          ) : job.tags && job.tags.length > 0 ? (
+            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
+          ) : null}
         </View>
       </View>
     </Pressable>
   );
-}
+};
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
   const suggestions = [
@@ -516,12 +507,12 @@ const HomeScreen: React.FC = () => {
   const notifyHintAnim = useRef(new Animated.Value(0)).current;
   const bellAnim = useRef(new Animated.Value(0)).current;
   const badgeAnim = useRef(new Animated.Value(1)).current;
-  const tagShakeAnim = useRef(new Animated.Value(0)).current;
+  const tagShakeAnim = useSharedValue(0);
 
   // Filter Grid States
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [filterTop, setFilterTop] = useState(130);
+  const [filterTop, setFilterTop] = useState(210);
 
   // List Visibility States
   const [showAllNearby, setShowAllNearby] = useState(false);
@@ -530,7 +521,7 @@ const HomeScreen: React.FC = () => {
   const scrollY = useMemo(() => new Animated.Value(0), []);
   const lastScrollY = useRef(0);
   const isTabBarVisible = useRef(true);
-  const [headerHeight, setHeaderHeight] = useState(130);
+  const [headerHeight, setHeaderHeight] = useState(210);
   const frozenScrollY = useRef(0);
   const COLLAPSE_DISTANCE = 80;
 
@@ -627,18 +618,16 @@ const HomeScreen: React.FC = () => {
   }, [shakeBell]);
 
   useEffect(() => {
-    // Shared tag shake animation (swinging like a bell)
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(tagShakeAnim, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(tagShakeAnim, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
-  }, [tagShakeAnim]);
+    tagShakeAnim.value = withRepeat(
+      withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+  }, []);
 
-  const tagRotation = tagShakeAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-12deg', '12deg'],
+  const tagRotationStyle = useAnimatedStyle(() => {
+    const rotate = reInterpolate(tagShakeAnim.value, [0, 1], [-12, 12]);
+    return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
   // 1. Initial Load Effect (Static/Main Data) - Only run once or when categories missing
@@ -691,13 +680,7 @@ const HomeScreen: React.FC = () => {
 
   const handleFilterOpen = () => {
     if (!showFilterGrid) {
-      // Compute the actual visible bottom of the header at this scroll position
-      // headerTranslateY interpolates: scrollY [0,80] -> translateY [0,-70]
-      const COLLAPSE_MAX_SHIFT = COLLAPSE_DISTANCE - 10; // = 70
-      const clamped = Math.min(frozenScrollY.current, COLLAPSE_DISTANCE);
-      const headerShift = (clamped / COLLAPSE_DISTANCE) * COLLAPSE_MAX_SHIFT;
-      const computedTop = Math.max(0, headerHeight - headerShift);
-      setFilterTop(computedTop);
+      setFilterTop(155);
     }
     setShowFilterGrid(prev => !prev);
   };
@@ -732,168 +715,23 @@ const HomeScreen: React.FC = () => {
   });
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      <Animated.View
-        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
-        style={[
-          styles.fixedHeader,
-          {
-            backgroundColor: colors.background,
-            borderBottomColor: colors.border,
-            transform: [{ translateY: headerTranslateY }],
-          },
-        ]}>
-        <View style={styles.headerBlock}>
-          <Animated.View style={[styles.headerTopRow, { opacity: topRowOpacity }]}>
-            <Pressable
-              onPress={goProfile}
-              style={styles.headerLeft}
-              accessibilityRole="button"
-              accessibilityLabel="Open profile">
-              <View style={styles.headerGreeting}>
-                <Pressable
-                  onPress={() => navigation.navigate('LocationSelection')}
-                  style={styles.locationSelector}
-                >
-                  <View style={[styles.locationIconBox, { backgroundColor: colors.primary + '12' }]}>
-                    <Icon name="map-marker" size={16} color={colors.primary} />
-                  </View>
-                  <View style={styles.locationTextStack}>
-                    <View style={styles.cityRow}>
-                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
-                        {selectedCity || 'Mumbai'}
-                      </Text>
-                      <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
-                    </View>
-                    <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
-                      {selectedArea || 'Andheri East'}
-                    </Text>
-                  </View>
-                </Pressable>
-              </View>
-            </Pressable>
-            <View style={styles.headerActions}>
-              <TouchableOpacity
-                onPress={handleRefer}
-                style={[styles.referBtn, { backgroundColor: colors.primary + '15' }]}
-              >
-                <Icon name="gift" size={16} color={colors.primary} />
-                <Text style={[styles.referText, { color: colors.primary }]}>Refer</Text>
-              </TouchableOpacity>
-
-              {showNotifyHint && (
-                <Animated.View
-                  style={[
-                    styles.headerNotifyHint,
-                    {
-                      backgroundColor: colors.accent,
-                      opacity: notifyHintAnim,
-                      transform: [
-                        { scale: notifyHintAnim },
-                        { translateX: -1 }
-                      ]
-                    }
-                  ]}>
-                  <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
-                    New Notification! 🔔
-                  </Text>
-                  <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
-                </Animated.View>
-              )}
-              <Pressable
-                onPress={() => navigation.navigate('Saved')}
-                hitSlop={8}
-                style={[
-                  styles.notifyBtnCircle,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    shadowColor: colors.shadow,
-                    marginRight: 4,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Saved jobs">
-                <IonIcon name="heart" size={24} color="#EF4444" />
-              </Pressable>
-
-              <Pressable
-                onPress={() => navigation.navigate('Notifications')}
-                hitSlop={8}
-                style={[
-                  styles.notifyBtnCircle,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    shadowColor: colors.shadow,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Notifications">
-                <Animated.View style={{
-                  transform: [{
-                    rotate: bellAnim.interpolate({
-                      inputRange: [-1, 1],
-                      outputRange: ['-20deg', '20deg']
-                    })
-                  }]
-                }}>
-                  <IonIcon name="notifications" size={22} color={colors.primary} />
-                </Animated.View>
-                <Animated.View style={[
-                  styles.notifyBadge,
-                  {
-                    backgroundColor: colors.accent,
-                    borderColor: colors.surface,
-                    transform: [{ scale: badgeAnim }]
-                  }
-                ]} />
-              </Pressable>
-            </View>
-          </Animated.View>
-
-          <View
-            style={[
-              styles.searchBarOuter,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                shadowColor: colors.shadow,
-              },
-            ]}>
-            <Pressable
-              onPress={goSearch}
-              style={styles.searchBarMain}
-              accessibilityRole="search"
-              accessibilityLabel="Search for a job or company">
-              <Icon name="search" size={18} color={colors.textPlaceholder} />
-              <SearchTicker colors={colors} />
-            </Pressable>
-
-            <Pressable
-              onPress={handleFilterOpen}
-              style={({ pressed }) => [
-                styles.searchFilterBtnPremium,
-                {
-                  backgroundColor: showFilterGrid || activeFilter !== 'All' ? colors.primary : colors.surfaceHighlight,
-                },
-                pressed && { transform: [{ scale: 0.94 }] }
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Open search and filters">
-              <View style={styles.filterBtnContent}>
-                <Icon
-                  name="sliders"
-                  size={14}
-                  color={showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary}
-                />
-                {(activeFilter !== 'All' && activeFilter !== null) && (
-                  <View style={[styles.filterActiveBadgeWhite, { backgroundColor: '#fff' }]} />
-                )}
-              </View>
-            </Pressable>
-          </View>
-        </View>
-      </Animated.View>
+      <HomescreenHeader
+        scrollY={scrollY}
+        colors={colors}
+        navigation={navigation}
+        displayName={displayName}
+        selectedCity={selectedCity}
+        selectedArea={selectedArea}
+        showNotifyHint={showNotifyHint}
+        notifyHintAnim={notifyHintAnim}
+        bellAnim={bellAnim}
+        badgeAnim={badgeAnim}
+        showFilterGrid={showFilterGrid}
+        activeFilter={activeFilter}
+        handleFilterOpen={handleFilterOpen}
+        goSearch={goSearch}
+        goProfile={goProfile}
+      />
 
       <Animated.ScrollView
         onScroll={handleScroll}
@@ -903,7 +741,7 @@ const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 120 },
+          { paddingBottom: 150 },
         ]}
         refreshControl={
           <RefreshControl
@@ -922,58 +760,15 @@ const HomeScreen: React.FC = () => {
               onPress={goSearch}
             />
 
-            <SectionHeader
-              title="Categories"
-              colors={colors}
-              onPress={() => navigation.navigate('JobCategories')}
-            />
+            <QuickFilterCards colors={colors} />
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesScroll}
-              decelerationRate="fast">
-              {categories.map(cat => (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
-                  style={[
-                    styles.categoryChip,
-                    {
-                      backgroundColor: getCategoryColor(cat.name),
-                      borderColor: 'rgba(0,0,0,0.05)',
-                      shadowColor: colors.shadow,
-                    },
-                  ]}>
-                  <View style={[styles.categoryIcon]}>
-                    <Icon name={getCategoryIcon(cat.name)} size={16} color="rgba(0,0,0,0.6)" />
-                  </View>
-                  <Text style={[typography.small, { color: 'rgba(0,0,0,0.7)', fontFamily: typography.labelMedium.fontFamily }]} numberOfLines={1}>
-                    {cat.name}
-                  </Text>
-                </Pressable>
-              ))}
-              {categories.length === 0 && HOME_CATEGORIES.map(cat => (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => navigation.navigate('JobListing', { filters: { category_id: undefined }, categoryName: cat.label })}
-                  style={[
-                    styles.categoryChip,
-                    {
-                      backgroundColor: getCategoryColor(cat.label),
-                      borderColor: 'rgba(0,0,0,0.05)',
-                      shadowColor: colors.shadow,
-                    },
-                  ]}>
-                  <View style={[styles.categoryIcon]}>
-                    <Icon name={cat.icon} size={16} color="rgba(0,0,0,0.6)" />
-                  </View>
-                  <Text style={[typography.small, { color: 'rgba(0,0,0,0.7)', fontFamily: typography.labelMedium.fontFamily }]}>
-                    {cat.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+            <HomeCategoriesSection 
+              categories={categories}
+              colors={colors}
+              navigation={navigation}
+              homeCategoriesMock={HOME_CATEGORIES}
+              isDark={isDark}
+            />
 
             {latest && latest.length > 0 && (
               <>
@@ -995,7 +790,7 @@ const HomeScreen: React.FC = () => {
                       job={{ ...job, isLatest: true }}
                       colors={colors}
                       onPress={() => openJob(job)}
-                      tagRotation={tagRotation}
+                      tagRotationStyle={tagRotationStyle}
                       isDark={isDark}
                     />
                   ))}
@@ -1023,7 +818,7 @@ const HomeScreen: React.FC = () => {
                       job={job}
                       colors={colors}
                       onPress={() => openJob(job)}
-                      tagRotation={tagRotation}
+                      tagRotationStyle={tagRotationStyle}
                       isDark={isDark}
                     />
                   ))}
@@ -1041,7 +836,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} isDark={isDark} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
                   ))}
                 </View>
                 {nearby.length > 5 && !showAllNearby && (
@@ -1058,6 +853,7 @@ const HomeScreen: React.FC = () => {
 
             {recommended && recommended.length > 0 && (
               <>
+                <View style={{ height: spacing.md }} />
                 <SectionHeader
                   title="Recommended for you"
                   icon="bullseye"
@@ -1067,7 +863,7 @@ const HomeScreen: React.FC = () => {
                 />
                 <View style={styles.verticalList}>
                   {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotation={tagRotation} isDark={isDark} />
+                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
                   ))}
                 </View>
                 {recommended.length > 5 && !showAllRecommended && (
@@ -1217,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: 118,
+    paddingTop: 123,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -1410,8 +1206,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
-    marginTop: 2,
+    marginBottom: 3,
+    marginTop: spacing.md,
   },
   sectionIcon: {
     marginRight: spacing.sm,
@@ -1448,12 +1244,11 @@ const styles = StyleSheet.create({
   },
 
   trendCard: {
-    padding: 10,
+    padding: 12,
     borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    ...components.jobCard,
     width: H_CARD_W,
     marginRight: spacing.md,
+    overflow: 'hidden',
   },
   trendTagsRow: {
     flexDirection: 'row',
@@ -1600,12 +1395,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   tagTextSm: {
-    fontSize: 10,
-    fontWeight: '700',
-    fontFamily: typography.labelMedium.fontFamily,
-  },
-  tagTextSm: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     fontFamily: typography.labelMedium.fontFamily,
   },

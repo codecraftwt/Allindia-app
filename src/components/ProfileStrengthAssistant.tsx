@@ -1,14 +1,13 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View, Dimensions, Image } from 'react-native';
-import { Animated as RNAnimated, Easing } from 'react-native';
 import Animated, {
   useAnimatedStyle,
-  withSpring,
   useSharedValue,
   withTiming,
   withSequence,
-  withDelay,
-  runOnJS
+  withRepeat,
+  Easing,
+  interpolate
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,21 +18,20 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';
 import { fetchProfileCompletion } from '../redux/slice/profileSlice';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ProfileStrengthCardProps {
   profile: any;
   colors: any;
   navigation: any;
-  scrollY?: RNAnimated.Value;
+  scrollY?: any;
 }
 
-const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile, colors, navigation, scrollY }) => {
+const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: ProfileStrengthCardProps) => {
   const insets = useSafeAreaInsets();
   const [showTooltip, setShowTooltip] = useState(false);
   const [showAutoHint, setShowAutoHint] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
-  const [frame, setFrame] = useState(0);
   const dispatch = useDispatch<AppDispatch>();
   const { completion } = useSelector((state: RootState) => state.profile);
 
@@ -43,17 +41,28 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
     }
   }, [dispatch, completion]);
 
-  // Manual Animation fallback for Rocket
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setFrame(f => (f === 0 ? 1 : 0));
-    }, 150);
-    return () => clearInterval(timer);
-  }, []);
+  const strength = completion?.percentage || 0;
 
+  // Reanimated Shared Values
   const launchY = useSharedValue(0);
   const launchScale = useSharedValue(1);
+  const rippleAnim = useSharedValue(0);
+  const tooltipAnim = useSharedValue(0);
+  const autoHintAnim = useSharedValue(0);
 
+  // Start Ripple Animation
+  useEffect(() => {
+    rippleAnim.value = withRepeat(
+      withTiming(1, {
+        duration: 2000,
+        easing: Easing.out(Easing.ease),
+      }),
+      -1,
+      false
+    );
+  }, []);
+
+  // Animations Styles
   const animatedRocketStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -64,108 +73,53 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
     };
   });
 
-  // Animations
-  const rippleScale = useRef(new RNAnimated.Value(1)).current;
-  const rippleOpacity = useRef(new RNAnimated.Value(0.4)).current;
-  const autoHintAnim = useRef(new RNAnimated.Value(0)).current;
-  const tooltipOpacity = useRef(new RNAnimated.Value(1)).current;
-
-  const strength = completion?.percentage || 0;
-
-  useEffect(() => {
-    let animation: Animated.CompositeAnimation | null = null;
-
-    // Start animation only if it's not launching and tooltip is not shown (ripple is visible)
-    if (!isLaunching && !showTooltip) {
-      // Reset values to ensure the loop restarts correctly
-      rippleScale.setValue(1);
-      rippleOpacity.setValue(0.4);
-
-      animation = RNAnimated.loop(
-        RNAnimated.parallel([
-          RNAnimated.timing(rippleScale, {
-            toValue: 1.5,
-            duration: 2000,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-          RNAnimated.timing(rippleOpacity, {
-            toValue: 0,
-            duration: 2000,
-            easing: Easing.out(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      animation.start();
-    }
-
-    return () => {
-      if (animation) {
-        animation.stop();
-      }
+  const animatedRippleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: interpolate(rippleAnim.value, [0, 1], [1, 1.6]) }],
+      opacity: interpolate(rippleAnim.value, [0, 1], [0.5, 0]),
     };
-  }, [isLaunching, showTooltip, rippleScale, rippleOpacity]);
+  });
 
+  const animatedTooltipStyle = useAnimatedStyle(() => {
+    return {
+      opacity: tooltipAnim.value,
+      transform: [{ scale: interpolate(tooltipAnim.value, [0, 1], [0.8, 1]) }],
+    };
+  });
+
+  const animatedAutoHintStyle = useAnimatedStyle(() => {
+    return {
+      opacity: autoHintAnim.value,
+      transform: [
+        { scale: autoHintAnim.value },
+        { translateY: interpolate(autoHintAnim.value, [0, 1], [0, -10]) }
+      ],
+    };
+  });
+
+  // Auto-hint Logic
   useEffect(() => {
-    // Auto-hint
     const timer = setTimeout(() => {
       if (strength < 100 && !isLaunching && !showTooltip) {
         setShowAutoHint(true);
-        RNAnimated.sequence([
-          RNAnimated.delay(1000),
-          RNAnimated.timing(autoHintAnim, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          RNAnimated.delay(4000),
-          RNAnimated.timing(autoHintAnim, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-        ]).start(() => setShowAutoHint(false));
+        autoHintAnim.value = withSequence(
+          withTiming(1, { duration: 500 }),
+          withTiming(1, { duration: 4000 }), // Wait using timing
+          withTiming(0, { duration: 500 })
+        );
+        setTimeout(() => setShowAutoHint(false), 5500);
       }
     }, 5000);
-
     return () => clearTimeout(timer);
-  }, [strength, isLaunching, showTooltip, autoHintAnim]);
-
-  // Auto-hide on scroll
-  useEffect(() => {
-    if (!scrollY) return;
-
-    const listenerId = scrollY.addListener(({ value }) => {
-      // If tooltip is open and user scrolls more than a tiny bit, hide it
-      if (showTooltip && Math.abs(value) > 10) {
-        RNAnimated.timing(tooltipOpacity, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }).start(() => setShowTooltip(false));
-      }
-    });
-
-    return () => {
-      scrollY.removeListener(listenerId);
-    };
-  }, [showTooltip, scrollY]);
+  }, [strength, isLaunching, showTooltip]);
 
   const toggleTooltip = () => {
     if (!showTooltip) {
       setShowTooltip(true);
-      tooltipOpacity.setValue(0);
-      RNAnimated.spring(tooltipOpacity, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
+      tooltipAnim.value = withTiming(1, { duration: 300 });
     } else {
-      RNAnimated.timing(tooltipOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => setShowTooltip(false));
+      tooltipAnim.value = withTiming(0, { duration: 200 });
+      setTimeout(() => setShowTooltip(false), 200);
     }
   };
 
@@ -174,34 +128,26 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
     setIsLaunching(true);
     setShowAutoHint(false);
 
-    // Ignition & Giant Launch Sequence
+    // Launch sequence
     launchY.value = withSequence(
-      withTiming(-50, { duration: 600 }), // Slow ignition
-      withTiming(-SCREEN_HEIGHT - 200, { duration: 800 }), // High-speed zoom out
+      withTiming(-50, { duration: 600 }),
+      withTiming(-SCREEN_HEIGHT - 200, { duration: 800 })
     );
-
     launchScale.value = withSequence(
-      withTiming(1.5, { duration: 600 }), // Get slightly bigger at start
-      withTiming(8, { duration: 800 }), // Become giant as it flies away
+      withTiming(1.5, { duration: 600 }),
+      withTiming(8, { duration: 800 })
     );
 
-    // Fade out tooltip and navigate
-    RNAnimated.timing(tooltipOpacity, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
+    tooltipAnim.value = withTiming(0, { duration: 300 });
+    setTimeout(() => {
+      navigation.navigate('Profile');
       setTimeout(() => {
-        navigation.navigate('Profile');
-        // Reset rocket for next time (hidden)
-        setTimeout(() => {
-          launchY.value = 0;
-          launchScale.value = 1;
-          setIsLaunching(false);
-          tooltipOpacity.setValue(1);
-        }, 1000);
-      }, 1200);
-    });
+        launchY.value = 0;
+        launchScale.value = 1;
+        setIsLaunching(false);
+        setShowTooltip(false);
+      }, 1000);
+    }, 1500);
   };
 
   if (strength === 100) return null;
@@ -212,43 +158,29 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
     <View style={[styles.container, { bottom: insets.bottom + spacing.lg + 80 }]}>
       {/* Auto Hint Bubble */}
       {showAutoHint && !showTooltip && !isLaunching && (
-        <RNAnimated.View
+        <Animated.View
           style={[
             styles.autoHint,
-            {
-              backgroundColor: colors.primary,
-              opacity: autoHintAnim,
-              transform: [{ scale: autoHintAnim }, { translateY: -10 }]
-            }
+            animatedAutoHintStyle,
+            { backgroundColor: colors.primary }
           ]}>
           <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
             Complete Profile !
           </Text>
           <View style={[styles.arrowDown, { borderTopColor: colors.primary }]} />
-        </RNAnimated.View>
+        </Animated.View>
       )}
 
-      {/* Backdrop to hide on outside click */}
       {showTooltip && (
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={toggleTooltip}
-        />
+        <Pressable style={StyleSheet.absoluteFill} onPress={toggleTooltip} />
       )}
 
       {/* Main Tooltip Card */}
       {showTooltip && (
-        <RNAnimated.View style={[styles.tooltip, {
+        <Animated.View style={[styles.tooltip, animatedTooltipStyle, {
           backgroundColor: colors.surface + 'F8',
           borderColor: colors.border,
           shadowColor: colors.primary,
-          opacity: tooltipOpacity,
-          transform: [{
-            scale: tooltipOpacity.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.8, 1],
-            })
-          }]
         }]}>
           <View style={styles.tooltipHeader}>
             <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>
@@ -260,7 +192,7 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
           </View>
 
           <View style={[styles.progressBarBase, { backgroundColor: colors.border + '30' }]}>
-            <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${strength}%`, shadowColor: colors.primary, shadowOpacity: 0.5, shadowRadius: 4, elevation: 2 }]} />
+            <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${strength}%` }]} />
           </View>
 
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 18 }]}>
@@ -269,86 +201,74 @@ const ProfileStrengthAssistant: React.FC<ProfileStrengthCardProps> = ({ profile,
               : 'Almost complete! Finish the last bits to stand out from others.'}
           </Text>
 
-          <Pressable
-            onPress={handleLaunch}
-            style={[styles.tooltipBtn, { backgroundColor: colors.primary }]}>
+          <Pressable onPress={handleLaunch} style={[styles.tooltipBtn, { backgroundColor: colors.primary }]}>
             <Text style={[typography.labelMedium, { color: colors.onPrimary, fontWeight: '700' }]}>
               Upgrade Profile Now
             </Text>
             <Icon name="bolt" size={14} color={colors.onPrimary} style={{ marginLeft: 8 }} />
           </Pressable>
-        </RNAnimated.View>
+        </Animated.View>
       )}
 
       <View style={styles.fabContainer}>
-        {/* Solid Ripple Effect */}
+        {/* Animated Ripple */}
         {!showTooltip && !isLaunching && (
-          <RNAnimated.View
+          <Animated.View
             pointerEvents="none"
             style={[
               styles.fabRippleLarge,
-              {
-                backgroundColor: colors.primary,
-                opacity: rippleOpacity,
-                transform: [{ scale: rippleScale }]
-              }
+              animatedRippleStyle,
+              { backgroundColor: colors.primary }
             ]}
           />
         )}
 
-        <View>
-          <Pressable
-            onPress={() => {
-              if (isLaunching) return;
-              toggleTooltip();
-              setShowAutoHint(false);
-            }}
-            style={styles.fabTouch}>
-            <View style={[styles.circleRing, {
-              backgroundColor: 'transparent', // Container is transparent to avoid square leak
-              shadowColor: isLaunching ? 'transparent' : colors.primary,
-              elevation: isLaunching ? 0 : 8,
-            }]}>
-              {/* Actual circular background layer */}
+        <Pressable
+          onPress={() => {
+            if (isLaunching) return;
+            toggleTooltip();
+            setShowAutoHint(false);
+          }}
+          style={styles.fabTouch}>
+          <View style={[styles.circleRing, {
+            backgroundColor: 'transparent',
+            shadowColor: isLaunching ? 'transparent' : colors.primary,
+            elevation: isLaunching ? 0 : 8,
+          }]}>
+            {!isLaunching && (
+              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 31, overflow: 'hidden' }]} />
+            )}
+            {!isLaunching && (
+              <>
+                <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
+                <View style={[styles.circleProgress, {
+                  borderColor: colors.primary,
+                  transform: [{ rotate: `${rotation}deg` }],
+                  borderTopColor: colors.primary,
+                  borderRightColor: rotation > 90 ? colors.primary : 'transparent',
+                  borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
+                  borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
+                }]} />
+              </>
+            )}
+            <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
               {!isLaunching && (
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 31, overflow: 'hidden' }]} />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 25, overflow: 'hidden' }]} />
               )}
-              {/* Glow Track */}
+              <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
+                <Image
+                  source={require('../assets/rocket-bg.png')}
+                  style={styles.rocketGif}
+                  resizeMode="contain"
+                  fadeDuration={0}
+                />
+              </Animated.View>
               {!isLaunching && (
-                <>
-                  <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
-                  <View style={[styles.circleProgress, {
-                    borderColor: colors.primary,
-                    transform: [{ rotate: `${rotation}deg` }],
-                    borderTopColor: colors.primary,
-                    borderRightColor: rotation > 90 ? colors.primary : 'transparent',
-                    borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
-                    borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
-                    shadowColor: colors.primary,
-                    shadowOpacity: 0.8,
-                    shadowRadius: 6,
-                  }]} />
-                </>
+                <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
               )}
-              <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
-                {!isLaunching && (
-                  <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 25, overflow: 'hidden' }]} />
-                )}
-                <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
-                  <Image
-                    source={require('../assets/rocket-bg.png')}
-                    style={styles.rocketGif}
-                    resizeMode="contain"
-                    fadeDuration={0}
-                  />
-                </Animated.View>
-                {!isLaunching && (
-                  <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
-                )}
-              </View>
             </View>
-          </Pressable>
-        </View>
+          </View>
+        </Pressable>
       </View>
     </View>
   );

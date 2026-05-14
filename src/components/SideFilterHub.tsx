@@ -39,12 +39,15 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
   const [selectedSection, setSelectedSection] = useState('jobType');
   const [selectedFilters, setSelectedFilters] = useState<any>({
     jobType: [],
-    category: null,
-    city: null,
+    categories: [],
+    subCategories: [],
+    cities: [],
     salary: null,
     freshness: null,
     manualSalary: { min: '', max: '' },
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [browsingCategory, setBrowsingCategory] = useState<any | null>(null);
 
   // Drawer horizontal animation
   const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
@@ -138,19 +141,84 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
   const SALARY_OPTIONS = ['₹3L-6L', '₹6L-10L', '₹10L-20L', '₹20L+'];
   const FRESHNESS_OPTIONS = ['All', 'Last 24 Hours', 'Last 3 Days', 'Last 7 Days'];
 
-  const toggleOption = (id: string, option: any) => {
-    if (id === 'jobType') {
-      const current = selectedFilters.jobType;
+  const handleCategoryChange = (id: string) => {
+    setSelectedSection(id);
+    setSearchQuery('');
+    setBrowsingCategory(null);
+  };
+
+  const toggleOption = (category: string, option: any, isSelectionOnly: boolean = false) => {
+    if (category === 'jobType') {
+      const current = selectedFilters.jobType || [];
       const updated = current.includes(option)
         ? current.filter((i: string) => i !== option)
         : [...current, option];
       setSelectedFilters({ ...selectedFilters, jobType: updated });
+    } else if (category === 'category') {
+      if (browsingCategory) {
+        // Subcategory selection (Multi-select)
+        const current = selectedFilters.subCategories || [];
+        const isSelected = current.some((c: any) => c.id === option.id);
+        
+        if (option.isAll) {
+          const catCurrent = selectedFilters.categories || [];
+          if (!catCurrent.some((c: any) => c.id === browsingCategory.id)) {
+            setSelectedFilters({
+              ...selectedFilters,
+              categories: [...catCurrent, browsingCategory]
+            });
+          }
+        } else {
+          const updated = isSelected
+            ? current.filter((c: any) => c.id !== option.id)
+            : [...current, option];
+            
+          const catCurrent = selectedFilters.categories || [];
+          const updatedCats = catCurrent.some((c: any) => c.id === browsingCategory.id)
+            ? catCurrent
+            : [...catCurrent, browsingCategory];
+
+          setSelectedFilters({
+            ...selectedFilters,
+            categories: updatedCats,
+            subCategories: updated
+          });
+        }
+      } else {
+        // Main Category selection
+        const current = selectedFilters.categories || [];
+        const isSelected = current.some((c: any) => c.id === option.id);
+        
+        const updated = isSelected
+          ? current.filter((c: any) => c.id !== option.id)
+          : [...current, option];
+
+        if (isSelectionOnly || !option.subcategories || option.subcategories.length === 0) {
+          setSelectedFilters({
+            ...selectedFilters,
+            categories: updated,
+            subCategories: isSelected 
+              ? (selectedFilters.subCategories || []).filter((sc: any) => sc.parent_id !== option.id)
+              : selectedFilters.subCategories
+          });
+        } else if (option.subcategories && option.subcategories.length > 0) {
+          setBrowsingCategory(option);
+        }
+      }
+    } else if (category === 'city') {
+      const current = selectedFilters.cities || [];
+      const isSelected = current.some((c: any) => c.id === option.id);
+      const updated = isSelected
+        ? current.filter((c: any) => c.id !== option.id)
+        : [...current, option];
+      setSelectedFilters({
+        ...selectedFilters,
+        cities: updated
+      });
     } else {
       setSelectedFilters({
         ...selectedFilters,
-        [id]: (id === 'salary' || id === 'freshness')
-          ? (selectedFilters[id] === option ? null : option)
-          : (selectedFilters[id]?.id === option.id ? null : option)
+        [category]: selectedFilters[category] === option ? null : option
       });
     }
   };
@@ -158,18 +226,28 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
   const handleReset = () => {
     setSelectedFilters({
       jobType: [],
-      category: null,
-      city: null,
+      categories: [],
+      subCategories: [],
+      cities: [],
       salary: null,
       freshness: null,
       manualSalary: { min: '', max: '' },
     });
+    setBrowsingCategory(null);
+    setSearchQuery('');
   };
 
   const handleApply = () => {
     const filters: any = {};
-    if (selectedFilters.category) filters.category_id = selectedFilters.category.id;
-    if (selectedFilters.city) filters.city_id = selectedFilters.city.id;
+    if (selectedFilters.categories && selectedFilters.categories.length > 0) {
+      filters.category_id = selectedFilters.categories.map((c: any) => c.id).join(',');
+    }
+    if (selectedFilters.subCategories && selectedFilters.subCategories.length > 0) {
+      filters.subcategory_id = selectedFilters.subCategories.map((c: any) => c.id).join(',');
+    }
+    if (selectedFilters.cities && selectedFilters.cities.length > 0) {
+      filters.city_id = selectedFilters.cities.map((c: any) => c.id).join(',');
+    }
     if (selectedFilters.jobType.length > 0) {
       filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace(/[-\s]/g, '_')).join(',');
     }
@@ -201,12 +279,29 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
   const getOptions = () => {
     switch (effectiveSection) {
       case 'jobType': return JOB_TYPES;
-      case 'category': return categories;
+      case 'category':
+        if (browsingCategory) {
+          return [
+            { id: `all-${browsingCategory.id}`, name: `All ${browsingCategory.name}`, isAll: true },
+            ...(browsingCategory.subcategories || [])
+          ];
+        }
+        return categories;
       case 'city': return cities;
       case 'salary': return SALARY_OPTIONS;
       case 'freshness': return FRESHNESS_OPTIONS;
       default: return [];
     }
+  };
+
+  const getFilteredOptions = () => {
+    const options = getOptions() || [];
+    if (!searchQuery.trim()) return options;
+    const q = searchQuery.toLowerCase();
+    return options.filter((opt: any) => {
+      const label = typeof opt === 'string' ? opt : (opt.city || opt.name || opt.label || '');
+      return label.toLowerCase().includes(q);
+    });
   };
 
   return (
@@ -247,31 +342,65 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
               {SECTIONS.map(sec => (
                 <Pressable
                   key={sec.id}
-                  onPress={() => setSelectedSection(sec.id)}
+                  onPress={() => handleCategoryChange(sec.id)}
                   style={[
                     styles.sideItem,
                     effectiveSection === sec.id && { backgroundColor: colors.surface }
                   ]}>
-                  <Icon
-                    name={sec.icon}
-                    size={18}
-                    color={effectiveSection === sec.id ? colors.primary : colors.textPlaceholder}
-                  />
-                  <Text style={[
-                    styles.sideText,
-                    { color: effectiveSection === sec.id ? colors.textPrimary : colors.textSecondary }
-                  ]}>
-                    {sec.label}
-                  </Text>
+                  <View style={{ alignItems: 'center', flex: 1 }}>
+                    <Icon
+                      name={sec.icon}
+                      size={16}
+                      color={effectiveSection === sec.id ? colors.primary : colors.textPlaceholder}
+                      style={{ marginBottom: 4 }}
+                    />
+                    <Text style={[
+                      styles.sideText,
+                      { color: effectiveSection === sec.id ? colors.textPrimary : colors.textSecondary },
+                      effectiveSection === sec.id && { fontWeight: '700' }
+                    ]}>
+                      {sec.label}
+                    </Text>
+                    {((sec.id === 'jobType' && selectedFilters.jobType?.length > 0) ||
+                      (sec.id === 'category' && selectedFilters.categories?.length > 0) ||
+                      (sec.id === 'city' && selectedFilters.cities?.length > 0) ||
+                      (sec.id !== 'jobType' && sec.id !== 'category' && sec.id !== 'city' && selectedFilters[sec.id])) && (
+                        <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+                      )}
+                  </View>
                 </Pressable>
               ))}
             </ScrollView>
           </View>
 
           <View style={styles.optionsArea}>
-            <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
-              Select {SECTIONS.find(s => s.id === effectiveSection)?.label}
-            </Text>
+            {effectiveSection === 'category' && browsingCategory ? (
+              <View style={[styles.browsingHeader, { backgroundColor: colors.surfaceHighlight, borderBottomColor: colors.border }]}>
+                <Pressable onPress={() => setBrowsingCategory(null)} style={styles.browsingBackBtn}>
+                  <Icon name="arrow-left" size={14} color={colors.primary} />
+                </Pressable>
+                <Text style={[styles.browsingTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {browsingCategory.name}
+                </Text>
+                <View style={{ width: 36 }} />
+              </View>
+            ) : (effectiveSection === 'category' || effectiveSection === 'city') ? (
+              <View style={[styles.searchBox, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                <Icon name="search" size={12} color={colors.textPlaceholder} />
+                <TextInput
+                  style={[styles.searchInput, { color: colors.textPrimary }]}
+                  placeholder={`Search ${effectiveSection}...`}
+                  placeholderTextColor={colors.textPlaceholder}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  autoCorrect={false}
+                />
+              </View>
+            ) : (
+              <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+                Select {SECTIONS.find(s => s.id === effectiveSection)?.label}
+              </Text>
+            )}
 
             {loading ? (
               <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 20 }} />
@@ -311,34 +440,51 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                     </View>
                   </View>
                 )}
-                {getOptions().map((opt: any) => {
+                {getFilteredOptions().map((opt: any) => {
                   const isSelected = effectiveSection === 'jobType'
                     ? selectedFilters.jobType.includes(opt)
-                    : ((effectiveSection === 'salary' || effectiveSection === 'freshness') ? selectedFilters[effectiveSection] === opt : selectedFilters[effectiveSection]?.id === opt.id);
-
-                  // Extract label more reliably
-                  const label = typeof opt === 'string'
-                    ? opt
-                    : (opt.city || opt.name || opt.label || 'Unknown');
+                    : (effectiveSection === 'category'
+                      ? (browsingCategory
+                        ? (opt.isAll 
+                           ? (selectedFilters.categories || []).some((c: any) => c.id === browsingCategory.id)
+                           : (selectedFilters.subCategories || []).some((c: any) => c.id === opt.id))
+                        : (selectedFilters.categories || []).some((c: any) => c.id === opt.id))
+                      : effectiveSection === 'city'
+                        ? (selectedFilters.cities || []).some((c: any) => c.id === opt.id)
+                        : ((effectiveSection === 'salary' || effectiveSection === 'freshness')
+                          ? selectedFilters[effectiveSection] === opt
+                          : selectedFilters[effectiveSection]?.id === opt.id));
+                  const label = typeof opt === 'string' ? opt : (opt.name || opt.city || opt.label || 'Unknown');
 
                   return (
-                    <Pressable
-                      key={typeof opt === 'string' ? opt : (opt.id || label)}
-                      onPress={() => toggleOption(effectiveSection, opt)}
-                      style={styles.optionItem}>
-                      <View style={[
-                        effectiveSection === 'jobType' ? styles.checkbox : styles.radio,
-                        { borderColor: isSelected ? colors.primary : colors.border }
-                      ]}>
-                        {isSelected && (
-                          <View style={[
-                            effectiveSection === 'jobType' ? styles.checkboxInner : styles.radioInner,
-                            { backgroundColor: colors.primary }
-                          ]} />
+                    <View key={typeof opt === 'string' ? opt : (opt.id || label)} style={styles.optionItem}>
+                      <Pressable 
+                        onPress={() => toggleOption(effectiveSection, opt, true)}
+                        style={styles.checkboxTouch}
+                      >
+                        <View style={[
+                          (effectiveSection === 'jobType' || effectiveSection === 'category' || effectiveSection === 'city') ? styles.checkbox : styles.radio,
+                          { borderColor: isSelected ? colors.primary : colors.border }
+                        ]}>
+                          {isSelected && (
+                            <View style={[
+                              (effectiveSection === 'jobType' || effectiveSection === 'category' || effectiveSection === 'city') ? styles.checkboxInner : styles.radioInner,
+                              { backgroundColor: colors.primary }
+                            ]} />
+                          )}
+                        </View>
+                      </Pressable>
+
+                      <Pressable 
+                        onPress={() => toggleOption(effectiveSection, opt, false)}
+                        style={styles.textTouch}
+                      >
+                        <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1 }]}>{label}</Text>
+                        {effectiveSection === 'category' && !browsingCategory && opt.subcategories?.length > 0 && (
+                          <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
                         )}
-                      </View>
-                      <Text style={[styles.optionText, { color: colors.textPrimary }]}>{label}</Text>
-                    </Pressable>
+                      </Pressable>
+                    </View>
                   );
                 })}
               </ScrollView>
@@ -407,17 +553,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   sidebar: {
-    width: 80,
+    width: 95,
     paddingTop: spacing.lg,
   },
   sideItem: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 14,
     gap: 4,
   },
   sideText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
+    textAlign: 'center',
   },
   optionsArea: {
     flex: 1,
@@ -428,7 +575,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
-    marginBottom: 20,
+    marginBottom: 12,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    paddingVertical: 0,
+    height: '100%',
   },
   optionsScroll: {
     paddingBottom: 40,
@@ -436,7 +599,7 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 10,
     gap: 12,
   },
   radio: {
@@ -466,8 +629,49 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   optionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    top: 15,
+    right: 8,
+  },
+  browsingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+  },
+  browsingBackBtn: {
+    width: 32,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  browsingTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  checkboxTouch: {
+    paddingRight: 10,
+    paddingVertical: 4,
+  },
+  textTouch: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    gap: 10,
   },
   footer: {
     flexDirection: 'row',

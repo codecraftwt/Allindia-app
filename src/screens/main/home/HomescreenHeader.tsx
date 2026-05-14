@@ -7,44 +7,43 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Share,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import IonIcon from 'react-native-vector-icons/Ionicons';
+const BRAND_ICON = require('../../../assets/Job india Icon & logo file/Icon Job india.jpg');
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { components } from '../../../theme/components';
 import type { ThemeColors } from '../../../theme/colors';
 
-const BRAND_ICON = require('../../../assets/icons/icon2.2.png');
-
 interface HomescreenHeaderProps {
   scrollY: Animated.Value;
   colors: ThemeColors;
   navigation: any;
   displayName: string;
-  goProfile: () => void;
-  handleRefer: () => void;
-  goSearch: () => void;
+  selectedCity: string;
+  selectedArea: string;
+  showNotifyHint: boolean;
+  notifyHintAnim: Animated.Value;
+  bellAnim: Animated.Value;
+  badgeAnim: Animated.Value;
   showFilterGrid: boolean;
-  setShowFilterGrid: (v: boolean) => void;
   activeFilter: string | null;
-}
-
-function greetingLine(): string {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Good morning';
-  if (h >= 12 && h < 17) return 'Good afternoon';
-  return 'Good evening';
+  handleFilterOpen: () => void;
+  goSearch: () => void;
+  goProfile: () => void;
 }
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
   const suggestions = [
-    'Search for a job or company',
-    'Search for Graphic Designer',
-    'Search for Software Engineer',
-    'Search for Sales Executive',
-    'Search for Part-time jobs',
-    'Search for Remote opportunities'
+    'a job or company',
+    'Graphic Designer',
+    'Software Engineer',
+    'Sales Executive',
+    'Part-time jobs',
+    'Remote opportunities'
   ];
   
   const [index, setIndex] = useState(0);
@@ -73,10 +72,11 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
 
   return (
     <View style={styles.tickerContainer}>
+      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>Search for</Text>
       <Animated.Text 
         style={[
           styles.searchPlaceholderWide, 
-          { color: colors.textPlaceholder, transform: [{ translateY }] }
+          { color: colors.textPlaceholder, transform: [{ translateY }], marginLeft: 4, flex: 1 }
         ]} 
         numberOfLines={1}
       >
@@ -91,88 +91,29 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   colors,
   navigation,
   displayName,
-  goProfile,
-  handleRefer,
-  goSearch,
+  selectedCity,
+  selectedArea,
+  showNotifyHint,
+  notifyHintAnim,
+  bellAnim,
+  badgeAnim,
   showFilterGrid,
-  setShowFilterGrid,
   activeFilter,
+  handleFilterOpen,
+  goSearch,
+  goProfile,
 }) => {
-  const [showNotifyHint, setShowNotifyHint] = useState(false);
-  const notifyHintAnim = useRef(new Animated.Value(0)).current;
-  const bellAnim = useRef(new Animated.Value(0)).current;
-  const badgeAnim = useRef(new Animated.Value(1)).current;
-
-  const shakeBell = useCallback(() => {
-    Animated.sequence([
-      Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(bellAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
-      Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-      Animated.timing(bellAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
-      Animated.timing(bellAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-    ]).start();
-
-    Animated.sequence([
-      Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
-      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
-      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-    ]).start();
-  }, [bellAnim, badgeAnim]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowNotifyHint(true);
-      shakeBell();
-      Animated.spring(notifyHintAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
-
-      setTimeout(() => {
-        Animated.timing(notifyHintAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }).start(() => setShowNotifyHint(false));
-      }, 5000);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [notifyHintAnim, shakeBell]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      shakeBell();
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [shakeBell]);
-
-  const COLLAPSE_DISTANCE = 100;
+  const COLLAPSE_DISTANCE = 80;
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: [0, -84],
+    outputRange: [0, -COLLAPSE_DISTANCE + 26],
     extrapolate: 'clamp',
   });
 
   const topRowOpacity = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_DISTANCE * 0.4],
+    inputRange: [0, COLLAPSE_DISTANCE * 0.5],
     outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
-  const searchBarTranslateY = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: [0, 4],
-    extrapolate: 'clamp',
-  });
-
-  const headerBorderColor = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: ['transparent', colors.border],
     extrapolate: 'clamp',
   });
 
@@ -182,8 +123,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
         styles.fixedHeader,
         {
           backgroundColor: colors.background,
-          borderBottomColor: headerBorderColor,
-          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
           transform: [{ translateY: headerTranslateY }],
         },
       ]}>
@@ -194,30 +134,33 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
             style={styles.headerLeft}
             accessibilityRole="button"
             accessibilityLabel="Open profile">
-            <View style={styles.headerAvatar}>
-              <Image source={BRAND_ICON} style={styles.avatarImage} />
-            </View>
             <View style={styles.headerGreeting}>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>
-                {greetingLine()} 👋
-              </Text>
-              <Text style={[typography.appTitle, { color: colors.textPrimary, marginTop: 2 }]} numberOfLines={1}>
-                {displayName}
-              </Text>
-              <Text style={[typography.small, { color: colors.primary, marginTop: 4 }]} numberOfLines={2}>
-                {"Let's find your dream job"}
-              </Text>
+              <Pressable
+                onPress={() => navigation.navigate('LocationSelection')}
+                style={styles.locationSelector}
+              >
+                <View style={[styles.locationIconBox, { backgroundColor: '#fff', overflow: 'hidden' }]}>
+                  <Image 
+                    source={BRAND_ICON} 
+                    style={{ width: '100%', height: '100%', resizeMode: 'cover' }} 
+                  />
+                </View>
+                <View style={styles.locationTextStack}>
+                  <View style={styles.cityRow}>
+                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
+                      {selectedCity || 'Mumbai'}
+                    </Text>
+                    <Icon name="map-marker" size={12} color={colors.primary} style={{ marginLeft: 6 }} />
+                    <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                  </View>
+                  <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                    {selectedArea || 'Andheri East'}
+                  </Text>
+                </View>
+              </Pressable>
             </View>
           </Pressable>
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              onPress={handleRefer}
-              style={[styles.referBtn, { backgroundColor: colors.primary + '15' }]}
-            >
-              <Icon name="gift" size={16} color={colors.primary} />
-              <Text style={[styles.referText, { color: colors.primary }]}>Refer</Text>
-            </TouchableOpacity>
-
             {showNotifyHint && (
               <Animated.View
                 style={[
@@ -237,6 +180,23 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                 <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
               </Animated.View>
             )}
+            <Pressable
+              onPress={() => navigation.navigate('Saved')}
+              hitSlop={8}
+              style={[
+                styles.notifyBtnCircle,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  shadowColor: colors.shadow,
+                  marginRight: 4,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Saved jobs">
+              <IonIcon name="heart" size={24} color="#EF4444" />
+            </Pressable>
+
             <Pressable
               onPress={() => navigation.navigate('Notifications')}
               hitSlop={8}
@@ -258,7 +218,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                   })
                 }]
               }}>
-                <Icon name="bell-o" size={20} color={colors.textPrimary} />
+                <IonIcon name="notifications" size={22} color={colors.primary} />
               </Animated.View>
               <Animated.View style={[
                 styles.notifyBadge,
@@ -272,14 +232,13 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
           </View>
         </Animated.View>
 
-        <Animated.View
+        <View
           style={[
             styles.searchBarOuter,
             {
               backgroundColor: colors.surface,
               borderColor: colors.border,
               shadowColor: colors.shadow,
-              transform: [{ translateY: searchBarTranslateY }],
             },
           ]}>
           <Pressable
@@ -292,7 +251,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
           </Pressable>
 
           <Pressable
-            onPress={() => setShowFilterGrid(!showFilterGrid)}
+            onPress={handleFilterOpen}
             style={({ pressed }) => [
               styles.searchFilterBtnPremium,
               {
@@ -313,7 +272,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
               )}
             </View>
           </Pressable>
-        </Animated.View>
+        </View>
       </View>
     </Animated.View>
   );
@@ -322,8 +281,8 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
 const styles = StyleSheet.create({
   fixedHeader: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.xl + 4,
+    paddingBottom: spacing.xs,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -350,49 +309,48 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minWidth: 0,
   },
-  headerAvatar: {
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
   headerGreeting: {
     flex: 1,
     minWidth: 0,
+  },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  locationIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationTextStack: {
+    justifyContent: 'center',
+  },
+  cityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  referBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-    gap: 6,
-    marginRight: 4,
-  },
-  referText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   notifyBtnCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    ...components.jobCard,
-    shadowOpacity: 0.08,
-    elevation: 2,
+    borderWidth: 1,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'visible',
   },
   notifyBadge: {
     position: 'absolute',
@@ -460,8 +418,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 30,
     overflow: 'hidden',
-    justifyContent: 'center',
-    marginLeft: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 6,
   },
   searchFilterBtnPremium: {
     paddingHorizontal: 16,

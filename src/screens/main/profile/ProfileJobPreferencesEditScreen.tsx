@@ -18,7 +18,11 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   useSharedValue,
+  runOnJS,
+  useDerivedValue,
+  useAnimatedProps,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { updatePreferencesProfile, fetchProfile } from '../../../redux/slice/profileSlice';
@@ -147,9 +151,8 @@ const Chip = React.memo(({ label, selected, onPress, colors }: any) => (
   </TouchableOpacity>
 ));
 
-const SalarySelectionField = ({ label, value, onPress, colors }: any) => (
-  <Pressable
-    onPress={onPress}
+const SalarySelectionField = ({ label, value, onChange, colors }: any) => (
+  <View
     style={[
       styles.dropdownTrigger,
       {
@@ -158,25 +161,112 @@ const SalarySelectionField = ({ label, value, onPress, colors }: any) => (
         borderColor: colors.border,
       },
     ]}>
-    <Icon name="dollar-sign" size={18} color={colors.primary} />
+    <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', width: 20, textAlign: 'center' }}>₹</Text>
     <View style={{ flex: 1 }}>
       <Text style={[typography.tiny, { color: colors.textSecondary }]}>{label}</Text>
-      <Text style={[typography.body, { color: colors.textPrimary }]}>{value} Lakhs</Text>
+      <TextInput
+        keyboardType="number-pad"
+        value={value.toString()}
+        onChangeText={(text) => {
+          const val = parseInt(text.replace(/\D/g, ''), 10) || 0;
+          onChange(Math.min(val, MAX_SALARY_LIMIT));
+        }}
+        placeholder="0"
+        placeholderTextColor={colors.textPlaceholder}
+        style={[typography.body, { color: colors.textPrimary, padding: 0, height: 24 }]}
+      />
     </View>
-    <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-  </Pressable>
+    <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>LPA</Text>
+  </View>
 );
 
-const SalaryRangeIndicator = ({ min, max, colors }: any) => {
-  const minPos = (min / MAX_SALARY_LIMIT) * 100;
-  const maxPos = (max / MAX_SALARY_LIMIT) * 100;
+const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const minX = useSharedValue(0);
+  const maxX = useSharedValue(0);
+  const startMinX = useSharedValue(0);
+  const startMaxX = useSharedValue(0);
+
+  // Sync with props only when layout or props change
+  useEffect(() => {
+    if (layoutWidth > 0) {
+      minX.value = (min / MAX_SALARY_LIMIT) * layoutWidth;
+      maxX.value = (max / MAX_SALARY_LIMIT) * layoutWidth;
+    }
+  }, [min, max, layoutWidth]);
+
+  const updateParent = (isMin: boolean) => {
+    const finalMin = Math.round((minX.value / layoutWidth) * MAX_SALARY_LIMIT);
+    const finalMax = Math.round((maxX.value / layoutWidth) * MAX_SALARY_LIMIT);
+    onChange(finalMin, finalMax);
+  };
+
+  const minGesture = Gesture.Pan()
+    .onStart(() => {
+      'worklet';
+      startMinX.value = minX.value;
+    })
+    .onUpdate((e) => {
+      'worklet';
+      minX.value = Math.max(0, Math.min(maxX.value - 20, startMinX.value + e.translationX));
+    })
+    .onEnd(() => {
+      'worklet';
+      runOnJS(updateParent)(true);
+    });
+
+  const maxGesture = Gesture.Pan()
+    .onStart(() => {
+      'worklet';
+      startMaxX.value = maxX.value;
+    })
+    .onUpdate((e) => {
+      'worklet';
+      maxX.value = Math.max(minX.value + 20, Math.min(layoutWidth, startMaxX.value + e.translationX));
+    })
+    .onEnd(() => {
+      'worklet';
+      runOnJS(updateParent)(false);
+    });
+
+  const minThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: minX.value - 12 }],
+  }));
+
+  const maxThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: maxX.value - 12 }],
+  }));
+
+  const trackStyle = useAnimatedStyle(() => ({
+    left: minX.value,
+    width: maxX.value - minX.value,
+  }));
+
+  // Create Animated Labels
+
 
   return (
-    <View style={styles.rangeIndicatorContainer}>
+    <View 
+      style={styles.rangeIndicatorContainer}
+      onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
+    >
       <View style={[styles.rangeTrack, { backgroundColor: colors.surfaceHighlight }]}>
-        <View style={[styles.rangeFill, { backgroundColor: colors.primary, left: `${minPos}%`, width: `${maxPos - minPos}%` }]} />
+        <Animated.View style={[styles.rangeFill, { backgroundColor: colors.primary }, trackStyle]} />
       </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+      
+      {layoutWidth > 0 && (
+        <>
+          <GestureDetector gesture={minGesture}>
+            <Animated.View style={[styles.sliderThumb, minThumbStyle, { backgroundColor: '#fff', borderColor: colors.primary }]} />
+          </GestureDetector>
+          
+          <GestureDetector gesture={maxGesture}>
+            <Animated.View style={[styles.sliderThumb, maxThumbStyle, { backgroundColor: '#fff', borderColor: colors.primary }]} />
+          </GestureDetector>
+        </>
+      )}
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
         <Text style={[typography.small, { color: colors.textPlaceholder }]}>₹0</Text>
         <Text style={[typography.small, { color: colors.textPlaceholder }]}>₹40L+</Text>
       </View>
@@ -360,8 +450,6 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   // Modals
   const [showCityModal, setShowCityModal] = useState(false);
   const [showPrefCityModal, setShowPrefCityModal] = useState(false);
-  const [showMinSalaryModal, setShowMinSalaryModal] = useState(false);
-  const [showMaxSalaryModal, setShowMaxSalaryModal] = useState(false);
   const [citySearch, setCitySearch] = useState('');
   const [prefCitySearch, setPrefCitySearch] = useState('');
 
@@ -528,12 +616,30 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       case 'section':
         let content = null;
         if (item.id === 'salary') content = (
-          <View style={{ gap: spacing.sm }}>
+          <View style={{ gap: spacing.sm, marginTop: -4 }}>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <SalarySelectionField label="Min Salary" value={minSalary} onPress={() => setShowMinSalaryModal(true)} colors={colors} />
-              <SalarySelectionField label="Max Salary" value={maxSalary} onPress={() => setShowMaxSalaryModal(true)} colors={colors} />
+              <SalarySelectionField 
+                label="Min Salary" 
+                value={minSalary} 
+                onChange={(val: number) => setMinSalary(Math.min(val, maxSalary))} 
+                colors={colors} 
+              />
+              <SalarySelectionField 
+                label="Max Salary" 
+                value={maxSalary} 
+                onChange={(val: number) => setMaxSalary(Math.max(val, minSalary))} 
+                colors={colors} 
+              />
             </View>
-            <SalaryRangeIndicator min={minSalary} max={maxSalary} colors={colors} />
+            <InteractiveRangeSlider 
+              min={minSalary} 
+              max={maxSalary} 
+              colors={colors} 
+              onChange={(newMin: number, newMax: number) => {
+                setMinSalary(newMin);
+                setMaxSalary(newMax);
+              }}
+            />
           </View>
         );
         if (item.id === 'language') content = (
@@ -701,87 +807,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
           </BottomSheetContent>
         </Pressable>
       </Modal>
-      <Modal
-        visible={showMinSalaryModal}
-        animationType="fade"
-        transparent
-        statusBarTranslucent
-        onRequestClose={() => setShowMinSalaryModal(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowMinSalaryModal(false)}>
-          <BottomSheetContent visible={showMinSalaryModal} colors={colors}>
-            <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Min Salary (LPA)</Text>
-              <Pressable onPress={() => setShowMinSalaryModal(false)} hitSlop={12}>
-                <Icon name="x" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-            <FlatList
-              data={SALARY_OPTIONS}
-              keyExtractor={item => item.toString()}
-              keyboardShouldPersistTaps="handled"
-              style={styles.cityList}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setMinSalary(Math.min(item, maxSalary));
-                    setShowMinSalaryModal(false);
-                  }}
-                  style={[
-                    styles.cityRow,
-                    {
-                      backgroundColor:
-                        minSalary === item ? colors.surfaceHighlight : 'transparent',
-                    },
-                  ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item} Lakhs</Text>
-                </Pressable>
-              )}
-            />
-          </BottomSheetContent>
-        </Pressable>
-      </Modal>
 
-      <Modal
-        visible={showMaxSalaryModal}
-        animationType="fade"
-        transparent
-        statusBarTranslucent
-        onRequestClose={() => setShowMaxSalaryModal(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowMaxSalaryModal(false)}>
-          <BottomSheetContent visible={showMaxSalaryModal} colors={colors}>
-            <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Max Salary (LPA)</Text>
-              <Pressable onPress={() => setShowMaxSalaryModal(false)} hitSlop={12}>
-                <Icon name="x" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-            <FlatList
-              data={SALARY_OPTIONS}
-              keyExtractor={item => item.toString()}
-              keyboardShouldPersistTaps="handled"
-              style={styles.cityList}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setMaxSalary(Math.max(item, minSalary));
-                    setShowMaxSalaryModal(false);
-                  }}
-                  style={[
-                    styles.cityRow,
-                    {
-                      backgroundColor:
-                        maxSalary === item ? colors.surfaceHighlight : 'transparent',
-                    },
-                  ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item} Lakhs</Text>
-                </Pressable>
-              )}
-            />
-          </BottomSheetContent>
-        </Pressable>
-      </Modal>
       <Modal
         visible={showPrefCityModal}
         animationType="fade"
@@ -849,8 +875,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 };
 
 const styles = StyleSheet.create({
-  section: { marginBottom: spacing.md },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.xs },
+  section: { marginBottom: spacing.xl },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   sectionDot: { width: 6, height: 6, borderRadius: 3 },
   sectionBody: { marginLeft: 0 },
   dropdownTrigger: {
@@ -868,21 +894,35 @@ const styles = StyleSheet.create({
   subCatItem: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.sm, borderWidth: 1 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.pill, borderWidth: 1 },
+  sliderThumb: {
+    position: 'absolute',
+    top: -10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    zIndex: 10,
+  },
+
   rangeIndicatorContainer: {
-    marginTop: 4,
-    width: '100%',
-    paddingHorizontal: 4,
+    marginTop: spacing.md,
+    paddingHorizontal: 12,
+    height: 40,
   },
   rangeTrack: {
-    height: 6,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     width: '100%',
-    overflow: 'hidden',
   },
   rangeFill: {
     height: '100%',
+    borderRadius: 2,
     position: 'absolute',
-    borderRadius: 3,
   },
   miniSearch: {
     flexDirection: 'row',
@@ -908,7 +948,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: radius.lg,
     borderWidth: 1,
-    marginTop: spacing.xs,
+    marginTop: spacing.md,
   },
   wfhIconCircle: {
     width: 44,
@@ -917,8 +957,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.md, borderWidth: 1 },
-  segmentRow: { flexDirection: 'row', gap: 12 },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: radius.md, borderWidth: 1, marginTop: 4 },
+  segmentRow: { flexDirection: 'row', gap: 12, marginTop: 4 },
   segment: { flex: 1, padding: 14, borderRadius: radius.md, borderWidth: 1, alignItems: 'center' },
   yearsRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   stepper: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },

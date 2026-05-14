@@ -6,9 +6,14 @@ import {
   FlatList,
   Pressable,
   TextInput,
+
   ActivityIndicator,
   Dimensions,
   ScrollView,
+  Animated,
+  Image,
+  Share,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -19,9 +24,10 @@ import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
+import JobActionModal from '../../../components/JobActionModal';
 
 const { width } = Dimensions.get('window');
 
@@ -42,10 +48,68 @@ const cleanIconName = (icon: string) => {
   return icon.replace(/fas fa-|fa-|fab fa-|far fa-/g, '').trim();
 };
 
+const getTagConfigLocal = (tag: string) => {
+  const t = tag.toLowerCase();
+  if (t.includes('urgent') || t.includes('hot')) return { icon: 'bolt', color: '#F59E0B' };
+  if (t.includes('salary') || t.includes('high')) return { icon: 'money', color: '#16A34A' };
+  if (t.includes('nearby') || t.includes('km')) return { icon: 'map-marker', color: '#2563EB' };
+  if (t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10b981' };
+  return { icon: 'tag', color: '#2563EB' };
+};
+
+const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
+  const [index, setIndex] = React.useState(0);
+  const fade = React.useRef(new Animated.Value(1)).current;
+  const translateY = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (tags.length <= 1) return;
+    const interval = setInterval(() => {
+      // Exit animation
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 400, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -10, duration: 400, useNativeDriver: true }),
+      ]).start(() => {
+        setIndex((prev) => (prev + 1) % tags.length);
+        translateY.setValue(10);
+        Animated.parallel([
+          Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]).start();
+      });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [tags.length, index]);
+
+  const tag = tags[index];
+  const isApplied = typeof tag !== 'string';
+  const tagName = isApplied ? tag.name : tag;
+  const tagIcon = isApplied ? cleanIconName(tag.icon) : getTagConfigLocal(tag).icon;
+  const tagColor = isApplied ? (tag.icon_color || colors.primary) : getTagConfigLocal(tag).color;
+
+  return (
+    <Animated.View style={[
+      styles.cornerBadge,
+      {
+        backgroundColor: colors.surface,
+        borderColor: tagColor + '60',
+        opacity: fade,
+        transform: [{ translateY }]
+      }
+    ]}>
+      <Icon name={tagIcon} size={12} color={tagColor} />
+      <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
+        {tagName}
+      </Text>
+    </Animated.View>
+  );
+};
+
 const AllJobsScreen = () => {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
   const { searchResults, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
   const [search, setSearch] = useState('');
@@ -54,6 +118,15 @@ const AllJobsScreen = () => {
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
 
   useEffect(() => {
+    // Handle incoming filters from navigation
+    if (route.params?.filters) {
+      dispatch(filterJobs(route.params?.filters));
+      setIsFiltered(true);
+      // Clear params after applying so it doesn't re-apply on every render
+      navigation.setParams({ filters: undefined });
+      return;
+    }
+
     const timer = setTimeout(() => {
       const params: any = { per_page: 20 };
       if (activeTab === 'Nearest') params.section = 'nearby';
@@ -103,37 +176,28 @@ const AllJobsScreen = () => {
           }
         ]}
       >
-        {hasAppliedTags && (
-          <View style={styles.tagsRightContainer}>
-            {item.applied_tags.map((tag: any, idx: number) => (
-              <View key={idx} style={[
-                styles.cornerBadge,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: (tag.icon_color || colors.primary) + '60',
-                }
-              ]}>
-                <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
-                <Text style={[
-                  styles.cornerBadgeText,
-                  { color: tag.icon_color || colors.primary }
-                ]}>
-                  {tag.name}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
         <View style={styles.cardHeader}>
-          <View style={styles.iconBox}>
-            <Icon name="briefcase" size={20} color={colors.primary} />
+          <View style={[styles.iconBox, { backgroundColor: hasAppliedTags ? primaryTagColor + '20' : colors.surfaceHighlight }]}>
+            {item.employer?.company?.company_logo_url ? (
+              <Image
+                source={{ uri: item.employer.company.company_logo_url }}
+                style={{ width: 44, height: 44, borderRadius: 12 }}
+              />
+            ) : (
+              <Icon name="briefcase" size={20} color={hasAppliedTags ? primaryTagColor : colors.primary} />
+            )}
           </View>
           <View style={styles.titleBox}>
-            <Text style={[typography.jobTitle, { color: colors.textPrimary, paddingRight: 80 }]} numberOfLines={1}>
+            <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
               {item.title}
             </Text>
             <Text style={[typography.small, { color: colors.textSecondary }]}>
               {companyName}
+            </Text>
+          </View>
+          <View style={{ position: 'absolute', top: 0, right: 0 }}>
+            <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
+              Recently
             </Text>
           </View>
         </View>
@@ -145,22 +209,26 @@ const AllJobsScreen = () => {
               {locationLabel}
             </Text>
           </View>
-          <View style={styles.metaItem}>
-            <Icon name="clock-o" size={14} color={colors.textSecondary} />
-            <Text style={[typography.small, { color: colors.textSecondary, marginLeft: 6 }]}>
-              Recently
-            </Text>
-          </View>
         </View>
 
         <View style={styles.cardFooter}>
-          <Text style={[typography.labelMedium, { color: colors.success }]}>
-            {salaryLabel}
-          </Text>
-          <View style={[styles.typeBadge, { borderColor: colors.primary + '40', borderWidth: 1 }]}>
-            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>
-              {jobType}
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.labelMedium, { color: colors.success }]}>
+              {salaryLabel}
             </Text>
+            <View style={[styles.typeBadge, { borderColor: colors.primary + '40', borderWidth: 1, alignSelf: 'flex-start', marginTop: 4 }]}>
+              <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>
+                {jobType}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ alignItems: 'flex-end' }}>
+            {hasAppliedTags ? (
+              <TagCycling tags={item.applied_tags} colors={colors} />
+            ) : item.tags && item.tags.length > 0 ? (
+              <TagCycling tags={item.tags} colors={colors} />
+            ) : null}
           </View>
         </View>
       </Pressable>
@@ -320,14 +388,14 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: 4,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: spacing.lg,
-    marginVertical: 8,
+    marginVertical: 4,
     paddingHorizontal: spacing.md,
     height: 46,
     borderRadius: 12,
@@ -347,10 +415,10 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: spacing.lg,
     paddingTop: 4,
-    gap: 12,
+    gap: 10,
   },
   jobCard: {
-    padding: 12,
+    padding: 10,
     borderRadius: 16,
     borderWidth: 1,
     shadowColor: '#000',
@@ -364,21 +432,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  tagsRightContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 10,
+  listCardTags: {
     flexDirection: 'row',
-    gap: 4,
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 10,
   },
   cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 1.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -386,9 +452,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cornerBadgeText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: 'bold',
-    marginLeft: 3,
+    marginLeft: 4,
   },
   iconBox: {
     width: 44,
@@ -401,8 +467,8 @@ const styles = StyleSheet.create({
   cardMeta: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 12,
-    paddingTop: 10,
+    marginTop: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.03)',
   },
@@ -414,7 +480,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 10,
   },
   typeBadge: {
     paddingHorizontal: 10,
@@ -450,7 +516,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     gap: 12,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   bigActionCard: {
     flex: 1,

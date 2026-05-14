@@ -1,11 +1,11 @@
-import React, {  useState } from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { 
-  FadeInDown, 
+import Animated, {
+  FadeInDown,
   FadeIn,
-  useAnimatedStyle, 
-  useSharedValue, 
-  withSpring, 
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
   withTiming,
   interpolateColor
 } from 'react-native-reanimated';
@@ -34,11 +34,11 @@ const ExperienceCard: React.FC<{
   colors: any;
 }> = ({ label, icon, selected, onPress, colors }) => {
   const scale = useSharedValue(1);
-  
+
   const animatedStyle = useAnimatedStyle(() => {
     const bgColor = selected ? (colors?.surfaceHighlight || '#EFF6FF') : (colors?.surface || '#FFFFFF');
     const borderColor = selected ? (colors?.primary || '#2563EB') : (colors?.border || '#E5E7EB');
-    
+
     return {
       transform: [{ scale: withSpring(selected ? 1.05 : 1) }],
       backgroundColor: withTiming(bgColor, { duration: 250 }),
@@ -63,10 +63,10 @@ const ExperienceCard: React.FC<{
       style={[styles.toggle, animatedStyle]}
     >
       <Animated.View style={{ alignItems: 'center', gap: spacing.xs }}>
-        <Icon 
-          name={icon} 
-          size={24} 
-          color={selected ? colors.primary : colors.textSecondary} 
+        <Icon
+          name={icon}
+          size={24}
+          color={selected ? colors.primary : colors.textSecondary}
         />
         <Animated.Text style={[typography.labelMedium, contentStyle]}>
           {label}
@@ -83,7 +83,7 @@ const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const bColor = colors?.border || '#E5E7EB';
     const pColor = colors?.primary || '#2563EB';
-    
+
     return {
       borderColor: interpolateColor(
         focusValue.value,
@@ -153,7 +153,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const renderSection = (children: React.ReactNode, index: number) => (
-    <Animated.View 
+    <Animated.View
       entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
       style={{ gap: spacing.xs }}
     >
@@ -165,12 +165,12 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
     <ProfileEditLayout
       title="Experience"
       subtitle="Tell us if you’re starting out or already have work history.">
-      
+
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Work experience</Text>
           <View style={styles.toggleRow}>
-            <ExperienceCard 
+            <ExperienceCard
               label="Fresher"
               icon="leaf"
               selected={isFresher}
@@ -180,7 +180,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
               }}
               colors={colors}
             />
-            <ExperienceCard 
+            <ExperienceCard
               label="Experienced"
               icon="briefcase"
               selected={!isFresher}
@@ -199,10 +199,48 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
                 Total years of experience
               </Text>
+
+              <View style={styles.chipGrid}>
+                {[
+                  { label: '0 to 1 Year', value: '1' },
+                  { label: '1 to 2 Years', value: '2' },
+                  { label: '2 to 3 Years', value: '3' },
+                  { label: '3 to 5 Years', value: '5' },
+                  { label: '5 to 7 Years', value: '7' },
+                  { label: '7 to 10 Years', value: '10' },
+                  { label: '10+ Years', value: '15' },
+                ].map((range) => (
+                  <Pressable
+                    key={range.label}
+                    onPress={() => setYears(range.value)}
+                    style={[
+                      styles.yearChip,
+                      {
+                        backgroundColor: years === range.value ? colors.primary : colors.surfaceHighlight,
+                        borderColor: years === range.value ? colors.primary : colors.border,
+                      }
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        typography.labelMedium,
+                        { color: years === range.value ? colors.onPrimary : colors.textPrimary }
+                      ]}
+                    >
+                      {range.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.xs }]}>
+                Or enter manually:
+              </Text>
+
               <AnimatedInput
                 value={years}
                 onChangeText={(t: string) => setYears(t.replace(/\D/g, '').slice(0, 2))}
-                placeholder="e.g. 3"
+                placeholder="e.g. 12"
                 placeholderTextColor={colors.textPlaceholder}
                 keyboardType="number-pad"
                 style={[
@@ -226,11 +264,11 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
       )}
 
       <Animated.View entering={FadeInDown.delay(500).duration(500)}>
-        <PrimaryButton 
-          title={loading ? "Saving..." : "Save"} 
-          onPress={handleSave} 
-          disabled={!canSave || loading} 
-          colors={colors} 
+        <PrimaryButton
+          title={loading ? "Saving..." : "Save"}
+          onPress={handleSave}
+          disabled={!canSave || loading}
+          colors={colors}
         />
       </Animated.View>
     </ProfileEditLayout>
@@ -251,6 +289,18 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  chipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginVertical: spacing.sm,
+  },
+  yearChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   input: {
     borderWidth: StyleSheet.hairlineWidth,

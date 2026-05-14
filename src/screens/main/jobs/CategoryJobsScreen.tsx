@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Animated,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -26,77 +28,119 @@ import { components } from '../../../theme/components';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
-const { width } = Dimensions.get('window');
-
-const cleanIconName = (iconStr: string) => {
-  if (!iconStr) return 'check-circle';
-  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+const cleanIconName = (icon: string) => {
+  if (!icon) return 'check-circle';
+  return icon.replace(/fa[srlb]? fa-/, '').trim();
 };
 
+const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
+  const [index, setIndex] = React.useState(0);
+  const fade = React.useRef(new Animated.Value(1)).current;
+  const translateY = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (tags.length <= 1) return;
+    const interval = setInterval(() => {
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 400, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -10, duration: 400, useNativeDriver: true }),
+      ]).start(() => {
+        setIndex((prev) => (prev + 1) % tags.length);
+        translateY.setValue(10);
+        Animated.parallel([
+          Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]).start();
+      });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [tags.length, index]);
+
+  const tag = tags[index];
+  const isApplied = typeof tag !== 'string';
+  const tagName = isApplied ? tag.name : tag;
+  const tagIcon = isApplied ? cleanIconName(tag.icon) : 'tag';
+  const tagColor = isApplied ? (tag.icon_color || colors.primary) : colors.primary;
+
+  return (
+    <Animated.View style={[
+      styles.cornerBadge,
+      {
+        backgroundColor: colors.surface,
+        borderColor: tagColor + '60',
+        opacity: fade,
+        transform: [{ translateY }]
+      }
+    ]}>
+      <Icon name={tagIcon} size={12} color={tagColor} />
+      <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
+        {tagName}
+      </Text>
+    </Animated.View>
+  );
+};
+
+const { width } = Dimensions.get('window');
+
 function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
-  const company = job.employer?.company || {};
-  const location = job.location?.label || 'Remote';
-  const salary = job.salary_label || 'Negotiable';
-  const tags = job.tags || [];
+  const companyName = job.employer?.company?.company_name || job.company_name || job.company || 'Hiring Company';
+  const locationLabel = job.location?.label || job.location_name || job.location || 'India';
+  const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
+  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.premiumCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
+      style={[styles.premiumCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
     >
-      <View style={styles.tagRowTop}>
-        {job.applied_tags && job.applied_tags.length > 0 ? (
-          job.applied_tags.slice(0, 2).map((tag: any, idx: number) => (
-            <View key={idx} style={[styles.tagPill, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
-              <Icon name={cleanIconName(tag.icon)} size={10} color={tag.icon_color || colors.primary} />
-              <Text style={[typography.tiny, { color: tag.icon_color || colors.primary, fontWeight: 'bold', marginLeft: 4 }]} numberOfLines={1}>
-                {tag.name}
-              </Text>
-            </View>
-          ))
-        ) : (
-          tags.length > 0 && (
-            <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
-              <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
-                {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
-              </Text>
-            </View>
-          )
-        )}
+      <View style={styles.cardHeader}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+          <View style={[styles.iconBox, { backgroundColor: colors.surfaceHighlight }]}>
+            {job.employer?.company?.company_logo_url ? (
+              <Image source={{ uri: job.employer.company.company_logo_url }} style={styles.logoImage} />
+            ) : (
+              <Icon name="briefcase" size={20} color={colors.primary} />
+            )}
+          </View>
+          <View style={styles.titleBox}>
+            <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+              {job.title}
+            </Text>
+            <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+              {companyName}
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
+          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
+            Recently
+          </Text>
+        </View>
       </View>
 
-      <View style={styles.cardTop}>
-        <View style={[styles.logoBox, { backgroundColor: colors.surfaceHighlight }]}>
-          {company.company_logo_url ? (
-            <Image source={{ uri: company.company_logo_url }} style={styles.logoImage} />
-          ) : (
-            <Icon name="briefcase" size={20} color={colors.primary} />
-          )}
+      <View style={styles.cardMeta}>
+        <View style={styles.metaItem}>
+          <Icon name="map-marker" size={12} color={colors.textPlaceholder} style={{ marginRight: 4 }} />
+          <Text style={[typography.small, { color: colors.textSecondary }]}>{locationLabel}</Text>
         </View>
-        <View style={styles.titleInfo}>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700', fontSize: 15 }]} numberOfLines={1}>
-            {job.title}
-          </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-            {company.company_name || 'Hiring Company'}
-          </Text>
-        </View>
-        <View style={[styles.arrowBox, { backgroundColor: colors.primary + '10' }]}>
-          <Icon name="chevron-right" size={12} color={colors.primary} />
+        <View style={styles.metaItem}>
+          <Icon name="money" size={12} color={colors.success} style={{ marginRight: 4 }} />
+          <Text style={[typography.small, { color: colors.textSecondary }]}>{salaryLabel}</Text>
         </View>
       </View>
 
       <View style={styles.cardFooter}>
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-            <Text style={[typography.tiny, { color: colors.textSecondary, flexShrink: 1 }]} numberOfLines={1}>{location}</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <Icon name="money" size={12} color={colors.success} />
-            <Text style={[typography.tiny, { color: colors.textSecondary }]}>{salary}</Text>
-          </View>
+        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground }]}>
+          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: 'bold' }]}>
+            {jobType}
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {(job.applied_tags?.length > 0 || job.tags?.length > 0) && (
+            <TagCycling tags={job.applied_tags?.length > 0 ? job.applied_tags : job.tags} colors={colors} />
+          )}
+         
         </View>
       </View>
     </Pressable>
@@ -140,6 +184,7 @@ const CategoryJobsScreen: React.FC = () => {
 
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { latest, trending, nearby, recommended, filteredJobs, jobsByCategory, loading } = useSelector((state: RootState) => state.jobs);
 
@@ -179,22 +224,33 @@ const CategoryJobsScreen: React.FC = () => {
   };
 
   const jobsData = useMemo(() => {
-    if (isFiltered) return filteredJobs;
-    
-    // If in category mode, extract jobs from the first category in jobsByCategory
-    if (categoryId && jobsByCategory.length > 0) {
-      return jobsByCategory[0].jobs || [];
+    let data = [];
+    if (isFiltered) {
+      data = filteredJobs;
+    } else if (categoryId && jobsByCategory.length > 0) {
+      // If in category mode, extract jobs from the first category in jobsByCategory
+      data = jobsByCategory[0].jobs || [];
+    } else {
+      switch (selectedId) {
+        case 'all': data = recommended; break;
+        case 'latest': data = latest; break;
+        case 'trending': data = trending; break;
+        case 'nearby': data = nearby; break;
+        case 'recommended': data = recommended; break;
+        default: data = recommended;
+      }
     }
 
-    switch (selectedId) {
-      case 'all': return recommended;
-      case 'latest': return latest;
-      case 'trending': return trending;
-      case 'nearby': return nearby;
-      case 'recommended': return recommended;
-      default: return recommended;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return data.filter((job: any) => 
+        job.title?.toLowerCase().includes(q) || 
+        job.employer?.company?.company_name?.toLowerCase().includes(q) ||
+        job.location?.label?.toLowerCase().includes(q)
+      );
     }
-  }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory, filteredJobs]);
+    return data;
+  }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory, filteredJobs, searchQuery]);
 
   const allTabs = useMemo(() => [
     { id: 'all', name: 'All Jobs' },
@@ -249,6 +305,25 @@ const CategoryJobsScreen: React.FC = () => {
           renderItem={renderTab}
           contentContainerStyle={styles.tabsContent}
         />
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchWrapper}>
+        <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+          <Icon name="search" size={16} color={colors.textPlaceholder} />
+          <TextInput
+            placeholder="Search within these jobs..."
+            placeholderTextColor={colors.textPlaceholder}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')}>
+              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {loading && jobsData.length === 0 ? (
@@ -311,6 +386,24 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: 'transparent',
   },
+  searchWrapper: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    fontSize: 14,
+    paddingVertical: 8,
+  },
   tabsContent: {
     paddingHorizontal: spacing.md,
     gap: spacing.lg, // More gap between text tabs
@@ -335,24 +428,24 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   premiumCard: {
-    padding: spacing.md,
-    borderRadius: radius.md, // Slightly less rounded for edge look
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 2,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    marginBottom: 0,
-    marginHorizontal: 0,
   },
-  cardTop: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
   },
-  logoBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -360,59 +453,48 @@ const styles = StyleSheet.create({
   logoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
-  titleInfo: {
-    flex: 1,
-  },
-  arrowBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardFooter: {
+  titleBox: { flex: 1 },
+  cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  metaRow: {
+  cornerBadgeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  cardMeta: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.03)',
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
   },
-  metaDivider: {
-    width: 1,
-    height: 10,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
   },
-  tagPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  typeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tagRow: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-  },
-  tagRowTop: {
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-    marginBottom: 10,
   },
   empty: {
     flex: 1,

@@ -45,6 +45,7 @@ export const filterJobs = createAsyncThunk(
   'jobs/filterJobs',
   async (params: {
     category_id?: number;
+    subcategory_id?: number;
     city_id?: number;
     job_type?: string;
     q?: string;
@@ -115,23 +116,23 @@ export const toggleWishlist = createAsyncThunk(
       const state = getState() as any;
       const token = state.auth.token;
 
-      
+
       if (isWishlisted) {
-    
+
         const res = await api.request({
           method: 'DELETE',
           url: `/api/candidate/jobs/${jobId}/wishlist`,
           headers: { Authorization: `Bearer ${token}` },
         });
-   
+
       } else {
-   
+
         const res = await api.request({
           method: 'POST',
           url: `/api/candidate/jobs/${jobId}/wishlist`,
           headers: { Authorization: `Bearer ${token}` },
         });
-     
+
       }
       // Refresh wishlist in profile slice
       dispatch(fetchWishlist());
@@ -190,7 +191,7 @@ const jobSlice = createSlice({
         state.loading = false;
         const { section, sort } = action.meta.arg;
         const jobs = action.payload.data.jobs;
-        
+
         if (section === 'recommended' || sort === 'recommended') {
           state.recommended = jobs;
         } else if (section === 'latest' || sort === 'latest') {

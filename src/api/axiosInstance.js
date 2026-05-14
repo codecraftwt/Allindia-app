@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-export const BASE_URL = 'https://jobindia.ai/';
+export const BASE_URL = 'https://jobindia.ai';
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
   },
 });
 //https://arpeggioed-anaya-nonostensively.ngrok-free.dev/

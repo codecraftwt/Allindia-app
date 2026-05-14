@@ -13,6 +13,8 @@ import {
   View,
   Modal,
   StatusBar,
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import {
   useNavigation,
@@ -31,21 +33,76 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import SkeletonPulse from '../../../components/SkeletonPulse';
+import JobActionModal from '../../../components/JobActionModal';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist } from '../../../redux/slice/jobSlice';
+import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist, reportJob } from '../../../redux/slice/jobSlice';
 import { fetchWishlist } from '../../../redux/slice/profileSlice';
+
+const REPORT_REASONS = [
+  'Fake Job / Scam',
+  'Asking for Money',
+  'Inappropriate Content',
+  'Already Filled / Closed',
+  'Wrong Category / Details',
+];
+
+const cleanIconName = (icon: string) => {
+  if (!icon) return 'check-circle';
+  return icon.replace(/fas fa-|fa-|fab fa-|far fa-/g, '').trim();
+};
+
+const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
+  const [index, setIndex] = React.useState(0);
+  const fade = React.useRef(new Animated.Value(1)).current;
+  const translateY = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (tags.length <= 1) return;
+    const interval = setInterval(() => {
+      Animated.parallel([
+        Animated.timing(fade, { toValue: 0, duration: 400, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -10, duration: 400, useNativeDriver: true }),
+      ]).start(() => {
+        setIndex((prev) => (prev + 1) % tags.length);
+        translateY.setValue(10);
+        Animated.parallel([
+          Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(translateY, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]).start();
+      });
+    }, 2800);
+    return () => clearInterval(interval);
+  }, [tags.length, index]);
+
+  const tag = tags[index];
+  const isApplied = typeof tag !== 'string';
+  const tagName = isApplied ? tag.name : tag;
+  const tagIcon = isApplied ? cleanIconName(tag.icon) : 'tag';
+  const tagColor = isApplied ? (tag.icon_color || colors.primary) : colors.primary;
+
+  return (
+    <Animated.View style={[
+      styles.cornerBadge,
+      {
+        backgroundColor: colors.surface,
+        borderColor: tagColor + '60',
+        opacity: fade,
+        transform: [{ translateY }]
+      }
+    ]}>
+      <Icon name={tagIcon} size={14} color={tagColor} />
+      <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
+        {tagName}
+      </Text>
+    </Animated.View>
+  );
+};
 
 export type JobDetailRouteParams = { jobId: string };
 
 type JobDetailRoute = RouteProp<{ JobDetail: JobDetailRouteParams }, 'JobDetail'>;
-
-const cleanIconName = (iconStr: string) => {
-  if (!iconStr) return 'check-circle';
-  // Remove 'fas fa-', 'far fa-', etc.
-  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
-};
 
 function SectionTitle({ title, colors }: { title: string; colors: ThemeColors }) {
   return (
@@ -54,6 +111,29 @@ function SectionTitle({ title, colors }: { title: string; colors: ThemeColors })
     </Text>
   );
 }
+
+const formatDescription = (html: string) => {
+  if (!html) return '';
+  
+  let text = html;
+  // Replace common block tags with newlines
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<p>/gi, '');
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/li>/gi, '\n');
+  text = text.replace(/<li>/gi, '• ');
+  text = text.replace(/<\/?[^>]+(>|$)/g, ''); // Strip remaining tags
+  
+  // Decode common entities
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+  text = text.replace(/&nbsp;/g, ' ');
+  
+  return text.trim();
+};
 function InfoRow({ label, value, icon, colors }: { label: string; value: string; icon: string; colors: ThemeColors }) {
   return (
     <View style={styles.infoRow}>
@@ -138,6 +218,7 @@ const JobDetailScreen: React.FC = () => {
   });
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
   const toastAnim = useRef(new Animated.Value(-100)).current;
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -262,14 +343,18 @@ const JobDetailScreen: React.FC = () => {
     } catch (error: any) {
       Alert.alert('Error', 'Could not open share menu');
     }
-  }, [currentJob, companyName, locationLabel, salaryLabel]);
+  }, [currentJob, companyName, locationLabel]);
+
+  const openActions = () => {
+    setShowActionModal(true);
+  };
 
   const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
 
   if (loading && !currentJob) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
           </Pressable>
@@ -282,7 +367,7 @@ const JobDetailScreen: React.FC = () => {
   if (!currentJob) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
           </Pressable>
@@ -322,7 +407,7 @@ const JobDetailScreen: React.FC = () => {
         </Animated.View>
       )}
 
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+      <View style={[styles.topBar, { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn} accessibilityLabel="Go back">
           <Icon name="chevron-left" size={22} color={colors.textPrimary} />
         </Pressable>
@@ -330,11 +415,11 @@ const JobDetailScreen: React.FC = () => {
           Job details
         </Text>
         <Pressable
-          onPress={handleShare}
+          onPress={openActions}
           hitSlop={12}
           style={[styles.iconBtn, { marginRight: spacing.xs }]}
-          accessibilityLabel="Share job">
-          <Icon name="share-alt" size={20} color={colors.textSecondary} />
+          accessibilityLabel="More actions">
+          <Icon name="ellipsis-v" size={20} color={colors.textSecondary} />
         </Pressable>
         <Pressable
           onPress={handleToggleWishlist}
@@ -358,28 +443,36 @@ const JobDetailScreen: React.FC = () => {
         ]}
         showsVerticalScrollIndicator={false}>
         
-        {/* Dynamic Tags Row */}
-        <View style={styles.tagsRow}>
-          {currentJob.applied_tags && currentJob.applied_tags.length > 0 ? (
-            currentJob.applied_tags.map((tag: any, idx: number) => (
-              <View key={idx} style={[styles.badge, { backgroundColor: (tag.icon_color || colors.primary) + '15' }]}>
-                <Icon name={cleanIconName(tag.icon)} size={12} color={tag.icon_color || colors.primary} />
-                <Text style={[typography.small, { color: tag.icon_color || colors.primary, fontWeight: '700', marginLeft: 6 }]}>
-                  {tag.name}
-                </Text>
-              </View>
-            ))
-          ) : (
-            currentJob.tags && currentJob.tags.length > 0 && currentJob.tags.map((tag: string, idx: number) => (
-              <View key={idx} style={[styles.badge, { backgroundColor: colors.primary + '10' }]}>
-                <Text style={[typography.small, { color: colors.primary }]}>{tag}</Text>
-              </View>
-            ))
+        {/* Header Section with Logo, Title, and Tags */}
+        <View style={styles.headerHero}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+            <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight }]}>
+              {currentJob.employer?.company?.company_logo_url ? (
+                <Image
+                  source={{ uri: currentJob.employer.company.company_logo_url }}
+                  style={styles.heroLogo}
+                />
+              ) : (
+                <Icon name="briefcase" size={24} color={colors.primary} />
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.h3, { color: colors.textPrimary }]} numberOfLines={2}>
+                {currentJob.title}
+              </Text>
+              <Text style={[typography.body, { color: colors.textSecondary }]}>
+                {companyName}
+              </Text>
+            </View>
+          </View>
+          
+          {(currentJob.applied_tags?.length > 0 || currentJob.tags?.length > 0) && (
+            <TagCycling 
+              tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags} 
+              colors={colors} 
+            />
           )}
         </View>
-
-        <Text style={[typography.appTitle, { color: colors.textPrimary, marginTop: spacing.xs }]}>{currentJob.title}</Text>
-        <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>{companyName}</Text>
 
         <View style={styles.metaRow}>
           <View style={[styles.metaPill, { backgroundColor: colors.successBackground }]}>
@@ -418,7 +511,7 @@ const JobDetailScreen: React.FC = () => {
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title="Description" colors={colors} />
           <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
-            {currentJob.description || 'No description provided.'}
+            {formatDescription(currentJob.description) || 'No description provided.'}
           </Text>
         </View>
 
@@ -602,6 +695,16 @@ const JobDetailScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      <JobActionModal
+        visible={showActionModal}
+        onClose={() => setShowActionModal(false)}
+        job={currentJob}
+        colors={colors}
+        onShare={handleShare}
+        type="dropdown"
+        anchorPosition={{ top: actualTop + 35, right: spacing.lg }}
+      />
     </View>
   );
 };
@@ -616,7 +719,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     minHeight: 56, // Added minHeight for stability
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    // borderBottomWidth moved to conditional styles to avoid black line during skeleton loading
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
@@ -637,6 +740,40 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
+  },
+  headerHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    gap: 8,
+  },
+  heroLogoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  heroLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.sm,
+  },
+  cornerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    gap: 6,
+  },
+  cornerBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   metaRow: {
     flexDirection: 'row',
