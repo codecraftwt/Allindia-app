@@ -26,8 +26,8 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
-import type { HomeJob } from '../home/homeMockData';
-import { ALL_LISTED_JOBS } from '../home/homeMockData';
+import type { HomeJob } from '../home/components/homeMockData';
+import { ALL_LISTED_JOBS } from '../home/components/homeMockData';
 
 type JobListingNav = StackNavigationProp<SearchStackParamList, 'JobListing'>;
 type JobListingRoute = RouteProp<SearchStackParamList, 'JobListing'>;

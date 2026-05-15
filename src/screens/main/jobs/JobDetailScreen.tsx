@@ -518,39 +518,129 @@ const JobDetailScreen: React.FC = () => {
         {currentJob.employer?.company && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title="About Company" colors={colors} />
+            
             <View style={styles.companyHeader}>
-              {currentJob.employer.company.company_logo_url ? (
-                <Image
-                  source={{ uri: currentJob.employer.company.company_logo_url }}
-                  style={styles.companyLogo}
-                />
-              ) : (
-                <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
-                  <Icon name="building" size={24} color={colors.primary} />
-                </View>
-              )}
+              <View>
+                {currentJob.employer.company.company_logo_url ? (
+                  <Image
+                    source={{ uri: currentJob.employer.company.company_logo_url }}
+                    style={styles.companyLogo}
+                  />
+                ) : (
+                  <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
+                    <Icon name="building" size={24} color={colors.primary} />
+                  </View>
+                )}
+                {currentJob.employer.company.verification_status === 'approved' && (
+                  <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
+                    <Icon name="check" size={8} color="#fff" />
+                  </View>
+                )}
+              </View>
               <View style={{ flex: 1 }}>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-                  {currentJob.employer.company.company_name}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                    {currentJob.employer.company.company_name}
+                  </Text>
+                </View>
                 <Text style={[typography.small, { color: colors.textSecondary }]}>
-                  {currentJob.employer.company.industry || 'General Industry'} · {currentJob.employer.company.company_size || 'Unknown Size'}
+                  {currentJob.employer.company.industry || 'General Industry'} · {currentJob.employer.company.company_size || 'Mid Scale'}
                 </Text>
               </View>
             </View>
+
+            {/* Gallery Media */}
+            {currentJob.employer.company.gallery_media?.length > 0 && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                style={styles.galleryScroll}
+                contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+              >
+                {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
+                  <Image 
+                    key={idx}
+                    source={{ uri: media.url }} 
+                    style={styles.galleryImage} 
+                  />
+                ))}
+              </ScrollView>
+            )}
+
             {currentJob.employer.company.description && (
-              <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.sm, lineHeight: 20 }]}>
+              <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 20 }]}>
                 {currentJob.employer.company.description}
               </Text>
             )}
+
+            {/* Address Section */}
+            {(currentJob.employer.company.address || currentJob.employer.company.city) && (
+              <View style={styles.addressBox}>
+                <View style={[styles.addressIcon, { backgroundColor: colors.surfaceHighlight }]}>
+                  <Icon name="map-marker" size={16} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>Address</Text>
+                  <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13 }]} numberOfLines={2}>
+                    {[
+                      currentJob.employer.company.address,
+                      currentJob.employer.company.city,
+                      currentJob.employer.company.state,
+                      currentJob.employer.company.pincode
+                    ].filter(Boolean).join(', ')}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Key Company Stats */}
+            <View style={styles.companyStatsGrid}>
+              <View style={styles.companyStatItem}>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Employees</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                  {currentJob.employer.company.employee_count || '50+'}
+                </Text>
+              </View>
+              <View style={styles.companyStatItem}>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Type</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                  {currentJob.employer.company.register_as_label || 'Company'}
+                </Text>
+              </View>
+              <View style={styles.companyStatItem}>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Size</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                  {currentJob.employer.company.company_size || 'Mid Scale'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Hiring Manager Info */}
+            <View style={[styles.employerCard, { backgroundColor: colors.surfaceHighlight }]}>
+              <View style={styles.employerAvatar}>
+                <Icon name="user-circle" size={32} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Hiring Manager</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{currentJob.employer.name}</Text>
+              </View>
+            </View>
+
             <View style={styles.companyMeta}>
               {currentJob.employer.company.established_year && (
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-                  Established: {currentJob.employer.company.established_year}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name="calendar" size={12} color={colors.textPlaceholder} />
+                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+                    Est: {currentJob.employer.company.established_year}
+                  </Text>
+                </View>
               )}
               {currentJob.employer.company.website && (
-                <Pressable onPress={() => Linking.openURL(currentJob.employer.company.website)}>
+                <Pressable 
+                  onPress={() => Linking.openURL(currentJob.employer.company.website)}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                >
+                  <Icon name="external-link" size={12} color={colors.primary} />
                   <Text style={[typography.small, { color: colors.primary }]}>Visit Website</Text>
                 </Pressable>
               )}
@@ -615,16 +705,17 @@ const JobDetailScreen: React.FC = () => {
           colors={colors}
           disabled={isApplying || currentJob.is_applied}
         />
-        <View style={styles.footerRow}>
-          <PrimaryButton
-            title="Call employer"
-            onPress={callEmployer}
-            colors={colors}
-            variant="secondary"
-            style={styles.callBtn}
-          />
-
-        </View>
+        {currentJob.allow_calls !== false && (
+          <View style={styles.footerRow}>
+            <PrimaryButton
+              title="Call employer"
+              onPress={callEmployer}
+              colors={colors}
+              variant="secondary"
+              style={styles.callBtn}
+            />
+          </View>
+        )}
       </View>
 
       {/* Validation Modal */}
@@ -908,10 +999,72 @@ const styles = StyleSheet.create({
   companyMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  galleryScroll: {
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  galleryImage: {
+    width: 140,
+    height: 90,
+    borderRadius: radius.md,
+    backgroundColor: '#eee',
+  },
+  employerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginTop: spacing.lg,
+    gap: spacing.md,
+  },
+  employerAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addressBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  addressIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  companyStatsGrid: {
+    flexDirection: 'row',
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    gap: spacing.xl,
+    justifyContent: 'space-between',
+  },
+  companyStatItem: {
+    flex: 1,
   },
   // Skeleton Styles
   skeletonContainer: {

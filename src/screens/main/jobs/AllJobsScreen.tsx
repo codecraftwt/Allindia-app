@@ -28,6 +28,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import JobActionModal from '../../../components/JobActionModal';
+import { AuthHeadline } from '../../../components/auth';
 
 const { width } = Dimensions.get('window');
 
@@ -127,6 +128,8 @@ const AllJobsScreen = () => {
       return;
     }
 
+    // Use 0ms delay for initial load, 500ms for search/filter debounce
+    const isInitial = !search && !selectedQuickFilter;
     const timer = setTimeout(() => {
       const params: any = { per_page: 20 };
       if (activeTab === 'Nearest') params.section = 'nearby';
@@ -147,7 +150,7 @@ const AllJobsScreen = () => {
       } else {
         dispatch(fetchJobs(params));
       }
-    }, 500);
+    }, isInitial ? 0 : 500);
     return () => clearTimeout(timer);
   }, [dispatch, search, activeTab, selectedQuickFilter]);
 
@@ -257,10 +260,13 @@ const AllJobsScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={[typography.h3, { color: colors.textPrimary }]}>All Jobs</Text>
-        <Text style={[typography.small, { color: colors.textSecondary }]}>Find your perfect match</Text>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
+        <AuthHeadline
+          colors={colors}
+          title="All jobs"
+          subtitle="Find your perfect match"
+        />
       </View>
       <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight }]}>
         <Icon name="search" size={18} color={colors.textPlaceholder} />
@@ -380,17 +386,13 @@ const AllJobsScreen = () => {
           dispatch(filterJobs(f));
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: 4,
-  },
+
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',

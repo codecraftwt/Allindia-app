@@ -1,4 +1,4 @@
-import type { HomeJob } from '../home/homeMockData';
+import type { HomeJob } from '../home/components/homeMockData';
 
 export type JobDetailExtras = {
   description: string;

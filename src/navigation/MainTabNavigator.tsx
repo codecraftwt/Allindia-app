@@ -11,7 +11,7 @@ import AllJobsStackNavigator from './AllJobsStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SavedStackNavigator from './SavedStackNavigator';
 import JobReelsStackNavigator from './JobReelsStackNavigator';
-import AIAssistantScreen from '../screens/main/home/AIAssistantScreen';
+import AIAssistantScreen from '../screens/main/AvatarAi/AIAssistantScreen';
 import { typography } from '../theme/typography';
 import type { MainTabParamList } from './types';
 
@@ -56,6 +56,51 @@ const TabIcon = ({ name, color, focused, label }: any) => {
         minimumFontScale={0.8}
       >
         {label}
+      </Text>
+    </View>
+  );
+};
+
+const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const aiColor = '#FF9800';
+
+  return (
+    <View style={styles.iconWrapper}>
+      <View style={{
+        backgroundColor: focused ? '#FF9800' : 'transparent',
+        padding: focused ? 6 : 0,
+        borderRadius: 14,
+        shadowColor: '#FF9800',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: focused ? 0.6 : 0.3,
+        shadowRadius: 10,
+        elevation: focused ? 12 : 4,
+      }}>
+        <Animated.View style={{ transform: [{ rotate }] }}>
+          <Icon name="logo-electron" size={focused ? 24 : 22} color={focused ? '#fff' : aiColor} />
+        </Animated.View>
+      </View>
+      <Text
+        style={[styles.label, { color: aiColor, fontWeight: focused ? '800' : '600', marginTop: focused ? 2 : 0 }]}
+      >
+        Ai
       </Text>
     </View>
   );
@@ -247,8 +292,8 @@ const MainTabNavigator: React.FC = () => {
         name="AIAssistant"
         component={AIAssistantScreen}
         options={{
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="sparkles" color={color} focused={focused} label="AI" />
+          tabBarIcon: ({ focused }) => (
+            <AnimatedAIIcon focused={focused} />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}

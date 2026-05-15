@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
 import HomeScreen from '../screens/main/home/HomeScreen';
 import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
@@ -35,7 +35,18 @@ const HomeStackNavigator: React.FC = () => {
       <Stack.Screen name="IndustryCategory" component={IndustryCategoryScreen} />
       <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
       <Stack.Screen name="Saved" component={SavedJobsScreen} />
-      <Stack.Screen name="LocationSelection" component={LocationScreen} />
+      {/* LocationSelection presented as modal (slides up from bottom)
+          so it doesn't conflict with HomeScreen's absolute-positioned header */}
+      <Stack.Screen
+        name="LocationSelection"
+        component={LocationScreen}
+        options={{
+          cardStyle: { backgroundColor: colors.background },
+          ...TransitionPresets.ModalSlideFromBottomIOS,
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+        }}
+      />
     </Stack.Navigator>
   );
 };

@@ -1,4 +1,4 @@
-import type { HomeJob } from '../home/homeMockData';
+import type { HomeJob } from '../home/components/homeMockData';
 
 /** Saved jobs use the same shape as home job cards (UI mock). */
 export const SAVED_JOBS_SEED: HomeJob[] = [

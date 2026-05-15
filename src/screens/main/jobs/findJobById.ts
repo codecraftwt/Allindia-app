@@ -1,5 +1,5 @@
-import type { HomeJob } from '../home/homeMockData';
-import { ALL_LISTED_JOBS } from '../home/homeMockData';
+import type { HomeJob } from '../home/components/homeMockData';
+import { ALL_LISTED_JOBS } from '../home/components/homeMockData';
 import { SAVED_JOBS_SEED } from '../saved/savedJobsMockData';
 
 export function findJobById(id: string): HomeJob | undefined {

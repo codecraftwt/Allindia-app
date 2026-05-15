@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
 import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
   RefreshControl,
+  Pressable,
+  View,
+
+  Text,
+  StyleSheet,
   Image,
   TextInput,
   TouchableOpacity,
   FlatList,
+  ScrollView,
+  Linking,
+  Alert,
+  Share,
+  Modal,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
@@ -35,70 +34,191 @@ import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography } from '../../../theme/typography';
 import { AuthHeadline } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
+import ApplicationStatsDashboard from './components/ApplicationStatsDashboard';
+import JobActionModal from '../../../components/JobActionModal';
 
-function AppliedJobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
+
+
+function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; colors: ThemeColors; onPress: () => void; profileData: any }) {
+  const [showMenu, setShowMenu] = React.useState(false);
+  const [menuAnchor, setMenuAnchor] = React.useState({ top: 0, right: 0 });
   const application = job.application || {};
-  const status = application.status || 'submitted';
-  const isContacted = status === 'contacted';
-  const statusBg = isContacted ? colors.successBackground : colors.badgeBackground;
-  const statusFg = isContacted ? colors.success : colors.badgeText;
+  const status = application.status || 'pending';
 
   const company = job.employer?.company || {};
   const location = job.location?.label || 'Remote';
+  const managerName = job.employer?.name || 'Manager';
 
   const appliedDate = application.applied_at
     ? new Date(application.applied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
     : '';
 
+  const salaryLabel = job.salary_min && job.salary_max
+    ? `Rs. ${job.salary_min.toLocaleString()} - Rs. ${job.salary_max.toLocaleString()} / month`
+    : 'Salary Negotiable';
+
+  const getStatusLabel = (s: string) => {
+    const statusLower = s.toLowerCase();
+    if (statusLower === 'pending') return 'In Review / Pending';
+    if (statusLower === 'shortlisted') return 'You are Shortlisted! 🎉';
+    if (statusLower === 'contacted') return 'HR has contacted you';
+    if (statusLower === 'interview_scheduled') return 'Interview Scheduled';
+    if (statusLower === 'selected') return 'Congratulations! Selected';
+    if (statusLower === 'rejected') return 'Application Rejected';
+    return 'HR is reviewing your profile';
+  };
+
+  const getStatusColor = (s: string) => {
+    const statusLower = s.toLowerCase();
+    if (statusLower === 'shortlisted' || statusLower === 'selected') return '#10b981';
+    if (statusLower === 'rejected') return '#ef4444';
+    if (statusLower === 'pending') return '#f59e0b';
+    return '#3b82f6';
+  };
+
+  const handleWhatsApp = () => {
+    const phone = job.employer?.phone || job.employer?.company?.company_phone;
+    if (phone) {
+      // Dynamic User Data
+      const userName = profileData?.personal?.name || 'Candidate';
+      const userExp = profileData?.preferences?.experience_type || 'Fresh';
+      const userLoc = profileData?.preferences?.current_city?.city || 'India';
+      const userPhone = profileData?.personal?.phone || '';
+      const userQual = profileData?.preferences?.qualification?.name || 'Graduate';
+      const userResume = profileData?.resume_url || 'Resume attached to profile';
+      const userSkills = profileData?.skills?.map((s: any) => s.name).join(', ') || 'Skills mentioned in profile';
+
+      const message = `Dear ${managerName},\nI came across your job posting on *Job India*, Job Title - *${job.title}*.\nI tried to contact you over the phone but could not reach you. I am interested in the profile. Please find my details below;\n\n*Full Name*: ${userName}\n*Experience*: ${userExp}\n*Location*: ${userLoc}\n*Mobile No*: ${userPhone}\n*Qualification*: ${userQual}\n*Resume Link*: ${userResume}\n*Skills*: ${userSkills}`;
+
+      const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
+      Linking.openURL(url).catch(() => Alert.alert('Error', 'WhatsApp is not installed'));
+    }
+  };
+
+  const handleCall = () => {
+    const phone = job.employer?.phone || job.employer?.company?.company_phone;
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    }
+  };
+
+  const handleShare = () => {
+    setShowMenu(false);
+    const companyName = job.employer?.company?.company_name || 'Hiring Company';
+    Share.share({
+      message: `Check out this job: ${job.title} at ${companyName}\nApply here: https://jobindia.app/job/${job.slug || job.id}`,
+      title: 'Job Opening',
+    });
+  };
+
+  const handleReport = () => {
+    // Handled by JobActionModal
+  };
+
   return (
     <Pressable
       onPress={onPress}
       style={[
-        styles.card,
+        styles.wiCard,
         {
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          shadowColor: colors.shadow,
         },
       ]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.logoContainer, { backgroundColor: colors.surfaceHighlight }]}>
+      {/* Header Info */}
+      <View style={styles.wiCardHeader}>
+        <View style={[styles.wiLogoBox, { backgroundColor: colors.surfaceHighlight }]}>
           {company.company_logo_url ? (
-            <Image source={{ uri: company.company_logo_url }} style={styles.logo} />
+            <Image source={{ uri: company.company_logo_url }} style={styles.wiLogo} />
           ) : (
-            <Icon name="briefcase" size={20} color={colors.primary} />
+            <Icon name="building" size={24} color={colors.primary} />
           )}
         </View>
-        <View style={styles.headerInfo}>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>
-            {job.title}
-          </Text>
-          <Text style={[typography.small, { color: colors.textSecondary }]} numberOfLines={1}>
-            {company.company_name || 'Anonymous Company'}
-          </Text>
+        <View style={styles.wiHeaderInfo}>
+          <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>{job.title}</Text>
+          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>{company.company_name || 'Anonymous Company'}</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
-          <Text style={[typography.tiny, { color: statusFg, textTransform: 'capitalize' }]}>
-            {status}
+        <TouchableOpacity
+          onPress={(event) => {
+            const { pageY } = event.nativeEvent;
+            setMenuAnchor({ top: pageY - 10, right: spacing.lg });
+            setShowMenu(true);
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.wiMenuBtn}
+        >
+          <Icon name="ellipsis-v" size={16} color={colors.textPlaceholder} />
+        </TouchableOpacity>
+
+        {/* Dynamic Action Modal/Dropdown */}
+        <JobActionModal
+          visible={showMenu}
+          onClose={() => setShowMenu(false)}
+          job={job}
+          colors={colors}
+          onShare={handleShare}
+          type="dropdown"
+          anchorPosition={menuAnchor}
+        />
+      </View>
+
+      {/* Meta Info */}
+      <View style={styles.wiMetaSection}>
+        <View style={styles.wiMetaItem}>
+          <Icon name="money" size={14} color={colors.textSecondary} />
+          <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>{salaryLabel}</Text>
+        </View>
+        <View style={styles.wiMetaItem}>
+          <Icon name="map-marker" size={14} color={colors.textSecondary} />
+          <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>{location}</Text>
+        </View>
+      </View>
+
+      {/* Status Journey Box */}
+      <View style={[styles.wiJourneyBox, { backgroundColor: colors.surfaceHighlight + '50' }]}>
+        <View style={styles.wiJourneyRow}>
+          <View style={styles.wiJourneyIconWrap}>
+            <View style={[styles.wiJourneyDot, { backgroundColor: '#10b981' }]}>
+              <Icon name="check" size={8} color="#fff" />
+            </View>
+            <View style={[styles.wiJourneyLine, { borderColor: colors.border }]} />
+          </View>
+          <View>
+            <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>Applied successfully</Text>
+            {appliedDate ? <Text style={{ fontSize: 10, color: colors.textSecondary }}>{appliedDate}</Text> : null}
+          </View>
+        </View>
+        <View style={[styles.wiJourneyRow, { marginTop: 4 }]}>
+          <View style={styles.wiJourneyIconWrap}>
+            <View style={[styles.wiJourneyCircle, { borderColor: getStatusColor(status), backgroundColor: colors.surface }]}>
+              {status !== 'pending' && <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: getStatusColor(status) }} />}
+            </View>
+          </View>
+          <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: status !== 'pending' ? '700' : '500' }]}>
+            {getStatusLabel(status)}
           </Text>
         </View>
       </View>
 
-      <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
-        <View style={styles.footerItem}>
-          <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textSecondary }]}>{location}</Text>
-        </View>
-        <View style={styles.footerItem}>
-          <Icon name="money" size={12} color={colors.textPlaceholder} />
+      {/* Manager Info */}
+      <View style={styles.wiManagerRow}>
+        <Icon name="user-circle" size={16} color={colors.textSecondary} />
+        <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>{managerName} (Manager)</Text>
+      </View>
 
-
-        </View>
-        {appliedDate ? (
-          <Text style={[typography.small, { color: colors.textPlaceholder, marginLeft: 'auto' }]}>
-            Applied {appliedDate}
-          </Text>
-        ) : null}
+      {/* Action Buttons */}
+      <View style={styles.wiActionRow}>
+        <TouchableOpacity style={[styles.wiBtn, styles.wiBtnWhatsapp, { backgroundColor: colors.surface, borderColor: '#22c55e' }]} onPress={handleWhatsApp}>
+          <Icon name="whatsapp" size={18} color="#22c55e" />
+          <Text style={styles.wiBtnTextWhatsapp}>WhatsApp</Text>
+        </TouchableOpacity>
+        {job.allow_calls !== false && (
+          <TouchableOpacity style={[styles.wiBtn, styles.wiBtnCall, { backgroundColor: colors.primary }]} onPress={handleCall}>
+            <Icon name="phone" size={18} color="#fff" />
+            <Text style={styles.wiBtnTextCall}>Call Now</Text>
+            <Icon name="arrow-right" size={14} color="#fff" style={{ marginLeft: 8 }} />
+          </TouchableOpacity>
+        )}
       </View>
     </Pressable>
   );
@@ -109,7 +229,7 @@ const ApplicationsSkeleton: React.FC = () => {
   return (
     <View style={{ gap: spacing.md }}>
       {[1, 2, 3, 4, 5].map(i => (
-        <View key={i} style={[styles.skeletonCard, { backgroundColor: colors.surface }]}>
+        <View key={i} style={[styles.skeletonCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.cardHeader}>
             <SkeletonPulse style={styles.skeletonLogo} />
             <View style={{ flex: 1, gap: 6 }}>
@@ -129,38 +249,15 @@ const ApplicationsSkeleton: React.FC = () => {
   );
 };
 
-const StatShimmer = ({ colors }: { colors: ThemeColors }) => {
-  const shimmerValue = useSharedValue(0.3);
 
-  React.useEffect(() => {
-    shimmerValue.value = withRepeat(
-      withTiming(0.7, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true
-    );
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: shimmerValue.value,
-  }));
-
-  return (
-    <View style={styles.statItemHorizontal}>
-      <Animated.View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border + '40' }, animatedStyle]}>
-        <Animated.View style={[{ width: 30, height: 20, backgroundColor: colors.border + '30', borderRadius: 4 }, animatedStyle]} />
-      </Animated.View>
-      <View style={{ marginTop: 8, alignItems: 'center' }}>
-        <Animated.View style={[{ width: 50, height: 10, backgroundColor: colors.border + '30', borderRadius: 2 }, animatedStyle]} />
-      </View>
-    </View>
-  );
-};
 const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
-  const { appliedJobs, applicationCounts, loading, countsLoading } = useSelector((state: RootState) => state.profile);
+  const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData } = useSelector((state: RootState) => state.profile);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
   const openJobDetail = (job: any) => {
@@ -168,12 +265,23 @@ const ApplicationsScreen: React.FC = () => {
   };
 
   const filteredAppliedJobs = React.useMemo(() => {
-    if (!searchQuery) return appliedJobs;
-    return appliedJobs.filter((job: any) => 
-      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.employer?.company?.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [appliedJobs, searchQuery]);
+    let filtered = appliedJobs;
+
+    // Status Filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((job: any) => job.application?.status === statusFilter);
+    }
+
+    // Search Filter
+    if (searchQuery) {
+      filtered = filtered.filter((job: any) =>
+        job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.employer?.company?.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return filtered;
+  }, [appliedJobs, searchQuery, statusFilter]);
 
   const onRefresh = React.useCallback(() => {
     dispatch(fetchAppliedJobs());
@@ -196,10 +304,12 @@ const ApplicationsScreen: React.FC = () => {
     onRefresh();
   }, [onRefresh]);
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       {!isLoggedIn ? (
-        <GuestView 
+        <GuestView
           title="Track Your Success"
           subtitle="Register now to keep track of all your job applications and their current status."
           icon="briefcase"
@@ -213,6 +323,7 @@ const ApplicationsScreen: React.FC = () => {
               job={item}
               colors={colors}
               onPress={() => openJobDetail(item)}
+              profileData={profileData}
             />
           )}
           ListHeaderComponent={
@@ -220,109 +331,67 @@ const ApplicationsScreen: React.FC = () => {
               <AuthHeadline
                 colors={colors}
                 title="Applications"
-                subtitle="Track the status of your job applications"
               />
+              <View style={{ height: spacing.xs }} />
 
               {/* Job Application Stats Dashboard - Horizontal Scroll */}
-              <View style={[styles.dashboardCard, { backgroundColor: colors.surface, shadowColor: colors.primary }]}>
-                <View style={styles.dashboardHeader}>
-                  <Text style={[styles.dashboardTitle, { color: colors.textSecondary }]}>APPLICATION STATS</Text>
-                  <View style={styles.swipeHint}>
-                    <Text style={[styles.swipeText, { color: colors.textPlaceholder }]}>Swipe</Text>
-                    <Icon name="chevron-right" size={8} color={colors.textPlaceholder} />
-                  </View>
+              <ApplicationStatsDashboard
+                applicationCounts={applicationCounts}
+                countsLoading={countsLoading}
+              />
+              <View style={styles.sectionHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
+                  <Text style={{ color: colors.textPlaceholder, fontSize: 12 }}>{filteredAppliedJobs.length} Applications</Text>
                 </View>
 
-                <ScrollView 
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.statsHorizontalScroll}
-                  snapToInterval={90 + spacing.md}
-                  decelerationRate="fast"
+                <TouchableOpacity
+                  onPress={() => setShowFilterMenu(true)}
+                  style={[styles.filterIconBtn, { backgroundColor: statusFilter !== 'all' ? colors.primary + '15' : colors.surface, borderColor: colors.border }]}
                 >
-                  {countsLoading || !applicationCounts ? (
-                    Array(6).fill(0).map((_, i) => <StatShimmer key={i} colors={colors} />)
-                  ) : (
-                    <>
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: colors.primary }]}>
-                            <Icon name="briefcase" size={10} color={colors.onPrimary} />
-                          </View>
-                          <Text style={[styles.statValue, { color: colors.primary }]}>
-                            {String(applicationCounts.total_applied).padStart(2, '0')}
-                          </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Applied</Text>
-                      </View>
+                  <Icon name="filter" size={18} color={statusFilter !== 'all' ? colors.primary : colors.textSecondary} />
+                  {statusFilter !== 'all' && <View style={[styles.filterBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]} />}
+                </TouchableOpacity>
 
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.warning + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: colors.warning }]}>
-                            <Icon name="clock-o" size={10} color="#000" />
-                          </View>
-                          <Text style={[styles.statValue, { color: colors.warning }]}>
-                            {String(applicationCounts.pending).padStart(2, '0')}
+                {/* Filter Dropdown */}
+                <Modal
+                  visible={showFilterMenu}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setShowFilterMenu(false)}
+                >
+                  <Pressable style={styles.menuOverlay} onPress={() => setShowFilterMenu(false)}>
+                    <View style={[styles.filterDropdownContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      {[
+                        { label: 'All Applications', value: 'all' },
+                        { label: 'Shortlisted', value: 'shortlisted' },
+                        { label: 'Pending', value: 'pending' },
+                        { label: 'Interview Scheduled', value: 'interview_scheduled' },
+                        { label: 'Rejected', value: 'rejected' }
+                      ].map((f) => (
+                        <TouchableOpacity
+                          key={f.value}
+                          onPress={() => {
+                            setStatusFilter(f.value);
+                            setShowFilterMenu(false);
+                          }}
+                          style={[
+                            styles.filterMenuItem,
+                            { backgroundColor: statusFilter === f.value ? colors.primary + '10' : 'transparent' }
+                          ]}
+                        >
+                          <Text style={[
+                            styles.filterMenuText,
+                            { color: statusFilter === f.value ? colors.primary : colors.textPrimary }
+                          ]}>
+                            {f.label}
                           </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
-                      </View>
-
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: (colors.info || colors.primary) + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: colors.info || colors.primary }]}>
-                            <Icon name="check-circle-o" size={10} color="#fff" />
-                          </View>
-                          <Text style={[styles.statValue, { color: colors.info || colors.primary }]}>
-                            {String(applicationCounts.shortlisted).padStart(2, '0')}
-                          </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Shortlisted</Text>
-                      </View>
-
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: '#6366f1' + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: '#6366f1' }]}>
-                            <Icon name="calendar-check-o" size={10} color="#fff" />
-                          </View>
-                          <Text style={[styles.statValue, { color: '#6366f1' }]}>
-                            {String(applicationCounts.interview_scheduled).padStart(2, '0')}
-                          </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Interview</Text>
-                      </View>
-
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.success + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: colors.success }]}>
-                            <Icon name="trophy" size={10} color="#fff" />
-                          </View>
-                          <Text style={[styles.statValue, { color: colors.success }]}>
-                            {String(applicationCounts.selected).padStart(2, '0')}
-                          </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Selected</Text>
-                      </View>
-
-                      <View style={styles.statItemHorizontal}>
-                        <View style={[styles.squircleBadge, { backgroundColor: colors.surfaceHighlight, borderColor: colors.error + '40' }]}>
-                          <View style={[styles.floatingIcon, { backgroundColor: colors.error }]}>
-                            <Icon name="times-circle-o" size={10} color="#fff" />
-                          </View>
-                          <Text style={[styles.statValue, { color: colors.error }]}>
-                            {String(applicationCounts.rejected).padStart(2, '0')}
-                          </Text>
-                        </View>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rejected</Text>
-                      </View>
-                    </>
-                  )}
-                </ScrollView>
-              </View>
-
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
-                <Text style={{ color: colors.primary, fontWeight: '700' }}>{appliedJobs.length} Jobs</Text>
+                          {statusFilter === f.value && <Icon name="check" size={14} color={colors.primary} />}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </Pressable>
+                </Modal>
               </View>
 
               {/* Search Bar */}
@@ -341,7 +410,7 @@ const ApplicationsScreen: React.FC = () => {
                   </TouchableOpacity>
                 )}
               </View>
-              
+
               {loading && filteredAppliedJobs.length === 0 && (
                 <ApplicationsSkeleton />
               )}
@@ -359,7 +428,7 @@ const ApplicationsScreen: React.FC = () => {
           }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -372,170 +441,215 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: 120,
   },
-  list: {
-    gap: spacing.md,
-  },
-  card: {
-    ...components.jobCard,
+  wiCard: {
     padding: spacing.md,
-    borderRadius: radius.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: spacing.md,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
-  cardHeader: {
+  wiCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+    marginBottom: spacing.sm,
   },
-  logoContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
+  wiLogoBox: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  logo: {
+  wiLogo: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
-  headerInfo: {
+  wiHeaderInfo: {
     flex: 1,
   },
-  statusBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.xs,
+  wiJobTitle: {
+    fontSize: 16,
+    fontWeight: '800',
   },
-  cardFooter: {
+  wiCompanyName: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  wiMetaSection: {
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  wiMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 10,
   },
-  footerItem: {
+  wiMetaText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  wiJourneyBox: {
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: spacing.md,
+  },
+  wiJourneyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 12,
+  },
+  wiJourneyIconWrap: {
+    alignItems: 'center',
+    width: 20,
+  },
+  wiJourneyDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wiJourneyCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+  },
+  wiJourneyLine: {
+    width: 2,
+    height: 16,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    marginVertical: 2,
+  },
+  wiJourneyText: {
+    fontSize: 13,
+  },
+  wiManagerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  wiManagerText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  wiActionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  wiBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  wiBtnWhatsapp: {
+    borderWidth: 1.5,
+  },
+  wiBtnCall: {
+    // Background color set dynamically
+  },
+  wiBtnTextWhatsapp: {
+    color: '#22c55e',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  wiBtnTextCall: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  wiAppliedDate: {
+    fontSize: 10,
+    marginTop: 8,
+    textAlign: 'right',
+  },
+  wiMenuBtn: {
+    padding: 4,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.xxl * 2,
   },
-  // Dashboard Styles
-  dashboardCard: {
-    paddingVertical: spacing.md,
-    paddingLeft: spacing.md, // Start items from left
-    paddingRight: 0, // Allow scroll to edge
-    borderRadius: radius.xl,
-    elevation: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    marginBottom: spacing.lg,
-    marginTop: spacing.sm,
-  },
-  dashboardTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    marginBottom: 0,
-  },
-  dashboardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    paddingRight: spacing.md, // Keep title away from right edge
-  },
-  swipeHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    opacity: 0.6,
-  },
-  swipeText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  statsHorizontalScroll: {
-    paddingRight: spacing.xl,
-    gap: spacing.md,
-  },
-  statItemHorizontal: {
-    width: 90,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  squircleBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    marginBottom: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  floatingIcon: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-    elevation: 4,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  statLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    marginTop: 0,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    opacity: 0.3,
-  },
   sectionHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
+    marginTop: spacing.xs,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
+  },
+  filterIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  filterDropdownContent: {
+    position: 'absolute',
+    right: spacing.lg,
+    top: 270,
+    width: 180,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 6,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  filterMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  filterMenuText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    height: 48,
-    borderRadius: radius.md,
+    height: 44,
+    borderRadius: 12,
     borderWidth: 1,
+    marginBottom: spacing.sm,
     gap: spacing.sm,
-    marginBottom: spacing.md,
   },
   searchInput: {
     flex: 1,
@@ -546,9 +660,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.1)',
     gap: spacing.md,
-    backgroundColor: '#fff',
   },
   skeletonLogo: {
     width: 48,

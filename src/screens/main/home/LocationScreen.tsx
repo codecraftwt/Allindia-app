@@ -8,6 +8,7 @@ import {
   TextInput,
   Dimensions,
   Platform,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
@@ -56,8 +57,13 @@ const LocationScreen = () => {
   };
 
   const handleAreaSelect = (area: string) => {
-    dispatch(setSelectedLocation({ city: tempCity, area: area }));
+    // Navigate back first, then dispatch after transition completes
+    // This prevents the simultaneous Redux state update + navigation animation
+    // that causes a visual double-render flicker on HomeScreen
     navigation.goBack();
+    InteractionManager.runAfterInteractions(() => {
+      dispatch(setSelectedLocation({ city: tempCity, area: area }));
+    });
   };
 
   const currentAreas = AREAS_MOCK[tempCity] || AREAS_MOCK['Mumbai'];

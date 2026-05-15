@@ -150,7 +150,7 @@ const ProfileDetailsScreen = () => {
       
       {/* Premium Header - WorkIndia Style */}
       <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
-        <SafeAreaView edges={['top']}>
+        <View style={{ paddingTop: insets.top }}>
           <View style={styles.topNav}>
             <Pressable onPress={() => navigation.goBack()} style={styles.iconBtn}>
               <FeatherIcon name="arrow-left" size={24} color="#FFFFFF" />
@@ -202,7 +202,7 @@ const ProfileDetailsScreen = () => {
               </View>
             </View>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
 
       <ScrollView 
@@ -219,7 +219,7 @@ const ProfileDetailsScreen = () => {
         }
       >
         {/* Profile Strength Card */}
-        {completion && (
+        {completion && completion.percentage < 100 && (
           <View style={[styles.strengthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.strengthInfo}>
               <View>

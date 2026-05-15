@@ -263,7 +263,7 @@ const ProfileOverviewScreen: React.FC = () => {
     >
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
+          <View style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', borderWidth: 0 }]}>
             <Icon name="user" size={32} color={colors.border} />
           </View>
           <View style={styles.headerInfo}>
@@ -303,7 +303,7 @@ const ProfileOverviewScreen: React.FC = () => {
       );
     }
 
-    if (profileLoading && !profileData) {
+    if (!profileData || profileLoading) {
       return <ProfileSkeleton />;
     }
 

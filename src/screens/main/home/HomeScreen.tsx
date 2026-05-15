@@ -15,11 +15,11 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import ReAnimated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
-  withSpring, 
+import ReAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
   withRepeat,
   runOnJS,
   interpolate as reInterpolate,
@@ -50,13 +50,13 @@ import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssista
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
 import HeroBanner from '../../../components/HeroBanner';
 import SkeletonPulse from '../../../components/SkeletonPulse';
-import { QuickFilterCards } from './QuickFilterCards';
-import HomescreenHeader from './HomescreenHeader';
-import HomeCategoriesSection from './HomeCategoriesSection';
-import type { HomeJob } from './homeMockData';
+import { QuickFilterCards } from './components/QuickFilterCards';
+import HomescreenHeader from './components/HomescreenHeader';
+import HomeCategoriesSection from './components/HomeCategoriesSection';
+import type { HomeJob } from './components/homeMockData';
 import {
   HOME_CATEGORIES,
-} from './homeMockData';
+} from './components/homeMockData';
 
 const H_CARD_W = Math.min(Dimensions.get('window').width * 0.72, 280);
 
@@ -394,7 +394,7 @@ function JobListCard({
             </Text>
           </View>
         </View>
-        
+
         <View style={{ alignItems: 'flex-end' }}>
           {hasAppliedTags ? (
             <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
@@ -490,8 +490,8 @@ const HomeSkeleton: React.FC = () => {
 };
 
 const HomeScreen: React.FC = () => {
-  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<HomeNav>();
   const { draft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
@@ -630,10 +630,13 @@ const HomeScreen: React.FC = () => {
     return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
-  // 1. Initial Load Effect (Static/Main Data) - Only run once or when categories missing
+  // 1. Initial Load Effect (Static/Main Data) - Only run once or when data missing
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchMetaCategories());
-    dispatch(fetchHomeFeed()); // Keep feed fresh
+    const hasFeedData = trending.length > 0 || latest.length > 0 || recommended.length > 0;
+    if (!hasFeedData) {
+      dispatch(fetchHomeFeed());
+    }
     dispatch(fetchAdminMedia({ media_section: 'home page', limit: 10 }));
   }, [dispatch]);
 
@@ -714,7 +717,7 @@ const HomeScreen: React.FC = () => {
     extrapolate: 'clamp',
   });
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <View style={[styles.safe, { backgroundColor: colors.background }]} >
       <HomescreenHeader
         scrollY={scrollY}
         colors={colors}
@@ -741,7 +744,7 @@ const HomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 150 },
+          { paddingBottom: 150, paddingTop: 130 + insets.top },
         ]}
         refreshControl={
           <RefreshControl
@@ -762,7 +765,7 @@ const HomeScreen: React.FC = () => {
 
             <QuickFilterCards colors={colors} />
 
-            <HomeCategoriesSection 
+            <HomeCategoriesSection
               categories={categories}
               colors={colors}
               navigation={navigation}
@@ -987,7 +990,7 @@ const HomeScreen: React.FC = () => {
           </View>
         </Modal>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -997,8 +1000,8 @@ const styles = StyleSheet.create({
   },
   fixedHeader: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xs, // Reduced even more
+    paddingTop: 10, // Base padding, will be combined with insets if needed
+    paddingBottom: spacing.xs,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -1013,7 +1016,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: 123,
+    paddingTop: 0, // Handled dynamically in render
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -1206,8 +1209,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
-    marginTop: spacing.md,
+    marginBottom: 12,
+    marginTop: spacing.sm,
   },
   sectionIcon: {
     marginRight: spacing.sm,
