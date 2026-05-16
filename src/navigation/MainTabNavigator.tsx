@@ -234,6 +234,7 @@ const MainTabNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
+      backBehavior="history"
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,

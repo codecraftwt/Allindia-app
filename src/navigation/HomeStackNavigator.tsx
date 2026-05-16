@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../context/ThemeContext';
 import HomeScreen from '../screens/main/home/HomeScreen';
 import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
@@ -14,7 +14,7 @@ import SavedJobsScreen from '../screens/main/saved/SavedJobsScreen';
 import LocationScreen from '../screens/main/home/LocationScreen';
 import type { HomeStackParamList } from './types';
 
-const Stack = createStackNavigator<HomeStackParamList>();
+const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 const HomeStackNavigator: React.FC = () => {
   const { colors } = useTheme();
@@ -23,7 +23,8 @@ const HomeStackNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: 'transparent' },
+        contentStyle: { backgroundColor: colors.background },
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="HomeFeed" component={HomeScreen} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} />
@@ -41,10 +42,8 @@ const HomeStackNavigator: React.FC = () => {
         name="LocationSelection"
         component={LocationScreen}
         options={{
-          cardStyle: { backgroundColor: colors.background },
-          ...TransitionPresets.ModalSlideFromBottomIOS,
-          gestureEnabled: true,
-          gestureDirection: 'vertical',
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'slide_from_bottom',
         }}
       />
     </Stack.Navigator>

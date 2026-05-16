@@ -412,4 +412,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileStrengthAssistant;
+export default React.memo(ProfileStrengthAssistant);

@@ -80,7 +80,7 @@ const QuickFilterCard = ({ title, icon, color, onPress, colors }: QuickFilterCar
     );
 };
 
-export const QuickFilterCards = ({ colors }: { colors: any }) => {
+export const QuickFilterCards = React.memo(({ colors }: { colors: any }) => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useDispatch<AppDispatch>();
@@ -139,7 +139,7 @@ export const QuickFilterCards = ({ colors }: { colors: any }) => {
             </View>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     container: {

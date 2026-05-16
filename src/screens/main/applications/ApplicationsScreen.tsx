@@ -331,6 +331,7 @@ const ApplicationsScreen: React.FC = () => {
               <AuthHeadline
                 colors={colors}
                 title="Applications"
+                style={{ marginBottom: 4 }}
               />
               <View style={{ height: spacing.xs }} />
 

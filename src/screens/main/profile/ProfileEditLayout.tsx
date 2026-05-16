@@ -82,8 +82,8 @@ export const ProfileEditLayout: React.FC<Props> = ({
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 20}>
 
         {useFlatList && flatListData && renderFlatItem ? (
           <FlatList

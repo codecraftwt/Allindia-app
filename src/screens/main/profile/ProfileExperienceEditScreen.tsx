@@ -96,10 +96,12 @@ const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
   });
 
   return (
-    <Animated.View style={[animatedStyle, { borderRadius: radius.card, backgroundColor: colors.surface }]}>
+    <Animated.View style={[animatedStyle, { borderRadius: radius.card, backgroundColor: colors.surface, overflow: 'hidden' }]}>
       <TextInput
         {...props}
-        style={[style, { borderWidth: 0 }]}
+        style={[style, { borderWidth: 0, textAlignVertical: 'center' }]}
+        cursorColor={colors.primary}
+        selectionColor={`${colors.primary}33`}
         onFocus={(e) => {
           focusValue.value = withTiming(1);
           onFocus?.(e);
@@ -303,10 +305,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   input: {
-    borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: spacing.sm,
+    minHeight: 52,
     fontSize: 16,
     fontFamily: typography.body.fontFamily,
   },

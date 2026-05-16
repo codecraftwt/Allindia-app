@@ -173,7 +173,11 @@ const jobSlice = createSlice({
     filteredJobs: [] as any[],
     jobsByCategory: [] as any[],
     currentJob: null as any,
-    loading: false,
+    homeLoading: false,
+    categoryLoading: false,
+    searchLoading: false,
+    detailLoading: false,
+    loading: false, // fallback
     error: null as string | null,
     meta: null as any,
   },
@@ -210,16 +214,16 @@ const jobSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(searchJobs.pending, (state) => {
-        state.loading = true;
+        state.searchLoading = true;
         state.error = null;
       })
       .addCase(searchJobs.fulfilled, (state, action) => {
-        state.loading = false;
+        state.searchLoading = false;
         state.searchResults = action.payload.data.jobs || [];
         state.meta = action.payload.meta;
       })
       .addCase(searchJobs.rejected, (state, action) => {
-        state.loading = false;
+        state.searchLoading = false;
         state.error = action.payload as string;
       })
       .addCase(filterJobs.pending, (state) => {
@@ -236,41 +240,41 @@ const jobSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(fetchHomeFeed.pending, (state) => {
-        state.loading = true;
+        state.homeLoading = true;
       })
       .addCase(fetchHomeFeed.fulfilled, (state, action) => {
-        state.loading = false;
+        state.homeLoading = false;
         state.trending = action.payload.data.trending || [];
         state.nearby = action.payload.data.nearby || [];
         state.recommended = action.payload.data.recommended || [];
         state.latest = action.payload.data.latest || [];
       })
       .addCase(fetchHomeFeed.rejected, (state, action) => {
-        state.loading = false;
+        state.homeLoading = false;
         state.error = action.payload as string;
       })
       .addCase(fetchJobsByCategory.pending, (state) => {
-        state.loading = true;
+        state.categoryLoading = true;
         state.error = null;
       })
       .addCase(fetchJobsByCategory.fulfilled, (state, action) => {
-        state.loading = false;
+        state.categoryLoading = false;
         state.jobsByCategory = action.payload.data.categories || [];
       })
       .addCase(fetchJobsByCategory.rejected, (state, action) => {
-        state.loading = false;
+        state.categoryLoading = false;
         state.error = action.payload as string;
       })
       .addCase(fetchJobDetail.pending, (state) => {
-        state.loading = true;
+        state.detailLoading = true;
         state.error = null;
       })
       .addCase(fetchJobDetail.fulfilled, (state, action) => {
-        state.loading = false;
+        state.detailLoading = false;
         state.currentJob = action.payload.data.job;
       })
       .addCase(fetchJobDetail.rejected, (state, action) => {
-        state.loading = false;
+        state.detailLoading = false;
         state.error = action.payload as string;
       })
       .addCase(applyJob.pending, (state) => {

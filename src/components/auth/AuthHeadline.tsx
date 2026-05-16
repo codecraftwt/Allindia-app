@@ -15,6 +15,7 @@ type Props = {
   centerDecor?: boolean;
   /** Optional back action */
   onBack?: () => void;
+  style?: any;
 };
 
 export const AuthHeadline: React.FC<Props> = ({
@@ -24,8 +25,9 @@ export const AuthHeadline: React.FC<Props> = ({
   decor,
   centerDecor,
   onBack,
+  style,
 }) => (
-  <View style={styles.wrap}>
+  <View style={[styles.wrap, style]}>
     {decor ? (
       <View style={[styles.decor, centerDecor && styles.decorCenter]}>{decor}</View>
     ) : null}

@@ -344,6 +344,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     <Animated.View
       style={[styles.container, { opacity: opacityAnim, top }]}
       pointerEvents={visible ? 'auto' : 'none'}>
+      {/* Full-screen backdrop to capture outside taps */}
       <Pressable style={styles.backdrop} onPress={onClose} />
       <Animated.View
         style={[
@@ -612,27 +613,28 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    left: spacing.md,
-    right: spacing.md,
+    left: 0,
+    right: 0,
     zIndex: 90,
   },
   backdrop: {
     position: 'absolute',
-    top: -500,
-    left: -100,
-    right: -100,
+    top: -1000,
+    left: 0,
+    right: 0,
     bottom: -SCREEN_HEIGHT,
-    backgroundColor: 'rgba(0,0,0,0.15)',
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   dropdownCard: {
     height: 520,
+    marginHorizontal: spacing.md,
     borderRadius: radius.xxl,
     borderWidth: 1,
     overflow: 'hidden',
-    elevation: 12,
+    elevation: 16,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
   },
   contentRow: {
     flex: 1,

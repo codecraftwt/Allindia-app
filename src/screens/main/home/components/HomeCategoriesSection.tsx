@@ -209,4 +209,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeCategoriesSection;
+export default React.memo(HomeCategoriesSection);

@@ -265,10 +265,10 @@ const AllJobsScreen = () => {
         <AuthHeadline
           colors={colors}
           title="All jobs"
-          subtitle="Find your perfect match"
+          style={{ marginBottom: 4 }}
         />
       </View>
-      <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight }]}>
+      <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight, marginTop: 4 }]}>
         <Icon name="search" size={18} color={colors.textPlaceholder} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
@@ -397,7 +397,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: spacing.lg,
-    marginVertical: 4,
+    marginTop: 0,
+    marginBottom: 12,
     paddingHorizontal: spacing.md,
     height: 46,
     borderRadius: 12,
@@ -550,7 +551,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   quickFilterBar: {
-    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.xs,
   },
   quickFilterScroll: {
     paddingHorizontal: spacing.lg,

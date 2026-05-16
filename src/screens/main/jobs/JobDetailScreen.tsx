@@ -326,7 +326,9 @@ const JobDetailScreen: React.FC = () => {
     ? `₹${currentJob.salary_min.toLocaleString()} - ${currentJob.salary_max.toLocaleString()}`
     : 'Negotiable';
   const postedDate = currentJob?.created_at ? new Date(currentJob.created_at).toLocaleDateString() : 'Recently';
-  const jobTypeLabel = currentJob?.job_type_label || currentJob?.job_type || 'Full Time';
+  const jobTypeLabel = currentJob?.job_type_label || (currentJob?.job_type
+    ? currentJob.job_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    : 'Full Time');
 
   const handleShare = useCallback(async () => {
     if (!currentJob) return;
@@ -498,7 +500,7 @@ const JobDetailScreen: React.FC = () => {
             <InfoRow label="Gender" value={currentJob.gender || 'Any'} icon="venus-mars" colors={colors} />
             <InfoRow label="Openings" value={`${currentJob.openings || 0} Positions`} icon="users" colors={colors} />
             <InfoRow label="Category" value={currentJob.category?.name || 'General'} icon="th-large" colors={colors} />
-            <InfoRow label="Experience" value={currentJob.experience_label || 'Fresher/Experience'} icon="briefcase" colors={colors} />
+            <InfoRow label="Experience" value={currentJob.experience_label || '-'} icon="briefcase" colors={colors} />
             {currentJob.working_hours && (
               <InfoRow label="Working Hours" value={currentJob.working_hours} icon="clock-o" colors={colors} />
             )}

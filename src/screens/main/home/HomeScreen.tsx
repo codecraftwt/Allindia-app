@@ -489,6 +489,177 @@ const HomeSkeleton: React.FC = () => {
   );
 };
 
+const MemoizedHomeContent = React.memo(({
+  isAnyLoading,
+  homeLoading,
+  recommended,
+  trending,
+  latest,
+  nearby,
+  categories,
+  colors,
+  isDark,
+  scrollY,
+  handleScroll,
+  onRefresh,
+  showFilterGrid,
+  insets,
+  showAllNearby,
+  setShowAllNearby,
+  showAllRecommended,
+  setShowAllRecommended,
+  openJob,
+  goSearch,
+  tagRotationStyle,
+  navigation
+}: any) => {
+  return (
+    <Animated.ScrollView
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      scrollEnabled={!showFilterGrid}
+      style={styles.scrollMain}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: 150, paddingTop: 130 + (insets.top || 40) },
+      ]}
+      refreshControl={
+        <RefreshControl
+          refreshing={isAnyLoading && recommended.length > 0}
+          onRefresh={onRefresh}
+          colors={[colors.primary]}
+          progressViewOffset={140}
+        />
+      }>
+      {isAnyLoading && recommended.length === 0 ? (
+        <HomeSkeleton />
+      ) : (
+        <>
+          <HeroBanner colors={colors} onPress={goSearch} />
+          <QuickFilterCards colors={colors} />
+          <HomeCategoriesSection
+            categories={categories}
+            colors={colors}
+            navigation={navigation}
+            homeCategoriesMock={HOME_CATEGORIES}
+            isDark={isDark}
+          />
+          {latest && latest.length > 0 && (
+            <>
+              <SectionHeader
+                title="Latest jobs"
+                icon="clock-o"
+                iconColor={colors.success}
+                colors={colors}
+                onPress={() => navigation.navigate('CategoryJobs', { section: 'latest' })}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.trendingScroll}
+                decelerationRate="fast">
+                {latest.map((job: any) => (
+                  <JobTrendCard
+                    key={job.id}
+                    job={{ ...job, isLatest: true }}
+                    colors={colors}
+                    onPress={() => openJob(job)}
+                    tagRotationStyle={tagRotationStyle}
+                    isDark={isDark}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
+          {trending && trending.length > 0 && (
+            <>
+              <SectionHeader
+                title="Trending jobs"
+                icon="fire"
+                iconColor={colors.warning}
+                colors={colors}
+                onPress={() => navigation.navigate('CategoryJobs', { section: 'trending' })}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.trendingScroll}
+                decelerationRate="fast">
+                {trending.map((job: any) => (
+                  <JobTrendCard
+                    key={job.id}
+                    job={job}
+                    colors={colors}
+                    onPress={() => openJob(job)}
+                    tagRotationStyle={tagRotationStyle}
+                    isDark={isDark}
+                  />
+                ))}
+              </ScrollView>
+            </>
+          )}
+          {nearby && nearby.length > 0 && (
+            <>
+              <SectionHeader
+                title="Nearby jobs"
+                icon="map-marker"
+                colors={colors}
+                onPress={() => navigation.navigate('CategoryJobs', { section: 'nearby' })}
+              />
+              <View style={styles.verticalList}>
+                {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
+                  <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
+                ))}
+              </View>
+              {nearby.length > 5 && !showAllNearby && (
+                <TouchableOpacity
+                  onPress={() => setShowAllNearby(true)}
+                  style={styles.viewMoreVertical}
+                >
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>View {nearby.length - 5} More Nearby Jobs</Text>
+                  <Icon name="chevron-down" size={14} color={colors.primary} />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+          {recommended && recommended.length > 0 && (
+            <>
+              <View style={{ height: spacing.md }} />
+              <SectionHeader
+                title="Recommended for you"
+                icon="bullseye"
+                iconColor={colors.primary}
+                colors={colors}
+                onPress={() => navigation.navigate('CategoryJobs', { section: 'recommended' })}
+              />
+              <View style={styles.verticalList}>
+                {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
+                  <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
+                ))}
+              </View>
+              {recommended.length > 5 && !showAllRecommended && (
+                <TouchableOpacity
+                  onPress={() => setShowAllRecommended(true)}
+                  style={styles.viewMoreVertical}
+                >
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>View {recommended.length - 5} More Recommendations</Text>
+                  <Icon name="chevron-down" size={14} color={colors.primary} />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+          {!homeLoading && trending.length === 0 && nearby.length === 0 && recommended.length === 0 && latest.length === 0 && (
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
+              No jobs found at the moment.
+            </Text>
+          )}
+        </>
+      )}
+    </Animated.ScrollView>
+  );
+});
+
 const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
@@ -497,11 +668,11 @@ const HomeScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
-  const { trending, nearby, recommended, latest, loading: jobsLoading } = useSelector((state: RootState) => state.jobs);
+  const { trending, nearby, recommended, latest, homeLoading } = useSelector((state: RootState) => state.jobs);
   const { data: profileData } = useSelector((state: RootState) => state.profile);
   const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
-  const isAnyLoading = jobsLoading || metaLoading;
+  const isAnyLoading = homeLoading || metaLoading;
 
   const [showNotifyHint, setShowNotifyHint] = useState(false);
   const notifyHintAnim = useRef(new Animated.Value(0)).current;
@@ -512,7 +683,10 @@ const HomeScreen: React.FC = () => {
   // Filter Grid States
   const [showFilterGrid, setShowFilterGrid] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [filterTop, setFilterTop] = useState(210);
+  const [filterTop, setFilterTop] = useState(0);
+  const headerHeightRef = useRef(0);
+  const [filterBgVisible, setFilterBgVisible] = useState(false);
+  const filterBgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // List Visibility States
   const [showAllNearby, setShowAllNearby] = useState(false);
@@ -521,7 +695,6 @@ const HomeScreen: React.FC = () => {
   const scrollY = useMemo(() => new Animated.Value(0), []);
   const lastScrollY = useRef(0);
   const isTabBarVisible = useRef(true);
-  const [headerHeight, setHeaderHeight] = useState(210);
   const frozenScrollY = useRef(0);
   const COLLAPSE_DISTANCE = 80;
 
@@ -530,42 +703,36 @@ const HomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState(profileData?.preferences?.current_city?.city || '');
 
-  const handleScroll = (event: any) => {
-    // Don't update scroll position when filter is open
-    if (showFilterGrid) return;
+  const handleScroll = useMemo(() => Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: true,
+      listener: (event: any) => {
+        const currentOffset = event.nativeEvent.contentOffset.y;
+        frozenScrollY.current = currentOffset;
 
-    const currentOffset = event.nativeEvent.contentOffset.y;
-
-    // Header animation
-    scrollY.setValue(currentOffset);
-    frozenScrollY.current = currentOffset;
-
-    // Tab bar hide/show logic
-    const diff = currentOffset - lastScrollY.current;
-    if (currentOffset <= 0) {
-      // At the top
-      if (!isTabBarVisible.current) {
-        isTabBarVisible.current = true;
-        navigation.setParams({ tabBarHidden: false });
-      }
-    } else if (Math.abs(diff) > 15) {
-      if (diff > 0 && isTabBarVisible.current && currentOffset > 100) {
-        // Scrolling down
-        isTabBarVisible.current = false;
-        navigation.setParams({ tabBarHidden: true });
-      } else if (diff < 0 && !isTabBarVisible.current) {
-        // Scrolling up
-        isTabBarVisible.current = true;
-        navigation.setParams({ tabBarHidden: false });
-      }
-      lastScrollY.current = currentOffset;
+        // Tab bar hide/show logic
+        const diff = currentOffset - lastScrollY.current;
+        if (currentOffset <= 0) {
+          if (!isTabBarVisible.current) {
+            isTabBarVisible.current = true;
+            navigation.setParams({ tabBarHidden: false });
+          }
+        } else if (Math.abs(diff) > 15) {
+          if (diff > 0 && isTabBarVisible.current && currentOffset > 100) {
+            isTabBarVisible.current = false;
+            navigation.setParams({ tabBarHidden: true });
+          } else if (diff < 0 && !isTabBarVisible.current) {
+            isTabBarVisible.current = true;
+            navigation.setParams({ tabBarHidden: false });
+          }
+          lastScrollY.current = currentOffset;
+        }
+      },
     }
-  };
-
-
+  ), [scrollY, navigation]);
 
   const shakeBell = useCallback(() => {
-    // Shake the bell
     Animated.sequence([
       Animated.timing(bellAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
       Animated.timing(bellAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
@@ -574,7 +741,6 @@ const HomeScreen: React.FC = () => {
       Animated.timing(bellAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
     ]).start();
 
-    // Pulse the badge
     Animated.sequence([
       Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
       Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
@@ -584,7 +750,6 @@ const HomeScreen: React.FC = () => {
   }, [bellAnim, badgeAnim]);
 
   useEffect(() => {
-    // Show hint initially after 3 seconds
     const timer = setTimeout(() => {
       setShowNotifyHint(true);
       shakeBell();
@@ -594,28 +759,9 @@ const HomeScreen: React.FC = () => {
         friction: 7,
         useNativeDriver: true,
       }).start();
-
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        Animated.timing(notifyHintAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }).start(() => setShowNotifyHint(false));
-      }, 5000);
     }, 3000);
-
     return () => clearTimeout(timer);
   }, [notifyHintAnim, shakeBell]);
-
-  useEffect(() => {
-    // Repeat shake every 8 seconds
-    const interval = setInterval(() => {
-      shakeBell();
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [shakeBell]);
 
   useEffect(() => {
     tagShakeAnim.value = withRepeat(
@@ -630,7 +776,6 @@ const HomeScreen: React.FC = () => {
     return { transform: [{ rotate: `${rotate}deg` }] };
   });
 
-  // 1. Initial Load Effect (Static/Main Data) - Only run once or when data missing
   useEffect(() => {
     if (categories.length === 0) dispatch(fetchMetaCategories());
     const hasFeedData = trending.length > 0 || latest.length > 0 || recommended.length > 0;
@@ -640,7 +785,6 @@ const HomeScreen: React.FC = () => {
     dispatch(fetchAdminMedia({ media_section: 'home page', limit: 10 }));
   }, [dispatch]);
 
-  // 2. Profile Data Effect
   useEffect(() => {
     if (!profileData) {
       dispatch(fetchProfile());
@@ -652,39 +796,35 @@ const HomeScreen: React.FC = () => {
     return n.length > 0 ? n : 'Job seeker';
   }, [user?.name, draft.fullName]);
 
-  const avatarInitials = useMemo(() => profileInitials(displayName), [displayName]);
-
-  const goSearch = () => {
-    setShowSearchOverlay(true);
-  };
-
+  const goSearch = () => setShowSearchOverlay(true);
   const goProfile = () => {
     const tab = navigation.getParent() as BottomTabNavigationProp<MainTabParamList> | undefined;
     tab?.navigate('Profile');
   };
-
-  const openJob = (job: any) => {
-    navigation.navigate('JobDetail', { jobId: job.slug || job.id });
-  };
+  const openJob = (job: any) => navigation.navigate('JobDetail', { jobId: job.slug || job.id });
 
   const applyAdvancedFilters = (filters: any) => {
     setShowFilterGrid(false);
-    // Restore scroll animation to frozen position when filter closes
-    scrollY.setValue(frozenScrollY.current);
-    // Navigate directly to JobListing with filters
     navigation.navigate('JobListing', { filters });
   };
 
   const handleCloseFilter = () => {
     setShowFilterGrid(false);
-    // Restore scroll animation to frozen position when filter closes
-    scrollY.setValue(frozenScrollY.current);
+    if (filterBgTimer.current) clearTimeout(filterBgTimer.current);
+    filterBgTimer.current = setTimeout(() => setFilterBgVisible(false), 350);
   };
 
   const handleFilterOpen = () => {
-    if (!showFilterGrid) {
-      setFilterTop(155);
-    }
+    if (filterBgTimer.current) clearTimeout(filterBgTimer.current);
+    setFilterBgVisible(true);
+    const maxTranslate = -COLLAPSE_DISTANCE + 26;
+    const rawScrollOffset = frozenScrollY.current;
+    const clampedTranslateY = Math.max(
+      maxTranslate,
+      Math.min(0, (rawScrollOffset / COLLAPSE_DISTANCE) * maxTranslate)
+    );
+    const baseHeight = headerHeightRef.current > 0 ? headerHeightRef.current : 155;
+    setFilterTop(baseHeight + clampedTranslateY - 8);
     setShowFilterGrid(prev => !prev);
   };
 
@@ -694,28 +834,6 @@ const HomeScreen: React.FC = () => {
     dispatch(fetchProfile());
   }, [dispatch]);
 
-  const handleRefer = async () => {
-    try {
-      await Share.share({
-        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://jobindia.app/refer',
-        title: 'Refer JobIndia',
-      });
-    } catch (error: any) {
-      console.log(error.message);
-    }
-  };
-
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_DISTANCE],
-    outputRange: [0, -COLLAPSE_DISTANCE + 26], // Increased from 10 to 22 to move it lower when collapsed
-    extrapolate: 'clamp',
-  });
-
-  const topRowOpacity = scrollY.interpolate({
-    inputRange: [0, COLLAPSE_DISTANCE * 0.5],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
   return (
     <View style={[styles.safe, { backgroundColor: colors.background }]} >
       <HomescreenHeader
@@ -729,166 +847,42 @@ const HomeScreen: React.FC = () => {
         notifyHintAnim={notifyHintAnim}
         bellAnim={bellAnim}
         badgeAnim={badgeAnim}
-        showFilterGrid={showFilterGrid}
+        showFilterGrid={filterBgVisible}
         activeFilter={activeFilter}
         handleFilterOpen={handleFilterOpen}
         goSearch={goSearch}
         goProfile={goProfile}
+        onHeaderLayout={(h) => {
+          if (headerHeightRef.current !== h) {
+            headerHeightRef.current = h;
+          }
+        }}
       />
 
-      <Animated.ScrollView
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        scrollEnabled={!showFilterGrid}
-        style={styles.scrollMain}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: 150, paddingTop: 130 + insets.top },
-        ]}
-        refreshControl={
-          <RefreshControl
-            refreshing={isAnyLoading && recommended.length > 0}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-            progressViewOffset={140}
-          />
-        }>
-        {isAnyLoading && recommended.length === 0 ? (
-          <HomeSkeleton />
-        ) : (
-          <>
-            <HeroBanner
-              colors={colors}
-              onPress={goSearch}
-            />
-
-            <QuickFilterCards colors={colors} />
-
-            <HomeCategoriesSection
-              categories={categories}
-              colors={colors}
-              navigation={navigation}
-              homeCategoriesMock={HOME_CATEGORIES}
-              isDark={isDark}
-            />
-
-            {latest && latest.length > 0 && (
-              <>
-                <SectionHeader
-                  title="Latest jobs"
-                  icon="clock-o"
-                  iconColor={colors.success}
-                  colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs', { section: 'latest' })}
-                />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.trendingScroll}
-                  decelerationRate="fast">
-                  {latest.map((job: any) => (
-                    <JobTrendCard
-                      key={job.id}
-                      job={{ ...job, isLatest: true }}
-                      colors={colors}
-                      onPress={() => openJob(job)}
-                      tagRotationStyle={tagRotationStyle}
-                      isDark={isDark}
-                    />
-                  ))}
-                </ScrollView>
-              </>
-            )}
-
-            {trending && trending.length > 0 && (
-              <>
-                <SectionHeader
-                  title="Trending jobs"
-                  icon="fire"
-                  iconColor={colors.warning}
-                  colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs', { section: 'trending' })}
-                />
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.trendingScroll}
-                  decelerationRate="fast">
-                  {trending.map((job: any) => (
-                    <JobTrendCard
-                      key={job.id}
-                      job={job}
-                      colors={colors}
-                      onPress={() => openJob(job)}
-                      tagRotationStyle={tagRotationStyle}
-                      isDark={isDark}
-                    />
-                  ))}
-                </ScrollView>
-              </>
-            )}
-
-            {nearby && nearby.length > 0 && (
-              <>
-                <SectionHeader
-                  title="Nearby jobs"
-                  icon="map-marker"
-                  colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs', { section: 'nearby' })}
-                />
-                <View style={styles.verticalList}>
-                  {(showAllNearby ? nearby : nearby.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
-                  ))}
-                </View>
-                {nearby.length > 5 && !showAllNearby && (
-                  <TouchableOpacity
-                    onPress={() => setShowAllNearby(true)}
-                    style={styles.viewMoreVertical}
-                  >
-                    <Text style={[typography.labelMedium, { color: colors.primary }]}>View {nearby.length - 5} More Nearby Jobs</Text>
-                    <Icon name="chevron-down" size={14} color={colors.primary} />
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-
-            {recommended && recommended.length > 0 && (
-              <>
-                <View style={{ height: spacing.md }} />
-                <SectionHeader
-                  title="Recommended for you"
-                  icon="bullseye"
-                  iconColor={colors.primary}
-                  colors={colors}
-                  onPress={() => navigation.navigate('CategoryJobs', { section: 'recommended' })}
-                />
-                <View style={styles.verticalList}>
-                  {(showAllRecommended ? recommended : recommended.slice(0, 5)).map((job: any) => (
-                    <JobListCard key={job.id} job={job} colors={colors} onPress={() => openJob(job)} tagRotationStyle={tagRotationStyle} isDark={isDark} />
-                  ))}
-                </View>
-                {recommended.length > 5 && !showAllRecommended && (
-                  <TouchableOpacity
-                    onPress={() => setShowAllRecommended(true)}
-                    style={styles.viewMoreVertical}
-                  >
-                    <Text style={[typography.labelMedium, { color: colors.primary }]}>View {recommended.length - 5} More Recommendations</Text>
-                    <Icon name="chevron-down" size={14} color={colors.primary} />
-                  </TouchableOpacity>
-                )}
-              </>
-            )}
-
-            {!jobsLoading && trending.length === 0 && nearby.length === 0 && recommended.length === 0 && latest.length === 0 && (
-              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
-                No jobs found at the moment.
-              </Text>
-            )}
-          </>
-        )}
-      </Animated.ScrollView>
+      <MemoizedHomeContent
+        isAnyLoading={isAnyLoading}
+        homeLoading={homeLoading}
+        recommended={recommended}
+        trending={trending}
+        latest={latest}
+        nearby={nearby}
+        categories={categories}
+        colors={colors}
+        isDark={isDark}
+        scrollY={scrollY}
+        handleScroll={handleScroll}
+        onRefresh={onRefresh}
+        showFilterGrid={showFilterGrid}
+        insets={insets}
+        showAllNearby={showAllNearby}
+        setShowAllNearby={setShowAllNearby}
+        showAllRecommended={showAllRecommended}
+        setShowAllRecommended={setShowAllRecommended}
+        openJob={openJob}
+        goSearch={goSearch}
+        tagRotationStyle={tagRotationStyle}
+        navigation={navigation}
+      />
 
       {user && (
         <ProfileStrengthAssistant
@@ -993,6 +987,8 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   safe: {

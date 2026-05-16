@@ -135,7 +135,7 @@ const IndustryCategoryScreen: React.FC = () => {
   const categoryId: number = route.params?.categoryId;
   const categoryName: string = route.params?.categoryName || 'Category';
 
-  const { jobsByCategory, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const { jobsByCategory, filteredJobs, categoryLoading: loading } = useSelector((state: RootState) => state.jobs);
   const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
@@ -156,13 +156,11 @@ const IndustryCategoryScreen: React.FC = () => {
     return [];
   }, [jobsByCategory, filteredJobs, isFiltered]);
 
-  const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
-
   return (
     <View
-      style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
+      style={[styles.safe, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 10 }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
         </Pressable>
@@ -202,7 +200,10 @@ const IndustryCategoryScreen: React.FC = () => {
             <View style={styles.empty}>
               <Icon name="briefcase" size={48} color={colors.border} />
               <Text
-                style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
+                style={[
+                  typography.labelMedium,
+                  { color: colors.textPlaceholder, marginTop: spacing.md, textAlign: 'center' },
+                ]}>
                 No jobs found in {categoryName}
               </Text>
               <Text
