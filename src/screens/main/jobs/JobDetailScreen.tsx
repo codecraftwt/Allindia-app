@@ -353,7 +353,7 @@ const JobDetailScreen: React.FC = () => {
 
   const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
 
-  if (loading && !currentJob) {
+  if (loading || (!currentJob && !error)) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
@@ -366,7 +366,7 @@ const JobDetailScreen: React.FC = () => {
     );
   }
 
-  if (!currentJob) {
+  if (!currentJob && error) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>

@@ -155,120 +155,137 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
   const rotation = (strength / 100) * 360;
 
   return (
-    <View style={[styles.container, { bottom: insets.bottom + spacing.lg + 80 }]}>
-      {/* Auto Hint Bubble */}
-      {showAutoHint && !showTooltip && !isLaunching && (
-        <Animated.View
-          style={[
-            styles.autoHint,
-            animatedAutoHintStyle,
-            { backgroundColor: colors.primary }
-          ]}>
-          <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
-            Complete Profile !
-          </Text>
-          <View style={[styles.arrowDown, { borderTopColor: colors.primary }]} />
-        </Animated.View>
-      )}
-
+    <View 
+      style={[StyleSheet.absoluteFill, { zIndex: 110 }]} 
+      pointerEvents="box-none"
+    >
       {showTooltip && (
-        <Pressable style={StyleSheet.absoluteFill} onPress={toggleTooltip} />
+        <Pressable 
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]} 
+          onPress={toggleTooltip} 
+        />
       )}
-
-      {/* Main Tooltip Card */}
-      {showTooltip && (
-        <Animated.View style={[styles.tooltip, animatedTooltipStyle, {
-          backgroundColor: colors.surface + 'F8',
-          borderColor: colors.border,
-          shadowColor: colors.primary,
-        }]}>
-          <View style={styles.tooltipHeader}>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>
-              Profile Assistant ✨
-            </Text>
-            <View style={[styles.strengthBadge, { backgroundColor: colors.primary + '15' }]}>
-              <Text style={[typography.tiny, { color: colors.primary, fontWeight: '800' }]}>{strength}%</Text>
-            </View>
-          </View>
-
-          <View style={[styles.progressBarBase, { backgroundColor: colors.border + '30' }]}>
-            <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${strength}%` }]} />
-          </View>
-
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 18 }]}>
-            {strength < 50
-              ? 'Your profile is just starting! Complete it to unlock premium matches.'
-              : 'Almost complete! Finish the last bits to stand out from others.'}
-          </Text>
-
-          <Pressable onPress={handleLaunch} style={[styles.tooltipBtn, { backgroundColor: colors.primary }]}>
-            <Text style={[typography.labelMedium, { color: colors.onPrimary, fontWeight: '700' }]}>
-              Upgrade Profile Now
-            </Text>
-            <Icon name="bolt" size={14} color={colors.onPrimary} style={{ marginLeft: 8 }} />
-          </Pressable>
-        </Animated.View>
-      )}
-
-      <View style={styles.fabContainer}>
-        {/* Animated Ripple */}
-        {!showTooltip && !isLaunching && (
+      
+      <View 
+        style={[
+          styles.innerContainer, 
+          { 
+            bottom: insets.bottom + spacing.lg + 110, // Adjusted to match your desired height
+            right: spacing.lg,
+          }
+        ]}
+        pointerEvents="box-none"
+      >
+        {/* Auto Hint Bubble */}
+        {showAutoHint && !showTooltip && !isLaunching && (
           <Animated.View
-            pointerEvents="none"
             style={[
-              styles.fabRippleLarge,
-              animatedRippleStyle,
+              styles.autoHint,
+              animatedAutoHintStyle,
               { backgroundColor: colors.primary }
-            ]}
-          />
+            ]}>
+            <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
+              Complete Profile !
+            </Text>
+            <View style={[styles.arrowDown, { borderTopColor: colors.primary }]} />
+          </Animated.View>
         )}
 
-        <Pressable
-          onPress={() => {
-            if (isLaunching) return;
-            toggleTooltip();
-            setShowAutoHint(false);
-          }}
-          style={styles.fabTouch}>
-          <View style={[styles.circleRing, {
-            backgroundColor: 'transparent',
-            shadowColor: isLaunching ? 'transparent' : colors.primary,
-            elevation: isLaunching ? 0 : 8,
+        {/* Main Tooltip Card */}
+        {showTooltip && (
+          <Animated.View style={[styles.tooltip, animatedTooltipStyle, {
+            backgroundColor: colors.surface + 'F8',
+            borderColor: colors.border,
+            shadowColor: colors.primary,
           }]}>
-            {!isLaunching && (
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 31, overflow: 'hidden' }]} />
-            )}
-            {!isLaunching && (
-              <>
-                <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
-                <View style={[styles.circleProgress, {
-                  borderColor: colors.primary,
-                  transform: [{ rotate: `${rotation}deg` }],
-                  borderTopColor: colors.primary,
-                  borderRightColor: rotation > 90 ? colors.primary : 'transparent',
-                  borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
-                  borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
-                }]} />
-              </>
-            )}
-            <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
-              {!isLaunching && (
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 25, overflow: 'hidden' }]} />
-              )}
-              <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
-                <Image
-                  source={require('../assets/rocket-bg.png')}
-                  style={styles.rocketGif}
-                  resizeMode="contain"
-                  fadeDuration={0}
-                />
-              </Animated.View>
-              {!isLaunching && (
-                <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
-              )}
+            <View style={styles.tooltipHeader}>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>
+                Profile Assistant ✨
+              </Text>
+              <View style={[styles.strengthBadge, { backgroundColor: colors.primary + '15' }]}>
+                <Text style={[typography.tiny, { color: colors.primary, fontWeight: '800' }]}>{strength}%</Text>
+              </View>
             </View>
-          </View>
-        </Pressable>
+
+            <View style={[styles.progressBarBase, { backgroundColor: colors.border + '30' }]}>
+              <View style={[styles.progressBarFill, { backgroundColor: colors.primary, width: `${strength}%` }]} />
+            </View>
+
+            <Text style={[typography.small, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 18 }]}>
+              {strength < 50
+                ? 'Your profile is just starting! Complete it to unlock premium matches.'
+                : 'Almost complete! Finish the last bits to stand out from others.'}
+            </Text>
+
+            <Pressable onPress={handleLaunch} style={[styles.tooltipBtn, { backgroundColor: colors.primary }]}>
+              <Text style={[typography.labelMedium, { color: colors.onPrimary, fontWeight: '700' }]}>
+                Upgrade Profile Now
+              </Text>
+              <Icon name="bolt" size={14} color={colors.onPrimary} style={{ marginLeft: 8 }} />
+            </Pressable>
+          </Animated.View>
+        )}
+
+        <View style={styles.fabContainer}>
+          {/* Animated Ripple */}
+          {!showTooltip && !isLaunching && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.fabRippleLarge,
+                animatedRippleStyle,
+                { backgroundColor: colors.primary }
+              ]}
+            />
+          )}
+
+          <Pressable
+            onPress={() => {
+              if (isLaunching) return;
+              toggleTooltip();
+              setShowAutoHint(false);
+            }}
+            style={styles.fabTouch}>
+            <View style={[styles.circleRing, {
+              backgroundColor: 'transparent',
+              shadowColor: isLaunching ? 'transparent' : colors.primary,
+              elevation: isLaunching ? 0 : 8,
+            }]}>
+              {!isLaunching && (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 31, overflow: 'hidden' }]} />
+              )}
+              {!isLaunching && (
+                <>
+                  <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
+                  <View style={[styles.circleProgress, {
+                    borderColor: colors.primary,
+                    transform: [{ rotate: `${rotation}deg` }],
+                    borderTopColor: colors.primary,
+                    borderRightColor: rotation > 90 ? colors.primary : 'transparent',
+                    borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
+                    borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
+                  }]} />
+                </>
+              )}
+              <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
+                {!isLaunching && (
+                  <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 25, overflow: 'hidden' }]} />
+                )}
+                <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
+                  <Image
+                    source={require('../assets/rocket-bg.png')}
+                    style={styles.rocketGif}
+                    resizeMode="contain"
+                    fadeDuration={0}
+                  />
+                </Animated.View>
+                {!isLaunching && (
+                  <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
+                )}
+              </View>
+            </View>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
@@ -278,8 +295,14 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     right: spacing.lg,
+    bottom: spacing.lg + 80,
     alignItems: 'flex-end',
     zIndex: 110,
+  },
+  innerContainer: {
+    position: 'absolute',
+    alignItems: 'flex-end',
+    zIndex: 111,
   },
   fabContainer: {
     alignItems: 'center',

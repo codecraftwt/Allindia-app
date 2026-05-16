@@ -36,8 +36,6 @@ const HomeStackNavigator: React.FC = () => {
       <Stack.Screen name="IndustryCategory" component={IndustryCategoryScreen} />
       <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
       <Stack.Screen name="Saved" component={SavedJobsScreen} />
-      {/* LocationSelection presented as modal (slides up from bottom)
-          so it doesn't conflict with HomeScreen's absolute-positioned header */}
       <Stack.Screen
         name="LocationSelection"
         component={LocationScreen}
