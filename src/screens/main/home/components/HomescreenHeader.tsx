@@ -19,6 +19,9 @@ import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
 import { components } from '../../../../theme/components';
 import type { ThemeColors } from '../../../../theme/colors';
+import { useTheme } from '../../../../context/ThemeContext';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface HomescreenHeaderProps {
   scrollY: Animated.Value;
@@ -37,6 +40,7 @@ interface HomescreenHeaderProps {
   goSearch: () => void;
   goProfile: () => void;
   onHeaderLayout?: (height: number) => void;
+  onPressNotifyHint?: () => void;
 }
 
 const styles = StyleSheet.create({
@@ -287,8 +291,10 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   goSearch,
   goProfile,
   onHeaderLayout,
+  onPressNotifyHint,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isDark } = useTheme();
   const COLLAPSE_DISTANCE = 80;
 
   const headerTranslateY = scrollY.interpolate({
@@ -332,7 +338,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
       <StatusBar
         translucent
         backgroundColor="transparent"
-        barStyle="dark-content"
+        barStyle={isDark ? 'light-content' : 'dark-content'}
       />
       <Animated.View
         onLayout={(e) => {
@@ -409,7 +415,8 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
           </Pressable>
           <View style={styles.headerActions}>
             {showNotifyHint && (
-              <Animated.View
+              <AnimatedPressable
+                onPress={onPressNotifyHint}
                 style={[
                   styles.headerNotifyHint,
                   {
@@ -425,7 +432,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                   New Notification! 🔔
                 </Text>
                 <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
-              </Animated.View>
+              </AnimatedPressable>
             )}
             <Pressable
               onPress={() => navigation.navigate('Saved')}
@@ -445,7 +452,12 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
             </Pressable>
 
             <Pressable
-              onPress={() => navigation.navigate('Notifications')}
+              onPress={() => {
+                if (onPressNotifyHint) {
+                  onPressNotifyHint();
+                }
+                navigation.navigate('Notifications');
+              }}
               hitSlop={8}
               style={[
                 styles.notifyBtnCircle,

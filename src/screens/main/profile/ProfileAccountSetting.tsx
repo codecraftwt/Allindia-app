@@ -219,7 +219,7 @@ const ProfileAccountSetting: React.FC = () => {
             colors={colors}
           />
           <AccountSettingItem
-            icon="legal"
+            icon="file-text"
             title="Terms of Service"
             onPress={() => {}}
             colors={colors}

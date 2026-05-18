@@ -14,6 +14,9 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  BackHandler,
+  Alert,
+  ToastAndroid,
 } from 'react-native';
 import ReAnimated, {
   useSharedValue,
@@ -33,7 +36,7 @@ import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSl
 import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -763,6 +766,16 @@ const HomeScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [notifyHintAnim, shakeBell]);
 
+  const dismissNotifyHint = useCallback(() => {
+    Animated.timing(notifyHintAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowNotifyHint(false);
+    });
+  }, [notifyHintAnim]);
+
   useEffect(() => {
     tagShakeAnim.value = withRepeat(
       withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
@@ -770,6 +783,27 @@ const HomeScreen: React.FC = () => {
       true
     );
   }, []);
+
+  const lastBackPressTime = useRef<number>(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        const currentTime = Date.now();
+        if (currentTime - lastBackPressTime.current < 2000) {
+          BackHandler.exitApp();
+          return true;
+        }
+
+        lastBackPressTime.current = currentTime;
+        ToastAndroid.show('Press back again to exit Job India', ToastAndroid.SHORT);
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   const tagRotationStyle = useAnimatedStyle(() => {
     const rotate = reInterpolate(tagShakeAnim.value, [0, 1], [-12, 12]);
@@ -857,6 +891,7 @@ const HomeScreen: React.FC = () => {
             headerHeightRef.current = h;
           }
         }}
+        onPressNotifyHint={dismissNotifyHint}
       />
 
       <MemoizedHomeContent

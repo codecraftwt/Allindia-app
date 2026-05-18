@@ -351,7 +351,7 @@ const JobDetailScreen: React.FC = () => {
     setShowActionModal(true);
   };
 
-  const actualTop = insets.top > 0 ? insets.top : (StatusBar.currentHeight || 0);
+  const actualTop = insets.top;
 
   if (loading || (!currentJob && !error)) {
     return (

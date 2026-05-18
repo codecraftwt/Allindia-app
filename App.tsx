@@ -30,19 +30,23 @@ function App() {
 }
 
 function AppNavigation() {
-  const { colors, mode } = useTheme();
+  const { colors, mode, isThemeLoading } = useTheme();
 
   const navTheme = {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: 'transparent', 
+      background: colors.background, 
       card: colors.surface,
       text: colors.textPrimary,
       border: colors.border,
       primary: colors.primary,
     },
   };
+
+  if (isThemeLoading) {
+    return null;
+  }
 
   return (
     <View style={{ flex: 1 }}>

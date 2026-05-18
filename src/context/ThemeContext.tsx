@@ -2,9 +2,11 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ThemeColors,
   ThemeMode,
@@ -17,25 +19,57 @@ type ThemeContextValue = {
   colors: ThemeColors;
   toggleTheme: () => void;
   setMode: (mode: ThemeMode) => void;
+  isThemeLoading: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [mode, setMode] = useState<ThemeMode>('light');
+  const [mode, setModeState] = useState<ThemeMode>('light');
+  const [isThemeLoading, setIsThemeLoading] = useState(true);
+
+  // Load saved theme from AsyncStorage on startup
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem('theme_mode');
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+          setModeState(savedTheme);
+        }
+      } catch (e) {
+        console.error('Failed to load theme from storage:', e);
+      } finally {
+        setIsThemeLoading(false);
+      }
+    };
+    loadTheme();
+  }, []);
 
   const colors = useMemo<ThemeColors>(
     () => (mode === 'dark' ? darkColors : lightColors),
     [mode],
   );
 
+  const setMode = useCallback((newMode: ThemeMode) => {
+    setModeState(newMode);
+    AsyncStorage.setItem('theme_mode', newMode).catch(e =>
+      console.error('Failed to save theme to storage:', e)
+    );
+  }, []);
+
   const toggleTheme = useCallback(() => {
-    setMode(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setModeState(prev => {
+      const nextMode = prev === 'dark' ? 'light' : 'dark';
+      AsyncStorage.setItem('theme_mode', nextMode).catch(e =>
+        console.error('Failed to save theme to storage:', e)
+      );
+      return nextMode;
+    });
   }, []);
 
   const value = useMemo(
-    () => ({ mode, colors, toggleTheme, setMode }),
-    [mode, colors, toggleTheme],
+    () => ({ mode, colors, toggleTheme, setMode, isThemeLoading }),
+    [mode, colors, toggleTheme, setMode, isThemeLoading],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

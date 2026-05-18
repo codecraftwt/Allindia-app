@@ -140,7 +140,7 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
 
     tooltipAnim.value = withTiming(0, { duration: 300 });
     setTimeout(() => {
-      navigation.navigate('Profile');
+      navigation.navigate('Profile', { screen: 'ProfileDetails' });
       setTimeout(() => {
         launchY.value = 0;
         launchScale.value = 1;
