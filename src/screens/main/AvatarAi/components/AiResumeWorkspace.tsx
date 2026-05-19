@@ -104,7 +104,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
     <Animated.View style={[styles.screenContainer, { transform: [{ scale: slideAnim }] }]}>
       <View style={[styles.workspaceHeader, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
         <Pressable
-          onPress={() => setCurrentScreen('WIZARD')}
+          onPress={() => setCurrentScreen('CHAT')}
           style={({ pressed }) => ({
             padding: 4,
             opacity: pressed ? 0.7 : 1
@@ -185,8 +185,8 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
           }
         ]}>
           {/* Header */}
-          <View style={{ alignItems: 'center', marginBottom: 8 }}>
-            <Text style={[typography.appTitle, { color: themeColors.accent, fontWeight: '900', fontSize: 28, letterSpacing: -0.5, textAlign: 'center' }]}>
+          <View style={{ alignItems: 'center', marginBottom: 6 }}>
+            <Text style={[typography.appTitle, { color: themeColors.accent, fontWeight: '900', fontSize: 22, letterSpacing: -0.5, textAlign: 'center' }]}>
               {profile?.personal?.name || 'Your Name'}
             </Text>
 
@@ -228,6 +228,15 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
                   <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold' }]}>
                     {(resumeLinkedin || profile?.personal?.linkedin).replace(/^https?:\/\/(www\.)?/, '')}
                   </Text>
+                  {(resumeGithub || profile?.personal?.github) && <Text style={{ color: '#cbd5e1', marginHorizontal: 6 }}>|</Text>}
+                </>
+              )}
+              {(resumeGithub || profile?.personal?.github) && (
+                <>
+                  <Icon name="logo-github" size={10} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold' }]}>
+                    {(resumeGithub || profile?.personal?.github).replace(/^https?:\/\/(www\.)?/, '')}
+                  </Text>
                 </>
               )}
             </View>
@@ -257,7 +266,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               <TextInput
                 value={generatedResume.skills.map(s => `- ${s}`).join('\n')}
                 multiline
-                style={[styles.inlineInput, { color: '#000', fontWeight: '500', lineHeight: 22 }]}
+                style={[styles.inlineInput, { color: '#000', fontWeight: '500', lineHeight: 18 }]}
                 editable={false}
               />
             ) : (
@@ -529,7 +538,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 2,
-    padding: 24,
+    padding: 16,
     minHeight: 600,
     width: '100%',
     alignSelf: 'center',
@@ -542,12 +551,12 @@ const styles = StyleSheet.create({
   },
   sheetDivider: {
     height: 1, // Crisp line like a real document
-    marginVertical: 12,
+    marginVertical: 8,
   },
   inlineInput: {
-    paddingVertical: 2,
-    fontSize: 13, // Smaller size for A4 realism
-    lineHeight: 18,
+    paddingVertical: 0,
+    fontSize: 11.5, // Smaller size for A4 realism
+    lineHeight: 16,
     fontFamily: 'Poppins-Regular',
   },
   bulletRow: {

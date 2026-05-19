@@ -251,8 +251,7 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
         {/* Paper Resume Card Sheet (Rendered second/front) */}
         <View style={{
           width: 310,
-          minHeight: 280,
-          paddingBottom: 32,
+          height: 420,
           backgroundColor: colors.card || colors.surface || '#ffffff',
           borderRadius: 16,
           borderWidth: 1.5,
@@ -578,8 +577,11 @@ const AIAssistantScreen: React.FC = () => {
         return true; // prevent default (exiting screen)
       }
       if (currentScreen === 'ATS_REPORT') {
-        navigation.goBack();
-        return true;
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+          return true;
+        }
+        return false;
       }
       if (currentScreen === 'GENERATING') {
         setCurrentScreen('CHAT');
@@ -1380,7 +1382,7 @@ ${generatedResume?.skills.join(', ')}
                     letterSpacing: 0.1,
                     textDecorationLine: 'underline',
                   }}>
-                    Skip and build resume now
+                    Your resume
                   </Text>
                   <Icon name="chevron-forward" size={13} color={colors.textSecondary} style={{ marginLeft: 3 }} />
                 </Pressable>

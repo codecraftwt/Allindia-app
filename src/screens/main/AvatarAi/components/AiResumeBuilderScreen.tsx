@@ -12,6 +12,7 @@ import {
   Keyboard,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -567,7 +568,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
           setSavedSessionData(null);
           await AsyncStorage.removeItem('AI_RESUME_BUILDER_SESSION');
           resetSessionStates();
-          
+
           setChatMessages([
             {
               id: 'welcome_restart',
@@ -610,7 +611,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         if (profile?.personal?.email && !isEditingFilledDetail) {
           const isYes = userText === 'Yes, use this email' || userText.toLowerCase().includes('yes') || userText === 'Keep and Continue' || userText.toLowerCase().includes('keep');
           const isNo = userText === 'No, let me enter new' || userText.toLowerCase() === 'no' || userText.toLowerCase().includes('change') || userText.toLowerCase().includes('edit');
-          
+
           if (isYes) {
             setIsTyping(false);
             setResumeEmail(profile.personal.email);
@@ -679,7 +680,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         if (existingPhone && !isEditingFilledDetail) {
           const isYes = userText === 'Yes, use this number' || userText.toLowerCase().includes('yes') || userText === 'Keep and Continue' || userText.toLowerCase().includes('keep');
           const isNo = userText === 'No, let me enter new' || userText.toLowerCase() === 'no' || userText.toLowerCase().includes('change') || userText.toLowerCase().includes('edit');
-          
+
           if (isYes) {
             setIsTyping(false);
             setResumePhone(existingPhone);
@@ -796,7 +797,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         if (eduInfo && !isEditingFilledDetail) {
           const isYes = userText === 'Yes, use this data' || userText.toLowerCase().includes('yes') || userText === 'Keep and Continue' || userText.toLowerCase().includes('keep');
           const isNo = userText === 'No, let me enter new' || userText.toLowerCase() === 'no' || userText.toLowerCase().includes('change') || userText.toLowerCase().includes('edit');
-          
+
           if (isYes) {
             setIsTyping(false);
             setEducationConfirmed(true);
@@ -878,7 +879,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         if (expInfo && !isEditingFilledDetail) {
           const isYes = userText === 'Yes, use this data' || userText.toLowerCase().includes('yes') || userText === 'Keep and Continue' || userText.toLowerCase().includes('keep');
           const isNo = userText === 'No, let me enter new' || userText.toLowerCase() === 'no' || userText.toLowerCase().includes('change') || userText.toLowerCase().includes('edit');
-          
+
           if (isYes) {
             setIsTyping(false);
             setExperienceConfirmed(true);
@@ -1344,6 +1345,27 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     });
   };
 
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleClearChat = async () => {
+    setIsTyping(false);
+    setSavedSessionData(null);
+    await AsyncStorage.removeItem('AI_RESUME_BUILDER_SESSION');
+    resetSessionStates();
+    
+    setChatMessages([
+      {
+        id: 'welcome_restart',
+        sender: 'ai',
+        text: `Session cleared. Let's start fresh! 📝`,
+        timestamp: new Date(),
+      },
+    ]);
+    setTimeout(() => {
+      triggerNextQuestion('headline');
+    }, 500);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {isInitializing ? (
@@ -1366,13 +1388,6 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
             paddingHorizontal: 12,
             paddingVertical: 8,
             backgroundColor: colors.surface,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.border,
-            elevation: 2,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 3,
           }}>
             <Pressable
               onPress={() => setCurrentScreen('ATS_REPORT')}
@@ -1410,12 +1425,65 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
               </Text>
             </View>
 
-            {/* Empty view to balance the header layout for perfect centering */}
-            <View style={{ width: 40 }} />
+            <View style={{ position: 'relative', zIndex: 100 }}>
+              <Pressable
+                onPress={() => setShowMenu(!showMenu)}
+                style={({ pressed }) => ({
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: pressed ? colors.border + '40' : 'transparent',
+                })}
+              >
+                <Icon name="ellipsis-vertical" size={22} color={colors.textPrimary} />
+              </Pressable>
+
+              {showMenu && (
+                <View style={{
+                  position: 'absolute',
+                  top: 45,
+                  right: 0,
+                  backgroundColor: colors.surface,
+                  borderRadius: 8,
+                  padding: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  minWidth: 140,
+                  zIndex: 100,
+                  borderWidth: 1,
+                  borderColor: colors.border + '40',
+                }}>
+                  <Pressable
+                    onPress={() => {
+                      setShowMenu(false);
+                      handleClearChat();
+                    }}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      backgroundColor: pressed ? colors.border + '30' : 'transparent',
+                      borderRadius: 6,
+                      gap: 8,
+                    })}
+                  >
+                    <Icon name="trash-outline" size={18} color="#f87171" />
+                    <Text style={{ fontSize: 13, color: '#f87171', fontWeight: '600' }}>Clear Chat</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
           </View>
 
           <ScrollView
             ref={chatScrollRef}
+            onScrollBeginDrag={() => setShowMenu(false)}
             style={copilotStyles.chatScroll}
             contentContainerStyle={{ paddingVertical: 16 }}
           >
@@ -1446,7 +1514,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                   >
                     <Text
                       style={[
-                        typography.body,
+                        typography.small,
                         msg.sender === 'user' ? { color: '#fff' } : { color: colors.textPrimary },
                       ]}
                     >
@@ -1474,13 +1542,13 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                                 borderColor: ORANGE_COLOR + '40',
                                 borderWidth: 1,
                                 borderRadius: 8,
-                                paddingHorizontal: 12,
-                                paddingVertical: 10,
+                                paddingHorizontal: 10,
+                                paddingVertical: 8,
                                 opacity: pressed ? 0.7 : 1,
                               }
                             ]}
                           >
-                            <Text style={[typography.small, { color: colors.textPrimary, fontWeight: '600' }]}>
+                            <Text style={[typography.tiny, { color: colors.textPrimary, fontWeight: '600' }]}>
                               {suggestion}
                             </Text>
                           </Pressable>
@@ -1503,7 +1571,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 gap: 6,
-                                paddingVertical: 8,
+                                paddingVertical: 6,
                                 marginTop: 4,
                                 borderStyle: 'dashed',
                                 borderColor: ORANGE_COLOR + '50',
@@ -1514,8 +1582,8 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                               }
                             ]}
                           >
-                            <Icon name="refresh-outline" size={14} color={ORANGE_COLOR} />
-                            <Text style={[typography.small, { color: ORANGE_COLOR, fontWeight: '700' }]}>
+                            <Icon name="refresh-outline" size={12} color={ORANGE_COLOR} />
+                            <Text style={[typography.tiny, { color: ORANGE_COLOR, fontWeight: '700' }]}>
                               Load More Suggestions
                             </Text>
                           </Pressable>
@@ -1541,11 +1609,11 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
 
           {currentQuestionKey !== 'complete' ? (
             <View style={[
-              copilotStyles.inputBar, 
-              { 
-                marginBottom: localKeyboardVisible 
-                  ? 40 
-                  : (Math.max(insets.bottom, 6) + (Platform.OS === 'ios' ? 10 : 2) + 64 + 4) 
+              copilotStyles.inputBar,
+              {
+                marginBottom: localKeyboardVisible
+                  ? 40
+                  : (Math.max(insets.bottom, 6) + (Platform.OS === 'ios' ? 10 : 2) + 64 + 4)
               }
             ]}>
               <TextInput
@@ -1562,12 +1630,12 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
             </View>
           ) : (
             <View style={[
-              copilotStyles.inputBar, 
-              { 
-                justifyContent: 'center', 
-                marginBottom: localKeyboardVisible 
-                  ? 40 
-                  : (Math.max(insets.bottom, 6) + (Platform.OS === 'ios' ? 10 : 2) + 64 + 0) 
+              copilotStyles.inputBar,
+              {
+                justifyContent: 'center',
+                marginBottom: localKeyboardVisible
+                  ? 40
+                  : (Math.max(insets.bottom, 6) + (Platform.OS === 'ios' ? 10 : 2) + 64 + 0)
               }
             ]}>
               <Pressable
@@ -1619,16 +1687,16 @@ const copilotStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   chatBubble: {
-    maxWidth: '75%',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
+    maxWidth: '78%',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 14,
   },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.sm,
-    gap: 10,
+    padding: 8,
+    gap: 8,
   },
   chatInput: {
     flex: 1,
