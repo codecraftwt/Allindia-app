@@ -137,7 +137,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputGroup]}>
                 <View style={styles.passwordHeader}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Password</Text>
-                  <Pressable onPress={() => {/* Handle Forgot Password */}}>
+                  <Pressable onPress={() => navigation.navigate('ForgotPass')}>
                     <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
                   </Pressable>
                 </View>

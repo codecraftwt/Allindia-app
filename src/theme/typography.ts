@@ -41,6 +41,12 @@ export const typography = {
     fontSize: 12,
     lineHeight: 16,
   },
+  /** Tiny / caption — 10 Regular */
+  tiny: {
+    fontFamily: fontFamilies.regular,
+    fontSize: 10,
+    lineHeight: 14,
+  },
   /** Important label (medium weight) */
   labelMedium: {
     fontFamily: fontFamilies.semiBold,

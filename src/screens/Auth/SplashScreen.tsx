@@ -17,7 +17,7 @@ import { typography } from '../../theme/typography';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
-const LOGO = require('../../assets/logo/logo111.png');
+const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-02.png');
 const SPLASH_DELAY_MS = 4000;
 const PROGRESS_BAR_W = 200;
 

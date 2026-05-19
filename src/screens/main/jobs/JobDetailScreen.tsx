@@ -114,7 +114,7 @@ function SectionTitle({ title, colors }: { title: string; colors: ThemeColors })
 
 const formatDescription = (html: string) => {
   if (!html) return '';
-  
+
   let text = html;
   // Replace common block tags with newlines
   text = text.replace(/<\/p>/gi, '\n\n');
@@ -123,7 +123,7 @@ const formatDescription = (html: string) => {
   text = text.replace(/<\/li>/gi, '\n');
   text = text.replace(/<li>/gi, '• ');
   text = text.replace(/<\/?[^>]+(>|$)/g, ''); // Strip remaining tags
-  
+
   // Decode common entities
   text = text.replace(/&amp;/g, '&');
   text = text.replace(/&lt;/g, '<');
@@ -131,7 +131,7 @@ const formatDescription = (html: string) => {
   text = text.replace(/&quot;/g, '"');
   text = text.replace(/&#39;/g, "'");
   text = text.replace(/&nbsp;/g, ' ');
-  
+
   return text.trim();
 };
 function InfoRow({ label, value, icon, colors }: { label: string; value: string; icon: string; colors: ThemeColors }) {
@@ -172,7 +172,8 @@ const JobDetailSkeleton: React.FC = () => {
 };
 
 const JobDetailScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
+  const isDark = mode === 'dark';
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const route = useRoute<JobDetailRoute>();
@@ -208,6 +209,7 @@ const JobDetailScreen: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [justApplied, setJustApplied] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
 
   // Toast State
@@ -311,6 +313,10 @@ const JobDetailScreen: React.FC = () => {
       const msg = resultAction.message || 'Application submitted successfully!';
       showToast(msg, msg.includes('already') ? 'info' : 'success');
 
+      if (!msg.toLowerCase().includes('already')) {
+        setJustApplied(true);
+      }
+
       // Refresh job detail to update application status
       dispatch(fetchJobDetail(currentJob.id));
     } catch (err: any) {
@@ -356,6 +362,7 @@ const JobDetailScreen: React.FC = () => {
   if (loading || (!currentJob && !error)) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
@@ -369,6 +376,7 @@ const JobDetailScreen: React.FC = () => {
   if (!currentJob && error) {
     return (
       <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
             <Icon name="chevron-left" size={22} color={colors.textPrimary} />
@@ -388,6 +396,7 @@ const JobDetailScreen: React.FC = () => {
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       {/* Animated Toast */}
       {toast.visible && (
         <Animated.View
@@ -416,13 +425,7 @@ const JobDetailScreen: React.FC = () => {
         <Text style={[typography.labelMedium, { color: colors.textPrimary, flex: 1, textAlign: 'left' }]} numberOfLines={1}>
           Job details
         </Text>
-        <Pressable
-          onPress={openActions}
-          hitSlop={12}
-          style={[styles.iconBtn, { marginRight: spacing.xs }]}
-          accessibilityLabel="More actions">
-          <Icon name="ellipsis-v" size={20} color={colors.textSecondary} />
-        </Pressable>
+
         <Pressable
           onPress={handleToggleWishlist}
           disabled={isWishlisting}
@@ -435,6 +438,13 @@ const JobDetailScreen: React.FC = () => {
             <Icon name={saved ? 'heart' : 'heart-o'} size={20} color={saved ? colors.error : colors.textSecondary} />
           )}
         </Pressable>
+        <Pressable
+          onPress={openActions}
+          hitSlop={12}
+          style={[styles.iconBtn, { marginRight: spacing.xs }]}
+          accessibilityLabel="More actions">
+          <Icon name="ellipsis-v" size={20} color={colors.textSecondary} />
+        </Pressable>
       </View>
 
       <ScrollView
@@ -444,7 +454,35 @@ const JobDetailScreen: React.FC = () => {
           { paddingBottom: spacing.lg + Math.max(insets.bottom, spacing.md) },
         ]}
         showsVerticalScrollIndicator={false}>
-        
+        {/* Already Applied Status Banner */}
+        {currentJob.is_applied && (
+          <Pressable
+            onPress={() => navigation.navigate('Applications', { screen: 'ApplicationsList' })}
+            style={{
+              backgroundColor: colors.successBackground,
+              borderWidth: 1,
+              borderColor: colors.success + '40',
+              padding: spacing.md,
+              borderRadius: radius.md,
+              marginBottom: spacing.md,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+            }}
+          >
+            <Icon name="check-circle" size={24} color={colors.success} />
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
+                {justApplied ? 'You have successfully applied!' : 'You have already applied!'}
+              </Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+                Tap here to check your application status.
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={14} color={colors.success} />
+          </Pressable>
+        )}
+
         {/* Header Section with Logo, Title, and Tags */}
         <View style={styles.headerHero}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
@@ -467,11 +505,11 @@ const JobDetailScreen: React.FC = () => {
               </Text>
             </View>
           </View>
-          
+
           {(currentJob.applied_tags?.length > 0 || currentJob.tags?.length > 0) && (
-            <TagCycling 
-              tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags} 
-              colors={colors} 
+            <TagCycling
+              tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags}
+              colors={colors}
             />
           )}
         </View>
@@ -520,7 +558,7 @@ const JobDetailScreen: React.FC = () => {
         {currentJob.employer?.company && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title="About Company" colors={colors} />
-            
+
             <View style={styles.companyHeader}>
               <View>
                 {currentJob.employer.company.company_logo_url ? (
@@ -553,17 +591,17 @@ const JobDetailScreen: React.FC = () => {
 
             {/* Gallery Media */}
             {currentJob.employer.company.gallery_media?.length > 0 && (
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 style={styles.galleryScroll}
                 contentContainerStyle={{ gap: 10, paddingRight: 20 }}
               >
                 {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
-                  <Image 
+                  <Image
                     key={idx}
-                    source={{ uri: media.url }} 
-                    style={styles.galleryImage} 
+                    source={{ uri: media.url }}
+                    style={styles.galleryImage}
                   />
                 ))}
               </ScrollView>
@@ -638,7 +676,7 @@ const JobDetailScreen: React.FC = () => {
                 </View>
               )}
               {currentJob.employer.company.website && (
-                <Pressable 
+                <Pressable
                   onPress={() => Linking.openURL(currentJob.employer.company.website)}
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
                 >

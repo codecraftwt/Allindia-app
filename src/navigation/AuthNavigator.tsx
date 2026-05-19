@@ -8,6 +8,7 @@ import SplashScreen from '../screens/Auth/SplashScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import SignInScreen from '../screens/Auth/SignInScreen';
 import EmailLoginScreen from '../screens/Auth/EmailLoginScreen';
+import ForgotPassScreen from '../screens/Auth/ForgotPass';
 import OtpVerificationScreen from '../screens/Auth/OtpVerificationScreen';
 import MainTabNavigator from './MainTabNavigator';
 import ProfileBasicInfoScreen from '../screens/ProfileSetup/ProfileBasicInfoScreen';
@@ -37,6 +38,7 @@ const AuthNavigator: React.FC = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="EmailLogin" component={EmailLoginScreen} />
+        <Stack.Screen name="ForgotPass" component={ForgotPassScreen} />
         <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
         <Stack.Screen name="ProfileBasicInfo" component={ProfileBasicInfoScreen} />
         <Stack.Screen name="ProfileLocation" component={ProfileLocationScreen} />

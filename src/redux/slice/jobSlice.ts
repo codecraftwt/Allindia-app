@@ -162,6 +162,24 @@ export const applyJob = createAsyncThunk(
   }
 );
 
+export const reportJob = createAsyncThunk(
+  'jobs/reportJob',
+  async ({ jobId, reason }: { jobId: number | string, reason: string }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.post(`/api/candidate/jobs/${jobId}/report`, { reason }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to report job');
+    }
+  }
+);
+
 const jobSlice = createSlice({
   name: 'jobs',
   initialState: {

@@ -427,6 +427,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { cities } = useSelector((state: RootState) => state.meta);
   const [dobOpen, setDobOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
 
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -493,12 +494,13 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         boundary: '',
         bio: p.bio || '',
       });
+
+      setPhoneNumber(p.phone || user?.phone || '');
     }
   }, [profileData, updateDraft]);
 
   const fullName = draft.fullName || user?.name || '';
   const email = user?.email || '';
-  const phone = user?.phone || '';
 
   const canSave =
     (draft.fullName.trim() || user?.name || '').length >= 2 &&
@@ -509,7 +511,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await dispatch(updatePersonalProfile({
         name: draft.fullName,
-        phone: user?.phone || undefined,
+        phone: phoneNumber || undefined,
         gender: draft.gender as string,
         date_of_birth: draft.dateOfBirth,
         address: `${draft.city}, ${draft.area}`,
@@ -586,15 +588,17 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
             Phone Number
           </Text>
-          <TextInput
-            value={phone}
-            editable={false}
+          <AnimatedInput
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            placeholder="Enter phone number"
+            placeholderTextColor={colors.textPlaceholder}
+            keyboardType="phone-pad"
             style={[
               styles.input,
               {
-                color: colors.textSecondary,
-                backgroundColor: colors.surfaceHighlight,
-                borderColor: colors.border,
+                color: colors.textPrimary,
+                backgroundColor: colors.surface,
               },
             ]}
           />

@@ -146,7 +146,7 @@ const ProfileDetailsScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} translucent={true} />
       
       {/* Premium Header - WorkIndia Style */}
       <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>

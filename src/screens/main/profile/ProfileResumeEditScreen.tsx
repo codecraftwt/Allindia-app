@@ -167,9 +167,11 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
           colors={colors}
           iconRight={<Icon name="arrow-right" size={16} color="#FFF" />}
         />
-        <Pressable onPress={() => updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: true })} style={styles.skipBtn}>
-          <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Skip for now</Text>
-        </Pressable>
+        {!(draft.resumeUri || resume?.has_resume) && (
+          <Pressable onPress={() => updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: true })} style={styles.skipBtn}>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Skip for now</Text>
+          </Pressable>
+        )}
       </View>
 
       <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>

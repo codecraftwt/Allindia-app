@@ -14,7 +14,8 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { fetchWishlist, toggleWishlist } from '../../../redux/slice/profileSlice';
+import { fetchWishlist } from '../../../redux/slice/profileSlice';
+import { toggleWishlist } from '../../../redux/slice/jobSlice';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -152,9 +153,10 @@ const SavedJobsScreen: React.FC = () => {
     );
   }, [wishlistJobs, searchQuery]);
 
-  const handleConfirmRemove = () => {
+  const handleConfirmRemove = async () => {
     if (confirmModal.jobId) {
-      dispatch(toggleWishlist({ jobId: confirmModal.jobId, isWishlisted: true }));
+      await dispatch(toggleWishlist({ jobId: confirmModal.jobId, isWishlisted: true }));
+      dispatch(fetchWishlist());
       setConfirmModal({ visible: false, jobId: null });
     }
   };
@@ -174,7 +176,15 @@ const SavedJobsScreen: React.FC = () => {
       ) : (
         <>
         <View style={styles.header}>
-        <View style={styles.headerTop}>
+        <View style={[styles.headerTop, { justifyContent: 'flex-start', gap: 12 }]}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              padding: 4,
+            }}
+          >
+            <Icon name="arrow-left" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
           <View>
             <Text style={[typography.appTitle, { color: colors.textPrimary }]}>Saved jobs</Text>
             <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.xs }]}>

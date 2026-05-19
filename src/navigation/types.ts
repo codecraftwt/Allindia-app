@@ -46,6 +46,9 @@ export type ProfileStackParamList = {
   ProfileJobPreferences: undefined;
   ProfileResume: undefined;
   ProfileAccountSetting: undefined;
+  HelpAndSupport: undefined;
+  PrivacyPolicy: undefined;
+  TermsAndConditions: undefined;
 };
 
 export type MainTabParamList = {
@@ -62,6 +65,7 @@ export type AuthStackParamList = {
   Login: undefined;
   SignIn: undefined;
   EmailLogin: undefined;
+  ForgotPass: undefined;
   OtpVerification: { phoneDigits: string };
   ProfileBasicInfo: undefined;
   ProfileLocation: undefined;

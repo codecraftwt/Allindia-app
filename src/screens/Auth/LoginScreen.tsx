@@ -10,7 +10,7 @@ import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-const LOGO = require('../../assets/logo/logo111.png');
+const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-02.png');
 
 type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 

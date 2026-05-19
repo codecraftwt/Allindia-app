@@ -6,11 +6,11 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  SafeAreaView,
   TextInput,
-  
+  StatusBar,
   FlatList,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
@@ -51,7 +51,9 @@ const getCategoryColor = (name: string) => {
 };
 
 const JobCategoriesScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
+  const isDark = mode === 'dark';
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
   const { categories, loading } = useSelector((state: RootState) => state.meta);
@@ -116,7 +118,8 @@ const JobCategoriesScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
@@ -232,7 +235,7 @@ const JobCategoriesScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -243,7 +246,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,

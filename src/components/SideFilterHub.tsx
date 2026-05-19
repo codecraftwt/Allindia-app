@@ -159,7 +159,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
         // Subcategory selection (Multi-select)
         const current = selectedFilters.subCategories || [];
         const isSelected = current.some((c: any) => c.id === option.id);
-        
+
         if (option.isAll) {
           const catCurrent = selectedFilters.categories || [];
           if (!catCurrent.some((c: any) => c.id === browsingCategory.id)) {
@@ -172,7 +172,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
           const updated = isSelected
             ? current.filter((c: any) => c.id !== option.id)
             : [...current, option];
-            
+
           const catCurrent = selectedFilters.categories || [];
           const updatedCats = catCurrent.some((c: any) => c.id === browsingCategory.id)
             ? catCurrent
@@ -188,7 +188,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
         // Main Category selection
         const current = selectedFilters.categories || [];
         const isSelected = current.some((c: any) => c.id === option.id);
-        
+
         const updated = isSelected
           ? current.filter((c: any) => c.id !== option.id)
           : [...current, option];
@@ -197,7 +197,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
           setSelectedFilters({
             ...selectedFilters,
             categories: updated,
-            subCategories: isSelected 
+            subCategories: isSelected
               ? (selectedFilters.subCategories || []).filter((sc: any) => sc.parent_id !== option.id)
               : selectedFilters.subCategories
           });
@@ -281,10 +281,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
       case 'jobType': return JOB_TYPES;
       case 'category':
         if (browsingCategory) {
-          return [
-            { id: `all-${browsingCategory.id}`, name: `All ${browsingCategory.name}`, isAll: true },
-            ...(browsingCategory.subcategories || [])
-          ];
+          return browsingCategory.subcategories || [];
         }
         return categories;
       case 'city': return cities;
@@ -445,20 +442,21 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                     ? selectedFilters.jobType.includes(opt)
                     : (effectiveSection === 'category'
                       ? (browsingCategory
-                        ? (opt.isAll 
-                           ? (selectedFilters.categories || []).some((c: any) => c.id === browsingCategory.id)
-                           : (selectedFilters.subCategories || []).some((c: any) => c.id === opt.id))
-                        : (selectedFilters.categories || []).some((c: any) => c.id === opt.id))
+                        ? (opt.isAll
+                          ? ((selectedFilters.categories || []).some((c: any) => c.id == browsingCategory.id) &&
+                            !(selectedFilters.subCategories || []).some((sc: any) => sc.parent_id == browsingCategory.id))
+                          : (selectedFilters.subCategories || []).some((c: any) => c.id == opt.id))
+                        : (selectedFilters.categories || []).some((c: any) => c.id == opt.id))
                       : effectiveSection === 'city'
-                        ? (selectedFilters.cities || []).some((c: any) => c.id === opt.id)
+                        ? (selectedFilters.cities || []).some((c: any) => c.id == opt.id)
                         : ((effectiveSection === 'salary' || effectiveSection === 'freshness')
                           ? selectedFilters[effectiveSection] === opt
-                          : selectedFilters[effectiveSection]?.id === opt.id));
+                          : selectedFilters[effectiveSection]?.id == opt.id));
                   const label = typeof opt === 'string' ? opt : (opt.name || opt.city || opt.label || 'Unknown');
 
                   return (
                     <View key={typeof opt === 'string' ? opt : (opt.id || label)} style={styles.optionItem}>
-                      <Pressable 
+                      <Pressable
                         onPress={() => toggleOption(effectiveSection, opt, true)}
                         style={styles.checkboxTouch}
                       >
@@ -475,7 +473,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                         </View>
                       </Pressable>
 
-                      <Pressable 
+                      <Pressable
                         onPress={() => toggleOption(effectiveSection, opt, false)}
                         style={styles.textTouch}
                       >

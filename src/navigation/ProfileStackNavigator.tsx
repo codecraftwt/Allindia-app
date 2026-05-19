@@ -9,6 +9,9 @@ import ProfileJobPreferencesEditScreen from '../screens/main/profile/ProfileJobP
 import ProfileResumeEditScreen from '../screens/main/profile/ProfileResumeEditScreen';
 import ProfileAccountSetting from '../screens/main/profile/ProfileAccountSetting';
 import ProfileDetailsScreen from '../screens/main/profile/ProfileDetailsScreen';
+import HelpAndSupportScreen from '../screens/main/profile/HelpAndSupportScreen';
+import PrivacyPolicyScreen from '../screens/main/profile/PrivacyPolicyScreen';
+import TermsAndConditionsScreen from '../screens/main/profile/TermsAndConditionsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -30,6 +33,9 @@ const ProfileStackNavigator: React.FC = () => {
       <Stack.Screen name="ProfileJobPreferences" component={ProfileJobPreferencesEditScreen} />
       <Stack.Screen name="ProfileResume" component={ProfileResumeEditScreen} />
       <Stack.Screen name="ProfileAccountSetting" component={ProfileAccountSetting} />
+      <Stack.Screen name="HelpAndSupport" component={HelpAndSupportScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} />
     </Stack.Navigator>
   );
 };

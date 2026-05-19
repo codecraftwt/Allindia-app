@@ -126,7 +126,8 @@ const IndustryJobsSkeleton: React.FC = () => {
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 const IndustryCategoryScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
+  const isDark = mode === 'dark';
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
@@ -159,6 +160,7 @@ const IndustryCategoryScreen: React.FC = () => {
   return (
     <View
       style={[styles.safe, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 10 }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>

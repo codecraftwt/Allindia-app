@@ -13,11 +13,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../../context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
@@ -64,6 +66,7 @@ const AccountSettingItem = ({
 
 const ProfileAccountSetting: React.FC = () => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -102,6 +105,34 @@ const ProfileAccountSetting: React.FC = () => {
   const [delLoading, setDelLoading] = useState(false);
   const [showDelPwd, setShowDelPwd] = useState(false);
 
+  // Animated values for custom premium slide-up sheets
+  const changePasswordSlideAnim = React.useRef(new Animated.Value(350)).current;
+  const deleteAccountSlideAnim = React.useRef(new Animated.Value(350)).current;
+
+  React.useEffect(() => {
+    if (showPasswordModal) {
+      changePasswordSlideAnim.setValue(350);
+      Animated.spring(changePasswordSlideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showPasswordModal]);
+
+  React.useEffect(() => {
+    if (showDeleteModal) {
+      deleteAccountSlideAnim.setValue(350);
+      Animated.spring(deleteAccountSlideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showDeleteModal]);
+
   const showStatus = (type: 'error' | 'success' | 'confirm', title: string, message: string, onConfirm?: () => void) => {
     setStatusModal({ visible: true, type, title, message, onConfirm: onConfirm || (() => {}) });
   };
@@ -114,12 +145,12 @@ const ProfileAccountSetting: React.FC = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      showStatus('error', 'Validation Error', 'Please fill all password fields.');
+    if (!currentPassword) {
+      showStatus('error', 'Validation Error', 'Please enter your current password.');
       return;
     }
-    if (newPassword !== confirmPassword) {
-      showStatus('error', 'Validation Error', 'New passwords do not match.');
+    if (!newPassword || !confirmPassword) {
+      showStatus('error', 'Validation Error', 'Please enter and confirm your new password.');
       return;
     }
 
@@ -139,8 +170,13 @@ const ProfileAccountSetting: React.FC = () => {
     } catch (err: any) {
       let errorMessage = err.message || "Failed to change password";
       if (err.errors) {
-        const errorList = Object.values(err.errors).flat();
-        errorMessage = errorList.join("\n• ");
+        // Prioritize current_password error if present
+        if (err.errors.current_password) {
+          errorMessage = err.errors.current_password.join("\n• ");
+        } else {
+          const errorList = Object.values(err.errors).flat();
+          errorMessage = errorList.join("\n• ");
+        }
       }
       showStatus('error', 'Change Failed', errorMessage);
     } finally {
@@ -215,13 +251,13 @@ const ProfileAccountSetting: React.FC = () => {
           <AccountSettingItem
             icon="file-text"
             title="Privacy Policy"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
             colors={colors}
           />
           <AccountSettingItem
             icon="file-text"
             title="Terms of Service"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('TermsAndConditions')}
             colors={colors}
           />
         </View>
@@ -243,7 +279,7 @@ const ProfileAccountSetting: React.FC = () => {
 
       <Modal
         visible={showPasswordModal}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setShowPasswordModal(false)}
       >
@@ -251,7 +287,8 @@ const ProfileAccountSetting: React.FC = () => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
-          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowPasswordModal(false)} />
+          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: changePasswordSlideAnim }] }]}>
             <View style={styles.modalHeader}>
               <Text style={[typography.h3, { color: colors.textPrimary }]}>Change Password</Text>
               <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}>
@@ -320,14 +357,14 @@ const ProfileAccountSetting: React.FC = () => {
                 />
               </View>
             </ScrollView>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
 
       {/* Delete Account Modal */}
       <Modal
         visible={showDeleteModal}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={() => setShowDeleteModal(false)}
       >
@@ -335,7 +372,8 @@ const ProfileAccountSetting: React.FC = () => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
-          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowDeleteModal(false)} />
+          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: deleteAccountSlideAnim }] }]}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={[typography.h3, { color: colors.error }]}>Delete Account</Text>
@@ -391,7 +429,7 @@ const ProfileAccountSetting: React.FC = () => {
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
 

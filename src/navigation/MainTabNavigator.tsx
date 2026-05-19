@@ -206,13 +206,18 @@ const MainTabNavigator: React.FC = () => {
               canPreventDefault: true,
             });
 
-            if (!event.defaultPrevented) {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: route.name }],
-                })
-              );
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate({ name: route.name, merge: true });
+            } else if (isFocused && !event.defaultPrevented) {
+              const stackRoutes = ['Home', 'Jobs', 'Applications', 'Profile'];
+              if (stackRoutes.includes(route.name)) {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: route.name }],
+                  })
+                );
+              }
             }
           };
 

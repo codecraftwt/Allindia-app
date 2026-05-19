@@ -55,7 +55,8 @@ function AppNavigation() {
       <NavigationContainer theme={navTheme}>
         <StatusBar
           barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.background}
+          backgroundColor="transparent"
+          translucent={true}
         />
         <AuthNavigator />
       </NavigationContainer>

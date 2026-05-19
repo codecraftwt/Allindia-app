@@ -3,11 +3,8 @@ import axios from 'axios';
 const GEMINI_API_KEY = 'AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
 
 const MODELS_TO_TRY = [
-  'gemini-1.5-flash',
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-flash-latest',
-  'gemini-2.5-flash-lite',
+  'gemini-1.5-flash',
   'gemini-1.5-pro'
 ];
 
@@ -87,7 +84,7 @@ export async function generateAIResume(
     try {
       console.log(`[GeminiService] Attempting resume generation with model: ${model}`);
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-      
+
       const response = await axios.post(
         endpoint,
         {
@@ -139,8 +136,8 @@ export async function generateAIResume(
   console.error('[GeminiService] All models in the fallback chain failed. Invoking graceful local mock generator.');
   return {
     summary: `Motivated and accomplished professional targeting a career as a ${targetJob}, using excellent skills to bring high value.`,
-    experienceBullets: experiences.length > 0 
-      ? experiences.map((exp: any) => `Worked as ${exp.designation || 'Specialist'} at ${exp.company || 'Organization'}`) 
+    experienceBullets: experiences.length > 0
+      ? experiences.map((exp: any) => `Worked as ${exp.designation || 'Specialist'} at ${exp.company || 'Organization'}`)
       : [`Enhanced career milestones for ${targetJob}`],
     skills: ['Leadership', 'Problem Solving', targetJob],
     score: 80,
@@ -158,10 +155,18 @@ export async function generateAISuggestions(
   const job = targetJob;
   const prompt = `
     You are an expert ATS recruitment AI.
-    Generate 3 highly tailored, specific, professional suggestions/options for the "${nextKey}" section of a candidate's resume who is targeting the job of "${job}".
-    Make the suggestions highly relevant to "${job}". For projects, achievements, and certifications, provide realistic, high-value technical/professional examples.
-    For hobbies and languages, provide realistic examples that fit a modern candidate.
-    Respond with a single raw JSON string array of exactly 3 elements. Do not include markdown code block wrappers or extra text.
+    Your task is to generate exactly 3 short, highly tailored, specific suggestion options strictly for the "${nextKey}" section of a candidate's resume who is targeting the job of "${job}".
+
+    CRITICAL RULES:
+    1. ONLY generate suggestions for the "${nextKey}" section. Do NOT include, mention, or generate details for other sections (like projects, achievements, certificates, hobbies, languages) if "${nextKey}" is different.
+    2. Keep each option extremely concise (maximum 10-15 words) so it fits inside a tiny button/chip on the mobile screen.
+    3. Do NOT use markdown headers (e.g., #, ##), bold text (e.g., **), bullet points (*), or newlines (\\n). Return plain text strings only.
+    4. For "${nextKey}" = "experience", suggest short descriptions like: "2 years of plumbing repairs and pipe installations" or "1 year of residential and commercial plumbing".
+    5. For "${nextKey}" = "objective", suggest 1-sentence career objectives.
+    6. For "${nextKey}" = "projects", suggest 1-sentence project titles with tech focus.
+    7. For "${nextKey}" = "certifications", suggest only the names of professional certificates (e.g., "OSHA 10-Hour Certification").
+
+    Respond with a single raw JSON string array of exactly 3 elements. Do not include markdown code block wrappers or any extra text.
     Example output format:
     ["Option 1", "Option 2", "Option 3"]
   `;
@@ -176,7 +181,7 @@ export async function generateAISuggestions(
         },
         {
           headers: { 'Content-Type': 'application/json' },
-          timeout: 8000,
+          timeout: 4000,
         }
       );
 
@@ -191,6 +196,13 @@ export async function generateAISuggestions(
   }
 
   // Graceful offline mock fallback matching the nextKey
+  if (nextKey === 'experience') {
+    return [
+      `1 year of professional experience as ${job}`,
+      `2+ years as ${job} handling core duties`,
+      `Fresher with training in ${job} field`
+    ];
+  }
   if (nextKey === 'objective') {
     return [
       `To secure a challenging role as a ${job} and deliver high-performance applications.`,
@@ -221,9 +233,9 @@ export async function generateAISuggestions(
   }
   if (nextKey === 'achievements') {
     return [
-      `Won 1st Place in Inter-College Hackathon representing ${job} domain`,
-      `Successfully built and deployed custom solution used by 100+ active users`,
-      `Delivered complex product features within deadline with zero critical bugs`
+      `Recognized as Best Performer for excellent service delivery as ${job}`,
+      `Successfully completed over 500+ tasks as ${job} with zero compliance issues`,
+      `Completed advanced training and certifications to improve efficiency as ${job}`
     ];
   }
   return [

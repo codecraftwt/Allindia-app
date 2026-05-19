@@ -525,7 +525,7 @@ const MemoizedHomeContent = React.memo(({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: 150, paddingTop: 130 + (insets.top || 40) },
+        { paddingBottom: 80, paddingTop: 130 + (insets.top || 40) },
       ]}
       refreshControl={
         <RefreshControl
@@ -752,20 +752,6 @@ const HomeScreen: React.FC = () => {
     ]).start();
   }, [bellAnim, badgeAnim]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowNotifyHint(true);
-      shakeBell();
-      Animated.spring(notifyHintAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [notifyHintAnim, shakeBell]);
-
   const dismissNotifyHint = useCallback(() => {
     Animated.timing(notifyHintAnim, {
       toValue: 0,
@@ -775,6 +761,31 @@ const HomeScreen: React.FC = () => {
       setShowNotifyHint(false);
     });
   }, [notifyHintAnim]);
+
+  useEffect(() => {
+    let hideTimer: ReturnType<typeof setTimeout>;
+    const timer = setTimeout(() => {
+      setShowNotifyHint(true);
+      shakeBell();
+      Animated.spring(notifyHintAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }).start();
+
+      hideTimer = setTimeout(() => {
+        dismissNotifyHint();
+      }, 3000);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timer);
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+      }
+    };
+  }, [notifyHintAnim, shakeBell, dismissNotifyHint]);
 
   useEffect(() => {
     tagShakeAnim.value = withRepeat(
@@ -980,23 +991,14 @@ const HomeScreen: React.FC = () => {
                 </Text>
                 {['Delivery Boy', 'Graphic Designer', 'Ahmedabad'].map((item, index) => (
                   <Pressable key={index} style={styles.recentItem} onPress={() => setSearchQuery(item)}>
-                    <Icon name="clock" size={16} color={colors.textPlaceholder} />
+            
                     <Text style={[typography.body, { color: colors.textPrimary, marginLeft: spacing.sm }]}>
                       {item}
                     </Text>
                   </Pressable>
                 ))}
 
-                <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.xl, marginBottom: spacing.sm }]}>
-                  POPULAR ROLES
-                </Text>
-                <View style={styles.popularTags}>
-                  {['Telecaller', 'Back Office', 'Sales', 'Driver', 'Cook'].map((tag, idx) => (
-                    <Pressable key={idx} onPress={() => setSearchQuery(tag)} style={[styles.popularTag, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                      <Text style={[typography.small, { color: colors.textPrimary }]}>{tag}</Text>
-                    </Pressable>
-                  ))}
-                </View>
+         
               </ScrollView>
 
               <View style={[styles.searchFooter, { borderTopColor: colors.border }]}>

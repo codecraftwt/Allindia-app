@@ -8,12 +8,18 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
+  ToastAndroid,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { typography } from '../theme/typography';
 import { radius } from '../theme/radius';
 import { spacing } from '../theme/spacing';
 import { ThemeColors } from '../theme/colors';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../redux/store';
+import { reportJob } from '../redux/slice/jobSlice';
 
 interface JobActionModalProps {
   visible: boolean;
@@ -42,6 +48,7 @@ const JobActionModal: React.FC<JobActionModalProps> = ({
   type = 'modal',
   anchorPosition,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [view, setView] = useState<'menu' | 'report'>('menu');
   const [reportReason, setReportReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,16 +57,27 @@ const JobActionModal: React.FC<JobActionModalProps> = ({
     setView('report');
   };
 
-  const submitReport = () => {
+  const submitReport = async () => {
     if (!reportReason.trim()) return;
     setIsSubmitting(true);
-    // Mock submit
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setReportReason('');
+    try {
+      await dispatch(reportJob({ jobId: job.id, reason: reportReason })).unwrap();
+      // On success
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Job has been reported successfully.', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Success', 'Job has been reported successfully.');
+      }
       setView('menu');
+      setReportReason('');
       onClose();
-    }, 1500);
+    } catch (err: any) {
+      // You can add a toast or alert here for errors
+      console.log('Failed to report job:', err);
+      Alert.alert('Error', err || 'Failed to report job');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!job) return null;

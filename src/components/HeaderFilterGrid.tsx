@@ -187,26 +187,40 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       if (browsingCategory) {
         // Subcategory selection (Multi-select)
         const current = selectedFilters.subCategories || [];
-        const isSelected = current.some((c: any) => c.id === option.id);
-        
+        const isSelected = current.some((c: any) => c.id == option.id);
+
         if (option.isAll) {
-          // If "All" is selected, we could clear specific subcategories for this parent
-          // but for now let's just make sure the parent is in the categories array
-          const catCurrent = selectedFilters.categories || [];
-          if (!catCurrent.some((c: any) => c.id === browsingCategory.id)) {
+          const isAllSelected = (selectedFilters.categories || []).some((c: any) => c.id == browsingCategory.id) &&
+            !(selectedFilters.subCategories || []).some((sc: any) => sc.parent_id == browsingCategory.id);
+
+          if (isAllSelected) {
+            // Toggle off: remove parent category from categories
             setSelectedFilters({
               ...selectedFilters,
-              categories: [...catCurrent, browsingCategory]
+              categories: (selectedFilters.categories || []).filter((c: any) => c.id != browsingCategory.id)
+            });
+          } else {
+            // Toggle on: add parent category and clear any specific subcategories under it
+            const catCurrent = selectedFilters.categories || [];
+            const updatedCats = catCurrent.some((c: any) => c.id == browsingCategory.id)
+              ? catCurrent
+              : [...catCurrent, browsingCategory];
+            const updatedSubCats = (selectedFilters.subCategories || []).filter((sc: any) => sc.parent_id != browsingCategory.id);
+            setSelectedFilters({
+              ...selectedFilters,
+              categories: updatedCats,
+              subCategories: updatedSubCats
             });
           }
         } else {
+          const optionWithParent = { ...option, parent_id: browsingCategory.id };
           const updated = isSelected
-            ? current.filter((c: any) => c.id !== option.id)
-            : [...current, option];
-            
+            ? current.filter((c: any) => c.id != option.id)
+            : [...current, optionWithParent];
+
           // Ensure parent category is also selected if a subcategory is picked
           const catCurrent = selectedFilters.categories || [];
-          const updatedCats = catCurrent.some((c: any) => c.id === browsingCategory.id)
+          const updatedCats = catCurrent.some((c: any) => c.id == browsingCategory.id)
             ? catCurrent
             : [...catCurrent, browsingCategory];
 
@@ -219,18 +233,18 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       } else {
         // Main Category selection
         const current = selectedFilters.categories || [];
-        const isSelected = current.some((c: any) => c.id === option.id);
-        
+        const isSelected = current.some((c: any) => c.id == option.id);
+
         const updated = isSelected
-          ? current.filter((c: any) => c.id !== option.id)
+          ? current.filter((c: any) => c.id != option.id)
           : [...current, option];
 
         if (isSelectionOnly || !option.subcategories || option.subcategories.length === 0) {
           setSelectedFilters({
             ...selectedFilters,
             categories: updated,
-            subCategories: isSelected 
-              ? (selectedFilters.subCategories || []).filter((sc: any) => sc.parent_id !== option.id)
+            subCategories: isSelected
+              ? (selectedFilters.subCategories || []).filter((sc: any) => sc.parent_id != option.id)
               : selectedFilters.subCategories
           });
         } else if (option.subcategories && option.subcategories.length > 0) {
@@ -308,10 +322,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       case 'jobType': return JOB_TYPES;
       case 'category':
         if (browsingCategory) {
-          return [
-            { id: `all-${browsingCategory.id}`, name: `All ${browsingCategory.name}`, isAll: true },
-            ...(browsingCategory.subcategories || [])
-          ];
+          return browsingCategory.subcategories || [];
         }
         return categories;
       case 'city': return cities;
@@ -534,23 +545,24 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                     ? selectedFilters.jobType.includes(option)
                     : (selectedCategory === 'category'
                       ? (browsingCategory
-                        ? (option.isAll 
-                           ? (selectedFilters.categories || []).some((c: any) => c.id === browsingCategory.id)
-                           : (selectedFilters.subCategories || []).some((c: any) => c.id === option.id))
-                        : (selectedFilters.categories || []).some((c: any) => c.id === option.id))
+                        ? (option.isAll
+                          ? ((selectedFilters.categories || []).some((c: any) => c.id == browsingCategory.id) &&
+                            !(selectedFilters.subCategories || []).some((sc: any) => sc.parent_id == browsingCategory.id))
+                          : (selectedFilters.subCategories || []).some((c: any) => c.id == option.id))
+                        : (selectedFilters.categories || []).some((c: any) => c.id == option.id))
                       : selectedCategory === 'city'
-                        ? (selectedFilters.cities || []).some((c: any) => c.id === option.id)
+                        ? (selectedFilters.cities || []).some((c: any) => c.id == option.id)
                         : ((selectedCategory === 'salary' || selectedCategory === 'freshness')
                           ? selectedFilters[selectedCategory] === option
-                          : selectedFilters[selectedCategory]?.id === option.id));
+                          : selectedFilters[selectedCategory]?.id == option.id));
                   const labelText = typeof option === 'string' ? option : (option.name || option.city || option.label || '');
 
                   return (
                     <View
                       key={typeof option === 'string' ? option : option.id}
                       style={styles.optionItem}>
-                      
-                      <TouchableOpacity 
+
+                      <TouchableOpacity
                         onPress={() => toggleOption(selectedCategory, option, true)}
                         style={styles.checkboxTouch}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
@@ -568,7 +580,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                         </View>
                       </TouchableOpacity>
 
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={() => toggleOption(selectedCategory, option, false)}
                         style={styles.textTouch}
                         hitSlop={{ top: 10, bottom: 10, left: 0, right: 10 }}

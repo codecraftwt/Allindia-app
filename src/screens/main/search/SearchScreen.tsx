@@ -41,7 +41,7 @@ const SearchScreen: React.FC = () => {
   const [location, setLocation] = useState('');
   const [experience, setExperience] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>(INITIAL_RECENT_SEARCHES);
-  
+
   // Suggestion States
   const [filteredSkills, setFilteredSkills] = useState<string[]>([]);
   const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
@@ -121,7 +121,7 @@ const SearchScreen: React.FC = () => {
           styles.scrollContent,
           { paddingBottom: 20 },
         ]}>
-        
+
         {/* Naukri Style Search Container */}
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {/* Role Input */}
@@ -188,12 +188,12 @@ const SearchScreen: React.FC = () => {
         <SectionHeader title="Work experience" colors={colors} />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.expScroll}>
           {EXP_OPTIONS.map(exp => (
-            <Pressable 
+            <Pressable
               key={exp}
               onPress={() => setExperience(exp === experience ? null : exp)}
               style={[
-                styles.expChip, 
-                { 
+                styles.expChip,
+                {
                   backgroundColor: experience === exp ? colors.primary : colors.surfaceHighlight,
                   borderColor: experience === exp ? colors.primary : colors.border
                 }
@@ -242,9 +242,7 @@ const SearchScreen: React.FC = () => {
                     {item}
                   </Text>
                 </Pressable>
-                <Pressable onPress={() => removeRecent(item)} hitSlop={10} accessibilityLabel={`Remove ${item}`}>
-                  <Icon name="times" size={16} color={colors.textPlaceholder} />
-                </Pressable>
+          
               </View>
             ))}
           </View>
