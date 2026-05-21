@@ -15,23 +15,33 @@ interface HomeCategoriesSectionProps {
 
 const getCategoryColor = (name: string, isDark: boolean) => {
   const n = name.toLowerCase();
-  let color = '#F1F5F9';
-  if (n.includes('beauty')) color = '#FDE2E4';
-  else if (n.includes('construction')) color = '#E2E2E2';
-  else if (n.includes('content') || n.includes('journalism')) color = '#FFF1E6';
-  else if (n.includes('data science') || n.includes('analytics')) color = '#E0FBFC';
-  else if (n.includes('delivery') || n.includes('driver')) color = '#FFDDD2';
-  else if (n.includes('design') || n.includes('architecture')) color = '#EAF4F4';
-  else if (n.includes('hardware') || n.includes('network')) color = '#D8E2DC';
-  else if (n.includes('fashion') || n.includes('tailoring')) color = '#FAD2E1';
+  let color = '#5C9CE6'; // A solid, attractive blue default (not too bright)
+
+  if (n.includes('beauty')) color = '#FFAEBC';
+  else if (n.includes('banking')) color = '#b2ed7bff'; // Gold/Yellow for Banking (Card 2)
+  else if (n.includes('automobile')) color = '#ffd256ff'; // Steel Blue for Automobile (Card 1)
+  else if (n.includes('bpm') || n.includes('bpo')) color = '#FBC4AB'; // Coral/Peach for BPM/BPO
+  else if (n.includes('engineering') && !n.includes('hardware') && !n.includes('network')) color = '#B8C0FF'; // Soft purple-blue for General Engineering
+  else if (n.includes('internet')) color = '#8EECF5'; // Tech Cyan/Teal for Internet
+  else if (n.includes('textile')) color = '#F3C4FB'; // Orchid Pink for Textile
+  else if (n.includes('construction')) color = '#C2C5BB';
+  else if (n.includes('content') || n.includes('journalism')) color = '#FFD0A3';
+  else if (n.includes('data science') || n.includes('analytics')) color = '#9CF6F6';
+  else if (n.includes('delivery') || n.includes('driver')) color = '#FFC4B4';
+  else if (n.includes('design') || n.includes('architecture')) color = '#BCEAE3';
+  else if (n.includes('hardware') || n.includes('network')) color = '#C5D3C2';
+  else if (n.includes('fashion') || n.includes('tailoring')) color = '#FFC6FF';
   else if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) color = '#FFADAD';
-  else if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) color = '#FFE5B4';
-  else if (n.includes('house help') || n.includes('worker')) color = '#ECE4DB';
+  else if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) color = '#FDE293';
+  else if (n.includes('house help') || n.includes('worker')) color = '#DFD3C3';
   else if (n.includes('human resources') || n.includes('hr')) color = '#B9FBC0';
-  else if (n.includes('it services') || n.includes('development')) color = '#A0C4FF';
+  else if (n.includes('it services') || n === 'it') color = '#A0C4FF';
+  else if (n.includes('development')) color = '#BDB2FF';
+  else if (n.includes('finance')) color = '#FDFFB6';
+  else if (n.includes('education') || n.includes('teacher') || n === 'edu') color = '#CAFFBF';
   else if (n.includes('labour') || n.includes('factory')) color = '#D7E3FC';
   else if (n.includes('legal')) color = '#E2ECE9';
-  else if (n.includes('marketing')) color = '#FDFFB6';
+  else if (n.includes('marketing')) color = '#FFF59D';
   else if (n.includes('media') || n.includes('entertainment')) color = '#BDB2FF';
   else if (n.includes('operations')) color = '#D0F4DE';
   else if (n.includes('purchase') || n.includes('supply chain')) color = '#FFC6FF';
@@ -45,6 +55,12 @@ const getCategoryColor = (name: string, isDark: boolean) => {
 
 const getCategoryIcon = (name: string) => {
   const n = name.toLowerCase();
+  if (n.includes('automobile')) return 'car';
+  if (n.includes('banking')) return 'university';
+  if (n.includes('bpm') || n.includes('bpo')) return 'headphones';
+  if (n.includes('engineering')) return 'gears';
+  if (n.includes('internet')) return 'globe';
+  if (n.includes('textile')) return 'scissors';
   if (n.includes('beauty')) return 'magic';
   if (n.includes('construction')) return 'building';
   if (n.includes('content') || n.includes('journalism')) return 'pencil';
@@ -123,7 +139,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
         {displayData.map((cat, idx) => {
           const catName = cat.name || cat.label || 'Category';
           const catIcon = cat.icon || getCategoryIcon(catName);
-          
+
           return (
             <Pressable
               key={cat.id || `cat-${idx}`}

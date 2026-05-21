@@ -28,10 +28,14 @@ import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
+import { useDispatch } from 'react-redux';
+import { forgotPasswordCandidate, resetPasswordCandidate } from '../../redux/slice/authSlice';
+
 type Props = StackScreenProps<AuthStackParamList, 'ForgotPass'>;
 
-const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
+const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors } = useTheme();
+  const dispatch = useDispatch<any>();
   
   // Multi-step wizard state
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -57,6 +61,17 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
 
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
 
+  // Listen for deep link parameters from email reset link
+  React.useEffect(() => {
+    if (route.params?.token) {
+      setVerificationCode(route.params.token);
+      if (route.params.email) {
+        setEmail(route.params.email);
+      }
+      setStep(3);
+    }
+  }, [route.params]);
+
   const showStatus = (type: 'error' | 'success', title: string, message: string) => {
     setStatusModal({
       visible: true,
@@ -74,7 +89,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
     }).start();
   };
 
-  const handleStep1Email = () => {
+  const handleStep1Email = async () => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail) {
       showStatus('error', 'Required Field', 'Please enter your email address');
@@ -88,28 +103,36 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     setLoading(true);
-    // Simulate sending OTP code statically
-    setTimeout(() => {
+    try {
+      const response = await dispatch(forgotPasswordCandidate(trimmedEmail)).unwrap();
       setLoading(false);
-      setStep(2);
-    }, 1000);
+      
+      showStatus(
+        'success',
+        'Reset Link Sent!',
+        response?.message || 'We have sent a password reset link to your email address.'
+      );
+      
+      setTimeout(() => {
+        setStatusModal(prev => ({ ...prev, visible: false }));
+        setStep(2);
+      }, 2500);
+    } catch (error: any) {
+      setLoading(false);
+      const errorMessage = error || 'Failed to send password reset link. Please try again.';
+      showStatus('error', 'Error', errorMessage);
+    }
   };
 
   const handleStep2Verify = () => {
-    if (verificationCode.length < 6) {
-      showStatus('error', 'Verification Required', 'Please enter the complete 6-digit verification code');
+    if (verificationCode.trim().length < 4) {
+      showStatus('error', 'OTP Required', 'Please enter the 4-digit OTP from your email');
       return;
     }
-
-    setLoading(true);
-    // Simulate verification statically (allows any 6 digit code)
-    setTimeout(() => {
-      setLoading(false);
-      setStep(3);
-    }, 1000);
+    setStep(3);
   };
 
-  const handleStep3Reset = () => {
+  const handleStep3Reset = async () => {
     if (!newPassword) {
       showStatus('error', 'Required Field', 'Please enter your new password');
       return;
@@ -124,20 +147,32 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     setLoading(true);
-    // Simulate password saving statically
-    setTimeout(() => {
+    try {
+      const payload = {
+        email: email.trim(),
+        otp: verificationCode.trim(),
+        password: newPassword,
+        password_confirmation: confirmPassword,
+      };
+
+      const response = await dispatch(resetPasswordCandidate(payload)).unwrap();
       setLoading(false);
+      
       showStatus(
         'success',
         'Password Reset!',
-        'Your password has been successfully reset. You can now login with your new password.'
+        response?.message || 'Your password has been successfully reset. You can now login with your new password.'
       );
       
       setTimeout(() => {
         setStatusModal(prev => ({ ...prev, visible: false }));
         navigation.navigate('EmailLogin');
       }, 2500);
-    }, 1200);
+    } catch (error: any) {
+      setLoading(false);
+      const errorMessage = error || 'Failed to reset password. Please try again.';
+      showStatus('error', 'Error', errorMessage);
+    }
   };
 
   const getHeaderTitle = () => {
@@ -234,7 +269,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
                 <AuthHeadline
                   colors={colors}
                   title="Verification Code"
-                  subtitle={`We have sent a 6-digit verification code to ${email}. Please enter it below.`}
+                  subtitle={`We have sent a 4-digit OTP to ${email}. Please enter it below.`}
                   centerDecor
                   decor={
                     <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}40` }]}>
@@ -243,23 +278,29 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
                   }
                 />
 
-                <View style={styles.otpSection}>
-                  <Text style={[typography.small, styles.otpLabel, { color: colors.textSecondary }]}>
-                    6-Digit OTP Code
-                  </Text>
-                  <View style={styles.otpBlock}>
-                    <OtpDigitInputs 
-                      value={verificationCode} 
-                      onChange={setVerificationCode} 
-                      colors={colors} 
-                    />
+                 <View style={styles.inputContainer}>
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>4-Digit OTP</Text>
+                    <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                      <Icon name="key" size={16} color={colors.primary} style={styles.inputIcon} />
+                      <TextInput
+                        placeholder="Enter 4-digit OTP from email"
+                        placeholderTextColor={colors.textPlaceholder}
+                        style={[styles.input, { color: colors.textPrimary }]}
+                        value={verificationCode}
+                        onChangeText={(text) => setVerificationCode(text.replace(/[^0-9]/g, '').slice(0, 4))}
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        autoFocus
+                      />
+                    </View>
                   </View>
                 </View>
 
                 <PrimaryButton
-                  title={loading ? "Verifying..." : "Verify Code"}
+                  title={loading ? "Verifying..." : "Verify Code / Token"}
                   onPress={handleStep2Verify}
-                  disabled={loading || verificationCode.length < 6}
+                  disabled={loading || verificationCode.trim().length < 4}
                   colors={colors}
                   style={styles.actionBtn}
                   iconRight={!loading && <Icon name="check" size={16} color={colors.onPrimary} />}
@@ -267,7 +308,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation }) => {
 
                 <Pressable onPress={() => setVerificationCode('')} style={styles.resendLink}>
                   <Text style={[typography.labelMedium, { color: colors.primary, textAlign: 'center' }]}>
-                    Clear Code
+                    Clear Token
                   </Text>
                 </Pressable>
               </>

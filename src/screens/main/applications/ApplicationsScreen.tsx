@@ -19,7 +19,7 @@ import {
 import Animated from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { ApplicationsStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
@@ -301,18 +301,20 @@ const ApplicationsScreen: React.FC = () => {
     </View>
   );
 
-  React.useEffect(() => {
-    onRefresh();
-  }, [onRefresh]);
+  useFocusEffect(
+    React.useCallback(() => {
+      onRefresh();
+    }, [onRefresh])
+  );
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       {!isLoggedIn ? (
-        <GuestView 
-          title="Track Your Success" 
-          subtitle="Register now to keep track of all your job applications and their current status." 
+        <GuestView
+          title="Track Your Success"
+          subtitle="Register now to keep track of all your job applications and their current status."
           image={JobIndiaIcon}
         />
       ) : (
@@ -662,6 +664,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
+    gap: spacing.md,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
   },
   skeletonLogo: {

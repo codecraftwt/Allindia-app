@@ -482,7 +482,11 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         city = parts[0].trim();
         area = parts.slice(1).join(',').trim();
       } else if (p.address) {
-        area = p.address;
+        if (!city) {
+          city = p.address.trim();
+        } else {
+          area = p.address.trim();
+        }
       }
 
       updateDraft({
@@ -502,19 +506,30 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const fullName = draft.fullName || user?.name || '';
   const email = user?.email || '';
 
-  const canSave =
-    (draft.fullName.trim() || user?.name || '').length >= 2 &&
-    draft.city.trim().length > 0 &&
-    !profileLoading;
+  const canSave = !profileLoading;
 
   const handleSave = async () => {
+    const nameToSave = draft.fullName.trim() || user?.name || '';
+    if (nameToSave.length < 2) {
+      showToast('Please enter a valid full name', 'error');
+      return;
+    }
+    if (phoneNumber && phoneNumber.trim().length !== 10) {
+      showToast('Phone number must be exactly 10 digits', 'error');
+      return;
+    }
+
+    const address = draft.city 
+      ? (draft.area ? `${draft.city}, ${draft.area}` : draft.city)
+      : (draft.area || undefined);
+
     try {
       await dispatch(updatePersonalProfile({
-        name: draft.fullName,
+        name: nameToSave,
         phone: phoneNumber || undefined,
         gender: draft.gender as string,
         date_of_birth: draft.dateOfBirth,
-        address: `${draft.city}, ${draft.area}`,
+        address: address,
         bio: draft.bio,
       })).unwrap();
       
@@ -590,10 +605,14 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
           <AnimatedInput
             value={phoneNumber}
-            onChangeText={setPhoneNumber}
+            onChangeText={(text: string) => {
+              const clean = text.replace(/[^0-9]/g, '');
+              setPhoneNumber(clean);
+            }}
             placeholder="Enter phone number"
             placeholderTextColor={colors.textPlaceholder}
             keyboardType="phone-pad"
+            maxLength={10}
             style={[
               styles.input,
               {
@@ -602,6 +621,11 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
               },
             ]}
           />
+          {phoneNumber.length > 0 && phoneNumber.length < 10 && (
+            <Text style={[typography.small, { color: colors.error, marginTop: 4, fontWeight: '500' }]}>
+              Phone number must be exactly 10 digits
+            </Text>
+          )}
         </>,
         2
       )}

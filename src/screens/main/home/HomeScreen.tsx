@@ -17,7 +17,9 @@ import {
   BackHandler,
   Alert,
   ToastAndroid,
+  Keyboard,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReAnimated, {
   useSharedValue,
   useAnimatedStyle,
@@ -52,6 +54,8 @@ import { typography } from '../../../theme/typography';
 import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssistant';
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
 import HeroBanner from '../../../components/HeroBanner';
+import AppRate from '../../../components/AppRate';
+import ActionForYou from '../../../components/ActionForYou';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { QuickFilterCards } from './components/QuickFilterCards';
 import HomescreenHeader from './components/HomescreenHeader';
@@ -635,6 +639,8 @@ const MemoizedHomeContent = React.memo(({
               )}
             </>
           )}
+          <AppRate colors={colors} />
+
           {recommended && recommended.length > 0 && (
             <>
               <View style={{ height: spacing.md }} />
@@ -666,6 +672,7 @@ const MemoizedHomeContent = React.memo(({
               No jobs found at the moment.
             </Text>
           )}
+          <ActionForYou colors={colors} />
         </>
       )}
     </Animated.ScrollView>
@@ -714,6 +721,39 @@ const HomeScreen: React.FC = () => {
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState(profileData?.preferences?.current_city?.city || '');
+  const [overlayRecent, setOverlayRecent] = useState<string[]>([]);
+
+  // Load recent searches from AsyncStorage on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      const loadRecent = async () => {
+        try {
+          const stored = await AsyncStorage.getItem('recent_searches');
+          if (stored) {
+            setOverlayRecent(JSON.parse(stored));
+          } else {
+            setOverlayRecent(['Product Manager', 'Hyderabad IT jobs', 'Customer support']);
+          }
+        } catch (e) {
+          console.warn('Failed to load recent searches:', e);
+        }
+      };
+      loadRecent();
+    }, [])
+  );
+
+  const saveOverlaySearch = async (q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    const next = [trimmed, ...overlayRecent.filter(x => x.toLowerCase() !== trimmed.toLowerCase())];
+    const sliced = next.slice(0, 8);
+    setOverlayRecent(sliced);
+    try {
+      await AsyncStorage.setItem('recent_searches', JSON.stringify(sliced));
+    } catch (e) {
+      console.warn(e);
+    }
+  };
 
   const handleScroll = useMemo(() => Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -945,8 +985,10 @@ const HomeScreen: React.FC = () => {
           colors={colors}
           navigation={navigation}
           scrollY={scrollY}
+          showFilterGrid={showFilterGrid}
         />
       )}
+
 
       <HeaderFilterGrid
         visible={showFilterGrid}
@@ -964,11 +1006,13 @@ const HomeScreen: React.FC = () => {
           transparent
           onRequestClose={() => setShowSearchOverlay(false)}>
           <View style={[styles.overlayContainer, { backgroundColor: colors.background }]}>
+
+            <Pressable onPress={() => setShowSearchOverlay(false)} style={styles.backBtn}>
+              <Icon name="arrow-left" size={24} color={colors.textPrimary} />
+            </Pressable>
             <SafeAreaView style={{ flex: 1 }}>
               <View style={[styles.overlayHeader, { borderBottomColor: colors.border }]}>
-                <Pressable onPress={() => setShowSearchOverlay(false)} style={styles.backBtn}>
-                  <Icon name="arrow-left" size={24} color={colors.textPrimary} />
-                </Pressable>
+
                 <View style={styles.dualInputContainer}>
                   <View style={[styles.overlayInputRow, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                     <Icon name="search" size={18} color={colors.primary} />
@@ -995,24 +1039,83 @@ const HomeScreen: React.FC = () => {
               </View>
 
               <ScrollView style={{ flex: 1, padding: spacing.md }}>
-                <Text style={[typography.labelMedium, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
-                  RECENT SEARCHES
-                </Text>
-                {['Delivery Boy', 'Graphic Designer', 'Ahmedabad'].map((item, index) => (
-                  <Pressable key={index} style={styles.recentItem} onPress={() => setSearchQuery(item)}>
-            
-                    <Text style={[typography.body, { color: colors.textPrimary, marginLeft: spacing.sm }]}>
-                      {item}
-                    </Text>
-                  </Pressable>
-                ))}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
+                  <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase' }]}>
+                    RECENT SEARCHES
+                  </Text>
+                  {overlayRecent.length > 0 && (
+                    <Pressable
+                      onPress={async () => {
+                        setOverlayRecent([]);
+                        try {
+                          await AsyncStorage.setItem('recent_searches', JSON.stringify([]));
+                        } catch (err) {
+                          console.warn(err);
+                        }
+                      }}
+                      style={{ paddingVertical: 2, paddingHorizontal: 6 }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>Clear All</Text>
+                    </Pressable>
+                  )}
+                </View>
+                {overlayRecent.map((item, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: 10,
+                    }}
+                  >
+                    <Pressable
+                      style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+                      onPress={async () => {
+                        Keyboard.dismiss();
+                        setSearchQuery(item);
+                        setShowSearchOverlay(false);
+                        await saveOverlaySearch(item);
+                        navigation.navigate('JobListing', {
+                          filters: {
+                            q: item,
+                            city: searchLocation
+                          }
+                        });
+                      }}
+                    >
+                      <Icon name="clock-o" size={14} color={colors.textPlaceholder} style={{ marginRight: spacing.sm }} />
+                      <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]} numberOfLines={1}>
+                        {item}
+                      </Text>
+                    </Pressable>
 
-         
+                    <Pressable
+                      onPress={async () => {
+                        const next = overlayRecent.filter(x => x !== item);
+                        setOverlayRecent(next);
+                        try {
+                          await AsyncStorage.setItem('recent_searches', JSON.stringify(next));
+                        } catch (err) {
+                          console.warn(err);
+                        }
+                      }}
+                      style={{ padding: 6, marginLeft: 8 }}
+                    >
+                      <Icon name="times" size={14} color={colors.textPlaceholder} />
+                    </Pressable>
+                  </View>
+                ))}
               </ScrollView>
 
               <View style={[styles.searchFooter, { borderTopColor: colors.border }]}>
                 <TouchableOpacity
-                  onPress={() => {
+                  onPress={async () => {
+                    Keyboard.dismiss();
+                    const finalQuery = searchQuery.trim() || searchLocation.trim();
+                    if (finalQuery) {
+                      await saveOverlaySearch(finalQuery);
+                    }
                     setShowSearchOverlay(false);
                     navigation.navigate('JobListing', {
                       filters: {
@@ -1450,13 +1553,15 @@ const styles = StyleSheet.create({
   overlayHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    paddingTop: 4, // Reduced to move inputs higher
     borderBottomWidth: 1,
     gap: spacing.md,
   },
   backBtn: {
     padding: 4,
-    marginTop: 8,
+    marginTop: 4, // Reduced margin
   },
   dualInputContainer: {
     flex: 1,
@@ -1467,6 +1572,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: radius.md,
     borderWidth: 1,
+    minHeight: 52, // Increased height
   },
   recentHeader: {
     flexDirection: 'row',

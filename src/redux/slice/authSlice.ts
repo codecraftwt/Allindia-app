@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axiosInstance';
-import { clearProfile } from './profileSlice';
+import { clearProfile, updatePersonalProfile, updateProfilePicture, deleteProfilePicture } from './profileSlice';
 
 interface AuthState {
   user: any | null;
@@ -74,6 +74,32 @@ export const logoutCandidate = createAsyncThunk(
   }
 );
 
+export const forgotPasswordCandidate = createAsyncThunk(
+  'auth/forgotPasswordCandidate',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/forgot-password', { email });
+      return response?.data;
+    } catch (error: any) {
+      console.log("Forgot Password Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to send reset link');
+    }
+  }
+);
+
+export const resetPasswordCandidate = createAsyncThunk(
+  'auth/resetPasswordCandidate',
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/reset-password', payload);
+      return response?.data;
+    } catch (error: any) {
+      console.log("Reset Password Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to reset password');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -121,6 +147,26 @@ const authSlice = createSlice({
       .addCase(registerCandidate.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(updatePersonalProfile.fulfilled, (state, action) => {
+        if (state.user) {
+          if (action.meta.arg.name) {
+            state.user.name = action.meta.arg.name;
+          }
+          if (action.meta.arg.phone) {
+            state.user.phone = action.meta.arg.phone;
+          }
+        }
+      })
+      .addCase(updateProfilePicture.fulfilled, (state, action) => {
+        if (state.user && action.payload.data?.user?.profile_picture_url) {
+          state.user.profile_picture_url = action.payload.data.user.profile_picture_url;
+        }
+      })
+      .addCase(deleteProfilePicture.fulfilled, (state) => {
+        if (state.user) {
+          state.user.profile_picture_url = null;
+        }
       });
   },
 });

@@ -31,6 +31,21 @@ function App() {
   );
 }
 
+const linking = {
+  prefixes: [
+    'jobindia://',
+    'https://jobindia.ai',
+    'https://*.jobindia.ai',
+    'http://*.ngrok-free.app',
+    'https://*.ngrok-free.app',
+  ],
+  config: {
+    screens: {
+      ForgotPass: 'reset-password',
+    },
+  },
+};
+
 function AppNavigation() {
   const { colors, mode, isThemeLoading } = useTheme();
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
@@ -52,7 +67,7 @@ function AppNavigation() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: colors.background, 
+      background: colors.background,
       card: colors.surface,
       text: colors.textPrimary,
       border: colors.border,
@@ -67,8 +82,8 @@ function AppNavigation() {
   return (
     <View style={{ flex: 1 }}>
       <AnimatedBackground colors={colors} />
-      
-      <NavigationContainer ref={navigationRef} theme={navTheme}>
+
+      <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
         <StatusBar
           barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
           backgroundColor="transparent"

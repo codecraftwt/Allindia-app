@@ -86,7 +86,8 @@ const SearchResultsScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const insets = useSafeAreaInsets();
 
-  const { searchResults, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const { searchResults, filteredJobs, loading, searchLoading } = useSelector((state: RootState) => state.jobs);
+  const isLoading = loading || searchLoading;
   const [searchText, setSearchText] = useState(route.params?.query || '');
   const [activeFilter, setActiveFilter] = useState<any>(null);
 
@@ -124,7 +125,7 @@ const SearchResultsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
@@ -148,7 +149,7 @@ const SearchResultsScreen: React.FC = () => {
         </View>
       </View>
 
-      {loading ? (
+      {isLoading ? (
         <View style={styles.loader}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>Searching for jobs...</Text>
@@ -185,7 +186,7 @@ const SearchResultsScreen: React.FC = () => {
         activeFilter={activeFilter}
         onFilterSelect={applyAdvancedFilters}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

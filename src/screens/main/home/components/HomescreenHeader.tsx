@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   notifyBtnCircle: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1.5,
     minHeight: 46,
     overflow: 'hidden',
     ...components.jobCard,
@@ -222,6 +222,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.1)',
   },
+  referBtnContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    height: 40,
+    borderRadius: 25, // fully rounded capsule shape matching height 50
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    gap: 6,
+  },
+  referBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
@@ -233,7 +251,7 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
     'Part-time jobs',
     'Remote opportunities'
   ];
-  
+
   const [index, setIndex] = useState(0);
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -261,11 +279,11 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
   return (
     <View style={styles.tickerContainer}>
       <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>Search for</Text>
-      <Animated.Text 
+      <Animated.Text
         style={[
-          styles.searchPlaceholderWide, 
+          styles.searchPlaceholderWide,
           { color: colors.textPlaceholder, transform: [{ translateY }], marginLeft: 4, flex: 1 }
-        ]} 
+        ]}
         numberOfLines={1}
       >
         {suggestions[index]}
@@ -296,6 +314,17 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
   const COLLAPSE_DISTANCE = 80;
+
+  const handleReferApp = async () => {
+    try {
+      await Share.share({
+        message: "Job India App: Find the best jobs matching your profile! Get daily new jobs, personalized recommendations. Download the app now: https://play.google.com/store/apps/details?id=com.jobindia",
+        title: "Job India App",
+      });
+    } catch (error: any) {
+      console.log('Error sharing:', error);
+    }
+  };
 
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, COLLAPSE_DISTANCE],
@@ -380,160 +409,183 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
             },
           ]}
         />
-      <View style={styles.headerBlock}>
-        <Animated.View style={[styles.headerTopRow, { opacity: topRowOpacity }]}>
-          <Pressable
-            onPress={goProfile}
-            style={styles.headerLeft}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile">
-            <View style={styles.headerGreeting}>
-              <Pressable
-                onPress={() => navigation.navigate('LocationSelection')}
-                style={styles.locationSelector}
-              >
-                <View style={[styles.locationIconBox, { backgroundColor: '#fff', overflow: 'hidden' }]}>
-                  <Image 
-                    source={BRAND_ICON} 
-                    style={{ width: '100%', height: '100%', resizeMode: 'cover' }} 
-                  />
-                </View>
-                <View style={styles.locationTextStack}>
-                  <View style={styles.cityRow}>
-                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
-                      {selectedCity || 'Mumbai'}
-                    </Text>
-                    <Icon name="map-marker" size={12} color={colors.primary} style={{ marginLeft: 6 }} />
-                    <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+        <View style={styles.headerBlock}>
+          <Animated.View style={[styles.headerTopRow, { opacity: topRowOpacity }]}>
+            <Pressable
+              onPress={goProfile}
+              style={styles.headerLeft}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile">
+              <View style={styles.headerGreeting}>
+                <Pressable
+                  onPress={() => navigation.navigate('LocationSelection')}
+                  style={styles.locationSelector}
+                >
+                  <View style={[styles.locationIconBox, { backgroundColor: '#fff', overflow: 'hidden' }]}>
+                    <Image
+                      source={BRAND_ICON}
+                      style={{ width: '100%', height: '100%', resizeMode: 'cover' }}
+                    />
                   </View>
-                  <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
-                    {selectedArea || 'Andheri East'}
+                  <View style={styles.locationTextStack}>
+                    <View style={styles.cityRow}>
+                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
+                        {selectedCity || 'Mumbai'}
+                      </Text>
+                      <Icon name="map-marker" size={12} color={colors.primary} style={{ marginLeft: 6 }} />
+                      <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                    </View>
+                    <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                      {selectedArea || 'Andheri East'}
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+            </Pressable>
+            <View style={styles.headerActions}>
+              {showNotifyHint && (
+                <AnimatedPressable
+                  onPress={onPressNotifyHint}
+                  style={[
+                    styles.headerNotifyHint,
+                    {
+                      backgroundColor: colors.accent,
+                      opacity: notifyHintAnim,
+                      transform: [
+                        { scale: notifyHintAnim },
+                        { translateX: -1 }
+                      ]
+                    }
+                  ]}>
+                  <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
+                    New Notification! 🔔
                   </Text>
-                </View>
-              </Pressable>
-            </View>
-          </Pressable>
-          <View style={styles.headerActions}>
-            {showNotifyHint && (
-              <AnimatedPressable
-                onPress={onPressNotifyHint}
+                  <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
+                </AnimatedPressable>
+              )}
+              <Pressable
+                onPress={handleReferApp}
+                hitSlop={8}
                 style={[
-                  styles.headerNotifyHint,
+                  styles.referBtnContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    shadowColor: colors.shadow,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Refer app">
+                <Icon name="gift" size={18} color={colors.primary} />
+                <Text style={[styles.referBtnText, { color: colors.textPrimary }]}>Refer</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => navigation.navigate('Saved')}
+                hitSlop={8}
+                style={[
+                  styles.notifyBtnCircle,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    shadowColor: colors.shadow,
+                    marginRight: 4,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Saved jobs">
+                <IonIcon name="heart" size={24} color="#EF4444" />
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  if (onPressNotifyHint) {
+                    onPressNotifyHint();
+                  }
+                  navigation.navigate('Notifications');
+                }}
+                hitSlop={8}
+                style={[
+                  styles.notifyBtnCircle,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    shadowColor: colors.shadow,
+                  },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Notifications">
+                <Animated.View style={{
+                  transform: [{
+                    rotate: bellAnim.interpolate({
+                      inputRange: [-1, 1],
+                      outputRange: ['-20deg', '20deg']
+                    })
+                  }]
+                }}>
+                  <IonIcon name="notifications" size={22} color={colors.primary} />
+                </Animated.View>
+                <Animated.View style={[
+                  styles.notifyBadge,
                   {
                     backgroundColor: colors.accent,
-                    opacity: notifyHintAnim,
-                    transform: [
-                      { scale: notifyHintAnim },
-                      { translateX: -1 }
-                    ]
+                    borderColor: colors.surface,
+                    transform: [{ scale: badgeAnim }]
                   }
-                ]}>
-                <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
-                  New Notification! 🔔
-                </Text>
-                <View style={[styles.hintArrowRight, { borderLeftColor: colors.accent }]} />
-              </AnimatedPressable>
-            )}
+                ]} />
+              </Pressable>
+            </View>
+          </Animated.View>
+
+          <View
+            style={[
+              styles.searchBarOuter,
+              {
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                shadowColor: '#FF7A00',
+                shadowOpacity: 0.95,
+                shadowRadius: 20,
+                shadowOffset: { width: 0, height: 3 },
+                elevation: 6,
+                marginTop: spacing.sm,
+              },
+            ]}>
             <Pressable
-              onPress={() => navigation.navigate('Saved')}
-              hitSlop={8}
-              style={[
-                styles.notifyBtnCircle,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  shadowColor: colors.shadow,
-                  marginRight: 4,
-                },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Saved jobs">
-              <IonIcon name="heart" size={24} color="#EF4444" />
+              onPress={goSearch}
+              style={styles.searchBarMain}
+              accessibilityRole="search"
+              accessibilityLabel="Search for a job or company">
+              <Icon name="search" size={18} color={colors.textPlaceholder} />
+              <SearchTicker colors={colors} />
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                if (onPressNotifyHint) {
-                  onPressNotifyHint();
-                }
-                navigation.navigate('Notifications');
-              }}
-              hitSlop={8}
-              style={[
-                styles.notifyBtnCircle,
+              onPress={handleFilterOpen}
+              style={({ pressed }) => [
+                styles.searchFilterBtnPremium,
                 {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                  shadowColor: colors.shadow,
+                  backgroundColor: showFilterGrid || activeFilter !== 'All' ? colors.primary : colors.surfaceHighlight,
                 },
+                pressed && { transform: [{ scale: 0.94 }] }
               ]}
               accessibilityRole="button"
-              accessibilityLabel="Notifications">
-              <Animated.View style={{
-                transform: [{
-                  rotate: bellAnim.interpolate({
-                    inputRange: [-1, 1],
-                    outputRange: ['-20deg', '20deg']
-                  })
-                }]
-              }}>
-                <IonIcon name="notifications" size={22} color={colors.primary} />
-              </Animated.View>
-              <Animated.View style={[
-                styles.notifyBadge,
-                {
-                  backgroundColor: colors.accent,
-                  borderColor: colors.surface,
-                  transform: [{ scale: badgeAnim }]
-                }
-              ]} />
+              accessibilityLabel="Open search and filters">
+              <View style={styles.filterBtnContent}>
+                <Icon
+                  name="sliders"
+                  size={14}
+                  color={showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary}
+                />
+                {(activeFilter !== 'All' && activeFilter !== null) && (
+                  <View style={[styles.filterActiveBadgeWhite, { backgroundColor: '#fff' }]} />
+                )}
+              </View>
             </Pressable>
           </View>
-        </Animated.View>
-
-        <View
-          style={[
-            styles.searchBarOuter,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              shadowColor: colors.shadow,
-            },
-          ]}>
-          <Pressable
-            onPress={goSearch}
-            style={styles.searchBarMain}
-            accessibilityRole="search"
-            accessibilityLabel="Search for a job or company">
-            <Icon name="search" size={18} color={colors.textPlaceholder} />
-            <SearchTicker colors={colors} />
-          </Pressable>
-
-          <Pressable
-            onPress={handleFilterOpen}
-            style={({ pressed }) => [
-              styles.searchFilterBtnPremium,
-              {
-                backgroundColor: showFilterGrid || activeFilter !== 'All' ? colors.primary : colors.surfaceHighlight,
-              },
-              pressed && { transform: [{ scale: 0.94 }] }
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Open search and filters">
-            <View style={styles.filterBtnContent}>
-              <Icon
-                name="sliders"
-                size={14}
-                color={showFilterGrid || activeFilter !== 'All' ? '#fff' : colors.primary}
-              />
-              {(activeFilter !== 'All' && activeFilter !== null) && (
-                <View style={[styles.filterActiveBadgeWhite, { backgroundColor: '#fff' }]} />
-              )}
-            </View>
-          </Pressable>
         </View>
-      </View>
-    </Animated.View>
+      </Animated.View>
     </>
   );
 };

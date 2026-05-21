@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -6,8 +6,10 @@ import {
   Text,
   TextInput,
   View,
+  Keyboard,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -42,6 +44,28 @@ const SearchScreen: React.FC = () => {
   const [experience, setExperience] = useState<string | null>(null);
   const [recent, setRecent] = useState<string[]>(INITIAL_RECENT_SEARCHES);
 
+  // Load recent searches from AsyncStorage on screen focus
+  useFocusEffect(
+    useCallback(() => {
+      const loadRecentSearches = async () => {
+        try {
+          const stored = await AsyncStorage.getItem('recent_searches');
+          if (stored) {
+            setRecent(JSON.parse(stored));
+          } else {
+            // Initialize storage with initial recent searches
+            await AsyncStorage.setItem('recent_searches', JSON.stringify(INITIAL_RECENT_SEARCHES));
+            setRecent(INITIAL_RECENT_SEARCHES);
+          }
+        } catch (e) {
+          console.warn('Failed to load recent searches:', e);
+          setRecent(INITIAL_RECENT_SEARCHES);
+        }
+      };
+      loadRecentSearches();
+    }, [])
+  );
+
   // Suggestion States
   const [filteredSkills, setFilteredSkills] = useState<string[]>([]);
   const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
@@ -50,22 +74,48 @@ const SearchScreen: React.FC = () => {
   const EXP_OPTIONS = ['Fresher', '1-2 Years', '3-5 Years', '5-10 Years', '10+ Years'];
 
   const goToResults = useCallback(
-    (q: string) => {
+    async (q: string) => {
+      Keyboard.dismiss();
       const trimmed = q.trim();
       if (!trimmed) {
         return;
       }
-      setRecent(prev => {
-        const next = [trimmed, ...prev.filter(x => x.toLowerCase() !== trimmed.toLowerCase())];
-        return next.slice(0, 8);
-      });
+      const currentList = Array.isArray(recent) ? recent : [];
+      const next = [trimmed, ...currentList.filter(x => x.toLowerCase() !== trimmed.toLowerCase())];
+      const sliced = next.slice(0, 8);
+
+      setRecent(sliced);
+      try {
+        await AsyncStorage.setItem('recent_searches', JSON.stringify(sliced));
+      } catch (err) {
+        console.warn('Failed to save search:', err);
+      }
       navigation.navigate('SearchResults', { query: trimmed });
     },
-    [navigation],
+    [navigation, recent],
   );
 
-  const removeRecent = useCallback((item: string) => {
-    setRecent(prev => prev.filter(x => x !== item));
+  const removeRecent = useCallback(
+    async (item: string) => {
+      const currentList = Array.isArray(recent) ? recent : [];
+      const next = currentList.filter(x => x !== item);
+      setRecent(next);
+      try {
+        await AsyncStorage.setItem('recent_searches', JSON.stringify(next));
+      } catch (err) {
+        console.warn('Failed to remove recent search:', err);
+      }
+    },
+    [recent],
+  );
+
+  const clearAllRecent = useCallback(async () => {
+    setRecent([]);
+    try {
+      await AsyncStorage.setItem('recent_searches', JSON.stringify([]));
+    } catch (err) {
+      console.warn('Failed to clear recent searches:', err);
+    }
   }, []);
 
   const handleSkillChange = (text: string) => {
@@ -96,12 +146,14 @@ const SearchScreen: React.FC = () => {
     setQuery(skill);
     setFilteredSkills([]);
     setActiveInput(null);
+    goToResults(skill);
   };
 
   const selectLocation = (loc: string) => {
     setLocation(loc);
     setFilteredLocations([]);
     setActiveInput(null);
+    goToResults(loc);
   };
 
   const onChipPress = useCallback(
@@ -126,7 +178,7 @@ const SearchScreen: React.FC = () => {
         <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {/* Role Input */}
           <View style={[styles.inputRow, { borderBottomColor: colors.border }]}>
-            <Icon name="briefcase" size={16} color={colors.primary} style={styles.inputIcon} />
+            <Icon name="briefcase" size={18} color={colors.primary} style={styles.inputIcon} />
             <TextInput
               style={[styles.searchInput, { color: colors.textPrimary }]}
               placeholder="Skills, Designations, Companies"
@@ -134,6 +186,11 @@ const SearchScreen: React.FC = () => {
               value={query}
               onChangeText={handleSkillChange}
               onFocus={() => query.length > 0 && setActiveInput('skill')}
+              onSubmitEditing={() => {
+                const finalQuery = query.trim() || location.trim();
+                goToResults(finalQuery);
+              }}
+              returnKeyType="search"
             />
             {query.length > 0 && (
               <Pressable onPress={() => { setQuery(''); setFilteredSkills([]); setActiveInput(null); }}>
@@ -152,6 +209,11 @@ const SearchScreen: React.FC = () => {
               value={location}
               onChangeText={handleLocationChange}
               onFocus={() => location.length > 0 && setActiveInput('location')}
+              onSubmitEditing={() => {
+                const finalQuery = query.trim() || location.trim();
+                goToResults(finalQuery);
+              }}
+              returnKeyType="search"
             />
             {location.length > 0 && (
               <Pressable onPress={() => { setLocation(''); setFilteredLocations([]); setActiveInput(null); }}>
@@ -206,7 +268,10 @@ const SearchScreen: React.FC = () => {
 
         <Pressable
           style={[styles.searchCta, { backgroundColor: colors.primary }]}
-          onPress={() => goToResults(query)}
+          onPress={() => {
+            const finalQuery = query.trim() || location.trim();
+            goToResults(finalQuery);
+          }}
           disabled={!query.trim() && !location.trim()}>
           <Text
             style={[
@@ -217,7 +282,18 @@ const SearchScreen: React.FC = () => {
           </Text>
         </Pressable>
 
-        <SectionHeader title="Recent searches" colors={colors} />
+        {/* Recent Searches Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, marginBottom: spacing.md }}>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 }]}>
+            Recent searches
+          </Text>
+          {recent.length > 0 && (
+            <Pressable onPress={clearAllRecent} style={{ paddingVertical: 4, paddingHorizontal: 8 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>Clear All</Text>
+            </Pressable>
+          )}
+        </View>
+
         {recent.length === 0 ? (
           <Text style={[typography.body, { color: colors.textSecondary, marginBottom: spacing.lg }]}>
             Your recent searches will appear here.
@@ -242,7 +318,10 @@ const SearchScreen: React.FC = () => {
                     {item}
                   </Text>
                 </Pressable>
-          
+
+                <Pressable onPress={() => removeRecent(item)} style={{ padding: 6, marginLeft: 8 }}>
+                  <Icon name="times" size={14} color={colors.textPlaceholder} />
+                </Pressable>
               </View>
             ))}
           </View>
@@ -279,7 +358,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: 32, // Moved search bar lower
     maxWidth: 520,
     width: '100%',
     alignSelf: 'center',
@@ -297,7 +376,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 18, // Increased height
     paddingHorizontal: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -308,7 +387,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 18, // Increased font size
     fontWeight: '600',
     paddingVertical: 0,
   },

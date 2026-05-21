@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View, Dimensions, Image } from 'react-native';
+import { Pressable, StyleSheet, Text, View, Dimensions, Image, TouchableOpacity } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -25,15 +25,25 @@ interface ProfileStrengthCardProps {
   colors: any;
   navigation: any;
   scrollY?: any;
+  showFilterGrid?: boolean;
 }
 
-const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: ProfileStrengthCardProps) => {
+const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY, showFilterGrid }: ProfileStrengthCardProps) => {
   const insets = useSafeAreaInsets();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Redux data
+  const { completion } = useSelector((state: RootState) => state.profile);
+  const { latest = [] } = useSelector((state: RootState) => state.jobs);
+
+  const strength = completion?.percentage || 0;
+  const latestCount = latest.length;
+
+  // Active Mode State: 'profile' or 'jobs'
+  const [activeMode, setActiveMode] = useState<'profile' | 'jobs'>('profile');
   const [showTooltip, setShowTooltip] = useState(false);
   const [showAutoHint, setShowAutoHint] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
-  const dispatch = useDispatch<AppDispatch>();
-  const { completion } = useSelector((state: RootState) => state.profile);
 
   useEffect(() => {
     if (!completion) {
@@ -41,7 +51,24 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
     }
   }, [dispatch, completion]);
 
-  const strength = completion?.percentage || 0;
+  // Mode cycling timer: changes mode every 3 seconds
+  useEffect(() => {
+    if (showTooltip || isLaunching) return; // Pause cycling if tooltip or launching animation is open
+
+    const showProfile = strength < 100;
+    const showJobs = latestCount > 0;
+
+    if (showProfile && showJobs) {
+      const interval = setInterval(() => {
+        setActiveMode(prev => (prev === 'profile' ? 'jobs' : 'profile'));
+      }, 3000);
+      return () => clearInterval(interval);
+    } else if (showProfile) {
+      setActiveMode('profile');
+    } else if (showJobs) {
+      setActiveMode('jobs');
+    }
+  }, [showTooltip, isLaunching, strength, latestCount]);
 
   // Reanimated Shared Values
   const launchY = useSharedValue(0);
@@ -49,6 +76,15 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
   const rippleAnim = useSharedValue(0);
   const tooltipAnim = useSharedValue(0);
   const autoHintAnim = useSharedValue(0);
+  const modeTransition = useSharedValue(0); // 0 = profile, 1 = jobs
+
+  // Animate mode transition when activeMode changes
+  useEffect(() => {
+    modeTransition.value = withTiming(activeMode === 'profile' ? 0 : 1, {
+      duration: 400,
+      easing: Easing.inOut(Easing.ease)
+    });
+  }, [activeMode]);
 
   // Start Ripple Animation
   useEffect(() => {
@@ -74,6 +110,7 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
   });
 
   const animatedRippleStyle = useAnimatedStyle(() => {
+    const rippleColor = activeMode === 'profile' ? colors.primary : '#FF5A5F';
     return {
       transform: [{ scale: interpolate(rippleAnim.value, [0, 1], [1, 1.6]) }],
       opacity: interpolate(rippleAnim.value, [0, 1], [0.5, 0]),
@@ -97,21 +134,41 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
     };
   });
 
-  // Auto-hint Logic
+  // Animated styles for alternating internals inside FAB
+  const animatedProfileContentStyle = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(modeTransition.value, [0, 1], [1, 0]),
+      transform: [{ scale: interpolate(modeTransition.value, [0, 1], [1, 0.7]) }],
+    };
+  });
+
+  const animatedJobsContentStyle = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(modeTransition.value, [0, 1], [0, 1]),
+      transform: [{ scale: interpolate(modeTransition.value, [0, 1], [0.7, 1]) }],
+    };
+  });
+
+  // Auto-hint Logic on mount or mode switch
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (strength < 100 && !isLaunching && !showTooltip) {
-        setShowAutoHint(true);
-        autoHintAnim.value = withSequence(
-          withTiming(1, { duration: 500 }),
-          withTiming(1, { duration: 4000 }), // Wait using timing
-          withTiming(0, { duration: 500 })
-        );
-        setTimeout(() => setShowAutoHint(false), 5500);
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [strength, isLaunching, showTooltip]);
+    if (showTooltip || isLaunching) return;
+
+    const currentHasHint = activeMode === 'profile' ? (strength < 100) : (latestCount > 0);
+    if (!currentHasHint) return;
+
+    setShowAutoHint(true);
+    autoHintAnim.value = withSequence(
+      withTiming(1, { duration: 500 }),
+      withTiming(1, { duration: 2000 }), // Shorter duration to fit 3 sec cycle
+      withTiming(0, { duration: 500 })
+    );
+
+    const hintTimer = setTimeout(() => {
+      setShowAutoHint(false);
+    }, 3000);
+
+    return () => clearTimeout(hintTimer);
+  }, [activeMode, showTooltip, isLaunching, strength, latestCount]);
 
   const toggleTooltip = () => {
     if (!showTooltip) {
@@ -128,7 +185,7 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
     setIsLaunching(true);
     setShowAutoHint(false);
 
-    // Launch sequence
+    // Launch sequence for rocket
     launchY.value = withSequence(
       withTiming(-50, { duration: 600 }),
       withTiming(-SCREEN_HEIGHT - 200, { duration: 800 })
@@ -150,49 +207,60 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
     }, 1500);
   };
 
-  if (strength === 100) return null;
+  const handleViewAllJobs = () => {
+    toggleTooltip();
+    navigation.navigate('CategoryJobs', { section: 'latest' });
+  };
+
+  const handleOpenJob = (job: any) => {
+    toggleTooltip();
+    navigation.navigate('JobDetail', { jobId: job.slug || job.id });
+  };
 
   const rotation = (strength / 100) * 360;
 
+  // If both profile is completed (100%) and no latest jobs, hide the assistant FAB entirely
+  if (strength === 100 && latestCount === 0) return null;
+
   return (
-    <View 
-      style={[StyleSheet.absoluteFill, { zIndex: 110 }]} 
+    <View
+      style={[StyleSheet.absoluteFill, { zIndex: showFilterGrid ? 10 : 110 }]}
       pointerEvents="box-none"
     >
       {showTooltip && (
-        <Pressable 
-          style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]} 
-          onPress={toggleTooltip} 
+        <Pressable
+          style={[StyleSheet.absoluteFill, { backgroundColor: 'transparent' }]}
+          onPress={toggleTooltip}
         />
       )}
-      
-      <View 
+
+      <View
         style={[
-          styles.innerContainer, 
-          { 
-            bottom: insets.bottom + spacing.lg + 110, // Adjusted to match your desired height
+          styles.innerContainer,
+          {
+            bottom: insets.bottom + spacing.lg + 110,
             right: spacing.lg,
           }
         ]}
         pointerEvents="box-none"
       >
-        {/* Auto Hint Bubble */}
+        {/* Auto Hint Bubble (Changes according to mode) */}
         {showAutoHint && !showTooltip && !isLaunching && (
           <Animated.View
             style={[
               styles.autoHint,
               animatedAutoHintStyle,
-              { backgroundColor: colors.primary }
+              { backgroundColor: activeMode === 'profile' ? colors.primary : '#FF5A5F' }
             ]}>
             <Text style={[typography.tiny, { color: colors.onPrimary, fontWeight: '700' }]}>
-              Complete Profile !
+              {activeMode === 'profile' ? 'Complete Profile !' : `${latestCount} New Jobs! 🔥`}
             </Text>
-            <View style={[styles.arrowDown, { borderTopColor: colors.primary }]} />
+            <View style={[styles.arrowDown, { borderTopColor: activeMode === 'profile' ? colors.primary : '#FF5A5F' }]} />
           </Animated.View>
         )}
 
-        {/* Main Tooltip Card */}
-        {showTooltip && (
+        {/* Dynamic Tooltip rendering based on active mode */}
+        {showTooltip && activeMode === 'profile' && (
           <Animated.View style={[styles.tooltip, animatedTooltipStyle, {
             backgroundColor: colors.surface + 'F8',
             borderColor: colors.border,
@@ -226,6 +294,60 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
           </Animated.View>
         )}
 
+        {showTooltip && activeMode === 'jobs' && (
+          <Animated.View style={[styles.tooltip, animatedTooltipStyle, {
+            backgroundColor: colors.surface + 'F8',
+            borderColor: colors.border,
+            shadowColor: '#FF5A5F',
+          }]}>
+            <View style={styles.tooltipHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="bolt" size={16} color="#FF5A5F" style={{ marginRight: 6 }} />
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 15, fontWeight: '800' }]}>
+                  Latest Jobs
+                </Text>
+              </View>
+              <View style={[styles.strengthBadge, { backgroundColor: '#FF5A5F15' }]}>
+                <Text style={[typography.tiny, { color: '#FF5A5F', fontWeight: '800' }]}>{latestCount} new</Text>
+              </View>
+            </View>
+
+            <View style={styles.miniList}>
+              {latest.slice(0, 2).map((job: any, idx: number) => {
+                const companyName = job.employer?.company?.company_name || job.company || 'Company';
+                const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
+
+                return (
+                  <TouchableOpacity
+                    key={job.id || idx}
+                    onPress={() => handleOpenJob(job)}
+                    style={[styles.miniJobItem, { borderBottomColor: idx === 0 ? colors.border + '50' : 'transparent', borderBottomWidth: idx === 0 ? 1 : 0 }]}
+                  >
+                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 13 }]} numberOfLines={1}>
+                      {job.title}
+                    </Text>
+                    <View style={styles.jobMeta}>
+                      <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
+                        {companyName}
+                      </Text>
+                      <Text style={[typography.small, { color: colors.success, fontWeight: '700' }]}>
+                        {salaryLabel}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Pressable onPress={handleViewAllJobs} style={[styles.tooltipBtn, { backgroundColor: '#FF5A5F' }]}>
+              <Text style={[typography.labelMedium, { color: '#FFF', fontWeight: '700' }]}>
+                View All New Jobs
+              </Text>
+              <Icon name="chevron-right" size={12} color="#FFF" style={{ marginLeft: 8 }} />
+            </Pressable>
+          </Animated.View>
+        )}
+
         <View style={styles.fabContainer}>
           {/* Animated Ripple */}
           {!showTooltip && !isLaunching && (
@@ -234,7 +356,7 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
               style={[
                 styles.fabRippleLarge,
                 animatedRippleStyle,
-                { backgroundColor: colors.primary }
+                { backgroundColor: activeMode === 'profile' ? colors.primary : '#FF5A5F' }
               ]}
             />
           )}
@@ -242,47 +364,69 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
           <Pressable
             onPress={() => {
               if (isLaunching) return;
-              toggleTooltip();
-              setShowAutoHint(false);
+              if (activeMode === 'jobs') {
+                setShowAutoHint(false);
+                navigation.navigate('CategoryJobs', { section: 'latest' });
+              } else {
+                toggleTooltip();
+                setShowAutoHint(false);
+              }
             }}
             style={styles.fabTouch}>
             <View style={[styles.circleRing, {
               backgroundColor: 'transparent',
-              shadowColor: isLaunching ? 'transparent' : colors.primary,
+              shadowColor: isLaunching ? 'transparent' : (activeMode === 'profile' ? colors.primary : '#FF5A5F'),
               elevation: isLaunching ? 0 : 8,
             }]}>
+
               {!isLaunching && (
                 <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 31, overflow: 'hidden' }]} />
               )}
-              {!isLaunching && (
-                <>
-                  <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
-                  <View style={[styles.circleProgress, {
-                    borderColor: colors.primary,
-                    transform: [{ rotate: `${rotation}deg` }],
-                    borderTopColor: colors.primary,
-                    borderRightColor: rotation > 90 ? colors.primary : 'transparent',
-                    borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
-                    borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
-                  }]} />
-                </>
-              )}
-              <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
+
+              {/* OVERLAPPED INTERNAL CONTENTS WITH TRANSITIONS */}
+
+              {/* Profile Assistant Mode View */}
+              <Animated.View style={[StyleSheet.absoluteFill, styles.internalWrapper, animatedProfileContentStyle]}>
                 {!isLaunching && (
-                  <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, borderRadius: 25, overflow: 'hidden' }]} />
+                  <>
+                    <View style={[styles.circleProgress, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
+                    <View style={[styles.circleProgress, {
+                      borderColor: colors.primary,
+                      transform: [{ rotate: `${rotation}deg` }],
+                      borderTopColor: colors.primary,
+                      borderRightColor: rotation > 90 ? colors.primary : 'transparent',
+                      borderBottomColor: rotation > 180 ? colors.primary : 'transparent',
+                      borderLeftColor: rotation > 270 ? colors.primary : 'transparent',
+                    }]} />
+                  </>
                 )}
-                <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
-                  <Image
-                    source={require('../assets/rocket-bg.png')}
-                    style={styles.rocketGif}
-                    resizeMode="contain"
-                    fadeDuration={0}
-                  />
-                </Animated.View>
-                {!isLaunching && (
-                  <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
-                )}
-              </View>
+                <View style={[styles.fab, { backgroundColor: 'transparent' }]}>
+                  <Animated.View style={[styles.iconStack, animatedRocketStyle, { backgroundColor: 'transparent', width: 32 }]}>
+                    <Image
+                      source={require('../assets/rocket-bg.png')}
+                      style={styles.rocketGif}
+                      resizeMode="contain"
+                      fadeDuration={0}
+                    />
+                  </Animated.View>
+                  {!isLaunching && (
+                    <Text style={[styles.centerPercentText, { color: colors.primary }]}>{strength}%</Text>
+                  )}
+                </View>
+              </Animated.View>
+
+              {/* Latest Jobs Mode View */}
+              <Animated.View style={[StyleSheet.absoluteFill, styles.internalWrapper, animatedJobsContentStyle]}>
+                <View style={styles.fab}>
+                  <View style={styles.iconStack}>
+                    <Icon name="briefcase" size={20} color="#FF5A5F" />
+                  </View>
+                  <View style={styles.badgeCountFab}>
+                    <Text style={styles.badgeTextCount}>{latestCount > 9 ? '9+' : latestCount}</Text>
+                  </View>
+                </View>
+              </Animated.View>
+
             </View>
           </Pressable>
         </View>
@@ -292,13 +436,6 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY }: Prof
 };
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.lg + 80,
-    alignItems: 'flex-end',
-    zIndex: 110,
-  },
   innerContainer: {
     position: 'absolute',
     alignItems: 'flex-end',
@@ -341,6 +478,10 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: 'transparent',
   },
+  internalWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   fab: {
     width: 50,
     height: 50,
@@ -364,19 +505,39 @@ const styles = StyleSheet.create({
     marginTop: 0,
     fontFamily: typography.labelMedium.fontFamily,
   },
+  badgeCountFab: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#FF5A5F',
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFF',
+  },
+  badgeTextCount: {
+    color: '#FFF',
+    fontSize: 8,
+    fontWeight: '900',
+  },
   autoHint: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 70,
     right: 0,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    borderRadius: radius.pill,
-    minWidth: 150,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+    minWidth: 110,
     alignItems: 'center',
+    justifyContent: 'center',
     elevation: 10,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   arrowDown: {
     position: 'absolute',
@@ -394,8 +555,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 85,
     right: 0,
-    width: 260,
-    padding: spacing.lg,
+    width: 270,
+    padding: spacing.md,
     borderRadius: radius.xxl,
     borderWidth: 1,
     elevation: 20,
@@ -407,11 +568,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   strengthBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: radius.md,
   },
   progressBarBase: {
@@ -425,13 +586,27 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tooltipBtn: {
-    marginTop: spacing.xl,
-    paddingVertical: 14,
+    marginTop: spacing.md,
+    paddingVertical: 12,
     borderRadius: radius.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
+    elevation: 2,
+  },
+  miniList: {
+    marginVertical: spacing.xs,
+    gap: 4,
+  },
+  miniJobItem: {
+    paddingVertical: 8,
+  },
+  jobMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 8,
   },
 });
 

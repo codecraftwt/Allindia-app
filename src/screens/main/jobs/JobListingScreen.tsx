@@ -9,6 +9,7 @@ import {
   Text,
   View,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
@@ -205,7 +206,8 @@ const JobListingScreen: React.FC = () => {
   const navigation = useNavigation<JobListingNav>();
   const route = useRoute<JobListingRoute>();
   const dispatch = useDispatch<AppDispatch>();
-  const { searchResults, recommended, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const { searchResults, recommended, filteredJobs, loading, searchLoading } = useSelector((state: RootState) => state.jobs);
+  const isLoading = loading || searchLoading;
   const query = route.params?.query;
   const filters = route.params?.filters;
 
@@ -217,6 +219,7 @@ const JobListingScreen: React.FC = () => {
   };
 
   React.useEffect(() => {
+    Keyboard.dismiss();
     if (query) {
       dispatch(searchJobs(query));
     } else if (filters) {
@@ -231,7 +234,7 @@ const JobListingScreen: React.FC = () => {
   const headerTitle = query ? `"${query}"` : (route.params?.categoryName || (filters ? 'Filtered results' : 'All jobs'));
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={styles.centerWrapper}>
         <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">
@@ -246,7 +249,7 @@ const JobListingScreen: React.FC = () => {
           <View style={{ width: 40 }} />
         </View>
 
-        {loading ? (
+        {isLoading ? (
           <JobListingSkeleton />
         ) : (
           <FlatList
@@ -283,7 +286,7 @@ const JobListingScreen: React.FC = () => {
           dispatch(filterJobs(f));
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

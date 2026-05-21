@@ -103,135 +103,135 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
       title="Education"
       subtitle="Your highest qualification helps match you to the right roles.">
 
-        {loading && !data ? (
-          <View style={styles.centerLoader}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : (
-          <>
-            {renderSection(
-              <>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
-                <AnimatedPressable
-                  onPressIn={() => (scale.value = withSpring(0.97))}
-                  onPressOut={() => (scale.value = withSpring(1))}
-                  onPress={() => setOpen(true)}
+      {loading && !data ? (
+        <View style={styles.centerLoader}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <>
+          {renderSection(
+            <>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
+              <AnimatedPressable
+                onPressIn={() => (scale.value = withSpring(0.97))}
+                onPressOut={() => (scale.value = withSpring(1))}
+                onPress={() => setOpen(true)}
+                style={[
+                  styles.selectField,
+                  selectStyle,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}>
+                <Icon name="graduation-cap" size={18} color={colors.primary} />
+                <Text
                   style={[
-                    styles.selectField,
-                    selectStyle,
+                    typography.body,
                     {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
+                      color: selectedQual ? colors.textPrimary : colors.textPlaceholder,
+                      flex: 1,
                     },
                   ]}>
-                  <Icon name="graduation-cap" size={18} color={colors.primary} />
-                  <Text
+                  {selectedQual ? selectedQual.name : 'Select qualification'}
+                </Text>
+                <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+              </AnimatedPressable>
+            </>,
+            0
+          )}
+
+          {renderSection(
+            <>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
+                Education Notes
+              </Text>
+              <TextInput
+                multiline
+                numberOfLines={4}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Describe your education background..."
+                placeholderTextColor={colors.textPlaceholder}
+                style={[
+                  styles.textArea,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.textPrimary,
+                  }
+                ]}
+              />
+            </>,
+            1
+          )}
+
+          {error && (
+            <Text style={[styles.errorText, { color: colors.error }]}>
+              {typeof error === 'string' ? error : (error.message || 'An error occurred')}
+            </Text>
+          )}
+        </>
+      )}
+
+      <Modal
+        visible={open}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
+          <AnimatedPressable
+            entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
+            exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
+            style={[styles.sheet, { backgroundColor: colors.surface }]}
+            onPress={(e: any) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
+                Qualification
+              </Text>
+              <Pressable onPress={() => setOpen(false)} hitSlop={12}>
+                <Icon name="times" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={qualifications}
+              keyExtractor={item => item.id.toString()}
+              style={styles.list}
+              renderItem={({ item, index }) => (
+                <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
+                  <Pressable
+                    onPress={() => {
+                      setSelectedQual(item);
+                      setOpen(false);
+                    }}
                     style={[
-                      typography.body,
+                      styles.row,
                       {
-                        color: selectedQual ? colors.textPrimary : colors.textPlaceholder,
-                        flex: 1,
+                        backgroundColor:
+                          selectedQual?.id === item.id ? colors.surfaceHighlight : 'transparent',
                       },
                     ]}>
-                    {selectedQual ? selectedQual.name : 'Select qualification'}
-                  </Text>
-                  <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
-                </AnimatedPressable>
-              </>,
-              0
-            )}
+                    <Text style={[typography.body, { color: colors.textPrimary }]}>{item.name}</Text>
+                    {selectedQual?.id === item.id ? (
+                      <Icon name="check" size={16} color={colors.primary} />
+                    ) : null}
+                  </Pressable>
+                </Animated.View>
+              )}
+            />
+          </AnimatedPressable>
+        </Pressable>
+      </Modal>
 
-            {renderSection(
-              <>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
-                  Education Notes
-                </Text>
-                <TextInput
-                  multiline
-                  numberOfLines={4}
-                  value={notes}
-                  onChangeText={setNotes}
-                  placeholder="Describe your education background..."
-                  placeholderTextColor={colors.textPlaceholder}
-                  style={[
-                    styles.textArea,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      color: colors.textPrimary,
-                    }
-                  ]}
-                />
-              </>,
-              1
-            )}
-
-            {error && (
-              <Text style={[styles.errorText, { color: colors.error }]}>
-                {typeof error === 'string' ? error : (error.message || 'An error occurred')}
-              </Text>
-            )}
-          </>
-        )}
-
-        <Modal 
-          visible={open} 
-          animationType="fade" 
-          transparent
-          onRequestClose={() => setOpen(false)}
-        >
-          <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
-            <AnimatedPressable
-              entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
-              exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
-              style={[styles.sheet, { backgroundColor: colors.surface }]}
-              onPress={(e: any) => e.stopPropagation()}>
-              <View style={styles.modalHeader}>
-                <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
-                  Qualification
-                </Text>
-                <Pressable onPress={() => setOpen(false)} hitSlop={12}>
-                  <Icon name="times" size={20} color={colors.textSecondary} />
-                </Pressable>
-              </View>
-              <FlatList
-                data={qualifications}
-                keyExtractor={item => item.id.toString()}
-                style={styles.list}
-                renderItem={({ item, index }) => (
-                  <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
-                    <Pressable
-                      onPress={() => {
-                        setSelectedQual(item);
-                        setOpen(false);
-                      }}
-                      style={[
-                        styles.row,
-                        {
-                          backgroundColor:
-                            selectedQual?.id === item.id ? colors.surfaceHighlight : 'transparent',
-                        },
-                      ]}>
-                      <Text style={[typography.body, { color: colors.textPrimary }]}>{item.name}</Text>
-                      {selectedQual?.id === item.id ? (
-                        <Icon name="check" size={16} color={colors.primary} />
-                      ) : null}
-                    </Pressable>
-                  </Animated.View>
-                )}
-              />
-            </AnimatedPressable>
-          </Pressable>
-        </Modal>
-
-        <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-          <PrimaryButton
-            title={loading ? "Saving..." : "Save"}
-            onPress={handleSave}
-            disabled={!canSave || loading}
-            colors={colors}
-          />
-        </Animated.View>
+      <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+        <PrimaryButton
+          title={loading ? "Saving..." : "Save"}
+          onPress={handleSave}
+          disabled={!canSave || loading}
+          colors={colors}
+        />
+      </Animated.View>
     </ProfileEditLayout>
   );
 };

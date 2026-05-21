@@ -1609,7 +1609,7 @@ ${generatedResume?.skills.join(', ')}
               }}>
 
                 {/* 1. Main Action Button: Grand Double-Stacked Branded Console */}
-                <Pressable
+                {/* <Pressable
                   onPress={handleProceedToInterview}
                   style={({ pressed }) => [
                     {
@@ -1634,7 +1634,7 @@ ${generatedResume?.skills.join(', ')}
                   ]}
                 >
 
-                  {/* Center: Double-Stacked Text (Action Title + Interactive Hint Subtitle!) */}
+              
                   <View style={{ flex: 1, justifyContent: 'center' }}>
                     <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 }}>
                       Auto-Complete With AI
@@ -1644,7 +1644,7 @@ ${generatedResume?.skills.join(', ')}
                     </Text>
                   </View>
 
-                  {/* Right Side: Glowing Chevron Circle */}
+                
                   <View style={{
                     width: 32,
                     height: 32,
@@ -1655,10 +1655,10 @@ ${generatedResume?.skills.join(', ')}
                   }}>
                     <Icon name="chevron-forward" size={16} color="#fff" />
                   </View>
-                </Pressable>
+                </Pressable> */}
 
                 {/* 2. Sleek Secondary Action: Underlined Skip Link */}
-                <Pressable
+                {/* <Pressable
                   onPress={handleGenerateResumeFromChat}
                   style={({ pressed }) => [
                     {
@@ -1681,7 +1681,11 @@ ${generatedResume?.skills.join(', ')}
                     Your resume
                   </Text>
                   <Icon name="chevron-forward" size={13} color={colors.textSecondary} style={{ marginLeft: 3 }} />
-                </Pressable>
+                </Pressable> */}
+
+
+
+      
 
               </View>
             </ScrollView>

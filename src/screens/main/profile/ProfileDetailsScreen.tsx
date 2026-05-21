@@ -63,20 +63,53 @@ const ProfileDetailsScreen = () => {
     setImageError(false);
   }, [profile?.personal?.profile_picture_url, user?.profile_picture_url]);
 
-  const getProfileImageUrl = (path: string | null) => {
+  const getProfileImageUrl = (path: string | null | undefined) => {
     if (!path) return null;
+    const cleanPath = path.trim();
+    if (cleanPath === '' || cleanPath === 'null' || cleanPath === 'undefined') return null;
     const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-    if (path.startsWith('http')) return path;
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (cleanPath.startsWith('http')) return cleanPath;
+    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
   };
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
   const displayPhone = profile?.personal?.phone || user?.phone || 'Add phone number';
-  const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url)
-    ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url)
-    : null;
+  const isValidPhotoUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase().trim();
+    if (
+      lowerUrl === '' ||
+      lowerUrl === 'null' ||
+      lowerUrl === 'undefined' ||
+      lowerUrl.includes('default') ||
+      lowerUrl.includes('placeholder') ||
+      lowerUrl.includes('avatar') ||
+      lowerUrl.includes('no-image') ||
+      lowerUrl.includes('noimage') ||
+      lowerUrl.includes('faces') ||
+      lowerUrl.includes('face1') ||
+      lowerUrl.includes('admin-assets')
+    ) {
+      return false;
+    }
+    const hasExtension =
+      lowerUrl.includes('.jpg') ||
+      lowerUrl.includes('.jpeg') ||
+      lowerUrl.includes('.png') ||
+      lowerUrl.includes('.webp') ||
+      lowerUrl.includes('.gif');
+
+    return hasExtension;
+  };
+
+  const hasUploadedPhoto = !!(
+    (profile?.personal?.profile_picture_url && isValidPhotoUrl(profile.personal.profile_picture_url)) ||
+    (user?.profile_picture_url && isValidPhotoUrl(user.profile_picture_url))
+  );
+
+  const profilePic = getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url);
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
@@ -147,7 +180,7 @@ const ProfileDetailsScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.primary} translucent={true} />
-      
+
       {/* Premium Header - WorkIndia Style */}
       <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
         <View style={{ paddingTop: insets.top }}>
@@ -205,15 +238,15 @@ const ProfileDetailsScreen = () => {
         </View>
       </View>
 
-      <ScrollView 
-        style={styles.scroll} 
+      <ScrollView
+        style={styles.scroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={[colors.primary]} 
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
             tintColor={colors.primary}
           />
         }
@@ -240,53 +273,53 @@ const ProfileDetailsScreen = () => {
           <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PROFESSIONAL DETAILS</Text>
         </View>
 
-        <SectionItem 
-          title="Work Experience" 
+        <SectionItem
+          title="Work Experience"
           subtitle={profile?.experience?.length ? `${profile.experience.length} Experience added` : "Add your past jobs"}
-          icon="briefcase-variant-outline" 
-          color="#3B82F6" 
-          onPress={() => navigation.navigate('ProfileExperience')} 
-          isMissing={isSectionMissing('experience')} 
+          icon="briefcase-variant-outline"
+          color="#3B82F6"
+          onPress={() => navigation.navigate('ProfileExperience')}
+          isMissing={isSectionMissing('experience')}
         />
 
-        <SectionItem 
-          title="Education" 
+        <SectionItem
+          title="Education"
           subtitle={profile?.education?.length ? `${profile.education.length} Education added` : "Add your degree/college"}
-          icon="school-outline" 
-          color="#10B981" 
-          onPress={() => navigation.navigate('ProfileEducation')} 
-          isMissing={isSectionMissing('education')} 
+          icon="school-outline"
+          color="#10B981"
+          onPress={() => navigation.navigate('ProfileEducation')}
+          isMissing={isSectionMissing('education')}
         />
 
-        <SectionItem 
-          title="Job Preferences" 
+        <SectionItem
+          title="Job Preferences"
           subtitle="Preferred roles & locations"
-          icon="bullseye-arrow" 
-          color="#F59E0B" 
-          onPress={() => navigation.navigate('ProfileJobPreferences')} 
-          isMissing={isSectionMissing('preferences')} 
+          icon="bullseye-arrow"
+          color="#F59E0B"
+          onPress={() => navigation.navigate('ProfileJobPreferences')}
+          isMissing={isSectionMissing('preferences')}
         />
 
-        <SectionItem 
-          title="Resume / CV" 
+        <SectionItem
+          title="Resume / CV"
           subtitle="Upload your resume to get hired fast"
-          icon="file-document-outline" 
-          color="#8B5CF6" 
-          onPress={() => navigation.navigate('ProfileResume')} 
-          isMissing={isSectionMissing('resume')} 
+          icon="file-document-outline"
+          color="#8B5CF6"
+          onPress={() => navigation.navigate('ProfileResume')}
+          isMissing={isSectionMissing('resume')}
         />
 
         <View style={[styles.sectionTitleRow, { marginTop: 24 }]}>
           <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PERSONAL DETAILS</Text>
         </View>
 
-        <SectionItem 
-          title="Personal Info" 
+        <SectionItem
+          title="Personal Info"
           subtitle="Name, DOB, Gender, Language"
-          icon="account-outline" 
-          color="#EC4899" 
-          onPress={() => navigation.navigate('ProfilePersonalInfo')} 
-          isMissing={isSectionMissing('personal')} 
+          icon="account-outline"
+          color="#EC4899"
+          onPress={() => navigation.navigate('ProfilePersonalInfo')}
+          isMissing={isSectionMissing('personal')}
         />
 
         {/* <SectionItem 
@@ -311,7 +344,7 @@ const ProfileDetailsScreen = () => {
       </ScrollView>
 
       {/* Image Selection Modal */}
-      <Modal visible={showImagePicker} transparent animationType="slide" onRequestClose={() => setShowImagePicker(false)}>
+      <Modal visible={showImagePicker} transparent animationType="fade" onRequestClose={() => setShowImagePicker(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowImagePicker(false)}>
           <View style={[styles.bottomSheet, { backgroundColor: colors.surface }]}>
             <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
@@ -329,7 +362,7 @@ const ProfileDetailsScreen = () => {
                 </View>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Gallery</Text>
               </Pressable>
-              {profilePic && (
+              {hasUploadedPhoto && (
                 <Pressable style={styles.pickerOption} onPress={() => { setShowImagePicker(false); setShowDeleteConfirm(true); }}>
                   <View style={[styles.pickerIcon, { backgroundColor: colors.error + '10' }]}>
                     <FeatherIcon name="trash-2" size={24} color={colors.error} />

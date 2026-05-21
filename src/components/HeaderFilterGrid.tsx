@@ -185,6 +185,10 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       setSelectedFilters({ ...selectedFilters, jobType: updated });
     } else if (category === 'category') {
       if (browsingCategory) {
+        if (option.isSelectAll) {
+          toggleSelectAllSubcategories();
+          return;
+        }
         // Subcategory selection (Multi-select)
         const current = selectedFilters.subCategories || [];
         const isSelected = current.some((c: any) => c.id == option.id);
@@ -270,6 +274,51 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     }
   };
 
+  const isAllSubcategoriesSelected = browsingCategory?.subcategories &&
+    browsingCategory.subcategories.length > 0 &&
+    browsingCategory.subcategories.every((sub: any) =>
+      (selectedFilters.subCategories || []).some((s: any) => s.id == sub.id)
+    );
+
+  const toggleSelectAllSubcategories = () => {
+    if (!browsingCategory) return;
+    const subcats = browsingCategory.subcategories || [];
+    const currentSubcats = selectedFilters.subCategories || [];
+    
+    if (isAllSubcategoriesSelected) {
+      // Deselect all subcategories of this browsingCategory
+      const updatedSubcats = currentSubcats.filter((s: any) => !subcats.some((sub: any) => sub.id == s.id));
+      // Remove parent category from selected categories if no other subcategories of this parent are selected
+      const remainingCatsOfParent = updatedSubcats.filter((s: any) => s.parent_id == browsingCategory.id);
+      let updatedCats = selectedFilters.categories || [];
+      if (remainingCatsOfParent.length === 0) {
+        updatedCats = updatedCats.filter((c: any) => c.id != browsingCategory.id);
+      }
+      setSelectedFilters({
+        ...selectedFilters,
+        categories: updatedCats,
+        subCategories: updatedSubcats
+      });
+    } else {
+      // Select all subcategories of this browsingCategory
+      const otherSubcats = currentSubcats.filter((s: any) => !subcats.some((sub: any) => sub.id == s.id));
+      const subcatsWithParent = subcats.map((sub: any) => ({ ...sub, parent_id: browsingCategory.id }));
+      const updatedSubcats = [...otherSubcats, ...subcatsWithParent];
+      
+      // Ensure parent category is selected
+      const catCurrent = selectedFilters.categories || [];
+      const updatedCats = catCurrent.some((c: any) => c.id == browsingCategory.id)
+        ? catCurrent
+        : [...catCurrent, browsingCategory];
+        
+      setSelectedFilters({
+        ...selectedFilters,
+        categories: updatedCats,
+        subCategories: updatedSubcats
+      });
+    }
+  };
+
   const handleApply = () => {
     const filters: any = {};
     if (selectedFilters.categories && selectedFilters.categories.length > 0) {
@@ -322,7 +371,11 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       case 'jobType': return JOB_TYPES;
       case 'category':
         if (browsingCategory) {
-          return browsingCategory.subcategories || [];
+          const subcats = browsingCategory.subcategories || [];
+          return [
+            { id: 'select-all', name: 'Select All', isSelectAll: true, parent_id: browsingCategory.id },
+            ...subcats
+          ];
         }
         return categories;
       case 'city': return cities;
@@ -545,10 +598,12 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                     ? selectedFilters.jobType.includes(option)
                     : (selectedCategory === 'category'
                       ? (browsingCategory
-                        ? (option.isAll
-                          ? ((selectedFilters.categories || []).some((c: any) => c.id == browsingCategory.id) &&
-                            !(selectedFilters.subCategories || []).some((sc: any) => sc.parent_id == browsingCategory.id))
-                          : (selectedFilters.subCategories || []).some((c: any) => c.id == option.id))
+                        ? (option.isSelectAll
+                          ? isAllSubcategoriesSelected
+                          : (option.isAll
+                            ? ((selectedFilters.categories || []).some((c: any) => c.id == browsingCategory.id) &&
+                              !(selectedFilters.subCategories || []).some((sc: any) => sc.parent_id == browsingCategory.id))
+                            : (selectedFilters.subCategories || []).some((c: any) => c.id == option.id)))
                         : (selectedFilters.categories || []).some((c: any) => c.id == option.id))
                       : selectedCategory === 'city'
                         ? (selectedFilters.cities || []).some((c: any) => c.id == option.id)

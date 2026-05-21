@@ -155,19 +155,52 @@ const ProfileOverviewScreen: React.FC = () => {
     }
   };
 
-  const getProfileImageUrl = (path: string | null) => {
+  const getProfileImageUrl = (path: string | null | undefined) => {
     if (!path) return null;
+    const cleanPath = path.trim();
+    if (cleanPath === '' || cleanPath === 'null' || cleanPath === 'undefined') return null;
     const baseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
-    if (path.startsWith('http')) return path;
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    if (cleanPath.startsWith('http')) return cleanPath;
+    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
     return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
   };
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
   const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
-  const profilePic = (profile?.personal?.profile_picture_url || user?.profile_picture_url)
-    ? getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url)
-    : null;
+  const isValidPhotoUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase().trim();
+    if (
+      lowerUrl === '' ||
+      lowerUrl === 'null' ||
+      lowerUrl === 'undefined' ||
+      lowerUrl.includes('default') ||
+      lowerUrl.includes('placeholder') ||
+      lowerUrl.includes('avatar') ||
+      lowerUrl.includes('no-image') ||
+      lowerUrl.includes('noimage') ||
+      lowerUrl.includes('faces') ||
+      lowerUrl.includes('face1') ||
+      lowerUrl.includes('admin-assets')
+    ) {
+      return false;
+    }
+    const hasExtension =
+      lowerUrl.includes('.jpg') ||
+      lowerUrl.includes('.jpeg') ||
+      lowerUrl.includes('.png') ||
+      lowerUrl.includes('.webp') ||
+      lowerUrl.includes('.gif');
+
+    return hasExtension;
+  };
+
+  const hasUploadedPhoto = !!(
+    (profile?.personal?.profile_picture_url && isValidPhotoUrl(profile.personal.profile_picture_url)) ||
+    (user?.profile_picture_url && isValidPhotoUrl(user.profile_picture_url))
+  );
+
+  const profilePic = getProfileImageUrl(profile?.personal?.profile_picture_url || user?.profile_picture_url);
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
@@ -296,9 +329,9 @@ const ProfileOverviewScreen: React.FC = () => {
   const renderContent = () => {
     if (!isLoggedIn) {
       return (
-        <GuestView 
-          title="Unlock Your Potential" 
-          subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations." 
+        <GuestView
+          title="Unlock Your Potential"
+          subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations."
           image={JobIndiaIcon}
         />
       );
@@ -379,28 +412,28 @@ const ProfileOverviewScreen: React.FC = () => {
 
         {/* Action Dashboard - Modern Dynamic Layout */}
         <View style={styles.dashboardGrid}>
-          {/* Left Large Card: Applied Jobs */}
+          {/* Left Large Card: Reels */}
           <Pressable
-            onPress={() => navigation.getParent()?.navigate('Applications')}
+            onPress={() => navigation.getParent()?.navigate('JobReels')}
             style={({ pressed }) => [
               styles.dashboardCardLarge,
               { backgroundColor: colors.surface, borderColor: colors.border },
               pressed && { opacity: 0.9, scale: 0.98 }
             ]}
           >
-            <View style={[styles.dashboardIconBoxLarge, { backgroundColor: '#3B82F615' }]}>
-              <Icon name="briefcase" size={28} color="#3B82F6" />
+            <View style={[styles.dashboardIconBoxLarge, { backgroundColor: '#EC489915' }]}>
+              <Icon name="play-circle" size={28} color="#EC4899" />
             </View>
             <View style={styles.dashboardCardContent}>
-              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>Applied</Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>Track your job status</Text>
+              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>Reels</Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>Watch short job videos</Text>
             </View>
-            <View style={[styles.cardTag, { backgroundColor: '#3B82F610' }]}>
-              <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: 'bold' }}>ACTIVITY</Text>
+            <View style={[styles.cardTag, { backgroundColor: '#EC489910' }]}>
+              <Text style={{ color: '#EC4899', fontSize: 10, fontWeight: 'bold' }}>REELS</Text>
             </View>
           </Pressable>
 
-          {/* Right Stack: Saved & Reels */}
+          {/* Right Stack: Saved & Applied */}
           <View style={styles.dashboardStack}>
             <Pressable
               onPress={() => navigation.navigate('Saved')}
@@ -417,17 +450,17 @@ const ProfileOverviewScreen: React.FC = () => {
             </Pressable>
 
             <Pressable
-              onPress={() => navigation.getParent()?.navigate('JobReels')}
+              onPress={() => navigation.getParent()?.navigate('Applications')}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
                 { backgroundColor: colors.surface, borderColor: colors.border },
                 pressed && { opacity: 0.9 }
               ]}
             >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#EC489915' }]}>
-                <Icon name="play-circle" size={18} color="#EC4899" />
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#3B82F615' }]}>
+                <Icon name="briefcase" size={18} color="#3B82F6" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Reels</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Applied</Text>
             </Pressable>
           </View>
         </View>
@@ -501,7 +534,7 @@ const ProfileOverviewScreen: React.FC = () => {
           <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
             <View style={[styles.pickerLine, { backgroundColor: colors.border }]} />
             <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 24 }]}>Profile Picture</Text>
-            {profilePic && (
+            {hasUploadedPhoto && (
               <Pressable style={styles.pickerMenuRow} onPress={() => { setShowImagePicker(false); setShowImageViewer(true); }}>
                 <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.primary + '10' }]}><Icon name="eye" size={18} color={colors.primary} /></View>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>View Profile Picture</Text>
@@ -515,7 +548,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.pickerIconWrapSmall, { backgroundColor: '#8B5CF610' }]}><Icon name="image" size={18} color="#8B5CF6" /></View>
               <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Choose from Gallery</Text>
             </Pressable>
-            {profilePic && (
+            {hasUploadedPhoto && (
               <Pressable style={styles.pickerMenuRow} onPress={handleDeletePicture}>
                 <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.error + '10' }]}><Icon name="trash-2" size={18} color={colors.error} /></View>
                 <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 16 }]}>Remove Photo</Text>

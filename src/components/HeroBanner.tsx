@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: radius.md,
     marginBottom: spacing.xs,
-    marginTop: 0,
+    marginTop: 8,
     overflow: 'hidden',
   },
   slide: {
