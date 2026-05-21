@@ -29,6 +29,16 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import GuestView from '../../../components/GuestView';
+import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
+
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
 
 const { width } = Dimensions.get('window');
 
@@ -95,7 +105,7 @@ function SavedJobCard({
         </View>
         <View style={[styles.typeBadge, { backgroundColor: colors.surfaceHighlight }]}>
           <Text style={[typography.tiny, { color: colors.primary }]}>
-            {job.job_type === 'full_time' ? 'Full Time' : job.job_type || 'Part Time'}
+            {formatJobType(job.job_type)}
           </Text>
         </View>
       </Pressable>
@@ -166,12 +176,12 @@ const SavedJobsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
+    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       {!isLoggedIn ? (
         <GuestView 
           title="Save Your Favorites"
           subtitle="Register now to bookmark the jobs you like and never lose track of a great opportunity."
-          icon="heart"
+          image={JobIndiaIcon}
         />
       ) : (
         <>
@@ -224,7 +234,7 @@ const SavedJobsScreen: React.FC = () => {
         )}
         contentContainerStyle={[
           styles.listContent,
-          filteredJobs.length === 0 && styles.listEmpty,
+          !loading && filteredJobs.length === 0 && styles.listEmpty,
         ]}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         ListEmptyComponent={!loading ? (
@@ -285,7 +295,7 @@ const SavedJobsScreen: React.FC = () => {
       </Modal>
       </>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

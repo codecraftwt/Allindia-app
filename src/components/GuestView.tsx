@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
@@ -11,10 +11,11 @@ import { PrimaryButton } from './auth';
 interface GuestViewProps {
   title: string;
   subtitle: string;
-  icon: string;
+  icon?: string;
+  image?: ImageSourcePropType;
 }
 
-const GuestView: React.FC<GuestViewProps> = ({ title, subtitle, icon }) => {
+const GuestView: React.FC<GuestViewProps> = ({ title, subtitle, icon, image }) => {
   const { colors } = useTheme();
   const navigation = useNavigation();
 
@@ -29,8 +30,12 @@ const GuestView: React.FC<GuestViewProps> = ({ title, subtitle, icon }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={[styles.iconCircle, { backgroundColor: colors.primary + '15' }]}>
-          <Icon name={icon} size={32} color={colors.primary} />
+        <View style={[styles.iconCircle, { backgroundColor: colors.primary + '15', overflow: 'hidden' }]}>
+          {image ? (
+            <Image source={image} style={styles.imageIcon} />
+          ) : (
+            <Icon name={icon || 'user'} size={32} color={colors.primary} />
+          )}
         </View>
         <Text style={[typography.h4, { color: colors.textPrimary, marginTop: 20, textAlign: 'center' }]}>
           {title}
@@ -91,6 +96,11 @@ const styles = StyleSheet.create({
   loginBtn: {
     alignItems: 'center',
     paddingVertical: 8,
+  },
+  imageIcon: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });
 

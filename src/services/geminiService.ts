@@ -1,11 +1,16 @@
 import axios from 'axios';
 
-const GEMINI_API_KEY = 'AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
+const GEMINI_API_KEY = 'IzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
+//AIzaSyDQ8-zUo8uz27kWC665WP1CoAnEQIfijdw- raj sir 
+//AIzaSyDDu-wvsXn89d1ucArJEPURZkt5B-Yh0ZY - my key 
+//client=IzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg
 
 const MODELS_TO_TRY = [
+  'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro'
+  'gemini-flash-latest',
+  'gemini-pro-latest',
+  'gemini-2.0-flash-lite'
 ];
 
 export interface AIResumeResponse {
@@ -153,9 +158,10 @@ export async function generateAISuggestions(
   profileData?: any
 ): Promise<string[]> {
   const job = targetJob;
+  const count = nextKey === 'languages' ? 8 : 3;
   const prompt = `
     You are an expert ATS recruitment AI.
-    Your task is to generate exactly 3 short, highly tailored, specific suggestion options strictly for the "${nextKey}" section of a candidate's resume who is targeting the job of "${job}".
+    Your task is to generate exactly ${count} short, highly tailored, specific suggestion options strictly for the "${nextKey}" section of a candidate's resume who is targeting the job of "${job}".
 
     CRITICAL RULES:
     1. ONLY generate suggestions for the "${nextKey}" section. Do NOT include, mention, or generate details for other sections (like projects, achievements, certificates, hobbies, languages) if "${nextKey}" is different.
@@ -165,10 +171,11 @@ export async function generateAISuggestions(
     5. For "${nextKey}" = "objective", suggest 1-sentence career objectives.
     6. For "${nextKey}" = "projects", suggest 1-sentence project titles with tech focus.
     7. For "${nextKey}" = "certifications", suggest only the names of professional certificates (e.g., "OSHA 10-Hour Certification").
+    8. For "${nextKey}" = "languages", suggest only individual language names (e.g., "English", "Hindi", "Marathi", "Gujarati", "Bengali", "Spanish").
 
-    Respond with a single raw JSON string array of exactly 3 elements. Do not include markdown code block wrappers or any extra text.
+    Respond with a single raw JSON string array of exactly ${count} elements. Do not include markdown code block wrappers or any extra text.
     Example output format:
-    ["Option 1", "Option 2", "Option 3"]
+    ${count === 3 ? '["Option 1", "Option 2", "Option 3"]' : '["Language 1", "Language 2", "Language 3", "Language 4", "Language 5", "Language 6", "Language 7", "Language 8"]'}
   `;
 
   for (const model of MODELS_TO_TRY) {
@@ -195,52 +202,87 @@ export async function generateAISuggestions(
     }
   }
 
-  // Graceful offline mock fallback matching the nextKey
-  if (nextKey === 'experience') {
+  // Enforce fully dynamic AI-only behavior: no mock fallbacks
+  return [];
+}
+
+/**
+ * Search and suggest professional certification titles based on user keywords using Gemini AI.
+ */
+export async function searchAICertifications(
+  query: string,
+  targetJob: string
+): Promise<string[]> {
+  const prompt = `
+    You are an expert resume builder AI.
+    The candidate is searching for a certification using the query: "${query}".
+    Their target job role is: "${targetJob}".
+    
+    Based on their search query and target job, generate exactly 3 professional, real, and recognizable certification titles (e.g., if query is "aws", suggest "AWS Certified Cloud Practitioner", "AWS Certified Solutions Architect - Associate", "AWS Certified Developer - Associate").
+    Keep each suggestion concise, professional, and clear.
+    Return ONLY a raw JSON string array of exactly 3 elements. Do NOT include markdown code block wrappers or any extra text.
+    Example:
+    ["AWS Certified Cloud Practitioner", "AWS Certified Developer - Associate", "AWS Certified Solutions Architect"]
+  `;
+
+  for (const model of MODELS_TO_TRY) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await axios.post(
+        endpoint,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 4000,
+        }
+      );
+
+      const responseText = response?.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const parsedData = cleanAndParseJSON(responseText);
+      if (Array.isArray(parsedData) && parsedData.length > 0) {
+        return parsedData.map(item => String(item));
+      }
+    } catch (e) {
+      console.warn(`[GeminiService] Certification search failed for model ${model}. Trying next...`);
+    }
+  }
+
+  // Graceful fallback suggestions based on query
+  const lowercaseQuery = query.toLowerCase();
+  if (lowercaseQuery.includes('aws')) {
     return [
-      `1 year of professional experience as ${job}`,
-      `2+ years as ${job} handling core duties`,
-      `Fresher with training in ${job} field`
+      'AWS Certified Cloud Practitioner',
+      'AWS Certified Developer - Associate',
+      'AWS Certified Solutions Architect - Associate'
     ];
   }
-  if (nextKey === 'objective') {
+  if (lowercaseQuery.includes('azure')) {
     return [
-      `To secure a challenging role as a ${job} and deliver high-performance applications.`,
-      `Motivated professional seeking to leverage my technical expertise in a ${job} position.`,
-      `Goal-oriented specialist looking to scale business operations and lead technical teams as a ${job}.`
+      'Microsoft Certified: Azure Fundamentals (AZ-900)',
+      'Microsoft Certified: Azure Developer Associate (AZ-204)',
+      'Microsoft Certified: Azure Solutions Architect Expert'
     ];
   }
-  if (nextKey === 'certifications') {
+  if (lowercaseQuery.includes('google') || lowercaseQuery.includes('gcp')) {
     return [
-      `Google Professional Certificate in ${job}`,
-      `Advanced Certificate in ${job} Methodologies`,
-      `Certified Professional ${job} Practitioner`
+      'Google Cloud Digital Leader',
+      'Google Associate Cloud Engineer',
+      'Google Professional Cloud Architect'
     ];
   }
-  if (nextKey === 'projects') {
+  if (lowercaseQuery.includes('scrum') || lowercaseQuery.includes('agile')) {
     return [
-      `High-Scale Enterprise E-Commerce platform optimized for mobile and desktop`,
-      `Interactive Portfolio Showcase and custom service automation platform`,
-      `AI-powered Chat and workflow optimization assistant tool`
+      'Certified ScrumMaster (CSM)',
+      'Professional Scrum Master I (PSM I)',
+      'PMI Agile Certified Practitioner (PMI-ACP)'
     ];
   }
-  if (nextKey === 'languages') {
-    return [
-      'English, Hindi',
-      'English, Hindi, regional language',
-      'English, professional communication'
-    ];
-  }
-  if (nextKey === 'achievements') {
-    return [
-      `Recognized as Best Performer for excellent service delivery as ${job}`,
-      `Successfully completed over 500+ tasks as ${job} with zero compliance issues`,
-      `Completed advanced training and certifications to improve efficiency as ${job}`
-    ];
-  }
+  const formattedQuery = query.charAt(0).toUpperCase() + query.slice(1);
   return [
-    'Coding, Tech Blogging, Reading',
-    'Cricket, Traveling, Fitness',
-    'Gaming, Music, Photography'
+    `${formattedQuery} Professional Certificate`,
+    `Advanced Certificate in ${formattedQuery}`,
+    `Certified ${formattedQuery} Specialist`
   ];
 }

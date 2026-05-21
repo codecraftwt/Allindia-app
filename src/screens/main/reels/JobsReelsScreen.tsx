@@ -29,7 +29,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
@@ -198,17 +198,24 @@ const JobsReelsScreen: React.FC = () => {
     });
   }, [viewMode, navigation]);
 
-  useEffect(() => {
-    const backAction = () => {
-      if (viewMode === 'full') {
-        setViewMode('grid');
-        return true;
-      }
-      return false;
-    };
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
-    return () => backHandler.remove();
-  }, [viewMode]);
+  useFocusEffect(
+    useCallback(() => {
+      const backAction = () => {
+        if (viewMode === 'full') {
+          setViewMode('grid');
+          return true;
+        }
+        const parentNav = navigation.getParent();
+        if (parentNav) {
+          parentNav.navigate('Profile', { screen: 'ProfileOverview' });
+          return true;
+        }
+        return false;
+      };
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+      return () => backHandler.remove();
+    }, [viewMode, navigation])
+  );
 
   const handlePress = (id: string) => {
     setLoadingId(id);
@@ -294,11 +301,26 @@ const JobsReelsScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <View style={{ flex: 1, paddingTop: insets.top }}>
         <View style={styles.header}>
-          <View>
-            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Discover</Text>
-            <Text style={[typography.h2, { color: colors.textPrimary }]}>Job Reels</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => {
+                const parentNav = navigation.getParent();
+                if (parentNav) {
+                  parentNav.navigate('Profile');
+                }
+              }}
+              style={{
+                padding: 4,
+              }}
+            >
+              <FeatherIcon name="arrow-left" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+            <View>
+              <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Discover</Text>
+              <Text style={[typography.h2, { color: colors.textPrimary }]}>Job Reels</Text>
+            </View>
           </View>
           <Pressable style={[styles.headerIcon, { backgroundColor: colors.surfaceHighlight }]}>
             <Icon name="bookmark-outline" size={24} color={colors.primary} />
@@ -388,7 +410,7 @@ const JobsReelsScreen: React.FC = () => {
             </>
           )}
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };

@@ -13,6 +13,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   Alert,
+  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,7 +26,7 @@ import {
   updatePersonalProfile,
 } from '../../../../redux/slice/profileSlice';
 import { fetchMetaQualifications } from '../../../../redux/slice/metaSlice';
-import { generateAISuggestions } from '../../../../services/geminiService';
+import { generateAISuggestions, searchAICertifications } from '../../../../services/geminiService';
 import { typography } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +49,8 @@ export interface AiProfileCoPilotProps {
     achievements: string;
     hobbies: string;
     projects: string;
+    educationText: string;
+    experienceText: string;
   }) => void;
 }
 
@@ -57,6 +60,7 @@ interface ChatMessage {
   text: string;
   timestamp: Date;
   suggestions?: string[];
+  associatedKey?: string;
 }
 
 const SmallSpinningAIIcon: React.FC<{ ORANGE_COLOR: string }> = ({ ORANGE_COLOR }) => {
@@ -138,6 +142,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
 
   const [isPendingSessionRestore, setIsPendingSessionRestore] = useState(false);
   const [savedSessionData, setSavedSessionData] = useState<any>(null);
+  const [activeLongPressKey, setActiveLongPressKey] = useState<string | null>(null);
 
   const resetSessionStates = () => {
     setResumeEmail('');
@@ -148,11 +153,12 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     setEmailConfirmed(false);
     setPhoneConfirmed(false);
     setLinkedinConfirmed(false);
-    setGithubConfirmed(false);
+    setGithubConfirmed(true);
     setHeadlineConfirmed(false);
     setCareerObjective('');
     setCertifications('');
     setLanguages('');
+    setSelectedLanguages([]);
     setAchievements('');
     setHobbies('');
     setProjects('');
@@ -168,7 +174,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     emailConfirmedRef.current = false;
     phoneConfirmedRef.current = false;
     linkedinConfirmedRef.current = false;
-    githubConfirmedRef.current = false;
+    githubConfirmedRef.current = true;
     headlineConfirmedRef.current = false;
     educationConfirmedRef.current = false;
     experienceConfirmedRef.current = false;
@@ -178,10 +184,15 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     achievementsConfirmedRef.current = false;
     hobbiesConfirmedRef.current = false;
     projectsConfirmedRef.current = false;
+
+    setHistoryStack([]);
+    setRedoStack([]);
   };
 
   // Local Chat / Interview States
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [historyStack, setHistoryStack] = useState<any[]>([]);
+  const [redoStack, setRedoStack] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [currentQuestionKey, setCurrentQuestionKey] = useState<
     | 'headline'
@@ -211,13 +222,14 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   const [emailConfirmed, setEmailConfirmed] = useState(false);
   const [phoneConfirmed, setPhoneConfirmed] = useState(false);
   const [linkedinConfirmed, setLinkedinConfirmed] = useState(false);
-  const [githubConfirmed, setGithubConfirmed] = useState(false);
+  const [githubConfirmed, setGithubConfirmed] = useState(true);
   const [headlineConfirmed, setHeadlineConfirmed] = useState(false);
 
   // Extra resume sections loaded locally/conversationally
   const [careerObjective, setCareerObjective] = useState('');
   const [certifications, setCertifications] = useState('');
   const [languages, setLanguages] = useState('');
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [achievements, setAchievements] = useState('');
   const [hobbies, setHobbies] = useState('');
   const [projects, setProjects] = useState('');
@@ -236,7 +248,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   const emailConfirmedRef = useRef(false);
   const phoneConfirmedRef = useRef(false);
   const linkedinConfirmedRef = useRef(false);
-  const githubConfirmedRef = useRef(false);
+  const githubConfirmedRef = useRef(true);
   const headlineConfirmedRef = useRef(false);
   const educationConfirmedRef = useRef(false);
   const experienceConfirmedRef = useRef(false);
@@ -246,6 +258,135 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   const achievementsConfirmedRef = useRef(false);
   const hobbiesConfirmedRef = useRef(false);
   const projectsConfirmedRef = useRef(false);
+
+  const applySnapshot = (snapshot: any) => {
+    setChatMessages(snapshot.chatMessages);
+    setCurrentQuestionKey(snapshot.currentQuestionKey);
+    setResumeEmail(snapshot.resumeEmail);
+    setResumePhone(snapshot.resumePhone);
+    setResumeLinkedin(snapshot.resumeLinkedin);
+    setResumeGithub(snapshot.resumeGithub);
+    setResumeHeadline(snapshot.resumeHeadline);
+    setEmailConfirmed(snapshot.emailConfirmed);
+    setPhoneConfirmed(snapshot.phoneConfirmed);
+    setLinkedinConfirmed(snapshot.linkedinConfirmed);
+    setGithubConfirmed(snapshot.githubConfirmed);
+    setHeadlineConfirmed(snapshot.headlineConfirmed);
+    setCareerObjective(snapshot.careerObjective);
+    setCertifications(snapshot.certifications);
+    setLanguages(snapshot.languages);
+    setSelectedLanguages(snapshot.selectedLanguages || []);
+    setAchievements(snapshot.achievements);
+    setHobbies(snapshot.hobbies);
+    setProjects(snapshot.projects);
+    setEducationConfirmed(snapshot.educationConfirmed);
+    setExperienceConfirmed(snapshot.experienceConfirmed);
+    setObjectiveConfirmed(snapshot.objectiveConfirmed);
+    setCertificationsConfirmed(snapshot.certificationsConfirmed);
+    setLanguagesConfirmed(snapshot.languagesConfirmed);
+    setAchievementsConfirmed(snapshot.achievementsConfirmed);
+    setHobbiesConfirmed(snapshot.hobbiesConfirmed);
+    setProjectsConfirmed(snapshot.projectsConfirmed);
+
+    // Sync refs
+    emailConfirmedRef.current = snapshot.emailConfirmed;
+    phoneConfirmedRef.current = snapshot.phoneConfirmed;
+    linkedinConfirmedRef.current = snapshot.linkedinConfirmed;
+    githubConfirmedRef.current = snapshot.githubConfirmed;
+    headlineConfirmedRef.current = snapshot.headlineConfirmed;
+    educationConfirmedRef.current = snapshot.educationConfirmed;
+    experienceConfirmedRef.current = snapshot.experienceConfirmed;
+    objectiveConfirmedRef.current = snapshot.objectiveConfirmed;
+    certificationsConfirmedRef.current = snapshot.certificationsConfirmed;
+    languagesConfirmedRef.current = snapshot.languagesConfirmed;
+    achievementsConfirmedRef.current = snapshot.achievementsConfirmed;
+    hobbiesConfirmedRef.current = snapshot.hobbiesConfirmed;
+    projectsConfirmedRef.current = snapshot.projectsConfirmed;
+  };
+
+  const handleUndo = () => {
+    if (historyStack.length === 0) return;
+
+    // Save current state to Redo stack
+    const currentSnapshot = {
+      chatMessages: [...chatMessages],
+      currentQuestionKey,
+      resumeEmail,
+      resumePhone,
+      resumeLinkedin,
+      resumeGithub,
+      resumeHeadline,
+      emailConfirmed,
+      phoneConfirmed,
+      linkedinConfirmed,
+      githubConfirmed,
+      headlineConfirmed,
+      careerObjective,
+      certifications,
+      languages,
+      selectedLanguages: [...selectedLanguages],
+      achievements,
+      hobbies,
+      projects,
+      educationConfirmed,
+      experienceConfirmed,
+      objectiveConfirmed,
+      certificationsConfirmed,
+      languagesConfirmed,
+      achievementsConfirmed,
+      hobbiesConfirmed,
+      projectsConfirmed,
+    };
+
+    setRedoStack((prev) => [...prev, currentSnapshot]);
+
+    // Pop previous state and apply
+    const prevSnapshot = historyStack[historyStack.length - 1];
+    setHistoryStack((prev) => prev.slice(0, prev.length - 1));
+    applySnapshot(prevSnapshot);
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+
+    // Save current state to History stack
+    const currentSnapshot = {
+      chatMessages: [...chatMessages],
+      currentQuestionKey,
+      resumeEmail,
+      resumePhone,
+      resumeLinkedin,
+      resumeGithub,
+      resumeHeadline,
+      emailConfirmed,
+      phoneConfirmed,
+      linkedinConfirmed,
+      githubConfirmed,
+      headlineConfirmed,
+      careerObjective,
+      certifications,
+      languages,
+      selectedLanguages: [...selectedLanguages],
+      achievements,
+      hobbies,
+      projects,
+      educationConfirmed,
+      experienceConfirmed,
+      objectiveConfirmed,
+      certificationsConfirmed,
+      languagesConfirmed,
+      achievementsConfirmed,
+      hobbiesConfirmed,
+      projectsConfirmed,
+    };
+
+    setHistoryStack((prev) => [...prev, currentSnapshot]);
+
+    // Pop next state and apply
+    const nextSnapshot = redoStack[redoStack.length - 1];
+    setRedoStack((prev) => prev.slice(0, prev.length - 1));
+    applySnapshot(nextSnapshot);
+  };
 
   const [isEditingFilledDetail, setIsEditingFilledDetail] = useState(false);
   const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([]);
@@ -301,7 +442,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
 
     if (type === 'fresher' || expObj.is_fresher) {
       return {
-        text: 'Fresher (No past work history)',
+        text: 'Fresher',
         isFresher: true,
       };
     }
@@ -330,7 +471,6 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
       | 'email'
       | 'phone'
       | 'linkedin'
-      | 'github'
       | 'education'
       | 'experience'
       | 'objective'
@@ -345,7 +485,6 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     if (!emailConfirmedRef.current) missing.push('email');
     if (!phoneConfirmedRef.current) missing.push('phone');
     if (!linkedinConfirmedRef.current) missing.push('linkedin');
-    if (!githubConfirmedRef.current) missing.push('github');
 
     if (!educationConfirmedRef.current) missing.push('education');
     if (!experienceConfirmedRef.current) missing.push('experience');
@@ -424,7 +563,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     setDynamicSuggestions([]); // Clear previous dynamic suggestions
 
     // Trigger AI Fetch asynchronously while typing animation plays
-    if (['experience', 'objective', 'certifications', 'projects', 'achievements', 'hobbies'].includes(nextKey)) {
+    if (['experience', 'objective', 'certifications', 'projects', 'achievements', 'hobbies', 'languages'].includes(nextKey)) {
       // Use ref or state for headline. If headline is the next key, we don't have it yet.
       const currentHeadline = nextKey === 'headline' ? '' : resumeHeadline;
       if (currentHeadline) {
@@ -436,7 +575,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
       setIsTyping(false);
       let text = '';
       if (nextKey === 'headline') {
-        text = `Let's start by finalizing your Resume Header! 📝\n\nWhat is your Professional Headline or Job Title? (This sits right under your name, e.g., 'React Native Developer')`;
+        text = `Let's start by finalizing your Resume Header! 📝\n\nWhat is your Professional Headline or Job Title? (e.g., 'Software engineer,plumber,doctor,teacher...')`;
       } else if (nextKey === 'email') {
         if (profile?.personal?.email) {
           text = `Great! Now for your contact info. ✉️\n\nI see your registered email is **${profile.personal.email}**. Do you want to use this on your resume?`;
@@ -481,7 +620,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
       } else if (nextKey === 'hobbies') {
         text = `Nice! What are your Hobbies or personal interests? 🎨\n\nSharing a few hobbies helps show your team culture match and passions!`;
       } else if (nextKey === 'projects') {
-        text = `Lastly, let's add a Key Project you built! 💻\n\nPlease share the project name, technologies used, and a brief description. (e.g., 'E-Commerce App built with React Native & Firebase, supporting 1k active users')`;
+        text = `Which projects have you worked on? 💻\n\nPlease share the project name, technologies used, and a brief description.`;
       } else {
         text = `Fantastic! 🎉 All missing sections (including dynamic local fields) have been successfully compiled!\n\nLet's head over to customize and generate your stunning, fully loaded 11-section AI Resume!`;
       }
@@ -494,6 +633,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
           text,
           timestamp: new Date(),
           suggestions: getSuggestionsForQuestion(nextKey),
+          associatedKey: nextKey,
         },
       ]);
     }, 1200);
@@ -502,6 +642,45 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   // Central Response Processor
   const processUserResponse = async (userText: string) => {
     try {
+      console.log(`\n--- 🗣️ CHAT RESPONSE CAPTURED ---`);
+      console.log(`Question Section: "${currentQuestionKey}"`);
+      console.log(`User Response: "${userText}"`);
+      console.log(`--------------------------------\n`);
+
+      if (!isPendingSessionRestore) {
+        const snapshot = {
+          chatMessages: [...chatMessages],
+          currentQuestionKey,
+          resumeEmail,
+          resumePhone,
+          resumeLinkedin,
+          resumeGithub,
+          resumeHeadline,
+          emailConfirmed,
+          phoneConfirmed,
+          linkedinConfirmed,
+          githubConfirmed,
+          headlineConfirmed,
+          careerObjective,
+          certifications,
+          languages,
+          selectedLanguages: [...selectedLanguages],
+          achievements,
+          hobbies,
+          projects,
+          educationConfirmed,
+          experienceConfirmed,
+          objectiveConfirmed,
+          certificationsConfirmed,
+          languagesConfirmed,
+          achievementsConfirmed,
+          hobbiesConfirmed,
+          projectsConfirmed,
+        };
+        setHistoryStack((prev) => [...prev, snapshot]);
+        setRedoStack([]);
+      }
+
       if (isPendingSessionRestore) {
         const isYes = userText.toLowerCase().includes('haan') || userText.toLowerCase().includes('yes') || userText.toLowerCase().includes('continue') || userText.toLowerCase().includes('aage');
         if (isYes) {
@@ -524,6 +703,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
             setCareerObjective(savedSessionData.careerObjective);
             setCertifications(savedSessionData.certifications);
             setLanguages(savedSessionData.languages);
+            setSelectedLanguages(savedSessionData.selectedLanguages || []);
             setAchievements(savedSessionData.achievements);
             setHobbies(savedSessionData.hobbies);
             setProjects(savedSessionData.projects);
@@ -645,7 +825,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                 sender: 'ai',
                 text: `Sure! Please enter the email address you want on your resume:`,
                 timestamp: new Date(),
-                suggestions: getSuggestionsForQuestion('email'),
+                suggestions: getSuggestionsForQuestion('email', true),
               },
             ]);
             return;
@@ -714,7 +894,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                 sender: 'ai',
                 text: `Sure! Please enter the phone number you want on your resume:`,
                 timestamp: new Date(),
-                suggestions: getSuggestionsForQuestion('phone'),
+                suggestions: getSuggestionsForQuestion('phone', true),
               },
             ]);
             return;
@@ -832,7 +1012,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                 sender: 'ai',
                 text: `Sure! Please enter your highest education (e.g. BTech in Computer Science from IIT Bombay):`,
                 timestamp: new Date(),
-                suggestions: getSuggestionsForQuestion('education'),
+                suggestions: getSuggestionsForQuestion('education', true),
               },
             ]);
             return;
@@ -914,7 +1094,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                 sender: 'ai',
                 text: `Sure! Please enter your experience (e.g. '1 year as Software Engineer at TCS' or 'Fresher'):`,
                 timestamp: new Date(),
-                suggestions: getSuggestionsForQuestion('experience'),
+                suggestions: getSuggestionsForQuestion('experience', true),
               },
             ]);
             return;
@@ -972,19 +1152,136 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
           },
         ]);
       } else if (currentQuestionKey === 'certifications') {
-        setCertifications(userText.toLowerCase().includes('skip') || userText.toLowerCase().includes('none') ? '' : userText);
-        setCertificationsConfirmed(true);
-        certificationsConfirmedRef.current = true;
-        setIsTyping(false);
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            id: `cert_success_${Date.now()}`,
-            sender: 'ai',
-            text: `Excellent! Recorded Certifications! 🏆`,
-            timestamp: new Date(),
-          },
-        ]);
+        const isSkip = userText.toLowerCase().includes('skip') || userText.toLowerCase().includes('none');
+        const defaultSuggestions = getSuggestionsForQuestion('certifications');
+        const isExactSelection = userText.toLowerCase().startsWith('use exactly: "') && userText.endsWith('"');
+        const isSuggestion =
+          defaultSuggestions.some(s => s.toLowerCase().trim() === userText.toLowerCase().trim()) ||
+          dynamicSuggestions.some(s => s.toLowerCase().trim() === userText.toLowerCase().trim()) ||
+          chatMessages.some(msg =>
+            msg.sender === 'ai' &&
+            msg.suggestions &&
+            msg.suggestions.some(s => s.toLowerCase().trim() === userText.toLowerCase().trim())
+          );
+
+        if (isSkip) {
+          setCertifications('');
+          setCertificationsConfirmed(true);
+          certificationsConfirmedRef.current = true;
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `cert_success_${Date.now()}`,
+              sender: 'ai',
+              text: `Skipped Certifications section. 👍`,
+              timestamp: new Date(),
+            },
+          ]);
+          setTimeout(() => {
+            const remaining = getMissingSections();
+            if (remaining.length > 0) {
+              triggerNextQuestion(remaining[0]);
+            } else {
+              triggerNextQuestion('complete');
+            }
+          }, 1000);
+          return;
+        }
+
+        if (isExactSelection) {
+          const rawCert = userText.substring(13, userText.length - 1);
+          setCertifications(rawCert);
+          setCertificationsConfirmed(true);
+          certificationsConfirmedRef.current = true;
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `cert_success_${Date.now()}`,
+              sender: 'ai',
+              text: `Excellent! Recorded Certification: **${rawCert}**! 🏆`,
+              timestamp: new Date(),
+            },
+          ]);
+          setTimeout(() => {
+            const remaining = getMissingSections();
+            if (remaining.length > 0) {
+              triggerNextQuestion(remaining[0]);
+            } else {
+              triggerNextQuestion('complete');
+            }
+          }, 1000);
+          return;
+        }
+
+        if (isSuggestion) {
+          setCertifications(userText);
+          setCertificationsConfirmed(true);
+          certificationsConfirmedRef.current = true;
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `cert_success_${Date.now()}`,
+              sender: 'ai',
+              text: `Excellent! Recorded Certification: **${userText}**! 🏆`,
+              timestamp: new Date(),
+            },
+          ]);
+          setTimeout(() => {
+            const remaining = getMissingSections();
+            if (remaining.length > 0) {
+              triggerNextQuestion(remaining[0]);
+            } else {
+              triggerNextQuestion('complete');
+            }
+          }, 1000);
+          return;
+        }
+
+        // Custom entered text -> Search/Analyze for relevant certifications using Gemini
+        setIsTyping(true);
+        try {
+          const results = await searchAICertifications(userText, resumeHeadline);
+          const suggestionOptions = [`Use exactly: "${userText}"`, ...results];
+          setDynamicSuggestions(suggestionOptions);
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `cert_search_results_${Date.now()}`,
+              sender: 'ai',
+              text: `I analyzed your input. Here are some related professional certifications. Please select one:`,
+              timestamp: new Date(),
+              suggestions: suggestionOptions,
+            },
+          ]);
+        } catch (e) {
+          // Fallback if search fails
+          setCertifications(userText);
+          setCertificationsConfirmed(true);
+          certificationsConfirmedRef.current = true;
+          setIsTyping(false);
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: `cert_success_${Date.now()}`,
+              sender: 'ai',
+              text: `Excellent! Recorded Certification: **${userText}**! 🏆`,
+              timestamp: new Date(),
+            },
+          ]);
+          setTimeout(() => {
+            const remaining = getMissingSections();
+            if (remaining.length > 0) {
+              triggerNextQuestion(remaining[0]);
+            } else {
+              triggerNextQuestion('complete');
+            }
+          }, 1000);
+        }
+        return;
       } else if (currentQuestionKey === 'languages') {
         setLanguages(userText);
         setLanguagesConfirmed(true);
@@ -1067,27 +1364,28 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   };
 
   // Helper to fetch horizontal quick suggestions for chat questions
-  const getSuggestionsForQuestion = (key?: any) => {
+  const getSuggestionsForQuestion = (key?: any, overrideEditingDetail?: boolean) => {
     const qKey = key || currentQuestionKey;
+    const isEditing = overrideEditingDetail !== undefined ? overrideEditingDetail : isEditingFilledDetail;
     if (qKey === 'headline') {
       return [
-        'React Native Developer',
+        'Doctor',
         'Frontend Engineer',
-        'Full Stack Developer',
-        'Software Engineer',
-        'UI/UX Designer',
+        'Teacher',
+        'Plumber',
+        'Electrician',
         'Data Analyst'
       ];
     }
     if (qKey === 'email') {
-      if (profile?.personal?.email && !isEditingFilledDetail) {
+      if (profile?.personal?.email && !isEditing) {
         return ['Yes, use this email', 'No, let me enter new'];
       }
       return [];
     }
     if (qKey === 'phone') {
       const existingPhone = profile?.personal?.phone || profile?.personal?.mobile;
-      if (existingPhone && !isEditingFilledDetail) {
+      if (existingPhone && !isEditing) {
         return ['Yes, use this number', 'No, let me enter new'];
       }
       return [];
@@ -1100,7 +1398,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     }
     if (qKey === 'education') {
       const eduInfo = getEducationInfo();
-      if (eduInfo && !isEditingFilledDetail) {
+      if (eduInfo && !isEditing) {
         return ['Yes, use this data', 'No, let me enter new'];
       }
       if (qualifications && qualifications.length > 0) {
@@ -1112,45 +1410,67 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
       if (dynamicSuggestions.length > 0) return dynamicSuggestions;
 
       const expInfo = getExperienceInfo();
-      if (expInfo && !isEditingFilledDetail) {
+      if (expInfo && !isEditing) {
         return ['Yes, use this data', 'No, let me enter new'];
       }
 
       return ['I am a Fresher / No Experience'];
     }
     if (qKey === 'objective') {
-      if (dynamicSuggestions.length > 0) return dynamicSuggestions;
-      return ['None / Skip this section'];
+      const suggestions = dynamicSuggestions.length > 0 ? dynamicSuggestions : [];
+      return [...suggestions, 'None / Skip this section'];
     }
     if (qKey === 'certifications') {
-      if (dynamicSuggestions.length > 0) return dynamicSuggestions;
-      return ['None / Skip this section'];
+      const suggestions = dynamicSuggestions.length > 0 ? dynamicSuggestions : [];
+      return [...suggestions, 'None / Skip this section'];
     }
     if (qKey === 'languages') {
-      return [
-        'English, Hindi',
-        'English, Spanish',
-        'English, Hindi, Punjabi',
-        'English, Hindi, Marathi',
-      ];
+      // Use dynamic suggestions (loaded from Gemini AI or service fallback)
+      const options = [...dynamicSuggestions];
+
+      if (selectedLanguages.length > 0) {
+        options.unshift(`✔️ Confirm: ${selectedLanguages.join(', ')}`);
+      }
+
+      return [...options, 'None / Skip this section'];
     }
     if (qKey === 'achievements') {
-      if (dynamicSuggestions.length > 0) return dynamicSuggestions;
-      return ['None / Skip this section'];
+      const suggestions = dynamicSuggestions.length > 0 ? dynamicSuggestions : [];
+      return [...suggestions, 'None / Skip this section'];
     }
     if (qKey === 'hobbies') {
-      if (dynamicSuggestions.length > 0) return dynamicSuggestions;
-      return ['None / Skip this section'];
+      const suggestions = dynamicSuggestions.length > 0 ? dynamicSuggestions : [];
+      return [...suggestions, 'None / Skip this section'];
     }
     if (qKey === 'projects') {
-      if (dynamicSuggestions.length > 0) return dynamicSuggestions;
-      return ['None / Skip this section'];
+      const suggestions = dynamicSuggestions.length > 0 ? dynamicSuggestions : [];
+      return [...suggestions, 'None / Skip this section'];
     }
     return [];
   };
 
   // Suggestion pill click handler
   const handleSendSuggestion = async (suggestionText: string) => {
+    if (currentQuestionKey === 'languages') {
+      if (suggestionText === 'None / Skip this section') {
+        setSelectedLanguages([]);
+      } else if (suggestionText.startsWith('✔️ Confirm: ')) {
+        const selectedStr = suggestionText.replace('✔️ Confirm: ', '');
+        setSelectedLanguages([]);
+        suggestionText = selectedStr;
+      } else {
+        // Toggle the language in selectedLanguages
+        setSelectedLanguages((prev) => {
+          if (prev.includes(suggestionText)) {
+            return prev.filter((lang) => lang !== suggestionText);
+          } else {
+            return [...prev, suggestionText];
+          }
+        });
+        return; // Return early, don't send message yet!
+      }
+    }
+
     setInputText('');
     setChatMessages((prev) => [
       ...prev,
@@ -1159,6 +1479,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         sender: 'user' as const,
         text: suggestionText,
         timestamp: new Date(),
+        associatedKey: currentQuestionKey || undefined,
       },
     ]);
 
@@ -1178,6 +1499,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         sender: 'user',
         text: userText,
         timestamp: new Date(),
+        associatedKey: currentQuestionKey || undefined,
       },
     ]);
     setInputText('');
@@ -1187,6 +1509,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   };
 
   useEffect(() => {
+    dispatch(fetchMetaQualifications());
     Animated.loop(
       Animated.timing(spinAnim, {
         toValue: 1,
@@ -1201,18 +1524,54 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         const stored = await AsyncStorage.getItem('AI_RESUME_BUILDER_SESSION');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed && parsed.chatMessages && parsed.chatMessages.length > 1) {
-            setSavedSessionData(parsed);
-            setIsPendingSessionRestore(true);
-            setChatMessages([
-              {
-                id: 'welcome_restore',
-                sender: 'ai',
-                text: `Hi ${profile?.personal?.name || 'there'}! I found your previous resume progress. Do you want to continue from where you left off?`,
-                timestamp: new Date(),
-                suggestions: ['Yes, Continue', 'No, Start Over'],
-              },
-            ]);
+          if (parsed && parsed.chatMessages && parsed.chatMessages.length > 0) {
+            // Restore all state variables directly without the restore prompt
+            setChatMessages(parsed.chatMessages);
+            setHistoryStack(parsed.historyStack || []);
+            setRedoStack(parsed.redoStack || []);
+            setCurrentQuestionKey(parsed.currentQuestionKey);
+            setResumeEmail(parsed.resumeEmail || '');
+            setResumePhone(parsed.resumePhone || '');
+            setResumeLinkedin(parsed.resumeLinkedin || '');
+            setResumeGithub(parsed.resumeGithub || '');
+            setResumeHeadline(parsed.resumeHeadline || '');
+            setEmailConfirmed(parsed.emailConfirmed || false);
+            setPhoneConfirmed(parsed.phoneConfirmed || false);
+            setLinkedinConfirmed(parsed.linkedinConfirmed || false);
+            setGithubConfirmed(parsed.githubConfirmed !== undefined ? parsed.githubConfirmed : true);
+            setHeadlineConfirmed(parsed.headlineConfirmed || false);
+            setCareerObjective(parsed.careerObjective || '');
+            setCertifications(parsed.certifications || '');
+            setLanguages(parsed.languages || '');
+            setSelectedLanguages(parsed.selectedLanguages || []);
+            setAchievements(parsed.achievements || '');
+            setHobbies(parsed.hobbies || '');
+            setProjects(parsed.projects || '');
+            setEducationConfirmed(parsed.educationConfirmed || false);
+            setExperienceConfirmed(parsed.experienceConfirmed || false);
+            setObjectiveConfirmed(parsed.objectiveConfirmed || false);
+            setCertificationsConfirmed(parsed.certificationsConfirmed || false);
+            setLanguagesConfirmed(parsed.languagesConfirmed || false);
+            setAchievementsConfirmed(parsed.achievementsConfirmed || false);
+            setHobbiesConfirmed(parsed.hobbiesConfirmed || false);
+            setProjectsConfirmed(parsed.projectsConfirmed || false);
+
+            // Update refs
+            emailConfirmedRef.current = parsed.emailConfirmed || false;
+            phoneConfirmedRef.current = parsed.phoneConfirmed || false;
+            linkedinConfirmedRef.current = parsed.linkedinConfirmed || false;
+            githubConfirmedRef.current = parsed.githubConfirmed !== undefined ? parsed.githubConfirmed : true;
+            headlineConfirmedRef.current = parsed.headlineConfirmed || false;
+            educationConfirmedRef.current = parsed.educationConfirmed || false;
+            experienceConfirmedRef.current = parsed.experienceConfirmed || false;
+            objectiveConfirmedRef.current = parsed.objectiveConfirmed || false;
+            certificationsConfirmedRef.current = parsed.certificationsConfirmed || false;
+            languagesConfirmedRef.current = parsed.languagesConfirmed || false;
+            achievementsConfirmedRef.current = parsed.achievementsConfirmed || false;
+            hobbiesConfirmedRef.current = parsed.hobbiesConfirmed || false;
+            projectsConfirmedRef.current = parsed.projectsConfirmed || false;
+
+            setIsPendingSessionRestore(false);
             setIsInitializing(false);
             return;
           }
@@ -1256,6 +1615,8 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
         try {
           const sessionData = {
             chatMessages,
+            historyStack,
+            redoStack,
             currentQuestionKey,
             resumeEmail,
             resumePhone,
@@ -1270,6 +1631,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
             careerObjective,
             certifications,
             languages,
+            selectedLanguages,
             achievements,
             hobbies,
             projects,
@@ -1291,6 +1653,8 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     }
   }, [
     chatMessages,
+    historyStack,
+    redoStack,
     currentQuestionKey,
     resumeEmail,
     resumePhone,
@@ -1305,6 +1669,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     careerObjective,
     certifications,
     languages,
+    selectedLanguages,
     achievements,
     hobbies,
     projects,
@@ -1326,11 +1691,22 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
   });
 
   const handleCompleteInterview = () => {
-    AsyncStorage.removeItem('AI_RESUME_BUILDER_SESSION').catch((err) =>
-      console.log('Error clearing session:', err)
-    );
 
-    onInterviewComplete({
+    // Build education text from chat session or profile
+    const eduInfo = getEducationInfo();
+    const chatEducationText = eduInfo
+      ? `${eduInfo.qualification || 'Degree'} from ${eduInfo.notes || 'University'}`
+      : '';
+
+    // Build experience text from chat session or profile
+    const expInfo = getExperienceInfo();
+    const chatExperienceText = expInfo
+      ? expInfo.isFresher
+        ? 'Fresher'
+        : expInfo.text || ''
+      : '';
+
+    const interviewDataObject = {
       resumeHeadline,
       resumeEmail,
       resumePhone,
@@ -1342,7 +1718,98 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
       achievements,
       hobbies,
       projects,
-    });
+      educationText: chatEducationText,
+      experienceText: chatExperienceText,
+    };
+
+    console.log("=========================================");
+    console.log("📝 CHAT INTERVIEW COMPLETE: Captured Data");
+    console.log("=========================================");
+    console.log(JSON.stringify(interviewDataObject, null, 2));
+    console.log("=========================================");
+
+    onInterviewComplete(interviewDataObject);
+  };
+
+  const sectionDisplayNames: Record<string, string> = {
+    headline: 'Professional Headline',
+    email: 'Email Address',
+    phone: 'Phone Number',
+    linkedin: 'LinkedIn Link',
+    github: 'GitHub Link',
+    education: 'Highest Education',
+    experience: 'Work History / Experience',
+    objective: 'Career Objective',
+    certifications: 'Certifications',
+    languages: 'Fluent Languages',
+    achievements: 'Honors & Achievements',
+    hobbies: 'Hobbies & Interests',
+    projects: 'Key Projects',
+  };
+
+  const initiateEditSection = (key: string) => {
+    if (!key || key === 'complete') return;
+
+    setCurrentQuestionKey(key as any);
+    setIsEditingFilledDetail(true);
+    setDynamicSuggestions([]);
+
+    if (['experience', 'objective', 'certifications', 'projects', 'achievements', 'hobbies', 'languages'].includes(key)) {
+      const currentHeadline = resumeHeadline;
+      if (currentHeadline) {
+        fetchAiSuggestions(key, currentHeadline);
+      }
+    }
+
+    const displayName = sectionDisplayNames[key] || key;
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: `edit_prompt_${key}_${Date.now()}`,
+        sender: 'ai',
+        text: `Sure! Let's update your **${displayName}**. ✏️\n\nPlease enter the new detail:`,
+        timestamp: new Date(),
+        suggestions: getSuggestionsForQuestion(key, true),
+        associatedKey: key,
+      },
+    ]);
+  };
+
+  const handleLongPressMessage = (key: string) => {
+    setActiveLongPressKey(key);
+  };
+
+  const getAssociatedKeyForMessage = (msg: ChatMessage, index: number): string | undefined => {
+    if (msg.associatedKey) return msg.associatedKey;
+
+    if (msg.id.startsWith('question_')) {
+      const parts = msg.id.split('_');
+      if (parts[1] && parts[1] !== 'complete') {
+        return parts[1];
+      }
+    }
+
+    if (msg.sender === 'user') {
+      for (let i = index - 1; i >= 0; i--) {
+        const prevMsg = chatMessages[i];
+        if (prevMsg && prevMsg.sender === 'ai') {
+          if (prevMsg.associatedKey) return prevMsg.associatedKey;
+          if (prevMsg.id.startsWith('question_')) {
+            const parts = prevMsg.id.split('_');
+            if (parts[1] && parts[1] !== 'complete') {
+              return parts[1];
+            }
+          }
+        }
+      }
+    }
+
+    if (msg.id.startsWith('edit_prompt_')) {
+      const parts = msg.id.split('_');
+      if (parts[2]) return parts[2];
+    }
+
+    return undefined;
   };
 
   const [showMenu, setShowMenu] = useState(false);
@@ -1352,7 +1819,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
     setSavedSessionData(null);
     await AsyncStorage.removeItem('AI_RESUME_BUILDER_SESSION');
     resetSessionStates();
-    
+
     setChatMessages([
       {
         id: 'welcome_restart',
@@ -1461,6 +1928,50 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                   <Pressable
                     onPress={() => {
                       setShowMenu(false);
+                      handleUndo();
+                    }}
+                    disabled={historyStack.length === 0}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      backgroundColor: pressed ? colors.border + '30' : 'transparent',
+                      borderRadius: 6,
+                      gap: 8,
+                      opacity: historyStack.length === 0 ? 0.4 : 1,
+                    })}
+                  >
+                    <Icon name="arrow-undo-outline" size={18} color={colors.textPrimary} />
+                    <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '600' }}>Undo</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => {
+                      setShowMenu(false);
+                      handleRedo();
+                    }}
+                    disabled={redoStack.length === 0}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      backgroundColor: pressed ? colors.border + '30' : 'transparent',
+                      borderRadius: 6,
+                      gap: 8,
+                      opacity: redoStack.length === 0 ? 0.4 : 1,
+                    })}
+                  >
+                    <Icon name="arrow-redo-outline" size={18} color={colors.textPrimary} />
+                    <Text style={{ fontSize: 13, color: colors.textPrimary, fontWeight: '600' }}>Redo</Text>
+                  </Pressable>
+
+                  <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 4 }} />
+
+                  <Pressable
+                    onPress={() => {
+                      setShowMenu(false);
                       handleClearChat();
                     }}
                     style={({ pressed }) => ({
@@ -1489,6 +2000,7 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
           >
             {chatMessages.map((msg, index) => {
               const isLatestAiMessage = msg.id === chatMessages[chatMessages.length - 1]?.id;
+              const assocKey = getAssociatedKeyForMessage(msg, index);
               return (
                 <View
                   key={msg.id}
@@ -1503,92 +2015,152 @@ export const AiProfileCoPilot: React.FC<AiProfileCoPilotProps> = ({
                     </View>
                   )}
 
-                  <View
-                    style={[
-                      copilotStyles.chatBubble,
-                      msg.sender === 'user'
-                        ? { backgroundColor: ORANGE_COLOR }
-                        : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
-                      msg.sender === 'ai' && { maxWidth: '85%' },
-                    ]}
-                  >
-                    <Text
+                  <View style={{ flexDirection: 'column', alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: msg.sender === 'ai' ? '85%' : '78%' }}>
+                    <Pressable
+                      onLongPress={() => {
+                        if (assocKey) {
+                          handleLongPressMessage(msg.id);
+                        }
+                      }}
+                      delayLongPress={500}
                       style={[
-                        typography.small,
-                        msg.sender === 'user' ? { color: '#fff' } : { color: colors.textPrimary },
+                        copilotStyles.chatBubble,
+                        msg.sender === 'user'
+                          ? { backgroundColor: ORANGE_COLOR }
+                          : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+                        { maxWidth: '100%' }
                       ]}
                     >
-                      {msg.text}
-                    </Text>
+                      <Text
+                        style={[
+                          typography.small,
+                          msg.sender === 'user' ? { color: '#fff' } : { color: colors.textPrimary },
+                        ]}
+                      >
+                        {msg.text}
+                      </Text>
 
-                    {/* Loader inside the bubble if we are actively fetching suggestions for this latest question and no suggestions exist yet */}
-                    {isLatestAiMessage && msg.sender === 'ai' && isLoadingSuggestions && (!msg.suggestions || msg.suggestions.length === 0) && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingLeft: 4 }}>
-                        <ActivityIndicator size="small" color={ORANGE_COLOR} />
-                        <Text style={[typography.tiny, { color: colors.textSecondary }]}>AI is thinking of options...</Text>
-                      </View>
-                    )}
+                      {/* Loader inside the bubble if we are actively fetching suggestions for this latest question and no suggestions exist yet */}
+                      {isLatestAiMessage && msg.sender === 'ai' && isLoadingSuggestions && (!msg.suggestions || msg.suggestions.length === 0) && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingLeft: 4 }}>
+                          <ActivityIndicator size="small" color={ORANGE_COLOR} />
+                          <Text style={[typography.tiny, { color: colors.textSecondary }]}>AI is thinking of options...</Text>
+                        </View>
+                      )}
 
-                    {/* Interactive suggestions inside the latest AI message bubble */}
-                    {isLatestAiMessage && msg.sender === 'ai' && msg.suggestions && msg.suggestions.length > 0 && (
-                      <View style={{ marginTop: 12, gap: 8 }}>
-                        {msg.suggestions.map((suggestion, idx) => (
-                          <Pressable
-                            key={idx}
-                            onPress={() => handleSendSuggestion(suggestion)}
-                            style={({ pressed }) => [
-                              {
-                                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                                borderColor: ORANGE_COLOR + '40',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                                paddingHorizontal: 10,
-                                paddingVertical: 8,
-                                opacity: pressed ? 0.7 : 1,
-                              }
-                            ]}
-                          >
-                            <Text style={[typography.tiny, { color: colors.textPrimary, fontWeight: '600' }]}>
-                              {suggestion}
-                            </Text>
-                          </Pressable>
-                        ))}
+                      {/* Interactive suggestions inside the latest AI message bubble */}
+                      {isLatestAiMessage && msg.sender === 'ai' && msg.suggestions && msg.suggestions.length > 0 && (
+                        <View
+                          style={
+                            currentQuestionKey === 'education' || msg.suggestions.length > 4
+                              ? { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }
+                              : { marginTop: 12, gap: 8 }
+                          }
+                        >
+                          {getSuggestionsForQuestion(currentQuestionKey).map((suggestion, idx) => {
+                            const isSelected = currentQuestionKey === 'languages' && selectedLanguages.includes(suggestion);
+                            return (
+                              <Pressable
+                                key={idx}
+                                onPress={() => handleSendSuggestion(suggestion)}
+                                style={({ pressed }) => [
+                                  {
+                                    backgroundColor: isSelected
+                                      ? ORANGE_COLOR + '15'
+                                      : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
+                                    borderColor: isSelected ? ORANGE_COLOR : (ORANGE_COLOR + '40'),
+                                    borderWidth: 1,
+                                    borderRadius: 8,
+                                    paddingHorizontal: 10,
+                                    paddingVertical: 8,
+                                    opacity: pressed ? 0.7 : 1,
+                                  }
+                                ]}
+                              >
+                                <Text style={[
+                                  typography.tiny,
+                                  {
+                                    color: isSelected ? ORANGE_COLOR : colors.textPrimary,
+                                    fontWeight: '600'
+                                  }
+                                ]}>
+                                  {isSelected ? `✓ ${suggestion}` : suggestion}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
 
-                        {/* Loader inside the bubble below suggestions if loading more */}
-                        {isLoadingSuggestions && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 4, paddingVertical: 4 }}>
-                            <ActivityIndicator size="small" color={ORANGE_COLOR} />
-                            <Text style={[typography.tiny, { color: colors.textSecondary }]}>Loading more options...</Text>
-                          </View>
-                        )}
+                          {/* Loader inside the bubble below suggestions if loading more */}
+                          {isLoadingSuggestions && (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 4, paddingVertical: 4 }}>
+                              <ActivityIndicator size="small" color={ORANGE_COLOR} />
+                              <Text style={[typography.tiny, { color: colors.textSecondary }]}>Loading more options...</Text>
+                            </View>
+                          )}
 
-                        {!isLoadingSuggestions && ['experience', 'objective', 'certifications', 'projects', 'achievements', 'hobbies', 'languages'].includes(currentQuestionKey) && (
-                          <Pressable
-                            onPress={() => fetchAiSuggestions(currentQuestionKey, resumeHeadline, true)}
-                            style={({ pressed }) => [
-                              {
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 6,
-                                paddingVertical: 6,
-                                marginTop: 4,
-                                borderStyle: 'dashed',
-                                borderColor: ORANGE_COLOR + '50',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                                backgroundColor: ORANGE_COLOR + '08',
-                                opacity: pressed ? 0.6 : 1,
-                              }
-                            ]}
-                          >
-                            <Icon name="refresh-outline" size={12} color={ORANGE_COLOR} />
-                            <Text style={[typography.tiny, { color: ORANGE_COLOR, fontWeight: '700' }]}>
-                              Load More Suggestions
-                            </Text>
-                          </Pressable>
-                        )}
-                      </View>
+                          {!isLoadingSuggestions && ['experience', 'objective', 'certifications', 'projects', 'achievements', 'hobbies', 'languages'].includes(currentQuestionKey) && (
+                            <Pressable
+                              onPress={() => fetchAiSuggestions(currentQuestionKey, resumeHeadline, true)}
+                              style={({ pressed }) => [
+                                {
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 6,
+                                  paddingVertical: 6,
+                                  marginTop: 4,
+                                  borderStyle: 'dashed',
+                                  borderColor: ORANGE_COLOR + '50',
+                                  borderWidth: 1,
+                                  borderRadius: 8,
+                                  backgroundColor: ORANGE_COLOR + '08',
+                                  opacity: pressed ? 0.6 : 1,
+                                }
+                              ]}
+                            >
+                              <Icon name="refresh-outline" size={12} color={ORANGE_COLOR} />
+                              <Text style={[typography.tiny, { color: ORANGE_COLOR, fontWeight: '700' }]}>
+                                Load More Suggestions
+                              </Text>
+                            </Pressable>
+                          )}
+                        </View>
+                      )}
+                    </Pressable>
+
+                    {/* Small Inline Edit option pill */}
+                    {activeLongPressKey === msg.id && assocKey && (
+                      <Pressable
+                        onPress={() => {
+                          initiateEditSection(assocKey);
+                          setActiveLongPressKey(null);
+                        }}
+                        style={({ pressed }) => [
+                          {
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: colors.surface,
+                            borderColor: ORANGE_COLOR,
+                            borderWidth: 1,
+                            borderRadius: 10,
+                            paddingHorizontal: 8,
+                            paddingVertical: 4,
+                            marginTop: 4,
+                            alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                            opacity: pressed ? 0.7 : 1,
+                            shadowColor: ORANGE_COLOR,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 3,
+                            elevation: 2,
+                          }
+                        ]}
+                      >
+                        <Icon name="pencil" size={10} color={ORANGE_COLOR} style={{ marginRight: 4 }} />
+                        <Text style={{ fontSize: 9, fontWeight: 'bold', color: ORANGE_COLOR }}>
+                          Edit this detail ✏️
+                        </Text>
+                      </Pressable>
                     )}
                   </View>
                 </View>
@@ -1728,5 +2300,32 @@ const copilotStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 35,
+    width: '100%',
+  },
+  modalHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  secondaryBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

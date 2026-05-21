@@ -19,7 +19,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -36,6 +36,7 @@ import {
 import { fetchMetaQualifications } from '../../../redux/slice/metaSlice';
 import { generateAIResume, AIResumeResponse, generateAISuggestions } from '../../../services/geminiService';
 import GuestView from '../../../components/GuestView';
+import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 import { AiProfileCoPilot } from './components/AiResumeBuilderScreen';
 import { AiResumeWorkspace } from './components/AiResumeWorkspace';
 import { generatePDF } from 'react-native-html-to-pdf';
@@ -50,7 +51,12 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-const AnimatedAIIcon = () => {
+interface AnimatedAIIconProps {
+  size?: number;
+  style?: any;
+}
+
+const AnimatedAIIcon: React.FC<AnimatedAIIconProps> = ({ size = 84, style }) => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -70,8 +76,8 @@ const AnimatedAIIcon = () => {
   });
 
   return (
-    <Animated.View style={{ transform: [{ rotate }], marginBottom: 24 }}>
-      <Icon name="logo-electron" size={84} color={ORANGE_COLOR} />
+    <Animated.View style={[{ transform: [{ rotate }] }, style]}>
+      <Icon name="logo-electron" size={size} color={ORANGE_COLOR} />
     </Animated.View>
   );
 };
@@ -81,13 +87,154 @@ interface AtsScoreOrbProps {
   colors: any;
   typography: any;
   profile?: any;
+  editedSummary?: string;
+  editedBullets?: string[];
+  generatedResume?: any;
+  targetJob?: string;
+  resumeEmail?: string;
+  resumePhone?: string;
+  resumeLinkedin?: string;
+  resumeGithub?: string;
+  careerObjective?: string;
+  certifications?: string;
+  languages?: string;
+  projects?: string;
+  achievements?: string;
+  hobbies?: string;
+  educationText?: string;
+  experienceText?: string;
 }
 
-const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, profile }) => {
+const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({
+  score,
+  colors,
+  typography,
+  profile,
+  editedSummary,
+  editedBullets = [],
+  generatedResume,
+  targetJob,
+  resumeEmail,
+  resumePhone,
+  resumeLinkedin,
+  resumeGithub,
+  careerObjective,
+  certifications,
+  languages,
+  projects,
+  achievements,
+  hobbies,
+  educationText,
+  experienceText,
+}) => {
   // Dynamic User details from candidates real personal profile state
   const userName = profile?.personal?.name || "Vijay Kumar";
-  const userEmail = profile?.personal?.email || "vijay.kumar@jobindia.in";
-  const userPhone = profile?.personal?.mobile || profile?.personal?.phone || "+91 98765 43210";
+
+  // Use the generated resume score if available to unlock the preview
+  const displayScore = generatedResume?.score || score;
+
+  // Normalize experience into a list
+  const getNormalizedExperience = () => {
+    if (!profile?.experience) return [];
+    if (Array.isArray(profile.experience)) {
+      return profile.experience;
+    }
+    const expObj = profile.experience;
+    const type = expObj.experience_type || '';
+    const years = expObj.total_experience_years;
+    const designation = expObj.designation || targetJob || 'Professional';
+    const company = expObj.company || 'Enterprise';
+
+    if (type === 'fresher' || expObj.is_fresher) {
+      return [{
+        designation: 'Fresher',
+        start_date: 'N/A',
+        end_date: '',
+        is_current: false,
+        description: 'Eager to contribute and learn in a professional work environment.',
+      }];
+    }
+
+    return [{
+      designation: designation || 'Specialist',
+      company: company || 'Organization',
+      start_date: expObj.start_date || 'Joined',
+      end_date: expObj.end_date || '',
+      is_current: expObj.is_current ?? true,
+      description: expObj.description || `${years || 1} Year(s) of Experience`,
+    }];
+  };
+
+  // Normalize education into a list
+  const getNormalizedEducation = () => {
+    if (!profile?.education) return [];
+    if (Array.isArray(profile.education)) {
+      return profile.education;
+    }
+
+    const eduObj = profile.education;
+    let degree = eduObj.degree || '';
+    if (!degree) {
+      const qIdObj = eduObj.qualification_id;
+      if (qIdObj && typeof qIdObj === 'object') {
+        degree = qIdObj.name || '';
+      } else {
+        degree = 'Highest Qualification';
+      }
+    }
+
+    const notes = eduObj.education_notes || eduObj.notes || eduObj.school_university || 'Completed Academic Program';
+
+    return [{
+      degree: degree,
+      school_university: notes,
+      passing_year: eduObj.passing_year || '',
+      gpa_percentage: eduObj.gpa_percentage || '',
+    }];
+  };
+
+  const normEducation = getNormalizedEducation();
+  const normExperience = getNormalizedExperience();
+
+  let finalEducation = normEducation;
+  if (educationText && educationText.trim().length > 0) {
+    const parts = educationText.split(/\s+from\s+/i);
+    const degree = parts[0]?.trim() || educationText;
+    const school = parts[1]?.trim() || '';
+    finalEducation = [{
+      degree,
+      school_university: school,
+      passing_year: '',
+      gpa_percentage: '',
+    }];
+  }
+
+  let finalExperience = normExperience;
+  if (experienceText && experienceText.trim().length > 0) {
+    const isFresherText = experienceText.toLowerCase().includes('fresher');
+    if (isFresherText) {
+      finalExperience = [{
+        designation: 'Fresher',
+        start_date: 'N/A',
+        end_date: '',
+        is_current: false,
+        description: 'Eager to contribute and learn in a professional work environment.',
+      }];
+    } else {
+      const parts = experienceText.split(/\s+at\s+/i);
+      const designation = parts[0]?.trim() || experienceText;
+      const company = parts[1]?.trim() || '';
+      finalExperience = [{
+        designation,
+        company,
+        start_date: '',
+        end_date: '',
+        is_current: false,
+        description: '',
+      }];
+    }
+  }
+
   // AI score circle scan animations
   const orbOuterBlink = useRef(new Animated.Value(1)).current;
   const scanLineAnim = useRef(new Animated.Value(4)).current;
@@ -192,7 +339,7 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
         }}>
           <Icon name="checkmark-circle" size={11} color={ORANGE_COLOR} style={{ marginRight: 4 }} />
           <Text style={{ fontSize: 8, fontWeight: '800', color: colors.textPrimary }}>
-            Keywords OK
+            Keywords
           </Text>
         </View>
 
@@ -252,11 +399,10 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
         <View style={{
           width: 310,
           height: 420,
-          backgroundColor: colors.card || colors.surface || '#ffffff',
+          backgroundColor: '#ffffff',
           borderRadius: 16,
           borderWidth: 1.5,
           borderColor: colors.border || '#e2e8f0',
-          padding: 20,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 8 },
           shadowOpacity: 0.15,
@@ -265,84 +411,231 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
           overflow: 'hidden',
           position: 'relative',
         }}>
-          {/* Simulated Real User Details Header Section */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18, borderBottomWidth: 1, borderBottomColor: colors.border + '40', paddingBottom: 12 }}>
-            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: ORANGE_COLOR + '20', marginRight: 10, alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="person" size={20} color={ORANGE_COLOR} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13.5, fontWeight: '900', color: colors.textPrimary, letterSpacing: -0.2 }} numberOfLines={1}>
-                {userName}
+          <ScrollView
+            contentContainerStyle={{ padding: 16, paddingBottom: 60 }}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+          >
+            {/* Simulated Real User Details Header Section */}
+            <View style={{ alignItems: 'center', marginBottom: 2 }}>
+              <Text style={{ color: ORANGE_COLOR, fontWeight: '900', fontSize: 13.5, letterSpacing: -0.5, textAlign: 'center' }}>
+                {profile?.personal?.name || 'Your Name'}
               </Text>
 
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <Icon name="mail-outline" size={9} color={ORANGE_COLOR} style={{ marginRight: 3 }} />
-                <Text style={{ fontSize: 8.5, color: colors.textSecondary, fontWeight: '600' }} numberOfLines={1}>
-                  {userEmail}
+              {targetJob ? (
+                <Text style={{ color: '#334155', fontWeight: '700', marginTop: 1, marginBottom: 1, fontSize: 8.5, letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center' }}>
+                  {targetJob}
                 </Text>
+              ) : null}
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>
+                {(resumePhone || profile?.personal?.phone || profile?.personal?.mobile) && (
+                  <>
+                    <Icon name="phone-portrait" size={8} color="#000" style={{ marginRight: 2 }} />
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                      {resumePhone || profile?.personal?.phone || profile?.personal?.mobile}
+                    </Text>
+                    <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>
+                  </>
+                )}
+                {(resumeEmail || profile?.personal?.email) && (
+                  <>
+                    <Icon name="mail" size={8} color="#000" style={{ marginRight: 2 }} />
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                      {resumeEmail || profile?.personal?.email}
+                    </Text>
+                    {((resumeLinkedin || profile?.personal?.linkedin) || (resumeGithub || profile?.personal?.github)) && <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>}
+                  </>
+                )}
+                {(resumeLinkedin || profile?.personal?.linkedin) && (
+                  <>
+                    <Icon name="logo-linkedin" size={8} color="#000" style={{ marginRight: 2 }} />
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                      {(resumeLinkedin || profile?.personal?.linkedin).replace(/^https?:\/\/(www\.)?/, '')}
+                    </Text>
+                    {(resumeGithub || profile?.personal?.github) && <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>}
+                  </>
+                )}
+                {(resumeGithub || profile?.personal?.github) && (
+                  <>
+                    <Icon name="logo-github" size={8} color="#000" style={{ marginRight: 2 }} />
+                    <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                      {(resumeGithub || profile?.personal?.github).replace(/^https?:\/\/(www\.)?/, '')}
+                    </Text>
+                  </>
+                )}
               </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                <Icon name="call-outline" size={9} color={ORANGE_COLOR} style={{ marginRight: 3 }} />
-                <Text style={{ fontSize: 8.5, color: colors.textSecondary, fontWeight: '600' }} numberOfLines={1}>
-                  {userPhone}
+            </View>
+
+            <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+
+            {/* Summary Section */}
+            {(editedSummary || profile?.personal?.bio) ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2 }}>
+                  SUMMARY
                 </Text>
-              </View>
-            </View>
-          </View>
+                <Text style={{ color: '#000', marginTop: 1, fontSize: 7.8, lineHeight: 12 }}>
+                  {editedSummary || profile.personal.bio}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
 
-          {/* Summary / Bio */}
-          {profile?.personal?.bio ? (
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 9, fontWeight: '900', color: ORANGE_COLOR, marginBottom: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>SUMMARY</Text>
-              <Text style={{ fontSize: 7.5, color: colors.textSecondary, lineHeight: 11 }} numberOfLines={3}>{profile.personal.bio}</Text>
-            </View>
-          ) : (
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ width: '100%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-              <View style={{ width: '90%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-            </View>
-          )}
+            {/* Experience Section */}
+            {finalExperience && finalExperience.length > 0 && (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  EXPERIENCE
+                </Text>
+                {finalExperience.map((exp: any, idx: number) => (
+                  <View key={idx} style={{ marginBottom: 3 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 1 }}>
+                      <Text style={{ color: '#000', fontWeight: 'bold', flex: 1, fontSize: 8.5 }}>
+                        {exp.designation || 'Specialist'}
+                        {exp.company ? ` , ${exp.company}` : ''}
+                      </Text>
+                      {exp.start_date && exp.start_date !== 'N/A' && exp.start_date !== 'Joined' ? (
+                        <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                          {exp.start_date} - {exp.is_current ? 'Present' : exp.end_date || ''}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {exp.designation !== 'Fresher' && (
+                      idx === 0 && editedBullets.length > 0 ? (
+                        editedBullets.map((bullet, bIdx) => (
+                          <View key={bIdx} style={{ flexDirection: 'row', marginTop: 1, alignItems: 'flex-start' }}>
+                            <Text style={{ color: '#000', marginRight: 4, fontSize: 8.2 }}>-</Text>
+                            <Text style={{ color: '#000', flex: 1, fontSize: 7.8, lineHeight: 12 }}>
+                              {bullet}
+                            </Text>
+                          </View>
+                        ))
+                      ) : (
+                        <View style={{ flexDirection: 'row', marginTop: 1, alignItems: 'flex-start' }}>
+                          <Text style={{ color: '#000', marginRight: 4, fontSize: 8.2 }}>-</Text>
+                          <Text style={{ color: '#000', flex: 1, fontSize: 7.8, lineHeight: 12 }}>
+                            {exp.description || 'Contributed to key projects.'}
+                          </Text>
+                        </View>
+                      )
+                    )}
+                  </View>
+                ))}
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            )}
 
-          {/* Experience Section */}
-          {profile?.experience && profile.experience.length > 0 ? (
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 9, fontWeight: '900', color: ORANGE_COLOR, marginBottom: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>EXPERIENCE</Text>
-              {profile.experience.slice(0, 2).map((exp: any, idx: number) => (
-                <View key={idx} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontSize: 8.5, fontWeight: 'bold', color: colors.textPrimary }} numberOfLines={1}>{exp.designation || 'Specialist'} at {exp.company || 'Company'}</Text>
-                  <Text style={{ fontSize: 7, color: colors.textSecondary }}>{exp.start_date} - {exp.is_current ? 'Present' : exp.end_date || ''}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ width: '40%', height: 7, backgroundColor: ORANGE_COLOR + '35', borderRadius: 2.5, marginBottom: 8 }} />
-              <View style={{ width: '90%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-              <View style={{ width: '75%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-            </View>
-          )}
+            {/* Projects Section */}
+            {projects ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  PROJECTS
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {projects}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
 
-          {/* Education Section */}
-          {profile?.education && profile.education.length > 0 ? (
-            <View style={{ marginBottom: 12 }}>
-              <Text style={{ fontSize: 9, fontWeight: '900', color: ORANGE_COLOR, marginBottom: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>EDUCATION</Text>
-              {profile.education.slice(0, 2).map((edu: any, idx: number) => (
-                <View key={idx} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontSize: 8.5, fontWeight: 'bold', color: colors.textPrimary }} numberOfLines={1}>{edu.degree || 'Degree'} - {edu.school_university || 'University'}</Text>
-                  <Text style={{ fontSize: 7, color: colors.textSecondary }}>Class of {edu.passing_year || ''}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={{ marginBottom: 12 }}>
-              <View style={{ width: '35%', height: 7, backgroundColor: ORANGE_COLOR + '35', borderRadius: 2.5, marginBottom: 8 }} />
-              <View style={{ width: '80%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-              <View style={{ width: '65%', height: 4.5, backgroundColor: colors.textSecondary + '12', borderRadius: 2, marginBottom: 5 }} />
-            </View>
-          )}
+            {/* Education Section */}
+            {finalEducation && finalEducation.length > 0 && (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  EDUCATION
+                </Text>
+                {finalEducation.map((edu: any, idx: number) => (
+                  <View key={idx} style={{ marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ color: '#000', fontSize: 8.2, fontWeight: '500' }}>
+                        <Text style={{ fontWeight: 'bold' }}>{edu.degree || 'Degree'}</Text>
+                        {edu.school_university ? ` - ${edu.school_university}` : ''}
+                        {edu.passing_year ? ` | Class of ${edu.passing_year}` : ''}
+                      </Text>
+                      {edu.gpa_percentage ? (
+                        <Text style={{ color: '#000', fontWeight: 'bold', fontSize: 7.8 }}>
+                          GPA: {edu.gpa_percentage}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                ))}
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            )}
+
+            {/* Certifications Section */}
+            {certifications ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  CERTIFICATIONS
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {certifications}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
+
+            {/* Career Objective Section */}
+            {careerObjective ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  CAREER OBJECTIVE
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {careerObjective}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
+
+            {/* Languages Section */}
+            {languages ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  LANGUAGES
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {languages}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
+
+            {/* Achievements Section */}
+            {achievements ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  ACHIEVEMENTS
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {achievements}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
+
+            {/* Hobbies Section */}
+            {hobbies ? (
+              <>
+                <Text style={{ color: ORANGE_COLOR, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }}>
+                  HOBBIES & INTERESTS
+                </Text>
+                <Text style={{ color: '#000', fontSize: 7.8, lineHeight: 12 }}>
+                  {hobbies}
+                </Text>
+                <View style={{ height: 1, backgroundColor: '#cbd5e1', marginVertical: 3 }} />
+              </>
+            ) : null}
+
+            {/* Skills Section hidden */}
+
+          </ScrollView>
 
           {/* DYNAMIC GAMIFIED LOCK OVERLAY */}
-          {score < 60 ? (
+          {displayScore < 40 ? (
             <>
               {/* Semi-transparent frosted overlay */}
               <View style={{
@@ -384,42 +677,18 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
                 </Text>
               </View>
             </>
-          ) : (
-            /* UNLOCKED FLOATING STATE CELEBRATION BADGE */
-            <View style={{
-              position: 'absolute',
-              top: '48%',
-              left: '8%',
-              right: '8%',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#10b981',
-              borderRadius: 12,
-              paddingVertical: 14,
-              paddingHorizontal: 10,
-              shadowColor: '#10b981',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.22,
-              shadowRadius: 6,
-              elevation: 4,
-            }}>
-              <Icon name="checkmark-circle" size={24} color="#fff" style={{ marginBottom: 6 }} />
-              <Text style={{ fontSize: 11, fontWeight: '900', color: '#fff', textAlign: 'center' }}>
-                🎉 Premium PDF Unlocked!
-              </Text>
-            </View>
-          )}
+          ) : null}
 
           {/* AI Fit Match Badge overlayed at bottom right of the sheet */}
           <View style={{
             position: 'absolute',
             bottom: 14,
             right: 14,
-            backgroundColor: score >= 60 ? '#10b981' : ORANGE_COLOR,
+            backgroundColor: displayScore >= 40 ? '#10b981' : ORANGE_COLOR,
             paddingHorizontal: 10,
             paddingVertical: 6,
             borderRadius: 6,
-            shadowColor: score >= 60 ? '#10b981' : ORANGE_COLOR,
+            shadowColor: displayScore >= 40 ? '#10b981' : ORANGE_COLOR,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.4,
             shadowRadius: 4,
@@ -429,7 +698,7 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({ score, colors, typography, pr
           }}>
             <Icon name="sparkles" size={12} color="#fff" style={{ marginRight: 4 }} />
             <Text style={{ color: '#fff', fontSize: 12, fontWeight: '900' }}>
-              {score}% AI
+              {displayScore}% AI
             </Text>
           </View>
 
@@ -521,7 +790,7 @@ const AIAssistantScreen: React.FC = () => {
 
     if (type === 'fresher' || expObj.is_fresher) {
       return {
-        text: 'Fresher (No past work history)',
+        text: 'Fresher',
         isFresher: true,
       };
     }
@@ -570,36 +839,41 @@ const AIAssistantScreen: React.FC = () => {
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   // Android hardware back button interception
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (currentScreen === 'CHAT') {
-        setCurrentScreen('ATS_REPORT');
-        return true; // prevent default (exiting screen)
-      }
-      if (currentScreen === 'ATS_REPORT') {
-        if (navigation.canGoBack()) {
-          navigation.goBack();
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (currentScreen === 'CHAT') {
+          setCurrentScreen('ATS_REPORT');
+          return true; // prevent default (exiting screen)
+        }
+        if (currentScreen === 'ATS_REPORT') {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+            return true;
+          }
+          return false;
+        }
+        if (currentScreen === 'GENERATING') {
+          setCurrentScreen('CHAT');
           return true;
         }
-        return false;
-      }
-      if (currentScreen === 'GENERATING') {
-        setCurrentScreen('CHAT');
-        return true;
-      }
-      if (currentScreen === 'WORKSPACE') {
-        setCurrentScreen('CHAT');
-        return true;
-      }
-      return false; // LANDING & SCANNING: allow default navigation back
-    });
-    return () => backHandler.remove();
-  }, [currentScreen]);
+        if (currentScreen === 'WORKSPACE') {
+          setCurrentScreen('CHAT');
+          return true;
+        }
+        return false; // LANDING & SCANNING: allow default navigation back
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [currentScreen, navigation])
+  );
   // Scan control
   const initialScanDone = useRef(false);
 
   // Wizard state
   const [targetJob, setTargetJob] = useState('');
+  const [interviewData, setInterviewData] = useState<any>({});
   const [selectedTone, setSelectedTone] = useState<'Professional' | 'Technical' | 'Creative' | 'Startup'>('Professional');
   const [jobDescription, setJobDescription] = useState('');
 
@@ -778,7 +1052,13 @@ const AIAssistantScreen: React.FC = () => {
 
 
   if (!isLoggedIn) {
-    return <GuestView title="AI Resume Builder" subtitle="Login to access the AI Recruiter and build your premium ATS resume!" />;
+    return (
+      <GuestView 
+        title="AI Resume Builder" 
+        subtitle="Login to access the AI Recruiter and build your premium ATS resume!" 
+        image={JobIndiaIcon}
+      />
+    );
   }
 
 
@@ -892,6 +1172,7 @@ const AIAssistantScreen: React.FC = () => {
         })
       ).unwrap();
       alert('Resume summary successfully synced and saved to your Candidate Bio! ✅');
+      setCurrentScreen('ATS_REPORT');
     } catch (e) {
       alert('Failed to sync summary with profile.');
     }
@@ -1117,12 +1398,6 @@ const AIAssistantScreen: React.FC = () => {
     <p class="summary-text">${hobbies}</p>
     ` : ''}
 
-    <div class="divider"></div>
-    
-    <div class="section-title">ATS Core Skills & Competencies</div>
-    <div class="skills-grid">
-      ${generatedResume.skills.map(skill => `<span class="skill-badge">${skill}</span>`).join('')}
-    </div>
   </div>
 </body>
 </html>`;
@@ -1280,7 +1555,7 @@ ${generatedResume?.skills.join(', ')}
         {currentScreen === 'SCANNING' && (
           <View style={[styles.centerScreen, { backgroundColor: colors.background }]}>
             {/* Centered Animated AI Radar Sparkles Icon */}
-            <AnimatedAIIcon />
+            <AnimatedAIIcon size={84} style={{ marginBottom: 24 }} />
 
             {/* Grand Title: Job India AI */}
             <Text style={[typography.sectionTitle, { color: colors.textPrimary, fontWeight: 'bold', textAlign: 'center', letterSpacing: -0.3 }]}>
@@ -1301,7 +1576,28 @@ ${generatedResume?.skills.join(', ')}
             {/* Header bar with Back button to go back to LANDING screen */}
 
             <ScrollView contentContainerStyle={{ padding: spacing.md, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
-              <AtsScoreOrb score={getBaselineATSScore()} colors={colors} typography={typography} profile={profile} />
+              <AtsScoreOrb
+                score={getBaselineATSScore()}
+                colors={colors}
+                typography={typography}
+                profile={profile}
+                editedSummary={editedSummary}
+                editedBullets={editedBullets}
+                generatedResume={generatedResume}
+                targetJob={targetJob}
+                resumeEmail={resumeEmail}
+                resumePhone={resumePhone}
+                resumeLinkedin={resumeLinkedin}
+                resumeGithub={resumeGithub}
+                careerObjective={careerObjective}
+                certifications={certifications}
+                languages={languages}
+                projects={projects}
+                achievements={achievements}
+                hobbies={hobbies}
+                educationText={interviewData?.educationText}
+                experienceText={interviewData?.experienceText}
+              />
 
               {/* Premium Integrated AI Console Button */}
               <View style={{
@@ -1402,6 +1698,7 @@ ${generatedResume?.skills.join(', ')}
               ORANGE_COLOR={ORANGE_COLOR}
               isKeyboardVisible={isKeyboardVisible}
               onInterviewComplete={async (interviewData) => {
+                setInterviewData(interviewData);
                 setResumeEmail(interviewData.resumeEmail);
                 setResumePhone(interviewData.resumePhone);
                 setResumeLinkedin(interviewData.resumeLinkedin);
@@ -1461,7 +1758,7 @@ ${generatedResume?.skills.join(', ')}
           <View style={styles.centerScreen}>
             <Animated.View style={[styles.loadingOrb, { transform: [{ scale: pulseAnim }] }]}>
               <View style={[styles.loadingOrbInner, { borderColor: ORANGE_COLOR }]}>
-                <Icon name="sparkles" size={48} color={ORANGE_COLOR} />
+                <AnimatedAIIcon size={48} />
               </View>
             </Animated.View>
             <ActivityIndicator size="small" color={ORANGE_COLOR} style={{ marginTop: 24 }} />
@@ -1469,7 +1766,7 @@ ${generatedResume?.skills.join(', ')}
               {loadingSubtitle}
             </Text>
             <Text style={[typography.tiny, { color: colors.textPlaceholder, marginTop: 6 }]}>
-              Google Gemini is crafting your career milestones...
+              Job india Ai is crafting your career milestones...
             </Text>
           </View>
         )}
@@ -1485,6 +1782,8 @@ ${generatedResume?.skills.join(', ')}
             setTargetJob={setTargetJob}
             selectedTheme={selectedTheme}
             setSelectedTheme={setSelectedTheme}
+            educationText={interviewData.educationText}
+            experienceText={interviewData.experienceText}
             themeColors={themeColors}
             editedSummary={editedSummary}
             setEditedSummary={setEditedSummary}

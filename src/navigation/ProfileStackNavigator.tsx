@@ -12,6 +12,7 @@ import ProfileDetailsScreen from '../screens/main/profile/ProfileDetailsScreen';
 import HelpAndSupportScreen from '../screens/main/profile/HelpAndSupportScreen';
 import PrivacyPolicyScreen from '../screens/main/profile/PrivacyPolicyScreen';
 import TermsAndConditionsScreen from '../screens/main/profile/TermsAndConditionsScreen';
+import SavedJobsScreen from '../screens/main/saved/SavedJobsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -36,6 +37,7 @@ const ProfileStackNavigator: React.FC = () => {
       <Stack.Screen name="HelpAndSupport" component={HelpAndSupportScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} />
+      <Stack.Screen name="Saved" component={SavedJobsScreen} />
     </Stack.Navigator>
   );
 };

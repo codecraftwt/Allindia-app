@@ -206,17 +206,23 @@ const MainTabNavigator: React.FC = () => {
               canPreventDefault: true,
             });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate({ name: route.name, merge: true });
-            } else if (isFocused && !event.defaultPrevented) {
-              const stackRoutes = ['Home', 'Jobs', 'Applications', 'Profile'];
-              if (stackRoutes.includes(route.name)) {
+            if (!event.defaultPrevented) {
+              const stackRoutes = ['Home', 'AllJobs', 'Applications', 'Profile'];
+              const rootScreen = 
+                route.name === 'Home' ? 'HomeFeed' : 
+                route.name === 'AllJobs' ? 'AllJobsList' : 
+                route.name === 'Applications' ? 'ApplicationsList' : 
+                route.name === 'Profile' ? 'ProfileOverview' : undefined;
+
+              if (rootScreen) {
                 navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: route.name }],
+                  CommonActions.navigate({
+                    name: route.name,
+                    params: { screen: rootScreen },
                   })
                 );
+              } else {
+                navigation.navigate({ name: route.name });
               }
             }
           };
@@ -239,7 +245,7 @@ const MainTabNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
-      backBehavior="firstRoute"
+      backBehavior="history"
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,

@@ -48,6 +48,15 @@ const REPORT_REASONS = [
   'Wrong Category / Details',
 ];
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const cleanIconName = (icon: string) => {
   if (!icon) return 'check-circle';
   return icon.replace(/fas fa-|fa-|fab fa-|far fa-/g, '').trim();
@@ -332,9 +341,7 @@ const JobDetailScreen: React.FC = () => {
     ? `₹${currentJob.salary_min.toLocaleString()} - ${currentJob.salary_max.toLocaleString()}`
     : 'Negotiable';
   const postedDate = currentJob?.created_at ? new Date(currentJob.created_at).toLocaleDateString() : 'Recently';
-  const jobTypeLabel = currentJob?.job_type_label || (currentJob?.job_type
-    ? currentJob.job_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    : 'Full Time');
+  const jobTypeLabel = formatJobType(currentJob?.job_type_label || currentJob?.job_type || 'Full Time');
 
   const handleShare = useCallback(async () => {
     if (!currentJob) return;

@@ -61,6 +61,15 @@ import {
   HOME_CATEGORIES,
 } from './components/homeMockData';
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const H_CARD_W = Math.min(Dimensions.get('window').width * 0.72, 280);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
@@ -243,7 +252,7 @@ function JobTrendCard({
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
-  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
 
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
@@ -333,7 +342,7 @@ function JobListCard({
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
-  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
 
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;

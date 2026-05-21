@@ -43,6 +43,15 @@ const QUICK_FILTERS_DATA = [
   { id: 'Contract', label: 'Contract', icon: 'file-text', color: '#6366F1' },
 ];
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const cleanIconName = (icon: string) => {
   if (!icon) return 'check-circle';
   // Remove 'fas fa-', 'fa-', etc.
@@ -160,7 +169,7 @@ const AllJobsScreen = () => {
     const companyName = item.employer?.company?.company_name || item.company_name || item.company || 'Hiring Company';
     const locationLabel = item.location?.label || item.location_name || item.location || 'India';
     const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : 'Negotiable');
-    const jobType = item.job_type_label || item.employmentType || item.job_type || 'Full Time';
+    const jobType = formatJobType(item.job_type_label || item.employmentType || item.job_type || 'Full Time');
 
     const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
     const hasAppliedTags = item.applied_tags && item.applied_tags.length > 0;

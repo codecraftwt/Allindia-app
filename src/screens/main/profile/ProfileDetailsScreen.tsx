@@ -289,14 +289,14 @@ const ProfileDetailsScreen = () => {
           isMissing={isSectionMissing('personal')} 
         />
 
-        <SectionItem 
+        {/* <SectionItem 
           title="My Documents" 
           subtitle="ID proofs & other certifications"
           icon="card-account-details-outline" 
           color="#64748B" 
           onPress={() => {}} 
           isMissing={true} 
-        />
+        /> */}
 
         {/* Pro Tip */}
         <View style={[styles.proTip, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30' }]}>

@@ -1,15 +1,17 @@
-import React from 'react';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { StatusBar, View, StyleSheet, Dimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from './src/redux/store';
+import { store, persistor, RootState } from './src/redux/store';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { ToastProvider } from './src/context/ToastContext';
 import { AnimatedBackground } from './src/components/AnimatedBackground';
+
+export const navigationRef = createNavigationContainerRef();
 
 function App() {
   return (
@@ -31,6 +33,20 @@ function App() {
 
 function AppNavigation() {
   const { colors, mode, isThemeLoading } = useTheme();
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+  const wasLoggedIn = useRef(isLoggedIn);
+
+  useEffect(() => {
+    if (wasLoggedIn.current && !isLoggedIn) {
+      if (navigationRef.isReady()) {
+        navigationRef.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      }
+    }
+    wasLoggedIn.current = isLoggedIn;
+  }, [isLoggedIn]);
 
   const navTheme = {
     ...DefaultTheme,
@@ -52,7 +68,7 @@ function AppNavigation() {
     <View style={{ flex: 1 }}>
       <AnimatedBackground colors={colors} />
       
-      <NavigationContainer theme={navTheme}>
+      <NavigationContainer ref={navigationRef} theme={navTheme}>
         <StatusBar
           barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
           backgroundColor="transparent"

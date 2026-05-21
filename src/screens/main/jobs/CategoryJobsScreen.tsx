@@ -28,6 +28,15 @@ import { components } from '../../../theme/components';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const cleanIconName = (icon: string) => {
   if (!icon) return 'check-circle';
   return icon.replace(/fa[srlb]? fa-/, '').trim();
@@ -86,7 +95,7 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
   const companyName = job.employer?.company?.company_name || job.company_name || job.company || 'Hiring Company';
   const locationLabel = job.location?.label || job.location_name || job.location || 'India';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
-  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
 
   return (
     <Pressable

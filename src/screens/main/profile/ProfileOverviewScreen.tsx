@@ -36,6 +36,7 @@ import ConfirmationModal from '../../../components/ConfirmationModal';
 import { PrimaryButton } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
 import SkeletonPulse from '../../../components/SkeletonPulse';
+import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 
 type Nav = StackNavigationProp<ProfileStackParamList, 'ProfileOverview'>;
 
@@ -295,10 +296,10 @@ const ProfileOverviewScreen: React.FC = () => {
   const renderContent = () => {
     if (!isLoggedIn) {
       return (
-        <GuestView
-          title="Unlock Your Potential"
-          subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations."
-          icon="user-plus"
+        <GuestView 
+          title="Unlock Your Potential" 
+          subtitle="Register now to apply for jobs, track your applications, and get personalized recommendations." 
+          image={JobIndiaIcon}
         />
       );
     }
@@ -402,7 +403,7 @@ const ProfileOverviewScreen: React.FC = () => {
           {/* Right Stack: Saved & Reels */}
           <View style={styles.dashboardStack}>
             <Pressable
-              onPress={() => navigation.navigate('Home' as any, { screen: 'Saved' })}
+              onPress={() => navigation.navigate('Saved')}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
                 { backgroundColor: colors.surface, borderColor: colors.border },
@@ -432,8 +433,8 @@ const ProfileOverviewScreen: React.FC = () => {
         </View>
         {/* Referral Section */}
         <View style={styles.menuContainer}>
-          <SectionHeader title="Earn Rewards" />
-          <Pressable
+          {/* <SectionHeader title="Earn Rewards" /> */}
+          {/* <Pressable
             style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={[styles.menuIconContainer, { backgroundColor: '#8B5CF615' }]}>
@@ -444,10 +445,11 @@ const ProfileOverviewScreen: React.FC = () => {
               <Text style={[typography.small, { color: colors.textSecondary }]}>Invite your friends and earn rewards</Text>
             </View>
             <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-          </Pressable>
+          </Pressable> */}
 
           <SectionHeader title="Support" />
           <Pressable
+            onPress={() => navigation.navigate('HelpAndSupport')}
             style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={[styles.menuIconContainer, { backgroundColor: '#10B98115' }]}>

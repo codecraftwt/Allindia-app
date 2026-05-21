@@ -152,7 +152,7 @@ const LocationScreen = () => {
                     onPress={() => handleCitySelect(city.name)}
                     style={[
                       styles.cityChip,
-                      { backgroundColor: colors.surface, borderColor: tempCity === city.name ? colors.primary : colors.border }
+                      { backgroundColor: colors.surface, borderColor: colors.border }
                     ]}
                   >
                     <Text style={[typography.labelMedium, { color: tempCity === city.name ? colors.primary : colors.textPrimary }]}>
@@ -264,14 +264,22 @@ const styles = StyleSheet.create({
   citiesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
+    paddingBottom: 8,
+    paddingTop: 4,
+    overflow: 'visible',
   },
   cityChip: {
-    width: (width - spacing.md * 2 - 20) / 3,
-    padding: 12,
+    width: Math.floor((width - spacing.md * 2 - 16) / 3) - 2,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderRadius: radius.lg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 68,
+    marginVertical: 4,
+    overflow: 'visible',
   },
   areasList: {
     borderRadius: radius.xl,

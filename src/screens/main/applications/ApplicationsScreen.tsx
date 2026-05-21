@@ -34,6 +34,7 @@ import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography } from '../../../theme/typography';
 import { AuthHeadline } from '../../../components/auth';
 import GuestView from '../../../components/GuestView';
+import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 import ApplicationStatsDashboard from './components/ApplicationStatsDashboard';
 import JobActionModal from '../../../components/JobActionModal';
 
@@ -309,10 +310,10 @@ const ApplicationsScreen: React.FC = () => {
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       {!isLoggedIn ? (
-        <GuestView
-          title="Track Your Success"
-          subtitle="Register now to keep track of all your job applications and their current status."
-          icon="briefcase"
+        <GuestView 
+          title="Track Your Success" 
+          subtitle="Register now to keep track of all your job applications and their current status." 
+          image={JobIndiaIcon}
         />
       ) : (
         <FlatList

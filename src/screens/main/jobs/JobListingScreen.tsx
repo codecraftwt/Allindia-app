@@ -32,6 +32,15 @@ import { ALL_LISTED_JOBS } from '../home/components/homeMockData';
 type JobListingNav = StackNavigationProp<SearchStackParamList, 'JobListing'>;
 type JobListingRoute = RouteProp<SearchStackParamList, 'JobListing'>;
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const cleanIconName = (iconStr: string) => {
   if (!iconStr) return 'check-circle';
   return iconStr.replace(/fa[srlb]? fa-/, '').trim();
@@ -59,7 +68,7 @@ function JobListCard({
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || job.location || 'Remote';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
-  const jobType = job.job_type_label || job.employmentType || job.job_type || 'Full Time';
+  const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
 
   return (

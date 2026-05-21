@@ -31,14 +31,14 @@ import { logoutToLogin } from './logoutToLogin';
 import { PrimaryButton } from '../../../components/auth';
 import { useToast } from '../../../context/ToastContext';
 
-const AccountSettingItem = ({ 
-  icon, 
-  title, 
-  subtitle, 
-  onPress, 
+const AccountSettingItem = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
   rightElement,
   isDanger = false,
-  colors 
+  colors
 }: any) => (
   <Pressable
     onPress={onPress}
@@ -71,7 +71,7 @@ const ProfileAccountSetting: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { showToast } = useToast();
-  
+
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
   // Change Password State
@@ -94,7 +94,7 @@ const ProfileAccountSetting: React.FC = () => {
     type: 'error' as 'error' | 'success' | 'confirm',
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   // Delete Account State
@@ -134,13 +134,13 @@ const ProfileAccountSetting: React.FC = () => {
   }, [showDeleteModal]);
 
   const showStatus = (type: 'error' | 'success' | 'confirm', title: string, message: string, onConfirm?: () => void) => {
-    setStatusModal({ visible: true, type, title, message, onConfirm: onConfirm || (() => {}) });
+    setStatusModal({ visible: true, type, title, message, onConfirm: onConfirm || (() => { }) });
   };
 
   const toggleVisibility = (field: 'current' | 'new' | 'confirm') => {
-    setPasswordVisibility(prev => ({ 
-      ...prev, 
-      [field]: !prev?.[field] 
+    setPasswordVisibility(prev => ({
+      ...prev,
+      [field]: !prev?.[field]
     }));
   };
 
@@ -161,8 +161,17 @@ const ProfileAccountSetting: React.FC = () => {
         password: newPassword,
         password_confirmation: confirmPassword
       })).unwrap();
-      
-      showStatus('success', 'Success', 'Password changed successfully.');
+
+      showStatus(
+        'success',
+        'Success',
+        'Password changed successfully. Please log in again with your new password.',
+        () => {
+          dispatch(logout());
+          dispatch(clearProfile());
+          logoutToLogin(navigation);
+        }
+      );
       setShowPasswordModal(false);
       setCurrentPassword('');
       setNewPassword('');
@@ -196,7 +205,7 @@ const ProfileAccountSetting: React.FC = () => {
         password: deletePassword,
         deletion_reason: deleteReason
       })).unwrap();
-      
+
       // Successfully deleted, now logout locally (don't call logout API as account is gone)
       dispatch(logout());
       dispatch(clearProfile());
@@ -217,8 +226,8 @@ const ProfileAccountSetting: React.FC = () => {
 
   const handleDeleteAccount = () => {
     showStatus(
-      'confirm', 
-      'Delete Account', 
+      'confirm',
+      'Delete Account',
       'Are you sure you want to delete your account? This action is permanent and cannot be undone.',
       () => {
         setStatusModal(prev => ({ ...prev, visible: false }));
@@ -231,7 +240,7 @@ const ProfileAccountSetting: React.FC = () => {
     <ProfileEditLayout
       title="Account Settings"
       subtitle="Manage your security, privacy and account status.">
-      
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Security</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -283,7 +292,7 @@ const ProfileAccountSetting: React.FC = () => {
         transparent={true}
         onRequestClose={() => setShowPasswordModal(false)}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
@@ -349,9 +358,9 @@ const ProfileAccountSetting: React.FC = () => {
               </View>
 
               <View style={{ marginTop: spacing.md }}>
-                <PrimaryButton 
-                  title={pwdLoading ? "Updating..." : "Update Password"} 
-                  onPress={handleChangePassword} 
+                <PrimaryButton
+                  title={pwdLoading ? "Updating..." : "Update Password"}
+                  onPress={handleChangePassword}
                   loading={pwdLoading}
                   colors={colors}
                 />
@@ -368,7 +377,7 @@ const ProfileAccountSetting: React.FC = () => {
         transparent={true}
         onRequestClose={() => setShowDeleteModal(false)}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
@@ -416,7 +425,7 @@ const ProfileAccountSetting: React.FC = () => {
               </View>
 
               <View style={{ marginTop: spacing.md }}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handleDeleteConfirm}
                   disabled={delLoading}
                   style={[styles.deleteBtn, { backgroundColor: colors.error }]}
@@ -442,24 +451,24 @@ const ProfileAccountSetting: React.FC = () => {
         <View style={styles.statusOverlay}>
           <View style={[styles.statusCard, { backgroundColor: colors.surface }]}>
             <View style={[styles.statusIcon, { backgroundColor: statusModal.type === 'success' ? colors.success + '20' : statusModal.type === 'confirm' ? colors.error + '10' : colors.error + '20' }]}>
-              <Icon 
-                name={statusModal.type === 'success' ? "check-circle" : statusModal.type === 'confirm' ? "trash-2" : "alert-circle"} 
-                size={32} 
-                color={statusModal.type === 'success' ? colors.success : colors.error} 
+              <Icon
+                name={statusModal.type === 'success' ? "check-circle" : statusModal.type === 'confirm' ? "trash-2" : "alert-circle"}
+                size={32}
+                color={statusModal.type === 'success' ? colors.success : colors.error}
               />
             </View>
             <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: 8 }]}>{statusModal.title}</Text>
             <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>{statusModal.message}</Text>
-            
+
             {statusModal.type === 'confirm' ? (
               <View style={styles.modalFooter}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
                   style={[styles.statusBtnSmall, { backgroundColor: colors.surfaceSecondary }]}
                 >
                   <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>No, Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={statusModal.onConfirm}
                   style={[styles.statusBtnSmall, { backgroundColor: colors.error }]}
                 >
@@ -467,8 +476,13 @@ const ProfileAccountSetting: React.FC = () => {
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity 
-                onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+              <TouchableOpacity
+                onPress={() => {
+                  setStatusModal(prev => ({ ...prev, visible: false }));
+                  if (statusModal.onConfirm) {
+                    statusModal.onConfirm();
+                  }
+                }}
                 style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
               >
                 <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>

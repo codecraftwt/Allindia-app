@@ -49,6 +49,7 @@ export type ProfileStackParamList = {
   HelpAndSupport: undefined;
   PrivacyPolicy: undefined;
   TermsAndConditions: undefined;
+  Saved: undefined;
 };
 
 export type MainTabParamList = {
