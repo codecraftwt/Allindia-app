@@ -20,6 +20,7 @@ import { typography } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { setSelectedLocation } from '../../../redux/slice/addressSlice';
+import { fetchMetaCities } from '../../../redux/slice/metaSlice';
 
 const { width } = Dimensions.get('window');
 
@@ -46,27 +47,66 @@ const LocationScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<AppDispatch>();
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
+  const { cities } = useSelector((state: RootState) => state.meta);
 
   const [search, setSearch] = useState('');
   const [activeStep, setActiveStep] = useState<'city' | 'area'>(selectedCity ? 'area' : 'city');
   const [tempCity, setTempCity] = useState(selectedCity || 'Mumbai');
 
+  React.useEffect(() => {
+    if (cities.length === 0) {
+      dispatch(fetchMetaCities());
+    }
+  }, [dispatch, cities.length]);
+
+  const uniqueCities = React.useMemo(() => {
+    if (cities.length === 0) {
+      return POPULAR_CITIES.map(c => c.name);
+    }
+    const set = new Set<string>();
+    cities.forEach((c: any) => {
+      if (c.city) {
+        set.add(c.city);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [cities]);
+
+  const filteredCities = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return uniqueCities;
+    return uniqueCities.filter(c => c.toLowerCase().includes(q));
+  }, [uniqueCities, search]);
+
+  const currentAreas = React.useMemo(() => {
+    if (cities.length === 0) {
+      return AREAS_MOCK[tempCity] || AREAS_MOCK['Mumbai'] || [];
+    }
+    const areas = cities
+      .filter((c: any) => c.city.toLowerCase() === tempCity.toLowerCase() && c.area)
+      .map((c: any) => c.area);
+    return Array.from(new Set(areas)).sort((a, b) => a.localeCompare(b));
+  }, [cities, tempCity]);
+
+  const filteredAreas = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const base = ['Entire City', ...currentAreas];
+    if (!q) return base;
+    return base.filter(a => a.toLowerCase().includes(q));
+  }, [currentAreas, search]);
+
   const handleCitySelect = (city: string) => {
     setTempCity(city);
     setActiveStep('area');
+    setSearch(''); // Clear search query for area search
   };
 
   const handleAreaSelect = (area: string) => {
-    // Navigate back first, then dispatch after transition completes
-    // This prevents the simultaneous Redux state update + navigation animation
-    // that causes a visual double-render flicker on HomeScreen
     navigation.goBack();
     InteractionManager.runAfterInteractions(() => {
       dispatch(setSelectedLocation({ city: tempCity, area: area }));
     });
   };
-
-  const currentAreas = AREAS_MOCK[tempCity] || AREAS_MOCK['Mumbai'];
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]}>
@@ -91,19 +131,7 @@ const LocationScreen = () => {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {/* Use Current Location Button */}
-          <Pressable style={[styles.currentLocation, { backgroundColor: colors.primary + '10' }]}>
-            <View style={[styles.gpsCircle, { backgroundColor: colors.primary }]}>
-              <Icon name="navigation" size={16} color="#FFF" />
-            </View>
-            <View style={styles.gpsText}>
-              <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: 'bold' }]}>
-                Use Current Location
-              </Text>
-              <Text style={[typography.tiny, { color: colors.textSecondary }]}>
-                Using GPS to find your location
-              </Text>
-            </View>
-          </Pressable>
+       
 
           {/* New Selection Bar below Current Location */}
           <View style={[styles.selectionBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -143,24 +171,25 @@ const LocationScreen = () => {
           {activeStep === 'city' ? (
             <View style={styles.section}>
               <Text style={[typography.labelMedium, { color: colors.textSecondary, marginBottom: 16 }]}>
-                POPULAR CITIES
+                {search.trim().length === 0 ? 'ALL CITIES' : 'SEARCH RESULTS'}
               </Text>
-              <View style={styles.citiesGrid}>
-                {POPULAR_CITIES.map((city) => (
+              <View style={styles.areasList}>
+                {filteredCities.map((city, index) => (
                   <Pressable
-                    key={city.id}
-                    onPress={() => handleCitySelect(city.name)}
-                    style={[
-                      styles.cityChip,
-                      { backgroundColor: colors.surface, borderColor: colors.border }
-                    ]}
+                    key={index}
+                    onPress={() => handleCitySelect(city)}
+                    style={[styles.areaItem, { borderBottomColor: colors.border }]}
                   >
-                    <Text style={[typography.labelMedium, { color: tempCity === city.name ? colors.primary : colors.textPrimary }]}>
-                      {city.name}
-                    </Text>
-                    <Text style={[typography.tiny, { color: colors.textSecondary }]}>{city.sub}</Text>
+                    <Icon name="map-pin" size={16} color={colors.textPlaceholder} />
+                    <Text style={[typography.body, { color: colors.textPrimary, marginLeft: 12 }]}>{city}</Text>
+                    <Icon name="chevron-right" size={16} color={colors.textPlaceholder} style={{ marginLeft: 'auto' }} />
                   </Pressable>
                 ))}
+                {filteredCities.length === 0 && (
+                  <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                    <Text style={[typography.body, { color: colors.textSecondary }]}>No cities found</Text>
+                  </View>
+                )}
               </View>
             </View>
           ) : (
@@ -169,7 +198,7 @@ const LocationScreen = () => {
                 AREAS IN {tempCity.toUpperCase()}
               </Text>
               <View style={styles.areasList}>
-                {currentAreas.map((area, index) => (
+                {filteredAreas.map((area, index) => (
                   <Pressable
                     key={index}
                     onPress={() => handleAreaSelect(area)}
@@ -180,6 +209,11 @@ const LocationScreen = () => {
                     <Icon name="chevron-right" size={16} color={colors.textPlaceholder} style={{ marginLeft: 'auto' }} />
                   </Pressable>
                 ))}
+                {filteredAreas.length === 0 && (
+                  <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                    <Text style={[typography.body, { color: colors.textSecondary }]}>No areas found</Text>
+                  </View>
+                )}
               </View>
             </View>
           )}

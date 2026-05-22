@@ -121,7 +121,7 @@ const AllJobsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
-  const { searchResults, filteredJobs, loading } = useSelector((state: RootState) => state.jobs);
+  const { searchResults, filteredJobs, nearby, loading } = useSelector((state: RootState) => state.jobs);
   const [search, setSearch] = useState('');
   const [isFiltered, setIsFiltered] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
@@ -129,11 +129,25 @@ const AllJobsScreen = () => {
 
   useEffect(() => {
     // Handle incoming filters from navigation
-    if (route.params?.filters) {
-      dispatch(filterJobs(route.params?.filters));
-      setIsFiltered(true);
+    if (route.params?.quickFilterId || route.params?.filters) {
+      const qfId = route.params.quickFilterId;
+      if (qfId === 'high_paying') {
+        setSelectedQuickFilter('High Salary');
+      } else if (qfId === 'wfh') {
+        setSelectedQuickFilter('Work from Home');
+      } else if (qfId === 'nearby') {
+        setActiveTab('Nearest');
+        setSelectedQuickFilter(null);
+      } else if (qfId === 'all_jobs') {
+        setSelectedQuickFilter(null);
+        setActiveTab('All');
+        setIsFiltered(false);
+      } else if (route.params?.filters) {
+        dispatch(filterJobs(route.params.filters));
+        setIsFiltered(true);
+      }
       // Clear params after applying so it doesn't re-apply on every render
-      navigation.setParams({ filters: undefined });
+      navigation.setParams({ filters: undefined, quickFilterId: undefined });
       return;
     }
 
@@ -143,17 +157,33 @@ const AllJobsScreen = () => {
       const params: any = { per_page: 20 };
       if (activeTab === 'Nearest') params.section = 'nearby';
 
-      // Format quick filter for API (snake_case)
-      const quickFilterValue = selectedQuickFilter ? selectedQuickFilter.toLowerCase().replace(/\s+/g, '_') : null;
+      // Format quick filter for API
+      let quickFilterParams: any = {};
+      if (selectedQuickFilter) {
+        if (selectedQuickFilter === 'High Salary') {
+          quickFilterParams = { salary_min: 600000 };
+        } else if (selectedQuickFilter === 'Work from Home') {
+          quickFilterParams = { job_type: 'remote' };
+        } else if (selectedQuickFilter === 'Immediate') {
+          quickFilterParams = { freshness: 'today' };
+        } else {
+          quickFilterParams = { job_type: selectedQuickFilter.toLowerCase().replace(/\s+/g, '_') };
+        }
+      }
 
-      if (search) {
+      const hasQuickFilter = selectedQuickFilter !== null;
+
+      if (search && hasQuickFilter) {
+        setIsFiltered(true);
+        dispatch(filterJobs({ ...params, q: search, ...quickFilterParams }));
+      } else if (search) {
         setIsFiltered(false);
         dispatch(searchJobs(search));
-      } else if (quickFilterValue) {
+      } else if (hasQuickFilter) {
         setIsFiltered(true);
-        dispatch(filterJobs({ ...params, job_type: quickFilterValue }));
+        dispatch(filterJobs({ ...params, ...quickFilterParams }));
       } else if (isFiltered) {
-        // If we were filtered but cleared quick filter, and no side filters active
+        // If we were filtered but cleared quick filter/search, and no side filters active
         setIsFiltered(false);
         dispatch(fetchJobs(params));
       } else {
@@ -161,9 +191,9 @@ const AllJobsScreen = () => {
       }
     }, isInitial ? 0 : 500);
     return () => clearTimeout(timer);
-  }, [dispatch, search, activeTab, selectedQuickFilter]);
+  }, [dispatch, search, activeTab, selectedQuickFilter, route.params]);
 
-  const jobsToShow = isFiltered ? filteredJobs : searchResults;
+  const jobsToShow = isFiltered ? filteredJobs : (activeTab === 'Nearest' ? nearby : searchResults);
 
   const renderJobItem = ({ item }: { item: any }) => {
     const companyName = item.employer?.company?.company_name || item.company_name || item.company || 'Hiring Company';

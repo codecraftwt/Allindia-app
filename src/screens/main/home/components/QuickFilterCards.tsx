@@ -101,11 +101,11 @@ export const QuickFilterCards = React.memo(({ colors }: { colors: any }) => {
             filters: { section: 'nearby' }
         },
         {
-            id: 'wfh',
-            title: 'Work From Home',
-            icon: 'home',
+            id: 'all_jobs',
+            title: 'All Jobs',
+            icon: 'briefcase',
             color: '#f59e0b', // Amber
-            filters: { job_type: 'remote' }
+            filters: {}
         }
     ];
 

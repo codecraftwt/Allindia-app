@@ -527,7 +527,8 @@ const MemoizedHomeContent = React.memo(({
   openJob,
   goSearch,
   tagRotationStyle,
-  navigation
+  navigation,
+  homeMedia
 }: any) => {
   return (
     <Animated.ScrollView
@@ -552,7 +553,7 @@ const MemoizedHomeContent = React.memo(({
         <HomeSkeleton />
       ) : (
         <>
-          <HeroBanner colors={colors} onPress={goSearch} />
+          <HeroBanner media={homeMedia} colors={colors} onPress={goSearch} />
           <QuickFilterCards colors={colors} />
           <HomeCategoriesSection
             categories={categories}
@@ -876,7 +877,7 @@ const HomeScreen: React.FC = () => {
     if (!hasFeedData) {
       dispatch(fetchHomeFeed());
     }
-    dispatch(fetchAdminMedia({ media_section: 'home page', limit: 10 }));
+    dispatch(fetchAdminMedia({ media_section: 'home page', limit: 20 }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -977,6 +978,7 @@ const HomeScreen: React.FC = () => {
         goSearch={goSearch}
         tagRotationStyle={tagRotationStyle}
         navigation={navigation}
+        homeMedia={homeMedia}
       />
 
       {user && (

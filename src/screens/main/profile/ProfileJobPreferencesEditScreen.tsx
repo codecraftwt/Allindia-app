@@ -77,7 +77,7 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
   const rotation = useSharedValue(0);
 
   const hasSelection = useMemo(() =>
-    category.subcategories.some((sub: any) => selectedIds.includes(sub.id)),
+    category.subcategories.some((sub: any) => selectedIds.map(Number).includes(Number(sub.id))),
     [category.subcategories, selectedIds]
   );
 
@@ -125,7 +125,7 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
       {isExpanded && (
         <View style={styles.subCatGrid}>
           {category.subcategories.map((sub: any) => {
-            const active = selectedIds.includes(sub.id);
+            const active = selectedIds.map(Number).includes(Number(sub.id));
             return (
               <TouchableOpacity
                 key={sub.id}
@@ -470,9 +470,11 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     const metaReady = cities.length > 0 && categories.length > 0;
     if (profile?.preferences && metaReady && !isInitialized.current) {
       const pref = profile.preferences;
-      setCurrentCityId(pref.current_city_id || null);
-      setPreferredCityIds(pref.preferred_city_ids || []);
-      const catIds = pref.job_category_id ? [pref.job_category_id] : (pref.job_category_ids || []);
+      setCurrentCityId(pref.current_city_id ? Number(pref.current_city_id) : null);
+      setPreferredCityIds((pref.preferred_city_ids || []).map(Number));
+      const catIds = (pref.job_category_ids && pref.job_category_ids.length > 0)
+        ? pref.job_category_ids.map(Number)
+        : (pref.job_category_id ? [Number(pref.job_category_id)] : []);
       setJobCategoryIds(catIds);
       setMinSalary(Math.round((pref.expected_salary_min || 200000) / 100000));
       setMaxSalary(Math.round((pref.expected_salary_max || 500000) / 100000));
@@ -486,29 +488,62 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   }, [dispatch, profile, profileLoading, cities, categories]);
 
   // Filter Categories
-  const filteredCategories = useMemo(() =>
-    categories.filter((cat: any) =>
+  // Filter and Sort Categories (selected first)
+  const filteredCategories = useMemo(() => {
+    const filtered = categories.filter((cat: any) =>
       cat.name.toLowerCase().includes(catSearch.toLowerCase()) ||
       cat.subcategories.some((sub: any) => sub.name.toLowerCase().includes(catSearch.toLowerCase()))
-    ),
-    [categories, catSearch]
-  );
+    );
 
-  const currentCityLabel = cities.find((c: any) => c.id === currentCityId)?.label;
+    // Sort so categories with selected subcategories come first
+    return [...filtered].sort((a, b) => {
+      const aHas = a.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      const bHas = b.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      return 0;
+    });
+  }, [categories, catSearch, jobCategoryIds]);
+
+  // Selected subcategories list
+  const selectedSubcategories = useMemo(() => {
+    const list: { id: number; name: string }[] = [];
+    categories.forEach((cat: any) => {
+      cat.subcategories.forEach((sub: any) => {
+        if (jobCategoryIds.map(Number).includes(Number(sub.id))) {
+          list.push({ id: Number(sub.id), name: sub.name });
+        }
+      });
+    });
+    return list;
+  }, [categories, jobCategoryIds]);
+
+  const currentCityLabel = cities.find((c: any) => Number(c.id) === Number(currentCityId))?.label;
 
   const handleSave = async () => {
     setSaving(true);
+    let finalLanguage = preferredLanguage;
+    const val = langInput.trim();
+    if (val) {
+      let current = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()) : [];
+      if (!current.map(s => s.toLowerCase()).includes(val.toLowerCase())) {
+        current.push(val);
+        finalLanguage = current.join(', ');
+      }
+    }
+
     const validCityIds = cities.map(c => Number(c.id));
     const payload = {
       current_city_id: currentCityId ? Number(currentCityId) : null,
       preferred_city_ids: preferredCityIds
         .map(id => Number(id))
-        .filter(id => validCityIds.includes(id) && id !== Number(currentCityId)),
+        .filter(id => validCityIds.includes(id)),
       job_category_id: jobCategoryIds[0] ? Number(jobCategoryIds[0]) : null,
+      job_category_ids: jobCategoryIds.map(Number),
       expected_salary_min: Number(minSalary) * 100000,
       expected_salary_max: Number(maxSalary) * 100000,
       work_from_home: workFromHome,
-      preferred_language: preferredLanguage ? preferredLanguage.trim() : null,
+      preferred_language: finalLanguage ? finalLanguage.trim() : null,
     };
     console.log('Saving Job Preferences Payload:', JSON.stringify(payload, null, 2));
     try {
@@ -545,6 +580,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       { id: 'search_bar', type: 'search_bar' }
     );
 
+
     const limit = 6;
     const shouldTruncate = !showAllCats && catSearch.length === 0 && filteredCategories.length > limit;
     const displayCats = shouldTruncate ? filteredCategories.slice(0, limit) : filteredCategories;
@@ -554,7 +590,9 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     });
 
     if (shouldTruncate) {
-      list.push({ id: 'view_more', type: 'view_more' });
+      list.push({ id: 'view_more_less', type: 'view_more_less', action: 'more' });
+    } else if (showAllCats && catSearch.length === 0 && filteredCategories.length > limit) {
+      list.push({ id: 'view_more_less', type: 'view_more_less', action: 'less' });
     }
 
     list.push(
@@ -567,7 +605,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       list.push({ id: 'button', type: 'button' });
     }
     return list;
-  }, [filteredCategories, metaLoading, profileLoading, showAllCats, catSearch, isInitialLoading, currentCityId, preferredCityIds]);
+  }, [filteredCategories, metaLoading, profileLoading, showAllCats, catSearch, isInitialLoading, currentCityId, preferredCityIds, selectedSubcategories]);
 
   const renderFlatItem = useCallback(({ item }: { item: any }) => {
     switch (item.type) {
@@ -613,6 +651,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         );
       case 'search_bar':
         return <CategorySearchField value={catSearch} onChange={setCatSearch} colors={colors} />;
+
       case 'section':
         let content = null;
         if (item.id === 'salary') content = (
@@ -644,8 +683,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         );
         if (item.id === 'language') content = (
           <View style={{ gap: spacing.sm }}>
-            <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Icon name="type" size={16} color={colors.primary} />
+            <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingRight: 8 }]}>
+              <Icon name="type" size={16} color={colors.primary} style={{ marginLeft: 8 }} />
               <TextInput
                 placeholder="Type your language..."
                 placeholderTextColor={colors.textPlaceholder}
@@ -664,6 +703,24 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 }}
                 style={[typography.body, { color: colors.textPrimary, flex: 1, paddingVertical: 8, marginLeft: 8 }]}
               />
+              {langInput.trim().length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const val = langInput.trim();
+                    if (val) {
+                      let current = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()) : [];
+                      if (!current.map(s => s.toLowerCase()).includes(val.toLowerCase())) {
+                        current.push(val);
+                        setPreferredLanguage(current.join(', '));
+                      }
+                      setLangInput('');
+                    }
+                  }}
+                  style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primary, borderRadius: radius.sm }}
+                >
+                  <Text style={[typography.small, { color: '#FFF', fontWeight: 'bold' }]}>Add</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Selected Languages as Removable Chips */}
@@ -720,18 +777,23 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               onToggle={(id: string) => setExpandedCatId(prev => (prev === id ? null : id))}
               onSelectSub={(subId: number) => {
                 setJobCategoryIds(prev =>
-                  prev.includes(subId) ? prev.filter(id => id !== subId) : [...prev, subId]
+                  prev.map(Number).includes(Number(subId))
+                    ? prev.map(Number).filter(id => id !== Number(subId))
+                    : [...prev.map(Number), Number(subId)]
                 );
               }}
               colors={colors}
             />
           </View>
         );
-      case 'view_more':
+      case 'view_more_less':
+        const isLess = item.action === 'less';
         return (
-          <TouchableOpacity onPress={() => setShowAllCats(true)} style={styles.viewMoreBtn}>
-            <Text style={[typography.labelMedium, { color: colors.primary }]}>View More Categories</Text>
-            <Icon name="chevron-down" size={16} color={colors.primary} />
+          <TouchableOpacity onPress={() => setShowAllCats(!isLess)} style={styles.viewMoreBtn}>
+            <Text style={[typography.labelMedium, { color: colors.primary }]}>
+              {isLess ? 'View Less Categories' : 'View More Categories'}
+            </Text>
+            <Icon name={isLess ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} />
           </TouchableOpacity>
         );
       case 'skeleton':
@@ -790,14 +852,14 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => {
-                    setCurrentCityId(item.id);
+                    setCurrentCityId(Number(item.id));
                     setShowCityModal(false);
                   }}
                   style={[
                     styles.cityRow,
                     {
                       backgroundColor:
-                        currentCityId === item.id ? colors.surfaceHighlight : 'transparent',
+                        Number(currentCityId) === Number(item.id) ? colors.surfaceHighlight : 'transparent',
                     },
                   ]}>
                   <Text style={[typography.body, { color: colors.textPrimary }]}>{item.label}</Text>
@@ -843,12 +905,14 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
               renderItem={({ item }) => {
-                const selected = preferredCityIds.includes(item.id);
+                const selected = preferredCityIds.map(Number).includes(Number(item.id));
                 return (
                   <Pressable
                     onPress={() => {
                       setPreferredCityIds(prev =>
-                        selected ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                        selected
+                          ? prev.map(Number).filter(id => id !== Number(item.id))
+                          : [...prev.map(Number), Number(item.id)]
                       );
                     }}
                     style={[
@@ -931,6 +995,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     marginBottom: 4,
+    height: 50,
   },
   selectedLangChip: {
     flexDirection: 'row',
@@ -1000,6 +1065,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     gap: 8,
+    height: 50,
   },
   viewMoreBtn: {
     flexDirection: 'row',

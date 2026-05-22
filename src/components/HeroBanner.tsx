@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Video from 'react-native-video';
 import { typography } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
@@ -66,20 +67,61 @@ const HERO_SLIDES: SlideData[] = [
   },
 ];
 
+const BannerVideo = ({ uri, paused, onEnd }: { uri: string; paused: boolean; onEnd: () => void }) => {
+  const videoRef = useRef<any>(null);
+  const prevPaused = useRef(paused);
+
+  useEffect(() => {
+    if (prevPaused.current && !paused) {
+      videoRef.current?.seek(0);
+    }
+    prevPaused.current = paused;
+  }, [paused]);
+
+  return (
+    <Video
+      ref={videoRef}
+      source={{ uri }}
+      style={{ width: '100%', height: '100%' }}
+      resizeMode="cover"
+      muted={true}
+      repeat={false}
+      paused={paused}
+      onEnd={onEnd}
+      playInBackground={false}
+      playWhenInactive={false}
+      disableFocus={true}
+    />
+  );
+};
+
 interface HeroBannerProps {
   colors: ThemeColors;
   onPress: () => void;
+  media?: any[];
 }
 
-const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress }) => {
+const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
 
+  const slides = media && media.length > 0 ? media : HERO_SLIDES;
+  const isApiMedia = media && media.length > 0;
+
+  const handleVideoEnd = () => {
+    const nextIndex = (activeIndex + 1) % slides.length;
+    flatListRef.current?.scrollToIndex({
+      index: nextIndex,
+      animated: true,
+    });
+    setActiveIndex(nextIndex);
+  };
+
   const startAutoScroll = () => {
     stopAutoScroll();
     autoScrollTimer.current = setInterval(() => {
-      const nextIndex = (activeIndex + 1) % HERO_SLIDES.length;
+      const nextIndex = (activeIndex + 1) % slides.length;
       flatListRef.current?.scrollToIndex({
         index: nextIndex,
         animated: true,
@@ -95,9 +137,16 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress }) => {
   };
 
   useEffect(() => {
-    startAutoScroll();
+    const currentSlide = slides[activeIndex];
+    const isCurrentSlideVideo = currentSlide && currentSlide.media_type === 'video';
+
+    if (isCurrentSlideVideo) {
+      stopAutoScroll();
+    } else {
+      startAutoScroll();
+    }
     return () => stopAutoScroll();
-  }, [activeIndex]);
+  }, [activeIndex, slides.length]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollOffset = event.nativeEvent.contentOffset.x;
@@ -107,83 +156,120 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress }) => {
     }
   };
 
-  const renderItem = ({ item }: { item: SlideData }) => (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.slide,
-        {
-          width: CAROUSEL_WIDTH,
-          backgroundColor: colors.primary,
-        },
-      ]}>
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-        <View
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    if (isApiMedia) {
+      const isVideo = item.media_type === 'video';
+      return (
+        <Pressable
+          onPress={onPress}
           style={[
-            styles.heroBlob,
-            { backgroundColor: colors.onPrimary, opacity: 0.12, top: -24, right: -32 },
-          ]}
-        />
-        <View
-          style={[
-            styles.heroBlob,
-            { backgroundColor: colors.onPrimary, opacity: 0.08, bottom: -28, left: -16 },
-          ]}
-        />
-      </View>
-      <View style={styles.heroInner}>
-        <View style={styles.heroCopy}>
-          <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 18, lineHeight: 24 }]} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text
-            style={[
-              typography.small,
-              {
-                color: colors.onPrimary,
-                opacity: 0.92,
-                marginTop: 6,
-                lineHeight: 16,
-              },
-            ]}
-            numberOfLines={2}>
-            {item.subtitle}
-          </Text>
+            styles.slide,
+            {
+              width: CAROUSEL_WIDTH,
+              height: 120,
+              padding: 0,
+              backgroundColor: colors.surfaceHighlight,
+              borderRadius: radius.md,
+              justifyContent: 'center',
+              alignItems: 'center',
+              overflow: 'hidden',
+            },
+          ]}>
+          {isVideo ? (
+            <BannerVideo
+              uri={item.media_url}
+              paused={activeIndex !== index}
+              onEnd={handleVideoEnd}
+            />
+          ) : (
+            <Image
+              source={{ uri: item.media_url }}
+              style={{ width: '100%', height: '100%', borderRadius: radius.md }}
+              resizeMode="cover"
+            />
+          )}
+        </Pressable>
+      );
+    }
+
+    return (
+      <Pressable
+        onPress={onPress}
+        style={[
+          styles.slide,
+          {
+            width: CAROUSEL_WIDTH,
+            backgroundColor: colors.primary,
+          },
+        ]}>
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <View
             style={[
-              styles.heroCta,
-              {
-                backgroundColor: colors.onPrimary,
-                marginTop: spacing.md,
-              },
-            ]}>
-            <Text style={[typography.labelMedium, { color: colors.primary }]}>{item.cta}</Text>
-          </View>
-        </View>
-        <View style={styles.heroVisual}>
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: colors.onPrimary,
-                opacity: 0.2,
-                borderRadius: radius.sm,
-              },
+              styles.heroBlob,
+              { backgroundColor: colors.onPrimary, opacity: 0.12, top: -24, right: -32 },
             ]}
           />
-          <Image source={{ uri: item.image }} style={styles.bannerImage} />
+          <View
+            style={[
+              styles.heroBlob,
+              { backgroundColor: colors.onPrimary, opacity: 0.08, bottom: -28, left: -16 },
+            ]}
+          />
         </View>
-      </View>
-    </Pressable>
-  );
+        <View style={styles.heroInner}>
+          <View style={styles.heroCopy}>
+            <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 18, lineHeight: 24 }]} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text
+              style={[
+                typography.small,
+                {
+                  color: colors.onPrimary,
+                  opacity: 0.92,
+                  marginTop: 6,
+                  lineHeight: 16,
+                },
+              ]}
+              numberOfLines={2}>
+              {item.subtitle}
+            </Text>
+            <View
+              style={[
+                styles.heroCta,
+                {
+                  backgroundColor: colors.onPrimary,
+                  marginTop: spacing.md,
+                },
+              ]}>
+              <Text style={[typography.labelMedium, { color: colors.primary }]}>{item.cta}</Text>
+            </View>
+          </View>
+          <View style={styles.heroVisual}>
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: colors.onPrimary,
+                  opacity: 0.2,
+                  borderRadius: radius.sm,
+                },
+              ]}
+            />
+            <Image source={{ uri: item.image }} style={styles.bannerImage} />
+          </View>
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <View style={[styles.container, { shadowColor: colors.primaryDark }]}>
       <FlatList
         ref={flatListRef}
-        data={HERO_SLIDES}
+        data={slides}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => (item.id || item.created_at).toString()}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -191,17 +277,27 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress }) => {
         onScrollBeginDrag={stopAutoScroll}
         onScrollEndDrag={startAutoScroll}
         scrollEventThrottle={16}
+        getItemLayout={(_, index) => ({
+          length: CAROUSEL_WIDTH,
+          offset: CAROUSEL_WIDTH * index,
+          index,
+        })}
       />
       <View style={styles.pagination}>
-        {HERO_SLIDES.map((_, index) => (
+        {slides.map((_, index) => (
           <View
             key={index}
             style={[
               styles.dot,
               {
-                backgroundColor: colors.onPrimary,
+                backgroundColor: isApiMedia ? '#ffffff' : colors.onPrimary,
                 opacity: activeIndex === index ? 1 : 0.4,
                 width: activeIndex === index ? 16 : 6,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 1,
+                elevation: 1,
               },
             ]}
           />

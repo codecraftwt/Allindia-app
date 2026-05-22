@@ -318,7 +318,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   const handleReferApp = async () => {
     try {
       await Share.share({
-        message: "Job India App: Find the best jobs matching your profile! Get daily new jobs, personalized recommendations. Download the app now: https://play.google.com/store/apps/details?id=com.jobindia",
+        message: "Job India App: Find the best jobs matching your profile! Get daily new jobs, personalized recommendations. Download the app now: https://play.google.com/store/apps/details?id=com.jobsindia",
         title: "Job India App",
       });
     } catch (error: any) {

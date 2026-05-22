@@ -48,6 +48,48 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [browsingCategory, setBrowsingCategory] = useState<any | null>(null);
+  const [browsingCity, setBrowsingCity] = useState<any | null>(null);
+
+  const uniqueCitiesWithAreas = React.useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    cities.forEach((item: any) => {
+      const name = item.city;
+      if (name) {
+        if (!groups[name]) {
+          groups[name] = [];
+        }
+        groups[name].push(item);
+      }
+    });
+
+    return Object.keys(groups).map(cityName => {
+      const items = groups[cityName];
+      const areas = items.filter((i: any) => i.area !== null);
+      const hasAreas = areas.length > 0;
+      
+      if (hasAreas) {
+        return {
+          id: `city-group-${cityName}`,
+          name: cityName,
+          city: cityName,
+          state: items[0].state,
+          label: cityName,
+          hasAreas: true,
+          areas: items,
+        };
+      } else {
+        return {
+          ...items[0],
+          name: cityName,
+          hasAreas: false,
+        };
+      }
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [cities]);
+
+  const minVal = selectedFilters.manualSalary.min ? parseInt(selectedFilters.manualSalary.min, 10) : NaN;
+  const maxVal = selectedFilters.manualSalary.max ? parseInt(selectedFilters.manualSalary.max, 10) : NaN;
+  const isSalaryInvalid = !isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal;
 
   // Drawer horizontal animation
   const drawerAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
@@ -145,6 +187,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     setSelectedSection(id);
     setSearchQuery('');
     setBrowsingCategory(null);
+    setBrowsingCity(null);
   };
 
   const toggleOption = (category: string, option: any, isSelectionOnly: boolean = false) => {
@@ -225,15 +268,52 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
         }
       }
     } else if (category === 'city') {
-      const current = selectedFilters.cities || [];
-      const isSelected = current.some((c: any) => c.id === option.id);
-      const updated = isSelected
-        ? current.filter((c: any) => c.id !== option.id)
-        : [...current, option];
-      setSelectedFilters({
-        ...selectedFilters,
-        cities: updated
-      });
+      if (browsingCity) {
+        if (option.isSelectAll) {
+          toggleSelectAllAreas();
+          return;
+        }
+        const current = selectedFilters.cities || [];
+        const isSelected = current.some((c: any) => c.id === option.id);
+        const updated = isSelected
+          ? current.filter((c: any) => c.id !== option.id)
+          : [...current, option];
+        setSelectedFilters({
+          ...selectedFilters,
+          cities: updated
+        });
+      } else {
+        if (option.hasAreas) {
+          if (isSelectionOnly) {
+            // Toggle all areas of this city
+            const current = selectedFilters.cities || [];
+            const allSelected = option.areas.every((a: any) => current.some((c: any) => c.id === a.id));
+            let updated;
+            if (allSelected) {
+              updated = current.filter((c: any) => !option.areas.some((a: any) => a.id === c.id));
+            } else {
+              const toAdd = option.areas.filter((a: any) => !current.some((c: any) => c.id === a.id));
+              updated = [...current, ...toAdd];
+            }
+            setSelectedFilters({
+              ...selectedFilters,
+              cities: updated
+            });
+          } else {
+            setBrowsingCity(option);
+          }
+        } else {
+          const current = selectedFilters.cities || [];
+          const isSelected = current.some((c: any) => c.id === option.id);
+          const updated = isSelected
+            ? current.filter((c: any) => c.id !== option.id)
+            : [...current, option];
+          setSelectedFilters({
+            ...selectedFilters,
+            cities: updated
+          });
+        }
+      }
     } else {
       setSelectedFilters({
         ...selectedFilters,
@@ -253,6 +333,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
       manualSalary: { min: '', max: '' },
     });
     setBrowsingCategory(null);
+    setBrowsingCity(null);
     setSearchQuery('');
   };
 
@@ -301,7 +382,38 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     }
   };
 
+  const isAllAreasSelected = browsingCity?.areas &&
+    browsingCity.areas.length > 0 &&
+    browsingCity.areas.every((area: any) =>
+      (selectedFilters.cities || []).some((c: any) => c.id == area.id)
+    );
+
+  const toggleSelectAllAreas = () => {
+    if (!browsingCity) return;
+    const areas = browsingCity.areas || [];
+    const currentCities = selectedFilters.cities || [];
+    
+    if (isAllAreasSelected) {
+      const updatedCities = currentCities.filter((c: any) => !areas.some((a: any) => a.id == c.id));
+      setSelectedFilters({
+        ...selectedFilters,
+        cities: updatedCities
+      });
+    } else {
+      const otherCities = currentCities.filter((c: any) => !areas.some((a: any) => a.id == c.id));
+      const updatedCities = [...otherCities, ...areas];
+      setSelectedFilters({
+        ...selectedFilters,
+        cities: updatedCities
+      });
+    }
+  };
+
   const handleApply = () => {
+    if (isSalaryInvalid) {
+      setSelectedSection('salary');
+      return;
+    }
     const filters: any = {};
     if (selectedFilters.categories && selectedFilters.categories.length > 0) {
       filters.category_id = selectedFilters.categories.map((c: any) => c.id).join(',');
@@ -352,7 +464,15 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
           ];
         }
         return categories;
-      case 'city': return cities;
+      case 'city':
+        if (browsingCity) {
+          const areas = browsingCity.areas || [];
+          return [
+            { id: 'select-all-city', area: 'Select All', isSelectAll: true, parent_id: browsingCity.id },
+            ...areas
+          ];
+        }
+        return uniqueCitiesWithAreas;
       case 'salary': return SALARY_OPTIONS;
       case 'freshness': return FRESHNESS_OPTIONS;
       default: return [];
@@ -361,10 +481,14 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
 
   const getFilteredOptions = () => {
     const options = getOptions() || [];
-    if (!searchQuery.trim()) return options;
     const q = searchQuery.toLowerCase();
     return options.filter((opt: any) => {
-      const label = typeof opt === 'string' ? opt : (opt.city || opt.name || opt.label || '');
+      const label = typeof opt === 'string'
+        ? opt
+        : (effectiveSection === 'city' && browsingCity
+          ? opt.area
+          : (opt.city || opt.name || opt.label || ''));
+      if (!searchQuery.trim()) return true;
       return label.toLowerCase().includes(q);
     });
   };
@@ -449,6 +573,16 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                 </Text>
                 <View style={{ width: 36 }} />
               </View>
+            ) : effectiveSection === 'city' && browsingCity ? (
+              <View style={[styles.browsingHeader, { backgroundColor: colors.surfaceHighlight, borderBottomColor: colors.border }]}>
+                <Pressable onPress={() => setBrowsingCity(null)} style={styles.browsingBackBtn}>
+                  <Icon name="arrow-left" size={14} color={colors.primary} />
+                </Pressable>
+                <Text style={[styles.browsingTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {browsingCity.name}
+                </Text>
+                <View style={{ width: 36 }} />
+              </View>
             ) : (effectiveSection === 'category' || effectiveSection === 'city') ? (
               <View style={[styles.searchBox, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                 <Icon name="search" size={12} color={colors.textPlaceholder} />
@@ -472,37 +606,50 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.optionsScroll}>
                 {effectiveSection === 'salary' && (
-                  <View style={styles.manualSalaryRow}>
-                    <View style={styles.manualInputBox}>
-                      <Text style={styles.manualLabel}>Min</Text>
-                      <TextInput
-                        style={[styles.manualInput, { color: colors.textPrimary, borderColor: colors.border }]}
-                        placeholder="Min"
-                        placeholderTextColor={colors.textPlaceholder}
-                        keyboardType="numeric"
-                        value={selectedFilters.manualSalary.min}
-                        onChangeText={(val) => setSelectedFilters({
-                          ...selectedFilters,
-                          salary: null,
-                          manualSalary: { ...selectedFilters.manualSalary, min: val }
-                        })}
-                      />
+                  <View style={{ marginBottom: 16 }}>
+                    <View style={[styles.manualSalaryRow, { marginBottom: 0 }]}>
+                      <View style={styles.manualInputBox}>
+                        <Text style={styles.manualLabel}>Min</Text>
+                        <TextInput
+                          style={[
+                            styles.manualInput,
+                            { color: colors.textPrimary, borderColor: isSalaryInvalid ? colors.error : colors.border }
+                          ]}
+                          placeholder="Min"
+                          placeholderTextColor={colors.textPlaceholder}
+                          keyboardType="numeric"
+                          value={selectedFilters.manualSalary.min}
+                          onChangeText={(val) => setSelectedFilters({
+                            ...selectedFilters,
+                            salary: null,
+                            manualSalary: { ...selectedFilters.manualSalary, min: val }
+                          })}
+                        />
+                      </View>
+                      <View style={styles.manualInputBox}>
+                        <Text style={styles.manualLabel}>Max</Text>
+                        <TextInput
+                          style={[
+                            styles.manualInput,
+                            { color: colors.textPrimary, borderColor: isSalaryInvalid ? colors.error : colors.border }
+                          ]}
+                          placeholder="Max"
+                          placeholderTextColor={colors.textPlaceholder}
+                          keyboardType="numeric"
+                          value={selectedFilters.manualSalary.max}
+                          onChangeText={(val) => setSelectedFilters({
+                            ...selectedFilters,
+                            salary: null,
+                            manualSalary: { ...selectedFilters.manualSalary, max: val }
+                          })}
+                        />
+                      </View>
                     </View>
-                    <View style={styles.manualInputBox}>
-                      <Text style={styles.manualLabel}>Max</Text>
-                      <TextInput
-                        style={[styles.manualInput, { color: colors.textPrimary, borderColor: colors.border }]}
-                        placeholder="Max"
-                        placeholderTextColor={colors.textPlaceholder}
-                        keyboardType="numeric"
-                        value={selectedFilters.manualSalary.max}
-                        onChangeText={(val) => setSelectedFilters({
-                          ...selectedFilters,
-                          salary: null,
-                          manualSalary: { ...selectedFilters.manualSalary, max: val }
-                        })}
-                      />
-                    </View>
+                    {isSalaryInvalid && (
+                      <Text style={{ color: colors.error, fontSize: 10, fontWeight: '600', marginLeft: 2, marginTop: 4 }}>
+                        Min salary cannot exceed max salary
+                      </Text>
+                    )}
                   </View>
                 )}
                 {getFilteredOptions().map((opt: any) => {
@@ -518,11 +665,21 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                             : (selectedFilters.subCategories || []).some((c: any) => c.id == opt.id)))
                         : (selectedFilters.categories || []).some((c: any) => c.id == opt.id))
                       : effectiveSection === 'city'
-                        ? (selectedFilters.cities || []).some((c: any) => c.id == opt.id)
+                        ? (browsingCity
+                          ? (opt.isSelectAll
+                            ? isAllAreasSelected
+                            : (selectedFilters.cities || []).some((c: any) => c.id == opt.id))
+                          : (opt.hasAreas
+                            ? opt.areas.some((a: any) => (selectedFilters.cities || []).some((c: any) => c.id == a.id))
+                            : (selectedFilters.cities || []).some((c: any) => c.id == opt.id)))
                         : ((effectiveSection === 'salary' || effectiveSection === 'freshness')
                           ? selectedFilters[effectiveSection] === opt
                           : selectedFilters[effectiveSection]?.id == opt.id));
-                  const label = typeof opt === 'string' ? opt : (opt.name || opt.city || opt.label || 'Unknown');
+                  const label = typeof opt === 'string'
+                    ? opt
+                    : (effectiveSection === 'city' && browsingCity
+                      ? opt.area
+                      : (opt.name || opt.city || opt.label || 'Unknown'));
 
                   return (
                     <View key={typeof opt === 'string' ? opt : (opt.id || label)} style={styles.optionItem}>
@@ -548,7 +705,8 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
                         style={styles.textTouch}
                       >
                         <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1 }]}>{label}</Text>
-                        {effectiveSection === 'category' && !browsingCategory && opt.subcategories?.length > 0 && (
+                        {((effectiveSection === 'category' && !browsingCategory && opt.subcategories?.length > 0) ||
+                          (effectiveSection === 'city' && !browsingCity && opt.hasAreas)) && (
                           <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
                         )}
                       </Pressable>

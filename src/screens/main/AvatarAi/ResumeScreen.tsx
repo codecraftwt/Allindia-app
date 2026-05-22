@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -35,6 +36,7 @@ const ResumeScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const profile = useSelector((state: RootState) => state.profile?.data);
+  const profileLoading = useSelector((state: RootState) => state.profile?.loading);
   const user = useSelector((state: RootState) => state.auth?.user);
 
   const [showPdfPreview, setShowPdfPreview] = useState(false);
@@ -188,7 +190,18 @@ const ResumeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={{ padding: spacing.md, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.md, paddingTop: 16 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={profileLoading || false}
+            onRefresh={() => dispatch(fetchProfile())}
+            colors={[ORANGE_COLOR]}
+            tintColor={ORANGE_COLOR}
+          />
+        }
+      >
 
         {/* Title Header */}
         <View style={{ alignItems: 'center', width: '100%' }}>
@@ -247,6 +260,7 @@ const ResumeScreen: React.FC = () => {
                       onLoadStart={() => setCardPdfLoading(true)}
                       onLoadEnd={() => setCardPdfLoading(false)}
                       onError={() => setCardPdfLoading(false)}
+                      userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.0.0 Safari/537.36"
                     />
                     {cardPdfLoading && (
                       <View style={{
@@ -479,6 +493,7 @@ const ResumeScreen: React.FC = () => {
                   setPdfLoading(false);
                   Alert.alert('Error', 'Failed to load PDF preview in-app');
                 }}
+                userAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.0.0 Safari/537.36"
               />
             ) : null}
 

@@ -50,6 +50,7 @@ export type ProfileStackParamList = {
   PrivacyPolicy: undefined;
   TermsAndConditions: undefined;
   Saved: undefined;
+  JobDetail: JobDetailParams;
 };
 
 export type MainTabParamList = {

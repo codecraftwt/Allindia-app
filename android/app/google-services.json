@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "208096749298",
+    "project_id": "jobsindia-41091",
+    "storage_bucket": "jobsindia-41091.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:208096749298:android:d2816651c9ac02f8a6126b",
+        "android_client_info": {
+          "package_name": "com.jobsindia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_0_Z5YXBogajhddWYKrHGlZBwksrBBnM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
