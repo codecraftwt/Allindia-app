@@ -38,6 +38,8 @@ export async function displayNotification(title?: string, body?: string, data?: 
  * We include 'token', 'device_token', and 'fcm_token' in the body.
  * We try both 'api/candidate/device-token' and 'api/device-token' routes in case of a 404.
  */
+
+
 export async function saveDeviceToken(fcmToken: string, userToken: string) {
   const possibleUrls = ['api/candidate/device-token', 'api/device-token'];
   
