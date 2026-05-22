@@ -3,7 +3,8 @@ import { store } from '../redux/store';
 import { logout } from '../redux/slice/authSlice';
 import { clearProfile } from '../redux/slice/profileSlice';
 
-export const BASE_URL = 'https://jobindia.ai/';
+export const BASE_URL = 'https://a82f-103-226-142-125.ngrok-free.app/';
+
 
 const api = axios.create({
   baseURL: BASE_URL,

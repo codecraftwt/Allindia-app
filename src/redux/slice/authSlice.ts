@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axiosInstance';
+import messaging from '@react-native-firebase/messaging';
 import { clearProfile, updatePersonalProfile, updateProfilePicture, deleteProfilePicture } from './profileSlice';
 
 interface AuthState {
@@ -24,7 +25,19 @@ export const loginCandidate = createAsyncThunk(
   'auth/loginCandidate',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/login', credentials);
+      let fcm_token: string | null = null;
+      try {
+        fcm_token = await messaging().getToken();
+      } catch (err) {
+        console.log("Failed to fetch FCM token for login:", err);
+      }
+
+      const response = await api.post('/api/candidate/login', {
+        email: credentials.email,
+        identifier: credentials.email,
+        password: credentials.password,
+        fcm_token: fcm_token,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Login Error:", error?.response?.data || error.message);
@@ -37,7 +50,17 @@ export const registerCandidate = createAsyncThunk(
   'auth/registerCandidate',
   async (userData: any, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register', userData);
+      let fcm_token: string | null = null;
+      try {
+        fcm_token = await messaging().getToken();
+      } catch (err) {
+        console.log("Failed to fetch FCM token for register:", err);
+      }
+
+      const response = await api.post('/api/candidate/register', {
+        ...userData,
+        fcm_token: fcm_token,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Registration Error:", error?.response?.data || error.message);

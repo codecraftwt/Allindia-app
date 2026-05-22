@@ -10,6 +10,7 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { ToastProvider } from './src/context/ToastContext';
 import { AnimatedBackground } from './src/components/AnimatedBackground';
+import { initNotifications } from './src/services/notificationService';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -48,7 +49,7 @@ const linking = {
 
 function AppNavigation() {
   const { colors, mode, isThemeLoading } = useTheme();
-  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+  const { isLoggedIn, token } = useSelector((state: RootState) => state.auth);
   const wasLoggedIn = useRef(isLoggedIn);
 
   useEffect(() => {
@@ -62,6 +63,28 @@ function AppNavigation() {
     }
     wasLoggedIn.current = isLoggedIn;
   }, [isLoggedIn]);
+
+  // Set up Firebase Push Notifications if logged in
+  useEffect(() => {
+    let unsubscribeNotifications: (() => void) | null | undefined = null;
+
+    const setupNotifications = async () => {
+      if (isLoggedIn && token) {
+        const cleanup = await initNotifications(token);
+        if (cleanup) {
+          unsubscribeNotifications = cleanup;
+        }
+      }
+    };
+
+    setupNotifications();
+
+    return () => {
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+      }
+    };
+  }, [isLoggedIn, token]);
 
   const navTheme = {
     ...DefaultTheme,
