@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, Alert, Linking, Platform, Modal, ActivityIndicator } from 'react-native';
+import { Pressable, TouchableOpacity, StyleSheet, Text, View, Alert, Linking, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { uploadResume, deleteResume } from '../../../redux/slice/profileSlice';
@@ -168,9 +168,16 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
           iconRight={<Icon name="arrow-right" size={16} color="#FFF" />}
         />
         {!(draft.resumeUri || resume?.has_resume) && (
-          <Pressable onPress={() => updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: true })} style={styles.skipBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: true });
+              navigation.goBack();
+            }}
+            style={styles.skipBtn}
+            hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
+          >
             <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Skip for now</Text>
-          </Pressable>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -214,7 +221,7 @@ const styles = StyleSheet.create({
   uploadCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   skipBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, padding: spacing.md, borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, marginBottom: spacing.lg },
   footer: { marginTop: spacing.md },
-  skipBtn: { alignSelf: 'center', paddingVertical: 16 },
+  skipBtn: { alignSelf: 'center', paddingVertical: 16, width: '100%', alignItems: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
   modalContent: { width: '100%', maxWidth: 320, borderRadius: 24, padding: spacing.xl, alignItems: 'center' },
   deleteIconWrap: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },

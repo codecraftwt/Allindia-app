@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, TouchableOpacity, StyleSheet, Text, View } from 'react-native';
 // import DocumentPicker, { isCancel, types } from 'react-native-document-picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
@@ -49,10 +49,27 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
   const skip = () => {
     clearFile();
     updateDraft({ resumeSkipped: true });
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          params: { screen: 'Profile' },
+        },
+      ],
+    });
   };
 
   const finish = () => {
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          params: { screen: 'Profile' },
+        },
+      ],
+    });
   };
 
   const canContinue = draft.resumeSkipped || Boolean(draft.resumeUri);
@@ -121,11 +138,11 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       ) : null}
 
-      <Pressable onPress={skip} style={styles.skipBtn}>
+      <TouchableOpacity onPress={skip} style={styles.skipBtn} hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}>
         <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>
           Skip for now
         </Text>
-      </Pressable>
+      </TouchableOpacity>
 
       <PrimaryButton
         title="Finish"
@@ -178,6 +195,8 @@ const styles = StyleSheet.create({
   skipBtn: {
     alignSelf: 'center',
     paddingVertical: spacing.sm,
+    width: '100%',
+    alignItems: 'center',
   },
 });
 

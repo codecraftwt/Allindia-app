@@ -151,34 +151,64 @@ const Chip = React.memo(({ label, selected, onPress, colors }: any) => (
   </TouchableOpacity>
 ));
 
-const SalarySelectionField = ({ label, value, onChange, colors }: any) => (
-  <View
-    style={[
-      styles.dropdownTrigger,
-      {
-        flex: 1,
-        backgroundColor: colors.surface,
-        borderColor: colors.border,
-      },
-    ]}>
-    <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', width: 20, textAlign: 'center' }}>₹</Text>
-    <View style={{ flex: 1 }}>
-      <Text style={[typography.tiny, { color: colors.textSecondary }]}>{label}</Text>
-      <TextInput
-        keyboardType="number-pad"
-        value={value.toString()}
-        onChangeText={(text) => {
-          const val = parseInt(text.replace(/\D/g, ''), 10) || 0;
-          onChange(Math.min(val, MAX_SALARY_LIMIT));
-        }}
-        placeholder="0"
-        placeholderTextColor={colors.textPlaceholder}
-        style={[typography.body, { color: colors.textPrimary, padding: 0, height: 24 }]}
-      />
+const SalarySelectionField = ({ label, value, onChange, colors }: any) => {
+  const [text, setText] = useState(value.toString());
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setText(value.toString());
+    }
+  }, [value, isFocused]);
+
+  const handleChangeText = (val: string) => {
+    const clean = val.replace(/\D/g, '');
+    setText(clean);
+  };
+
+  const handleCommit = () => {
+    let num = parseInt(text, 10);
+    if (isNaN(num)) {
+      num = 0;
+    }
+    const clamped = Math.max(0, Math.min(num, MAX_SALARY_LIMIT));
+    onChange(clamped);
+    setText(clamped.toString());
+  };
+
+  return (
+    <View
+      style={[
+        styles.dropdownTrigger,
+        {
+          flex: 1,
+          backgroundColor: colors.surface,
+          borderColor: isFocused ? colors.primary : colors.border,
+          borderWidth: isFocused ? 1.5 : 1,
+        },
+      ]}>
+      <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', width: 20, textAlign: 'center' }}>₹</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={[typography.tiny, { color: colors.textSecondary }]}>{label}</Text>
+        <TextInput
+          keyboardType="number-pad"
+          value={text}
+          onChangeText={handleChangeText}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            handleCommit();
+          }}
+          onSubmitEditing={handleCommit}
+          placeholder="0"
+          placeholderTextColor={colors.textPlaceholder}
+          style={[typography.body, { color: colors.textPrimary, padding: 0, height: 24 }]}
+        />
+      </View>
+      <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>LPA</Text>
     </View>
-    <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>LPA</Text>
-  </View>
-);
+  );
+};
 
 const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
   const [layoutWidth, setLayoutWidth] = useState(0);

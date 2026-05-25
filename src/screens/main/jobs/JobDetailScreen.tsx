@@ -230,6 +230,15 @@ const JobDetailScreen: React.FC = () => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
+
+  // Image Preview State
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewIndex, setPreviewIndex] = useState<number>(-1);
+
+  const handleOpenPreview = useCallback((images: string[], index: number) => {
+    setPreviewImages(images);
+    setPreviewIndex(index);
+  }, []);
   const toastAnim = useRef(new Animated.Value(-100)).current;
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -495,10 +504,15 @@ const JobDetailScreen: React.FC = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
             <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight }]}>
               {currentJob.employer?.company?.company_logo_url ? (
-                <Image
-                  source={{ uri: currentJob.employer.company.company_logo_url }}
-                  style={styles.heroLogo}
-                />
+                <Pressable
+                  onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                >
+                  <Image
+                    source={{ uri: currentJob.employer.company.company_logo_url }}
+                    style={styles.heroLogo}
+                  />
+                </Pressable>
               ) : (
                 <Icon name="briefcase" size={24} color={colors.primary} />
               )}
@@ -569,10 +583,15 @@ const JobDetailScreen: React.FC = () => {
             <View style={styles.companyHeader}>
               <View>
                 {currentJob.employer.company.company_logo_url ? (
-                  <Image
-                    source={{ uri: currentJob.employer.company.company_logo_url }}
-                    style={styles.companyLogo}
-                  />
+                  <Pressable
+                    onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                  >
+                    <Image
+                      source={{ uri: currentJob.employer.company.company_logo_url }}
+                      style={styles.companyLogo}
+                    />
+                  </Pressable>
                 ) : (
                   <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
                     <Icon name="building" size={24} color={colors.primary} />
@@ -605,11 +624,19 @@ const JobDetailScreen: React.FC = () => {
                 contentContainerStyle={{ gap: 10, paddingRight: 20 }}
               >
                 {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
-                  <Image
+                  <Pressable
                     key={idx}
-                    source={{ uri: media.url }}
-                    style={styles.galleryImage}
-                  />
+                    onPress={() => {
+                      const urls = currentJob.employer.company.gallery_media.map((m: any) => m.url);
+                      handleOpenPreview(urls, idx);
+                    }}
+                    style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                  >
+                    <Image
+                      source={{ uri: media.url }}
+                      style={styles.galleryImage}
+                    />
+                  </Pressable>
                 ))}
               </ScrollView>
             )}
@@ -843,6 +870,69 @@ const JobDetailScreen: React.FC = () => {
         type="dropdown"
         anchorPosition={{ top: actualTop + 35, right: spacing.lg }}
       />
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={previewIndex >= 0}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewIndex(-1)}
+      >
+        <View style={styles.previewOverlay}>
+          <StatusBar barStyle="light-content" backgroundColor="rgba(0,0,0,0.95)" />
+          <Pressable style={styles.previewBackdrop} onPress={() => setPreviewIndex(-1)} />
+          
+          <TouchableOpacity 
+            style={[styles.previewCloseBtn, { top: actualTop + 10 }]} 
+            onPress={() => setPreviewIndex(-1)}
+            activeOpacity={0.7}
+          >
+            <Icon name="times" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {previewImages.length > 1 && (
+            <View style={[styles.previewIndicator, { top: actualTop + 12 }]}>
+              <Text style={styles.previewIndicatorText}>
+                {previewIndex + 1} of {previewImages.length}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.previewContainer}>
+            {previewImages.length > 1 ? (
+              <TouchableOpacity
+                style={styles.previewArrowBtn}
+                onPress={() => setPreviewIndex((prev) => (prev > 0 ? prev - 1 : previewImages.length - 1))}
+                activeOpacity={0.7}
+              >
+                <Icon name="chevron-left" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 44 }} />
+            )}
+
+            {previewIndex >= 0 && previewIndex < previewImages.length && (
+              <Image
+                source={{ uri: previewImages[previewIndex] }}
+                style={styles.previewImageLarge}
+                resizeMode="contain"
+              />
+            )}
+
+            {previewImages.length > 1 ? (
+              <TouchableOpacity
+                style={styles.previewArrowBtn}
+                onPress={() => setPreviewIndex((prev) => (prev < previewImages.length - 1 ? prev + 1 : 0))}
+                activeOpacity={0.7}
+              >
+                <Icon name="chevron-right" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 44 }} />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1226,6 +1316,69 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Image Preview Modal Styles
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 10, 12, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  previewIndicator: {
+    position: 'absolute',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    zIndex: 9,
+  },
+  previewIndicatorText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  previewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    height: '80%',
+    paddingHorizontal: 10,
+  },
+  previewImageLarge: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+  },
+  previewArrowBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
   },
 });
 

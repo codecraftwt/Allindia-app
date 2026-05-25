@@ -22,32 +22,44 @@ import { typography } from '../../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
-const getCategoryColor = (name: string) => {
+const getCategoryColor = (name: string, isDark: boolean) => {
   const n = name.toLowerCase();
-  if (n.includes('beauty')) return { bg: '#FFF0F3', icon: '#FF85A1', text: '#C9184A' };
-  if (n.includes('construction')) return { bg: '#F8F9FA', icon: '#ADB5BD', text: '#495057' };
-  if (n.includes('content') || n.includes('journalism')) return { bg: '#FEFAE0', icon: '#E9EDC9', text: '#606C38' };
-  if (n.includes('data science') || n.includes('analytics')) return { bg: '#E0FBFC', icon: '#9AD1D4', text: '#253237' };
-  if (n.includes('delivery') || n.includes('driver')) return { bg: '#FFE5D9', icon: '#FEC89A', text: '#D08159' };
-  if (n.includes('design') || n.includes('architecture')) return { bg: '#EAF4F4', icon: '#CCE3DE', text: '#6B9080' };
-  if (n.includes('hardware') || n.includes('network')) return { bg: '#F1F1F1', icon: '#D6CCC2', text: '#5E503F' };
-  if (n.includes('fashion') || n.includes('tailoring')) return { bg: '#FDE2E4', icon: '#FAD2E1', text: '#A4133C' };
-  if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) return { bg: '#FFECEF', icon: '#FFB3C1', text: '#C9184A' };
-  if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) return { bg: '#FFF3E0', icon: '#FFCC80', text: '#E65100' };
-  if (n.includes('house help') || n.includes('worker')) return { bg: '#F5F5F7', icon: '#E2E2E2', text: '#707070' };
-  if (n.includes('human resources') || n.includes('hr')) return { bg: '#E8F5E9', icon: '#A5D6A7', text: '#2E7D32' };
-  if (n.includes('it services') || n.includes('development')) return { bg: '#E3F2FD', icon: '#90CAF9', text: '#1565C0' };
-  if (n.includes('labour') || n.includes('factory')) return { bg: '#F3E5F5', icon: '#CE93D8', text: '#7B1FA2' };
-  if (n.includes('legal')) return { bg: '#ECEFF1', icon: '#B0BEC5', text: '#37474F' };
-  if (n.includes('marketing')) return { bg: '#FFFDE7', icon: '#FFF59D', text: '#F9A825' };
-  if (n.includes('media') || n.includes('entertainment')) return { bg: '#F5F3FF', icon: '#DDD6FE', text: '#5B21B6' };
-  if (n.includes('operations')) return { bg: '#F0FDF4', icon: '#BBF7D0', text: '#166534' };
-  if (n.includes('purchase') || n.includes('supply chain')) return { bg: '#FDF2F8', icon: '#FBCFE8', text: '#9D174D' };
-  if (n.includes('sales')) return { bg: '#ECFDF5', icon: '#A7F3D0', text: '#065F46' };
-  if (n.includes('security')) return { bg: '#F9FAFB', icon: '#E5E7EB', text: '#374151' };
-  if (n.includes('sport') || n.includes('fitness')) return { bg: '#FFF7ED', icon: '#FFEDD5', text: '#9A3412' };
-  if (n.includes('technician') || n.includes('vehicle')) return { bg: '#EEF2FF', icon: '#C7D2FE', text: '#3730A3' };
-  return { bg: '#F8FAFC', icon: '#E2E8F0', text: '#475569' };
+  let color = '#5C9CE6'; // A solid, attractive blue default (not too bright)
+
+  if (n.includes('beauty')) color = '#FFAEBC';
+  else if (n.includes('banking')) color = '#b2ed7bff'; // Gold/Yellow for Banking (Card 2)
+  else if (n.includes('automobile')) color = '#ffd256ff'; // Steel Blue for Automobile (Card 1)
+  else if (n.includes('bpm') || n.includes('bpo')) color = '#FBC4AB'; // Coral/Peach for BPM/BPO
+  else if (n.includes('engineering') && !n.includes('hardware') && !n.includes('network')) color = '#B8C0FF'; // Soft purple-blue for General Engineering
+  else if (n.includes('internet')) color = '#8EECF5'; // Tech Cyan/Teal for Internet
+  else if (n.includes('textile')) color = '#F3C4FB'; // Orchid Pink for Textile
+  else if (n.includes('construction')) color = '#C2C5BB';
+  else if (n.includes('content') || n.includes('journalism')) color = '#FFD0A3';
+  else if (n.includes('data science') || n.includes('analytics')) color = '#9CF6F6';
+  else if (n.includes('delivery') || n.includes('driver')) color = '#FFC4B4';
+  else if (n.includes('design') || n.includes('architecture')) color = '#BCEAE3';
+  else if (n.includes('hardware') || n.includes('network')) color = '#C5D3C2';
+  else if (n.includes('fashion') || n.includes('tailoring')) color = '#FFC6FF';
+  else if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) color = '#FFADAD';
+  else if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) color = '#FDE293';
+  else if (n.includes('house help') || n.includes('worker')) color = '#DFD3C3';
+  else if (n.includes('human resources') || n.includes('hr')) color = '#B9FBC0';
+  else if (n.includes('it services') || n === 'it') color = '#A0C4FF';
+  else if (n.includes('development')) color = '#BDB2FF';
+  else if (n.includes('finance')) color = '#FDFFB6';
+  else if (n.includes('education') || n.includes('teacher') || n === 'edu') color = '#CAFFBF';
+  else if (n.includes('labour') || n.includes('factory')) color = '#D7E3FC';
+  else if (n.includes('legal')) color = '#E2ECE9';
+  else if (n.includes('marketing')) color = '#FFF59D';
+  else if (n.includes('media') || n.includes('entertainment')) color = '#BDB2FF';
+  else if (n.includes('operations')) color = '#D0F4DE';
+  else if (n.includes('purchase') || n.includes('supply chain')) color = '#FFC6FF';
+  else if (n.includes('sales')) color = '#CAFFBF';
+  else if (n.includes('security')) color = '#E5E5E5';
+  else if (n.includes('sport') || n.includes('fitness')) color = '#FFD6A5';
+  else if (n.includes('technician') || n.includes('vehicle')) color = '#CFBCFF';
+
+  return isDark ? color + 'CC' : color; // CC is 80% opacity, bright enough for black text
 };
 
 const JobCategoriesScreen: React.FC = () => {
@@ -57,7 +69,7 @@ const JobCategoriesScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
   const { categories, loading } = useSelector((state: RootState) => state.meta);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
@@ -69,13 +81,19 @@ const JobCategoriesScreen: React.FC = () => {
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return categories;
-    return categories.filter(cat => 
+    return categories.filter(cat =>
       cat.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [categories, searchQuery]);
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase();
+    if (n.includes('automobile')) return 'car';
+    if (n.includes('banking')) return 'university';
+    if (n.includes('bpm') || n.includes('bpo')) return 'headphones';
+    if (n.includes('engineering')) return 'gears';
+    if (n.includes('internet')) return 'globe';
+    if (n.includes('textile')) return 'scissors';
     if (n.includes('beauty')) return 'magic';
     if (n.includes('construction')) return 'building';
     if (n.includes('content') || n.includes('journalism')) return 'pencil';
@@ -127,8 +145,8 @@ const JobCategoriesScreen: React.FC = () => {
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
           Job Categories
         </Text>
-        <Pressable 
-          onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')} 
+        <Pressable
+          onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
           style={styles.backBtn}
         >
           <Icon name={viewMode === 'list' ? 'th-large' : 'list'} size={18} color={colors.primary} />
@@ -162,26 +180,26 @@ const JobCategoriesScreen: React.FC = () => {
           numColumns={viewMode === 'grid' ? 2 : 1}
           keyExtractor={(cat) => cat.id.toString()}
           renderItem={({ item: cat }) => {
-            const config = getCategoryColor(cat.name);
-            
+            const cardBg = getCategoryColor(cat.name, isDark);
+
             if (viewMode === 'grid') {
               return (
                 <Pressable
                   onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
                   style={[
                     styles.gridCard,
-                    { 
-                      backgroundColor: config.bg,
-                      borderColor: config.icon + '30',
+                    {
+                      backgroundColor: cardBg,
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
                     }
                   ]}>
-                  <View style={[styles.gridIconBox, { backgroundColor: config.icon + '40' }]}>
-                    <Icon name={getCategoryIcon(cat.name)} size={24} color={config.text} />
+                  <View style={[styles.gridIconBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)' }]}>
+                    <Icon name={getCategoryIcon(cat.name)} size={24} color="#000000" />
                   </View>
-                  <Text style={[typography.labelMedium, { color: config.text, fontWeight: '700', textAlign: 'center', marginTop: 10 }]} numberOfLines={2}>
+                  <Text style={[typography.labelMedium, { color: '#000000', fontWeight: '700', textAlign: 'center', marginTop: 10 }]} numberOfLines={2}>
                     {cat.name}
                   </Text>
-                  <Text style={[typography.tiny, { color: config.text, opacity: 0.7, marginTop: 4 }]}>
+                  <Text style={[typography.tiny, { color: 'rgba(0,0,0,0.6)', marginTop: 4 }]}>
                     {cat.jobs_count || 0} Jobs
                   </Text>
                 </Pressable>
@@ -195,8 +213,8 @@ const JobCategoriesScreen: React.FC = () => {
                   styles.listCard,
                   { backgroundColor: colors.surface, borderColor: colors.border }
                 ]}>
-                <View style={[styles.iconBox, { backgroundColor: config.bg, borderRadius: 12 }]}>
-                  <Icon name={getCategoryIcon(cat.name)} size={22} color={config.text} />
+                <View style={[styles.iconBox, { backgroundColor: cardBg, borderRadius: 12 }]}>
+                  <Icon name={getCategoryIcon(cat.name)} size={22} color="#000000" />
                 </View>
                 <View style={styles.cardContent}>
                   <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700' }]}>

@@ -49,6 +49,16 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
 
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / (CARD_WIDTH + 12));
+    if (index >= 0 && index < ADS_DATA.length) {
+      setActiveIndex(index);
+    }
+  };
+
   const handleShare = async () => {
     try {
       const result = await Share.share({
@@ -131,7 +141,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
 
   return (
     <View style={styles.outerContainer}>
-      <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase', marginBottom: spacing.sm, marginHorizontal: spacing.lg }]}>
+      <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase', marginBottom: spacing.sm, marginHorizontal: spacing.xs }]}>
         Actions & Promos For You
       </Text>
       
@@ -143,7 +153,9 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
         snapToInterval={CARD_WIDTH + 12}
         decelerationRate="fast"
         snapToAlignment="start"
-        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: 4 }}
+        contentContainerStyle={{ paddingHorizontal: spacing.xs, paddingBottom: 4 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         renderItem={({ item }) => {
           const cardBgColor = isDark ? item.bgDark : item.bgLight;
           const cardBorderColor = isDark ? item.borderDark : item.borderLight;
@@ -242,6 +254,27 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
           );
         }}
       />
+
+      {/* Pagination Dots */}
+      <View style={styles.paginationContainer}>
+        {ADS_DATA.map((_, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: isActive 
+                    ? colors.primary 
+                    : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'),
+                  width: isActive ? 16 : 6,
+                }
+              ]}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 };
@@ -320,6 +353,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 1,
     elevation: 1,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: 6,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
   },
 });
 
