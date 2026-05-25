@@ -11,8 +11,8 @@ import {
   LayoutAnimation,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { typography } from '../theme/typography';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { typography, fontFamilies } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import type { ThemeColors } from '../theme/colors';
@@ -30,6 +30,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
   const [feedback, setFeedback] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
 
   useEffect(() => {
     const checkRateStatus = async () => {
@@ -88,20 +89,54 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
         },
       ]}
     >
+      {/* Decorative Overlapping Faux Gradient Blobs */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View
+          style={[
+            styles.blob,
+            {
+              backgroundColor: rating >= 4 ? '#EAB308' : colors.primary,
+              opacity: rating >= 4 ? 0.06 : 0.04,
+              width: 140,
+              height: 140,
+              borderRadius: 70,
+              top: -30,
+              left: -30,
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.blob,
+            {
+              backgroundColor: '#EAB308',
+              opacity: rating > 0 ? 0.08 : 0.03,
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              bottom: -40,
+              right: -30,
+            },
+          ]}
+        />
+      </View>
+
       {/* Dismiss Button */}
       {!isSubmitted && (
         <Pressable onPress={handleDismiss} style={styles.closeBtn} hitSlop={12}>
-          <Icon name="times" size={16} color={colors.textPlaceholder} />
+          <Icon name="close" size={18} color={colors.textPlaceholder} />
         </Pressable>
       )}
 
       {isSubmitted ? (
         <View style={styles.centerContent}>
-          <Icon name="check-circle" size={42} color={colors.success || '#10b981'} style={{ marginBottom: 12 }} />
-          <Text style={[typography.sectionTitle, { color: colors.textPrimary, textAlign: 'center' }]}>
+          <View style={[styles.successIconWrapper, { backgroundColor: colors.success + '15' }]}>
+            <Icon name="check-decagram" size={48} color={colors.success || '#10b981'} />
+          </View>
+          <Text style={[typography.sectionTitle, { fontFamily: fontFamilies.bold, color: colors.textPrimary, textAlign: 'center', marginTop: spacing.sm }]}>
             Thank You!
           </Text>
-          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 4 }]}>
+          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, paddingHorizontal: 12 }]}>
             Your feedback helps us make JobIndia better for everyone.
           </Text>
         </View>
@@ -109,13 +144,13 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
         <View>
           <View style={styles.headerRow}>
             <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
-              <Icon name="star" size={20} color={colors.primary} />
+              <Icon name="star-face" size={22} color={colors.primary} />
             </View>
             <View style={styles.titleCol}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>
+              <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: 16 }]}>
                 Enjoying JobIndia?
               </Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
                 Please rate your experience with us!
               </Text>
             </View>
@@ -131,8 +166,8 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                 style={styles.starTouch}
               >
                 <Icon
-                  name={star <= rating ? 'star' : 'star-o'}
-                  size={32}
+                  name={star <= rating ? 'star' : 'star-outline'}
+                  size={36}
                   color={star <= rating ? '#fbbf24' : colors.textPlaceholder}
                 />
               </TouchableOpacity>
@@ -147,11 +182,13 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                 placeholderTextColor={colors.textPlaceholder}
                 value={feedback}
                 onChangeText={setFeedback}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 style={[
                   styles.textInput,
                   {
                     color: colors.textPrimary,
-                    borderColor: colors.border,
+                    borderColor: isFocused ? colors.primary : colors.border,
                     backgroundColor: colors.surface,
                   },
                 ]}
@@ -160,9 +197,10 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
               />
               <TouchableOpacity
                 onPress={handleSubmit}
-                style={[styles.submitBtn, { backgroundColor: colors.primary }]}
+                activeOpacity={0.8}
+                style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
               >
-                <Text style={[typography.labelMedium, { color: colors.onPrimary || '#fff' }]}>
+                <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
                   Submit Feedback
                 </Text>
               </TouchableOpacity>
@@ -171,23 +209,25 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
 
           {rating >= 4 && (
             <View style={styles.successCta}>
-              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 12 }]}>
+              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 16, lineHeight: 20 }]}>
                 We're glad you love using JobIndia! Would you like to rate us on the Play Store?
               </Text>
               <View style={styles.btnRow}>
                 <TouchableOpacity
                   onPress={handleDismiss}
-                  style={[styles.subBtn, { borderColor: colors.border }]}
+                  activeOpacity={0.8}
+                  style={[styles.subBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
-                  <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>
+                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.semiBold, color: colors.textSecondary }]}>
                     Later
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSubmit}
-                  style={[styles.submitBtn, { backgroundColor: colors.primary, flex: 1, marginLeft: 8 }]}
+                  activeOpacity={0.8}
+                  style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1, marginLeft: 12 }]}
                 >
-                  <Text style={[typography.labelMedium, { color: colors.onPrimary || '#fff' }]}>
+                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
                     Rate Now
                   </Text>
                 </TouchableOpacity>
@@ -202,34 +242,38 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.lg,
-    padding: spacing.md,
-    borderRadius: radius.card || 16,
-    borderWidth: 1,
-    elevation: 2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.md,
+    padding: spacing.lg,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
     position: 'relative',
+    overflow: 'hidden',
+  },
+  blob: {
+    position: 'absolute',
   },
   closeBtn: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 14,
+    right: 14,
     zIndex: 10,
-    padding: 4,
+    padding: 6,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -240,33 +284,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 16,
-    marginVertical: spacing.sm,
+    gap: 12,
+    marginVertical: spacing.md,
   },
   starTouch: {
     padding: 4,
   },
   feedbackContainer: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
+    marginTop: spacing.sm,
+    gap: spacing.md,
   },
   textInput: {
-    borderRadius: radius.md || 8,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     fontSize: 14,
-    height: 80,
+    height: 90,
     textAlignVertical: 'top',
+    fontFamily: fontFamilies.regular,
   },
   submitBtn: {
     paddingVertical: 12,
-    borderRadius: radius.button || 24,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   successCta: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     alignItems: 'center',
   },
   btnRow: {
@@ -275,10 +324,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   subBtn: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: radius.button || 24,
+    paddingHorizontal: 24,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -286,6 +335,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.md,
+  },
+  successIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
 });
 
