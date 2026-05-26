@@ -87,6 +87,42 @@ export const markAllNotificationsAsRead = createAsyncThunk(
   }
 );
 
+export const deleteNotification = createAsyncThunk(
+  'notifications/deleteNotification',
+  async (notificationId: string, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      await api.delete(`api/candidate/notifications/${notificationId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete notification');
+    }
+  }
+);
+
+export const clearAllNotifications = createAsyncThunk(
+  'notifications/clearAllNotifications',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.delete('api/candidate/notifications', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to clear all notifications');
+    }
+  }
+);
+
 const notificationSlice = createSlice({
   name: 'notifications',
   initialState,
@@ -126,6 +162,20 @@ const notificationSlice = createSlice({
         state.notifications.forEach(n => {
           n.is_read = true;
         });
+        state.unreadCount = 0;
+      })
+      .addCase(deleteNotification.fulfilled, (state, action) => {
+        const notificationId = action.payload;
+        const notification = state.notifications.find(n => n.id === notificationId);
+        if (notification) {
+          if (!notification.is_read) {
+            state.unreadCount = Math.max(0, state.unreadCount - 1);
+          }
+          state.notifications = state.notifications.filter(n => n.id !== notificationId);
+        }
+      })
+      .addCase(clearAllNotifications.fulfilled, (state) => {
+        state.notifications = [];
         state.unreadCount = 0;
       });
   },

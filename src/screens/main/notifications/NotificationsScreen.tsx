@@ -4,6 +4,7 @@ import type { StackScreenProps } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useDispatch, useSelector } from 'react-redux';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import type { HomeStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import type { ThemeColors } from '../../../theme/colors';
@@ -11,7 +12,7 @@ import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, ApiNotification } from '../../../redux/slice/notificationSlice';
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, clearAllNotifications, ApiNotification } from '../../../redux/slice/notificationSlice';
 import type { RootState, AppDispatch } from '../../../redux/store';
 
 type Props = StackScreenProps<HomeStackParamList, 'Notifications'>;
@@ -96,6 +97,16 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleDelete = (id: string) => {
+    dispatch(deleteNotification(id));
+  };
+
+  const handleClearAll = () => {
+    if (notifications.length > 0) {
+      dispatch(clearAllNotifications());
+    }
+  };
+
   const sections = useMemo(() => {
     const jobAlerts: ApiNotification[] = [];
     const employerActivity: ApiNotification[] = [];
@@ -121,15 +132,22 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">
-          <Icon name="chevron-left" size={22} color={colors.textPrimary} />
-        </Pressable>
+        <View style={styles.headerLeft}>
+          <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">
+            <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+          </Pressable>
+        </View>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
           Notifications
         </Text>
-        <Pressable onPress={handleMarkAllRead} hitSlop={12} style={styles.backBtn} accessibilityLabel="Mark all read">
-          <Icon name="check-square-o" size={22} color={colors.primary} />
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable onPress={handleMarkAllRead} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Mark all read">
+            <Icon name="check-square-o" size={22} color={colors.primary} />
+          </Pressable>
+          <Pressable onPress={handleClearAll} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Clear all">
+            <Icon name="trash-o" size={22} color={colors.error} />
+          </Pressable>
+        </View>
       </View>
 
       {loading && notifications.length === 0 ? (
@@ -147,7 +165,29 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
           renderSectionHeader={({ section: { title } }) => (
             <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
           )}
-          renderItem={({ item }) => <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} />}
+          renderItem={({ item }) => (
+            <Swipeable
+              renderRightActions={() => (
+                <View style={styles.deleteActionContainer}>
+                  <Pressable
+                    onPress={() => handleDelete(item.id)}
+                    style={[styles.deleteAction, { backgroundColor: colors.error }]}
+                  >
+                    <Icon name="trash" size={20} color="#FFF" />
+                  </Pressable>
+                </View>
+              )}
+              onSwipeableOpen={(direction, swipeable) => {
+                if (direction === 'right') {
+                  handleDelete(item.id);
+                  swipeable.close();
+                }
+              }}
+              rightThreshold={80}
+            >
+              <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} />
+            </Swipeable>
+          )}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           SectionSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           contentContainerStyle={[
@@ -230,6 +270,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.sm,
+  },
+  deleteActionContainer: {
+    width: 80,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  deleteAction: {
+    width: 70,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: radius.card,
+  },
+  headerLeft: {
+    width: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  headerRight: {
+    width: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: spacing.xs,
+  },
+  actionBtn: {
+    width: 36,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
