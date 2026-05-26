@@ -10,6 +10,8 @@ import AuthNavigator from './src/navigation/AuthNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { ToastProvider } from './src/context/ToastContext';
 import { AnimatedBackground } from './src/components/AnimatedBackground';
+import notifee, { EventType } from '@notifee/react-native';
+import messaging from '@react-native-firebase/messaging';
 import { initNotifications } from './src/services/notificationService';
 
 export const navigationRef = createNavigationContainerRef();
@@ -66,12 +68,16 @@ function AppNavigation() {
 
   // Set up Firebase Push Notifications if logged in
   useEffect(() => {
+    let isMounted = true;
     let unsubscribeNotifications: (() => void) | null | undefined = null;
 
     const setupNotifications = async () => {
       if (isLoggedIn && token) {
         const cleanup = await initNotifications(token);
-        if (cleanup) {
+        if (!isMounted && cleanup) {
+          // If the effect was cleaned up before this resolved, clean up the listener immediately
+          cleanup();
+        } else {
           unsubscribeNotifications = cleanup;
         }
       }
@@ -80,11 +86,56 @@ function AppNavigation() {
     setupNotifications();
 
     return () => {
+      isMounted = false;
       if (unsubscribeNotifications) {
         unsubscribeNotifications();
       }
     };
   }, [isLoggedIn, token]);
+
+  // Handle notification interaction
+  useEffect(() => {
+    // Handle Notifee foreground notification click
+    const unsubscribeNotifee = notifee.onForegroundEvent(({ type, detail }) => {
+      if (type === EventType.PRESS && navigationRef.isReady()) {
+        navigationRef.navigate('Main', { 
+          screen: 'Home',
+          params: { screen: 'Notifications' }
+        } as any);
+      }
+    });
+
+    // Handle FCM notification click (app in background)
+    const unsubscribeFCM = messaging().onNotificationOpenedApp(remoteMessage => {
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('Main', { 
+          screen: 'Home',
+          params: { screen: 'Notifications' }
+        } as any);
+      }
+    });
+
+    // Handle FCM notification click (app quit/killed)
+    messaging().getInitialNotification().then(remoteMessage => {
+      if (remoteMessage && navigationRef.isReady()) {
+        // You might want to delay this slightly if navigation is still mounting,
+        // but typically getInitialNotification is handled once navigationRef is ready.
+        setTimeout(() => {
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Main', { 
+          screen: 'Home',
+          params: { screen: 'Notifications' }
+        } as any);
+          }
+        }, 500);
+      }
+    });
+
+    return () => {
+      unsubscribeNotifee();
+      unsubscribeFCM();
+    };
+  }, []);
 
   const navTheme = {
     ...DefaultTheme,

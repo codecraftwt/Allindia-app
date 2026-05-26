@@ -22,6 +22,8 @@ export async function displayNotification(title?: string, body?: string, data?: 
       android: {
         channelId,
         importance: AndroidImportance.HIGH,
+        smallIcon: 'ic_notification', 
+        color: '#2b7ddb', 
         pressAction: {
           id: 'default',
         },
@@ -41,7 +43,7 @@ export async function displayNotification(title?: string, body?: string, data?: 
 
 
 export async function saveDeviceToken(fcmToken: string, userToken: string) {
-  const possibleUrls = ['api/candidate/device-token', 'api/device-token'];
+  const possibleUrls = ['api/device-token', 'api/candidate/device-token'];
   
   for (const url of possibleUrls) {
     try {

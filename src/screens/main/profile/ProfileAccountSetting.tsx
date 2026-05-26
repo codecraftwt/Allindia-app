@@ -105,6 +105,10 @@ const ProfileAccountSetting: React.FC = () => {
   const [delLoading, setDelLoading] = useState(false);
   const [showDelPwd, setShowDelPwd] = useState(false);
 
+  const confirmPasswordError = confirmPassword && newPassword && confirmPassword !== newPassword
+    ? 'Passwords do not match'
+    : '';
+
   // Animated values for custom premium slide-up sheets
   const changePasswordSlideAnim = React.useRef(new Animated.Value(350)).current;
   const deleteAccountSlideAnim = React.useRef(new Animated.Value(350)).current;
@@ -151,6 +155,37 @@ const ProfileAccountSetting: React.FC = () => {
     }
     if (!newPassword || !confirmPassword) {
       showStatus('error', 'Validation Error', 'Please enter and confirm your new password.');
+      return;
+    }
+
+    // New password field validations
+    const errors: string[] = [];
+    if (newPassword.length < 8) {
+      errors.push('• Must be at least 8 characters long.');
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      errors.push('• Must contain at least one uppercase letter (A-Z).');
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      errors.push('• Must contain at least one lowercase letter (a-z).');
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      errors.push('• Must contain at least one number (0-9).');
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+      errors.push('• Must contain at least one special character.');
+    }
+    if (/(.)\1{2,}/.test(newPassword)) {
+      errors.push('• Must not contain 3 or more consecutive identical characters.');
+    }
+
+    if (errors.length > 0) {
+      showStatus('error', 'Weak Password', `Your new password does not meet the requirements:\n${errors.join('\n')}`);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showStatus('error', 'Validation Error', 'New password and confirm password do not match.');
       return;
     }
 
@@ -338,6 +373,50 @@ const ProfileAccountSetting: React.FC = () => {
                     <Icon name={passwordVisibility?.new ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
                   </Pressable>
                 </View>
+                {newPassword.length > 0 && (
+                  <View style={styles.requirementsContainer}>
+                    <View style={styles.requirementRow}>
+                      <Icon
+                        name={newPassword.length >= 8 ? "check-circle" : "circle"}
+                        size={14}
+                        color={newPassword.length >= 8 ? colors.success : colors.textPlaceholder}
+                      />
+                      <Text style={[styles.requirementText, { color: newPassword.length >= 8 ? colors.textPrimary : colors.textSecondary }]}>
+                        At least 8 characters
+                      </Text>
+                    </View>
+                    <View style={styles.requirementRow}>
+                      <Icon
+                        name={(/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) ? "check-circle" : "circle"}
+                        size={14}
+                        color={(/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) ? colors.success : colors.textPlaceholder}
+                      />
+                      <Text style={[styles.requirementText, { color: (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) ? colors.textPrimary : colors.textSecondary }]}>
+                        At least one uppercase & lowercase letter
+                      </Text>
+                    </View>
+                    <View style={styles.requirementRow}>
+                      <Icon
+                        name={(/[0-9]/.test(newPassword) && /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) ? "check-circle" : "circle"}
+                        size={14}
+                        color={(/[0-9]/.test(newPassword) && /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) ? colors.success : colors.textPlaceholder}
+                      />
+                      <Text style={[styles.requirementText, { color: (/[0-9]/.test(newPassword) && /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) ? colors.textPrimary : colors.textSecondary }]}>
+                        At least one number & special character
+                      </Text>
+                    </View>
+                    <View style={styles.requirementRow}>
+                      <Icon
+                        name={(!/(.)\1{2,}/.test(newPassword)) ? "check-circle" : "x-circle"}
+                        size={14}
+                        color={(!/(.)\1{2,}/.test(newPassword)) ? colors.success : colors.error}
+                      />
+                      <Text style={[styles.requirementText, { color: (!/(.)\1{2,}/.test(newPassword)) ? colors.textPrimary : colors.error }]}>
+                        No 3+ consecutive identical characters
+                      </Text>
+                    </View>
+                  </View>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
@@ -355,6 +434,11 @@ const ProfileAccountSetting: React.FC = () => {
                     <Icon name={passwordVisibility?.confirm ? "eye" : "eye-off"} size={18} color={colors.textPlaceholder} />
                   </Pressable>
                 </View>
+                {confirmPasswordError ? (
+                  <Text style={styles.errorText}>
+                    {confirmPasswordError}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={{ marginTop: spacing.md }}>
@@ -595,6 +679,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
     marginLeft: 2,
+  },
+  requirementsContainer: {
+    marginTop: spacing.sm,
+    gap: 6,
+    paddingHorizontal: 4,
+  },
+  requirementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  requirementText: {
+    fontSize: 11,
   },
   statusOverlay: {
     flex: 1,

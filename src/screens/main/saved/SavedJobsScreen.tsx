@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
-    maxWidth: 520,
+    maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
     gap: spacing.md,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.lg,
     paddingBottom: 120,
-    maxWidth: 520,
+    maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
   },

@@ -10,6 +10,7 @@ import addressReducer from './slice/addressSlice';
 import metaReducer from './slice/metaSlice';
 import jobReducer from './slice/jobSlice';
 import mediaReducer from './slice/mediaSlice';
+import notificationReducer from './slice/notificationSlice';
 
 const rootReducer = combineReducers({
   auth: getPersistedReducer('auth', authReducer),
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   meta: metaReducer,
   jobs: jobReducer,
   media: mediaReducer,
+  notifications: notificationReducer,
 });
 
 export const store = configureStore({

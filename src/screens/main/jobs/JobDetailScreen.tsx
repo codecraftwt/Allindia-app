@@ -180,6 +180,12 @@ const JobDetailSkeleton: React.FC = () => {
   );
 };
 
+const isQuestionRequired = (q: any): boolean => {
+  if (!q) return false;
+  const val = q.is_required;
+  return val === true || val === 1 || val === '1' || val === 'true' || val === 'yes';
+};
+
 const JobDetailScreen: React.FC = () => {
   const { colors, mode } = useTheme();
   const isDark = mode === 'dark';
@@ -316,7 +322,7 @@ const JobDetailScreen: React.FC = () => {
 
     // Validate required questions
     const missingRequired = currentJob.questions?.filter(
-      (q: any) => q.is_required && !answers[q.id.toString()]
+      (q: any) => isQuestionRequired(q) && (answers[q.id.toString()] === undefined || answers[q.id.toString()] === null)
     );
 
     if (missingRequired && missingRequired.length > 0) {
@@ -728,7 +734,7 @@ const JobDetailScreen: React.FC = () => {
             {currentJob.questions.map((q: any) => (
               <View key={q.id} style={styles.questionBlock}>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
-                  {q.question} {q.is_required ? <Text style={{ color: colors.error }}>*</Text> : ''}
+                  {q.question} {isQuestionRequired(q) ? <Text style={{ color: colors.error }}>*</Text> : ''}
                 </Text>
                 <View style={styles.optionsWrap}>
                   {q.options?.map((opt: any) => {
@@ -773,23 +779,25 @@ const JobDetailScreen: React.FC = () => {
             paddingBottom: 60,
           },
         ]}>
-        <PrimaryButton
-          title={isApplying ? "Processing..." : (currentJob.is_applied ? "Already Applied" : "Apply now")}
-          onPress={applyNow}
-          colors={colors}
-          disabled={isApplying || currentJob.is_applied}
-        />
-        {currentJob.allow_calls !== false && (
-          <View style={styles.footerRow}>
-            <PrimaryButton
-              title="Call employer"
-              onPress={callEmployer}
-              colors={colors}
-              variant="secondary"
-              style={styles.callBtn}
-            />
-          </View>
-        )}
+        <View style={styles.footerContent}>
+          <PrimaryButton
+            title={isApplying ? "Processing..." : (currentJob.is_applied ? "Already Applied" : "Apply now")}
+            onPress={applyNow}
+            colors={colors}
+            disabled={isApplying || currentJob.is_applied}
+          />
+          {currentJob.allow_calls !== false && (
+            <View style={styles.footerRow}>
+              <PrimaryButton
+                title="Call employer"
+                onPress={callEmployer}
+                colors={colors}
+                variant="secondary"
+                style={styles.callBtn}
+              />
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Validation Modal */}
@@ -946,9 +954,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
-    minHeight: 56, // Added minHeight for stability
-    // borderBottomWidth moved to conditional styles to avoid black line during skeleton loading
-    maxWidth: 520,
+    minHeight: 56,
+    maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
   },
@@ -965,7 +972,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    maxWidth: 520,
+    maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
   },
@@ -1047,10 +1054,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: spacing.sm,
     shadowOpacity: 0.08,
     elevation: 8,
     paddingBottom: 100,
+  },
+  footerContent: {
+    maxWidth: 768,
+    width: '100%',
+    alignSelf: 'center',
+    gap: spacing.sm,
   },
   footerRow: {
     flexDirection: 'row',
