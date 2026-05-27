@@ -26,6 +26,10 @@ import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
+import { CommingSoonAi } from './components/CommingSoonAi';
+import { AiResumeAnalyzer } from './components/AiResumeAnalyzer';
+
+
 
 const { width } = Dimensions.get('window');
 const ORANGE_COLOR = '#FF9800';
@@ -100,7 +104,7 @@ const ResumeScreen: React.FC = () => {
 
   // ---- PROFILE API DATA with fallbacks ----
   const userName = profile?.personal?.name || user?.name || 'Your Name';
-  const targetJob = profile?.personal?.designation || profile?.experience?.designation || '';
+  const targetJob = profile?.personal?.designation || (Array.isArray(profile?.experience) ? profile.experience[0]?.designation : profile?.experience?.designation) || '';
   const phone = profile?.personal?.phone || profile?.personal?.mobile || user?.phone || '';
   const email = profile?.personal?.email || user?.email || '';
   const linkedin = profile?.personal?.linkedin || '';
@@ -191,7 +195,7 @@ const ResumeScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={{ padding: spacing.md, paddingTop: 16 }}
+        contentContainerStyle={{ padding: spacing.md, paddingTop: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -218,7 +222,8 @@ const ResumeScreen: React.FC = () => {
 
 
           {/* Resume Card with Scanner */}
-          <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 35, width: '100%', position: 'relative' }}>
+          <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 10, width: '100%', position: 'relative' }}>
+
 
 
             {/* HUD Callout: Keywords */}
@@ -402,13 +407,6 @@ const ResumeScreen: React.FC = () => {
                   </ScrollView>
                 )}
 
-                {/* AI Fit Badge */}
-                <View style={[styles.aiBadge, { backgroundColor: atsScore >= 40 ? '#10b981' : ORANGE_COLOR, shadowColor: atsScore >= 40 ? '#10b981' : ORANGE_COLOR }]}>
-                  <Icon name="sparkles" size={12} color="#fff" style={{ marginRight: 4 }} />
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '900' }}>
-                    {atsScore}% AI
-                  </Text>
-                </View>
 
                 {/* Laser Scanner Beam */}
                 <Animated.View style={{
@@ -431,6 +429,8 @@ const ResumeScreen: React.FC = () => {
           </View>
         </View>
 
+        <AiResumeAnalyzer profile={profile} />
+        <CommingSoonAi />
       </ScrollView>
 
       {/* PDF Preview Modal */}
