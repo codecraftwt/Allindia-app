@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const GEMINI_API_KEY = 'AIzaSyAHK0gOzZQ_hLiEV9mN0TyNlk4GYEmZZN0';
-// export const RAJ_SIR_KEY = 'AIzaSyDQ8-zUo8uz27kWC665WP1CoAnEQIfijdw-';
+export const GEMINI_API_KEY = 'AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
+
 
 const MODELS_TO_TRY = [
   'gemini-2.5-flash',

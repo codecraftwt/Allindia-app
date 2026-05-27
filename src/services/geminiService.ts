@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const GEMINI_API_KEY = 'AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
 //AIzaSyDQ8-zUo8uz27kWC665WP1CoAnEQIfijdw- raj sir 
-//AIzaSyDDu-wvsXn89d1ucArJEPURZkt5B-Yh0ZY - my key 
 //client=AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg
 
 const MODELS_TO_TRY = [
