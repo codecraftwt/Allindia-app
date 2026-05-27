@@ -93,7 +93,7 @@ const { width } = Dimensions.get('window');
 
 function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const companyName = job.employer?.company?.company_name || job.company_name || job.company || 'Hiring Company';
-  const locationLabel = job.location?.label || job.location_name || job.location || 'India';
+  const locationLabel = job.location?.label || job.location_name || (typeof job.location === 'string' ? job.location : job.location?.city) || 'India';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
 

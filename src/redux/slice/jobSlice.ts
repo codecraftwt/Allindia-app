@@ -52,6 +52,7 @@ export const filterJobs = createAsyncThunk(
     salary_min?: number;
     salary_max?: number;
     freshness?: string;
+    location?: string;
   }, { rejectWithValue }) => {
     try {
       const response = await api.get('api/candidate/jobs/filter', { params });

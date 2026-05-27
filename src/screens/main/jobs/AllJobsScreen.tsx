@@ -126,6 +126,7 @@ const AllJobsScreen = () => {
   const [isFiltered, setIsFiltered] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<any>(null);
 
   useEffect(() => {
     // Handle incoming filters from navigation
@@ -141,9 +142,10 @@ const AllJobsScreen = () => {
       } else if (qfId === 'all_jobs') {
         setSelectedQuickFilter(null);
         setActiveTab('All');
+        setActiveFilters(null);
         setIsFiltered(false);
       } else if (route.params?.filters) {
-        dispatch(filterJobs(route.params.filters));
+        setActiveFilters(route.params.filters);
         setIsFiltered(true);
       }
       // Clear params after applying so it doesn't re-apply on every render
@@ -152,7 +154,7 @@ const AllJobsScreen = () => {
     }
 
     // Use 0ms delay for initial load, 500ms for search/filter debounce
-    const isInitial = !search && !selectedQuickFilter;
+    const isInitial = !search;
     const timer = setTimeout(() => {
       const params: any = { per_page: 20 };
       if (activeTab === 'Nearest') params.section = 'nearby';
@@ -172,32 +174,32 @@ const AllJobsScreen = () => {
       }
 
       const hasQuickFilter = selectedQuickFilter !== null;
+      const hasActiveFilters = activeFilters !== null && Object.keys(activeFilters).length > 0;
+      const hasSearch = search.trim().length > 0;
 
-      if (search && hasQuickFilter) {
+      if (hasSearch || hasQuickFilter || hasActiveFilters) {
         setIsFiltered(true);
-        dispatch(filterJobs({ ...params, q: search, ...quickFilterParams }));
-      } else if (search) {
-        setIsFiltered(false);
-        dispatch(searchJobs(search));
-      } else if (hasQuickFilter) {
-        setIsFiltered(true);
-        dispatch(filterJobs({ ...params, ...quickFilterParams }));
-      } else if (isFiltered) {
-        // If we were filtered but cleared quick filter/search, and no side filters active
-        setIsFiltered(false);
-        dispatch(fetchJobs(params));
+        dispatch(
+          filterJobs({
+            ...params,
+            ...activeFilters,
+            ...quickFilterParams,
+            q: search || undefined,
+          })
+        );
       } else {
+        setIsFiltered(false);
         dispatch(fetchJobs(params));
       }
     }, isInitial ? 0 : 500);
     return () => clearTimeout(timer);
-  }, [dispatch, search, activeTab, selectedQuickFilter, route.params]);
+  }, [dispatch, search, activeTab, selectedQuickFilter, route.params, activeFilters]);
 
   const jobsToShow = isFiltered ? filteredJobs : (activeTab === 'Nearest' ? nearby : searchResults);
 
   const renderJobItem = ({ item }: { item: any }) => {
     const companyName = item.employer?.company?.company_name || item.company_name || item.company || 'Hiring Company';
-    const locationLabel = item.location?.label || item.location_name || item.location || 'India';
+    const locationLabel = item.location?.label || item.location_name || (typeof item.location === 'string' ? item.location : item.location?.city) || 'India';
     const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : 'Negotiable');
     const jobType = formatJobType(item.job_type_label || item.employmentType || item.job_type || 'Full Time');
 
@@ -421,8 +423,7 @@ const AllJobsScreen = () => {
       <SideFilterHub
         colors={colors}
         onFilterSelect={(f) => {
-          setIsFiltered(Object.keys(f).length > 0);
-          dispatch(filterJobs(f));
+          setActiveFilters(Object.keys(f).length > 0 ? f : null);
         }}
       />
     </View>

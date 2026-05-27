@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 export const GEMINI_API_KEY = 'AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg';
+// export const GEMINI_API_KEY = 'AIzaSyDRwp1_Op86_rVdrUtFe80U3WzV1gLIZB0';
+
 
 
 const MODELS_TO_TRY = [

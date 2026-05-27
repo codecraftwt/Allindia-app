@@ -102,9 +102,21 @@ const LocationScreen = () => {
   };
 
   const handleAreaSelect = (area: string) => {
+    const cityObj = cities.find((c: any) => c.city.toLowerCase() === tempCity.toLowerCase());
+    const cityId = cityObj ? cityObj.city_id : undefined;
+
     navigation.goBack();
     InteractionManager.runAfterInteractions(() => {
       dispatch(setSelectedLocation({ city: tempCity, area: area }));
+      navigation.navigate('AllJobs', {
+        screen: 'AllJobsList',
+        params: {
+          filters: {
+            city_id: cityId,
+            location: area === 'Entire City' ? undefined : area,
+          }
+        }
+      } as any);
     });
   };
 

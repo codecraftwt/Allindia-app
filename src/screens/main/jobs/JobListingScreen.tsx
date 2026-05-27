@@ -67,7 +67,7 @@ function JobListCard({
   onPress?: () => void;
 }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
-  const locationLabel = job.location?.label || job.location || 'Remote';
+  const locationLabel = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'Remote';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
   const postedLabel = job.created_at ? new Date(job.created_at).toLocaleDateString() : (job.postedLabel || 'Recently');
