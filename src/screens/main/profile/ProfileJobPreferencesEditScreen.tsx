@@ -14,6 +14,7 @@ import {
   Animated as RNAnimated,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -74,6 +75,7 @@ const Section = React.memo(({ title, subtitle, children, colors }: any) => (
 ));
 
 const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onToggle, onSelectSub, colors }: any) => {
+  const { t } = useTranslation();
   const rotation = useSharedValue(0);
 
   const hasSelection = useMemo(() =>
@@ -115,7 +117,7 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
         ]}>
           {category.name}
           {hasSelection && (
-            <Text style={[typography.small, { color: colors.primary }]}> (Selected)</Text>
+            <Text style={[typography.small, { color: colors.primary }]}>{t('profileJobPreferences.selectedSuffix', ' (Selected)')}</Text>
           )}
         </Text>
         <Animated.View style={arrowStyle}>
@@ -152,6 +154,7 @@ const Chip = React.memo(({ label, selected, onPress, colors }: any) => (
 ));
 
 const SalarySelectionField = ({ label, value, onChange, colors }: any) => {
+  const { t } = useTranslation();
   const [text, setText] = useState(value.toString());
   const [isFocused, setIsFocused] = useState(false);
 
@@ -205,12 +208,13 @@ const SalarySelectionField = ({ label, value, onChange, colors }: any) => {
           style={[typography.body, { color: colors.textPrimary, padding: 0, height: 24 }]}
         />
       </View>
-      <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>LPA</Text>
+      <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.lpa', 'LPA')}</Text>
     </View>
   );
 };
 
 const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
+  const { t } = useTranslation();
   const [layoutWidth, setLayoutWidth] = useState(0);
   const minX = useSharedValue(0);
   const maxX = useSharedValue(0);
@@ -297,38 +301,41 @@ const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
       )}
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>₹0</Text>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>₹40L+</Text>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.salaryMinLimitLabel', '₹0')}</Text>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.salaryMaxLimitLabel', '₹40L+')}</Text>
       </View>
     </View>
   );
 };
 
-const WFHCard = ({ active, onToggle, colors }: any) => (
-  <Pressable
-    onPress={() => onToggle(!active)}
-    style={[
-      styles.wfhCard,
-      {
-        backgroundColor: active ? colors.primary : colors.surface,
-        borderColor: active ? colors.primary : colors.border
-      }
-    ]}>
-    <View style={[styles.wfhIconCircle, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
-      <Icon name="home" size={20} color={active ? '#fff' : colors.primary} />
-    </View>
-    <View style={{ flex: 1, marginLeft: 12 }}>
-      <Text style={[typography.labelMedium, { color: active ? '#fff' : colors.textPrimary }]}>Remote / Work From Home</Text>
-      <Text style={[typography.small, { color: active ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>Show jobs that don't require office visit</Text>
-    </View>
-    <Switch
-      value={active}
-      onValueChange={onToggle}
-      trackColor={{ false: 'transparent', true: 'rgba(255,255,255,0.3)' }}
-      thumbColor={active ? '#fff' : colors.textPlaceholder}
-    />
-  </Pressable>
-);
+const WFHCard = ({ active, onToggle, colors }: any) => {
+  const { t } = useTranslation();
+  return (
+    <Pressable
+      onPress={() => onToggle(!active)}
+      style={[
+        styles.wfhCard,
+        {
+          backgroundColor: active ? colors.primary : colors.surface,
+          borderColor: active ? colors.primary : colors.border
+        }
+      ]}>
+      <View style={[styles.wfhIconCircle, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : colors.surfaceHighlight }]}>
+        <Icon name="home" size={20} color={active ? '#fff' : colors.primary} />
+      </View>
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={[typography.labelMedium, { color: active ? '#fff' : colors.textPrimary }]}>{t('profileJobPreferences.remoteWfh', 'Remote / Work From Home')}</Text>
+        <Text style={[typography.small, { color: active ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>{t('profileJobPreferences.wfhSubtitle', "Show jobs that don't require office visit")}</Text>
+      </View>
+      <Switch
+        value={active}
+        onValueChange={onToggle}
+        trackColor={{ false: 'transparent', true: 'rgba(255,255,255,0.3)' }}
+        thumbColor={active ? '#fff' : colors.textPlaceholder}
+      />
+    </Pressable>
+  );
+};
 
 // ─── Skeleton Components ───────────────────────────────────────────────────
 
@@ -428,33 +435,37 @@ const PreferencesSkeleton = ({ colors }: any) => (
 );
 
 // ── Category Search Component (Stable) ──────────────────────────────────────
-const CategorySearchField = React.memo(({ value, onChange, colors }: any) => (
-  <View style={{ paddingHorizontal: 14, marginTop: spacing.md, marginBottom: spacing.sm }}>
-    <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>Job category</Text>
-    <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Icon name="search" size={14} color={colors.textPlaceholder} />
-      <TextInput
-        placeholder="Search categories..."
-        placeholderTextColor={colors.textPlaceholder}
-        value={value}
-        onChangeText={onChange}
-        style={[typography.small, { color: colors.textPrimary, flex: 1, paddingVertical: 8 }]}
-        autoCorrect={false}
-      />
-      {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChange('')}>
-          <Icon name="x-circle" size={14} color={colors.textPlaceholder} />
-        </TouchableOpacity>
-      )}
+const CategorySearchField = React.memo(({ value, onChange, colors }: any) => {
+  const { t } = useTranslation();
+  return (
+    <View style={{ paddingHorizontal: 14, marginTop: spacing.md, marginBottom: spacing.sm }}>
+      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>{t('profileJobPreferences.jobCategory', 'Job category')}</Text>
+      <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Icon name="search" size={14} color={colors.textPlaceholder} />
+        <TextInput
+          placeholder={t('profileJobPreferences.searchCategories', 'Search categories...')}
+          placeholderTextColor={colors.textPlaceholder}
+          value={value}
+          onChangeText={onChange}
+          style={[typography.small, { color: colors.textPrimary, flex: 1, paddingVertical: 8 }]}
+          autoCorrect={false}
+        />
+        {value.length > 0 && (
+          <TouchableOpacity onPress={() => onChange('')}>
+            <Icon name="x-circle" size={14} color={colors.textPlaceholder} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
-  </View>
-));
+  );
+});
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferencesEdit'>;
 
 export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
@@ -578,7 +589,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     console.log('Saving Job Preferences Payload:', JSON.stringify(payload, null, 2));
     try {
       await dispatch(updatePreferencesProfile(payload)).unwrap();
-      showToast('Job preferences saved!', 'success');
+      showToast(t('profileJobPreferences.saveSuccess', 'Job preferences saved!'), 'success');
       setTimeout(() => {
         if (navigation.canGoBack()) {
           navigation.goBack();
@@ -588,7 +599,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         }
       }, 3000);
     } catch (err: any) {
-      showToast(err?.message || 'Save failed', 'error');
+      showToast(err?.message || t('profileJobPreferences.saveFailed', 'Save failed'), 'error');
       console.error('Save failed', err);
     } finally {
       setSaving(false);
@@ -626,9 +637,9 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     }
 
     list.push(
-      { id: 'salary', type: 'section', title: 'Expected salary' },
-      { id: 'language', type: 'section', title: 'Preferred language' },
-      { id: 'wfh', type: 'section', title: 'Work from home' }
+      { id: 'salary', type: 'section', title: t('profileJobPreferences.expectedSalary', 'Expected salary') },
+      { id: 'language', type: 'section', title: t('profileJobPreferences.preferredLanguage', 'Preferred language') },
+      { id: 'wfh', type: 'section', title: t('profileJobPreferences.workFromHome', 'Work from home') }
     );
 
     if (!profileLoading && !metaLoading) {
@@ -641,7 +652,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     switch (item.type) {
       case 'city_selection':
         return (
-          <Section title="Current city" colors={colors}>
+          <Section title={t('profileJobPreferences.currentCity', 'Current city')} colors={colors}>
             <Pressable
               onPress={() => {
                 setCitySearch('');
@@ -653,7 +664,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}>
               <Icon name="map-pin" size={18} color={colors.primary} />
               <Text style={[typography.body, { color: currentCityId ? colors.textPrimary : colors.textPlaceholder, flex: 1 }]}>
-                {currentCityLabel || 'Select city'}
+                {currentCityLabel || t('profileJobPreferences.selectCity', 'Select city')}
               </Text>
               <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
             </Pressable>
@@ -661,7 +672,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         );
       case 'pref_locations':
         return (
-          <Section title="Preferred job locations" colors={colors}>
+          <Section title={t('profileJobPreferences.preferredJobLocations', 'Preferred job locations')} colors={colors}>
             <Pressable
               onPress={() => {
                 setPrefCitySearch('');
@@ -673,7 +684,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}>
               <Icon name="navigation" size={18} color={colors.primary} />
               <Text style={[typography.body, { color: preferredCityIds.length ? colors.textPrimary : colors.textPlaceholder, flex: 1 }]}>
-                {preferredCityIds.length ? `${preferredCityIds.length} cities selected` : 'Select cities'}
+                {preferredCityIds.length ? t('profileJobPreferences.citiesSelected', '{{count}} cities selected', { count: preferredCityIds.length }) : t('profileJobPreferences.selectCities', 'Select cities')}
               </Text>
               <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
             </Pressable>
@@ -688,13 +699,13 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
           <View style={{ gap: spacing.sm, marginTop: -4 }}>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <SalarySelectionField 
-                label="Min Salary" 
+                label={t('profileJobPreferences.minSalary', 'Min Salary')} 
                 value={minSalary} 
                 onChange={(val: number) => setMinSalary(Math.min(val, maxSalary))} 
                 colors={colors} 
               />
               <SalarySelectionField 
-                label="Max Salary" 
+                label={t('profileJobPreferences.maxSalary', 'Max Salary')} 
                 value={maxSalary} 
                 onChange={(val: number) => setMaxSalary(Math.max(val, minSalary))} 
                 colors={colors} 
@@ -716,7 +727,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
             <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingRight: 8 }]}>
               <Icon name="type" size={16} color={colors.primary} style={{ marginLeft: 8 }} />
               <TextInput
-                placeholder="Type your language..."
+                placeholder={t('profileJobPreferences.typeLanguage', 'Type your language...')}
                 placeholderTextColor={colors.textPlaceholder}
                 value={langInput}
                 onChangeText={setLangInput}
@@ -748,7 +759,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                   }}
                   style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.primary, borderRadius: radius.sm }}
                 >
-                  <Text style={[typography.small, { color: '#FFF', fontWeight: 'bold' }]}>Add</Text>
+                  <Text style={[typography.small, { color: '#FFF', fontWeight: 'bold' }]}>{t('profileJobPreferences.add', 'Add')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -777,7 +788,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 return (
                   <Chip
                     key={l.id}
-                    label={l.label}
+                    label={t('profileJobPreferences.languages.' + l.id, l.label)}
                     selected={isSelected}
                     onPress={() => {
                       let current = preferredLanguage ? preferredLanguage.split(',').map(s => s.trim()) : [];
@@ -821,7 +832,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         return (
           <TouchableOpacity onPress={() => setShowAllCats(!isLess)} style={styles.viewMoreBtn}>
             <Text style={[typography.labelMedium, { color: colors.primary }]}>
-              {isLess ? 'View Less Categories' : 'View More Categories'}
+              {isLess ? t('profileJobPreferences.viewLessCategories', 'View Less Categories') : t('profileJobPreferences.viewMoreCategories', 'View More Categories')}
             </Text>
             <Icon name={isLess ? 'chevron-up' : 'chevron-down'} size={16} color={colors.primary} />
           </TouchableOpacity>
@@ -829,7 +840,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       case 'skeleton':
         return <PreferencesSkeleton colors={colors} />;
       case 'button':
-        return <View style={{ padding: 14 }}><PrimaryButton title={saving ? 'Saving...' : 'Save Preferences'} onPress={handleSave} colors={colors} /></View>;
+        return <View style={{ padding: 14 }}><PrimaryButton title={saving ? t('profileJobPreferences.saving', 'Saving...') : t('profileJobPreferences.savePreferences', 'Save Preferences')} onPress={handleSave} colors={colors} /></View>;
       default:
         return null;
     }
@@ -837,8 +848,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
   return (
     <ProfileEditLayout
-      title="Job Preferences"
-      subtitle="Set your location and field"
+      title={t('profileJobPreferences.jobPreferences', 'Job Preferences')}
+      subtitle={t('profileJobPreferences.subtitle', 'Set your location and field')}
       useFlatList={true}
       flatListData={sections}
       renderFlatItem={renderFlatItem}
@@ -855,7 +866,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         <Pressable style={styles.modalOverlay} onPress={() => setShowCityModal(false)}>
           <BottomSheetContent visible={showCityModal} colors={colors}>
             <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select Current City</Text>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('profileJobPreferences.selectCurrentCity', 'Select Current City')}</Text>
               <Pressable onPress={() => setShowCityModal(false)} hitSlop={12}>
                 <Icon name="x" size={20} color={colors.textSecondary} />
               </Pressable>
@@ -863,7 +874,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
             <TextInput
               value={citySearch}
               onChangeText={setCitySearch}
-              placeholder="Search city…"
+              placeholder={t('profileJobPreferences.searchCityPlaceholder', 'Search city…')}
               placeholderTextColor={colors.textPlaceholder}
               style={[
                 styles.searchInput,
@@ -910,7 +921,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         <Pressable style={styles.modalOverlay} onPress={() => setShowPrefCityModal(false)}>
           <BottomSheetContent visible={showPrefCityModal} colors={colors}>
             <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Preferred Locations</Text>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('profileJobPreferences.preferredLocations', 'Preferred Locations')}</Text>
               <Pressable onPress={() => setShowPrefCityModal(false)} hitSlop={12}>
                 <Icon name="check" size={20} color={colors.primary} />
               </Pressable>
@@ -918,7 +929,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
             <TextInput
               value={prefCitySearch}
               onChangeText={setPrefCitySearch}
-              placeholder="Search city…"
+              placeholder={t('profileJobPreferences.searchCityPlaceholder', 'Search city…')}
               placeholderTextColor={colors.textPlaceholder}
               style={[
                 styles.searchInput,

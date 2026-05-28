@@ -19,6 +19,7 @@ import { typography } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import { PrimaryButton } from '../../../components/auth';
 import { useToast } from '../../../context/ToastContext';
+import { useTranslation } from 'react-i18next';
 
 // Enable layout animation on Android
 if (Platform.OS === 'android') {
@@ -118,6 +119,7 @@ const ContactRow: React.FC<ContactRowProps> = ({ icon, title, value, badge, colo
 const HelpAndSupportScreen: React.FC = () => {
   const { colors } = useTheme();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   // Form State
   const [category, setCategory] = useState('application');
@@ -141,7 +143,7 @@ const HelpAndSupportScreen: React.FC = () => {
 
   const handleSubmitTicket = () => {
     if (!message.trim() || !email.trim()) {
-      showToast('Please fill in both Email and Message fields.', 'error');
+      showToast(t('helpAndSupportScreen.validationError', 'Please fill in both Email and Message fields.'), 'error');
       return;
     }
 
@@ -151,8 +153,8 @@ const HelpAndSupportScreen: React.FC = () => {
       setEmail('');
       setMessage('');
       Alert.alert(
-        'Ticket Submitted',
-        'Thank you for reaching out! A support ticket has been created. Our team will contact you back at your email within 24 hours.',
+        t('helpAndSupportScreen.ticketSubmittedTitle', 'Ticket Submitted'),
+        t('helpAndSupportScreen.ticketSubmittedMsg', 'Thank you for reaching out! A support ticket has been created. Our team will contact you back at your email within 24 hours.'),
         [{ text: 'OK' }]
       );
     }, 1500);
@@ -160,59 +162,68 @@ const HelpAndSupportScreen: React.FC = () => {
 
   const faqData = [
     {
-      question: 'How do I apply for a job?',
-      answer: 'Browse jobs on the Home or Jobs tab. Click on a job to view its details, fill in any screening answers requested by the employer, and click "Apply now". You can track the status of all your applications in the "Applications" tab.',
+      question: t('helpAndSupportScreen.faq1Q', 'How do I apply for a job?'),
+      answer: t('helpAndSupportScreen.faq1A', 'Browse jobs on the Home or Jobs tab. Click on a job to view its details, fill in any screening answers requested by the employer, and click "Apply now". You can track the status of all your applications in the "Applications" tab.'),
     },
     {
-      question: 'How does the AI Resume Builder work?',
-      answer: 'Navigate to the AI Assistant screen from your profile or the main dashboard. Our AI parses your personal and professional profile details, formats it professionally, and suggests high-impact keywords to beat Applicant Tracking Systems (ATS).',
+      question: t('helpAndSupportScreen.faq2Q', 'How does the AI Resume Builder work?'),
+      answer: t('helpAndSupportScreen.faq2A', 'Navigate to the AI Assistant screen from your profile or the main dashboard. Our AI parses your personal and professional profile details, formats it professionally, and suggests high-impact keywords to beat Applicant Tracking Systems (ATS).'),
     },
     {
-      question: 'How can I edit my job preferences?',
-      answer: 'Go to your Profile tab, click "View Profile Details", and click on the edit icon next to "Job Preferences". There, you can update your preferred roles, locations, industry, and expected salary to get better recommendations.',
+      question: t('helpAndSupportScreen.faq3Q', 'How can I edit my job preferences?'),
+      answer: t('helpAndSupportScreen.faq3A', 'Go to your Profile tab, click "View Profile Details", and click on the edit icon next to "Job Preferences". There, you can update your preferred roles, locations, industry, and expected salary to get better recommendations.'),
     },
     {
-      question: 'What do the application status labels mean?',
-      answer: '"Under Review" means the recruiter is actively viewing your resume. "Shortlisted" means you advanced to the next screening round, and a representative will contact you shortly. "Rejected" means the application is closed.',
+      question: t('helpAndSupportScreen.faq4Q', 'What do the application status labels mean?'),
+      answer: t('helpAndSupportScreen.faq4A', '"Under Review" means the recruiter is actively viewing your resume. "Shortlisted" means you advanced to the next screening round, and a representative will contact you shortly. "Rejected" means the application is closed.'),
     },
     {
-      question: 'Is my personal data protected on Job India?',
-      answer: 'Yes, absolutely. We use industry-standard encryption protocols. Your personal contact details are kept secure and are only revealed to verified recruiters to protect you from fraudulent activities or spam.',
+      question: t('helpAndSupportScreen.faq5Q', 'Is my personal data protected on Job India?'),
+      answer: t('helpAndSupportScreen.faq5A', 'Yes, absolutely. We use industry-standard encryption protocols. Your personal contact details are kept secure and are only revealed to verified recruiters to protect you from fraudulent activities or spam.'),
     },
+  ];
+
+  const categories = [
+    { label: t('helpAndSupportScreen.categoryJobApply', 'Job Apply'), val: 'application' },
+    { label: t('helpAndSupportScreen.categoryAiResume', 'AI Resume'), val: 'resume' },
+    { label: t('helpAndSupportScreen.categoryAccount', 'Account'), val: 'account' },
+    { label: t('helpAndSupportScreen.categoryOther', 'Other'), val: 'other' },
   ];
 
   return (
     <ProfileEditLayout
-      title="Help & Support"
-      subtitle="Find quick answers, contact our team, or submit a support request ticket."
+      title={t('helpAndSupportScreen.title', 'Help & Support')}
+      subtitle={t('helpAndSupportScreen.subtitle', 'Find quick answers, contact our team, or submit a support request ticket.')}
     >
       {/* Quick Contacts */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Get in Touch</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+          {t('helpAndSupportScreen.getInTouch', 'Get in Touch')}
+        </Text>
         <View style={styles.contactsColumn}>
           <ContactRow
             icon="mail"
-            title="Email Support"
+            title={t('helpAndSupportScreen.emailSupport', 'Email Support')}
             value="support@jobindia.in"
-            badge="Replies in 4h"
+            badge={t('helpAndSupportScreen.emailReplies', 'Replies in 4h')}
             color="#3B82F6"
             onPress={() => handleContactPress('email')}
             colors={colors}
           />
           <ContactRow
             icon="phone"
-            title="Toll Free Call"
+            title={t('helpAndSupportScreen.tollFreeCall', 'Toll Free Call')}
             value="1800-123-4567"
-            badge="9 AM - 6 PM"
+            badge={t('helpAndSupportScreen.tollFreeHours', '9 AM - 6 PM')}
             color="#10B981"
             onPress={() => handleContactPress('phone')}
             colors={colors}
           />
           <ContactRow
             icon="message-circle"
-            title="WhatsApp Support"
+            title={t('helpAndSupportScreen.whatsappSupport', 'WhatsApp Support')}
             value="+91 98765 43210"
-            badge="Instant Chat"
+            badge={t('helpAndSupportScreen.whatsappInstant', 'Instant Chat')}
             color="#8B5CF6"
             onPress={() => handleContactPress('whatsapp')}
             colors={colors}
@@ -222,7 +233,9 @@ const HelpAndSupportScreen: React.FC = () => {
 
       {/* Frequently Asked Questions */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Frequently Asked Questions</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+          {t('helpAndSupportScreen.faqTitle', 'Frequently Asked Questions')}
+        </Text>
         <View style={styles.faqList}>
           {faqData.map((faq, index) => (
             <FAQItem
@@ -237,11 +250,15 @@ const HelpAndSupportScreen: React.FC = () => {
 
       {/* Submit Ticket Form */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Submit a Support Ticket</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>
+          {t('helpAndSupportScreen.submitTicket', 'Submit a Support Ticket')}
+        </Text>
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Your Registered Email Address</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              {t('helpAndSupportScreen.emailLabel', 'Your Registered Email Address')}
+            </Text>
             <View style={[
               styles.inputWrapper, 
               { 
@@ -256,7 +273,7 @@ const HelpAndSupportScreen: React.FC = () => {
                 onChangeText={setEmail}
                 onFocus={() => setIsEmailFocused(true)}
                 onBlur={() => setIsEmailFocused(false)}
-                placeholder="Enter email address"
+                placeholder={t('helpAndSupportScreen.emailPlaceholder', 'Enter email address')}
                 placeholderTextColor={colors.textPlaceholder}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -265,14 +282,11 @@ const HelpAndSupportScreen: React.FC = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Issue Category</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              {t('helpAndSupportScreen.categoryLabel', 'Issue Category')}
+            </Text>
             <View style={styles.categoriesRow}>
-              {[
-                { label: 'Job Apply', val: 'application' },
-                { label: 'AI Resume', val: 'resume' },
-                { label: 'Account', val: 'account' },
-                { label: 'Other', val: 'other' }
-              ].map(cat => (
+              {categories.map(cat => (
                 <Pressable
                   key={cat.val}
                   onPress={() => setCategory(cat.val)}
@@ -293,7 +307,9 @@ const HelpAndSupportScreen: React.FC = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Description of the issue</Text>
+            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+              {t('helpAndSupportScreen.descriptionLabel', 'Description of the issue')}
+            </Text>
             <TextInput
               style={[
                 styles.textArea,
@@ -310,14 +326,17 @@ const HelpAndSupportScreen: React.FC = () => {
               onChangeText={setMessage}
               onFocus={() => setIsMessageFocused(true)}
               onBlur={() => setIsMessageFocused(false)}
-              placeholder="Describe your query or issue in detail..."
+              placeholder={t('helpAndSupportScreen.descriptionPlaceholder', 'Describe your query or issue in detail...')}
               placeholderTextColor={colors.textPlaceholder}
             />
           </View>
 
           <View style={{ marginTop: spacing.sm }}>
             <PrimaryButton
-              title={isSubmitting ? 'Submitting...' : 'Submit Support Request'}
+              title={isSubmitting
+                ? t('helpAndSupportScreen.submittingBtn', 'Submitting...')
+                : t('helpAndSupportScreen.submitBtn', 'Submit Support Request')
+              }
               onPress={handleSubmitTicket}
               loading={isSubmitting}
               colors={colors}

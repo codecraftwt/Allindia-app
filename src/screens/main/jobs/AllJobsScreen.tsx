@@ -25,6 +25,7 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import JobActionModal from '../../../components/JobActionModal';
@@ -127,6 +128,7 @@ const AllJobsScreen = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<any>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Handle incoming filters from navigation
@@ -198,9 +200,9 @@ const AllJobsScreen = () => {
   const jobsToShow = isFiltered ? filteredJobs : (activeTab === 'Nearest' ? nearby : searchResults);
 
   const renderJobItem = ({ item }: { item: any }) => {
-    const companyName = item.employer?.company?.company_name || item.company_name || item.company || 'Hiring Company';
-    const locationLabel = item.location?.label || item.location_name || (typeof item.location === 'string' ? item.location : item.location?.city) || 'India';
-    const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : 'Negotiable');
+    const companyName = item.employer?.company?.company_name || item.company_name || item.company || t('allJobs.hiringCompany', 'Hiring Company');
+    const locationLabel = item.location?.label || item.location_name || (typeof item.location === 'string' ? item.location : item.location?.city) || t('allJobs.india', 'India');
+    const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : t('allJobs.negotiable', 'Negotiable'));
     const jobType = formatJobType(item.job_type_label || item.employmentType || item.job_type || 'Full Time');
 
     const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
@@ -241,7 +243,7 @@ const AllJobsScreen = () => {
           </View>
           <View style={{ position: 'absolute', top: 0, right: 0 }}>
             <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
-              Recently
+              {t('allJobs.recently', 'Recently')}
             </Text>
           </View>
         </View>
@@ -305,7 +307,7 @@ const AllJobsScreen = () => {
       <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
         <AuthHeadline
           colors={colors}
-          title="All jobs"
+          title={t('allJobs.title', 'All jobs')}
           style={{ marginBottom: 4 }}
         />
       </View>
@@ -313,7 +315,7 @@ const AllJobsScreen = () => {
         <Icon name="search" size={18} color={colors.textPlaceholder} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
-          placeholder="Search jobs, companies..."
+          placeholder={t('allJobs.searchPlaceholder', 'Search jobs, companies...')}
           placeholderTextColor={colors.textPlaceholder}
           value={search}
           onChangeText={setSearch}
@@ -336,8 +338,8 @@ const AllJobsScreen = () => {
               <Icon name="map-marker" size={18} color={activeTab === 'Nearest' ? '#fff' : '#6366F1'} />
             </View>
             <View style={styles.cardInfo}>
-              <Text style={[styles.actionTitle, { color: activeTab === 'Nearest' ? '#1E1B4B' : '#4B5563' }]}>Nearest</Text>
-              <Text style={styles.actionSub}>Near you</Text>
+              <Text style={[styles.actionTitle, { color: activeTab === 'Nearest' ? '#1E1B4B' : '#4B5563' }]}>{t('allJobs.nearest', 'Nearest')}</Text>
+              <Text style={styles.actionSub}>{t('allJobs.nearYou', 'Near you')}</Text>
             </View>
           </Pressable>
 
@@ -355,8 +357,8 @@ const AllJobsScreen = () => {
               <Icon name="globe" size={18} color={activeTab === 'Other Cities' ? '#fff' : '#0284C7'} />
             </View>
             <View style={styles.cardInfo}>
-              <Text style={[styles.actionTitle, { color: activeTab === 'Other Cities' ? '#082F49' : '#4B5563' }]}>Other Cities</Text>
-              <Text style={styles.actionSub}>Explore India</Text>
+              <Text style={[styles.actionTitle, { color: activeTab === 'Other Cities' ? '#082F49' : '#4B5563' }]}>{t('allJobs.otherCities', 'Other Cities')}</Text>
+              <Text style={styles.actionSub}>{t('allJobs.exploreIndia', 'Explore India')}</Text>
             </View>
           </Pressable>
         </View>
@@ -392,7 +394,7 @@ const AllJobsScreen = () => {
                   styles.quickFilterText,
                   { color: isSelected ? filter.color : colors.textPrimary }
                 ]}>
-                  {filter.label}
+                  {t(`allJobs.quickFilters.${filter.label.replace(/\s+/g, '')}`, filter.label)}
                 </Text>
               </Pressable>
             );
@@ -413,7 +415,7 @@ const AllJobsScreen = () => {
             <View style={styles.empty}>
               <Icon name="briefcase" size={60} color={colors.border} />
               <Text style={[typography.h4, { color: colors.textSecondary, marginTop: 16 }]}>
-                No jobs available yet
+                {t('allJobs.noJobs', 'No jobs available yet')}
               </Text>
             </View>
           )}

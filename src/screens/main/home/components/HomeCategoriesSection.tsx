@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { typography } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import type { ThemeColors } from '../../../../theme/colors';
+import { useTranslation } from 'react-i18next';
 
 interface HomeCategoriesSectionProps {
   categories: any[];
@@ -100,6 +101,7 @@ function SectionHeader({
   colors: ThemeColors;
   onPress?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.sectionHeader}>
       {icon ? (
@@ -107,7 +109,7 @@ function SectionHeader({
       ) : null}
       <Text style={[typography.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
       <Pressable hitSlop={8} onPress={onPress}>
-        <Text style={[typography.labelMedium, { color: colors.primary }]}>See all</Text>
+        <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('home.seeAll', 'See all')}</Text>
       </Pressable>
     </View>
   );
@@ -120,12 +122,13 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
   homeCategoriesMock,
   isDark = false,
 }) => {
+  const { t } = useTranslation();
   const displayData = (categories && categories.length > 0) ? categories : (homeCategoriesMock || []);
 
   return (
     <View style={[styles.container, { minHeight: 100 }]}>
       <SectionHeader
-        title="Categories"
+        title={t('home.categories', 'Categories')}
         colors={colors}
         onPress={() => navigation.navigate('JobCategories')}
       />

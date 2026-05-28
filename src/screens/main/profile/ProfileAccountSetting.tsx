@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
+import { useTranslation } from 'react-i18next';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import { logoutCandidate, logout } from '../../../redux/slice/authSlice';
 import { changePassword, deleteAccount, clearProfile } from '../../../redux/slice/profileSlice';
@@ -71,6 +72,7 @@ const ProfileAccountSetting: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { showToast } = useToast();
+  const { t, i18n } = useTranslation();
 
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
 
@@ -102,11 +104,27 @@ const ProfileAccountSetting: React.FC = () => {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
 
+  // Language Modal State
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const languageSlideAnim = React.useRef(new Animated.Value(350)).current;
+
+  React.useEffect(() => {
+    if (showLanguageModal) {
+      languageSlideAnim.setValue(350);
+      Animated.spring(languageSlideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showLanguageModal]);
+
   const [delLoading, setDelLoading] = useState(false);
   const [showDelPwd, setShowDelPwd] = useState(false);
 
   const confirmPasswordError = confirmPassword && newPassword && confirmPassword !== newPassword
-    ? 'Passwords do not match'
+    ? t('profileAccountSetting.passwordsDoNotMatch', 'Passwords do not match')
     : '';
 
   // Animated values for custom premium slide-up sheets
@@ -150,42 +168,42 @@ const ProfileAccountSetting: React.FC = () => {
 
   const handleChangePassword = async () => {
     if (!currentPassword) {
-      showStatus('error', 'Validation Error', 'Please enter your current password.');
+      showStatus('error', t('profileAccountSetting.validationError', 'Validation Error'), t('profileAccountSetting.pleaseEnterCurrentPassword', 'Please enter your current password.'));
       return;
     }
     if (!newPassword || !confirmPassword) {
-      showStatus('error', 'Validation Error', 'Please enter and confirm your new password.');
+      showStatus('error', t('profileAccountSetting.validationError', 'Validation Error'), t('profileAccountSetting.pleaseEnterConfirmNewPassword', 'Please enter and confirm your new password.'));
       return;
     }
 
     // New password field validations
     const errors: string[] = [];
     if (newPassword.length < 8) {
-      errors.push('• Must be at least 8 characters long.');
+      errors.push(t('profileAccountSetting.errLength', '• Must be at least 8 characters long.'));
     }
     if (!/[A-Z]/.test(newPassword)) {
-      errors.push('• Must contain at least one uppercase letter (A-Z).');
+      errors.push(t('profileAccountSetting.errUppercase', '• Must contain at least one uppercase letter (A-Z).'));
     }
     if (!/[a-z]/.test(newPassword)) {
-      errors.push('• Must contain at least one lowercase letter (a-z).');
+      errors.push(t('profileAccountSetting.errLowercase', '• Must contain at least one lowercase letter (a-z).'));
     }
     if (!/[0-9]/.test(newPassword)) {
-      errors.push('• Must contain at least one number (0-9).');
+      errors.push(t('profileAccountSetting.errNumber', '• Must contain at least one number (0-9).'));
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
-      errors.push('• Must contain at least one special character.');
+      errors.push(t('profileAccountSetting.errSpecial', '• Must contain at least one special character.'));
     }
     if (/(.)\1{2,}/.test(newPassword)) {
-      errors.push('• Must not contain 3 or more consecutive identical characters.');
+      errors.push(t('profileAccountSetting.errConsecutive', '• Must not contain 3 or more consecutive identical characters.'));
     }
 
     if (errors.length > 0) {
-      showStatus('error', 'Weak Password', `Your new password does not meet the requirements:\n${errors.join('\n')}`);
+      showStatus('error', t('profileAccountSetting.weakPassword', 'Weak Password'), `${t('profileAccountSetting.requirementsTitle', 'Your new password does not meet the requirements:')}\n${errors.join('\n')}`);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      showStatus('error', 'Validation Error', 'New password and confirm password do not match.');
+      showStatus('error', t('profileAccountSetting.validationError', 'Validation Error'), t('profileAccountSetting.newPasswordConfirmMismatch', 'New password and confirm password do not match.'));
       return;
     }
 
@@ -199,8 +217,8 @@ const ProfileAccountSetting: React.FC = () => {
 
       showStatus(
         'success',
-        'Success',
-        'Password changed successfully. Please log in again with your new password.',
+        t('profileAccountSetting.successTitle', 'Success'),
+        t('profileAccountSetting.changePasswordSuccess', 'Password changed successfully. Please log in again with your new password.'),
         () => {
           dispatch(logout());
           dispatch(clearProfile());
@@ -212,7 +230,7 @@ const ProfileAccountSetting: React.FC = () => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      let errorMessage = err.message || "Failed to change password";
+      let errorMessage = err.message || t('profileAccountSetting.changePasswordFailed', 'Failed to change password');
       if (err.errors) {
         // Prioritize current_password error if present
         if (err.errors.current_password) {
@@ -222,7 +240,7 @@ const ProfileAccountSetting: React.FC = () => {
           errorMessage = errorList.join("\n• ");
         }
       }
-      showStatus('error', 'Change Failed', errorMessage);
+      showStatus('error', t('profileAccountSetting.changeFailedTitle', 'Change Failed'), errorMessage);
     } finally {
       setPwdLoading(false);
     }
@@ -230,7 +248,7 @@ const ProfileAccountSetting: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (!deletePassword || !deleteReason) {
-      showStatus('error', 'Required Fields', 'Please enter your password and a reason for leaving.');
+      showStatus('error', t('profileAccountSetting.requiredFieldsTitle', 'Required Fields'), t('profileAccountSetting.enterPasswordAndReason', 'Please enter your password and a reason for leaving.'));
       return;
     }
 
@@ -245,15 +263,15 @@ const ProfileAccountSetting: React.FC = () => {
       dispatch(logout());
       dispatch(clearProfile());
       setShowDeleteModal(false);
-      showToast('Account deleted successfully', 'success');
+      showToast(t('profileAccountSetting.accountDeletedSuccess', 'Account deleted successfully'), 'success');
       logoutToLogin(navigation);
     } catch (err: any) {
-      let errorMessage = err.message || "Failed to delete account";
+      let errorMessage = err.message || t('profileAccountSetting.failedToDeleteAccount', 'Failed to delete account');
       if (err.errors) {
         const errorList = Object.values(err.errors).flat();
         errorMessage = errorList.join("\n• ");
       }
-      showStatus('error', 'Deletion Failed', errorMessage);
+      showStatus('error', t('profileAccountSetting.deletionFailedTitle', 'Deletion Failed'), errorMessage);
     } finally {
       setDelLoading(false);
     }
@@ -262,8 +280,8 @@ const ProfileAccountSetting: React.FC = () => {
   const handleDeleteAccount = () => {
     showStatus(
       'confirm',
-      'Delete Account',
-      'Are you sure you want to delete your account? This action is permanent and cannot be undone.',
+      t('profileAccountSetting.confirmDeleteTitle', 'Delete Account'),
+      t('profileAccountSetting.confirmDeleteMessage', 'Are you sure you want to delete your account? This action is permanent and cannot be undone.'),
       () => {
         setStatusModal(prev => ({ ...prev, visible: false }));
         setShowDeleteModal(true);
@@ -271,18 +289,45 @@ const ProfileAccountSetting: React.FC = () => {
     );
   };
 
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    setShowLanguageModal(false);
+  };
+
+  const getLanguageLabel = (lngCode: string) => {
+    switch (lngCode) {
+      case 'hi': return t('profileAccountSetting.hindi', 'Hindi');
+      case 'mr': return t('profileAccountSetting.marathi', 'Marathi');
+      case 'kn': return t('profileAccountSetting.kannada', 'Kannada');
+      case 'en': default: return t('profileAccountSetting.english', 'English');
+    }
+  };
+
   return (
     <ProfileEditLayout
-      title="Account Settings"
-      subtitle="Manage your security, privacy and account status.">
+      title={t('profile.accountSettings', 'Account Settings')}
+      subtitle={t('profile.manageSecurity', 'Manage your security, privacy and account status.')}>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Security</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{t('profile.preferences', 'Preferences')}</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <AccountSettingItem
+            icon="globe"
+            title={t('profile.language', 'Language')}
+            subtitle={getLanguageLabel(i18n.language)}
+            onPress={() => setShowLanguageModal(true)}
+            colors={colors}
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{t('profile.security', 'Security')}</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <AccountSettingItem
             icon="lock"
-            title="Change Password"
-            subtitle="Secure your account with a new password"
+            title={t('profile.changePassword', 'Change Password')}
+            subtitle={t('profile.secureAccount', 'Secure your account with a new password')}
             onPress={() => setShowPasswordModal(true)}
             colors={colors}
           />
@@ -290,17 +335,17 @@ const ProfileAccountSetting: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>Privacy & Legal</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{t('profile.privacyLegal', 'Privacy & Legal')}</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <AccountSettingItem
             icon="file-text"
-            title="Privacy Policy"
+            title={t('profile.privacyPolicy', 'Privacy Policy')}
             onPress={() => navigation.navigate('PrivacyPolicy')}
             colors={colors}
           />
           <AccountSettingItem
             icon="file-text"
-            title="Terms of Service"
+            title={t('profile.termsOfService', 'Terms of Service')}
             onPress={() => navigation.navigate('TermsAndConditions')}
             colors={colors}
           />
@@ -308,12 +353,12 @@ const ProfileAccountSetting: React.FC = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.error }]}>Danger Zone</Text>
+        <Text style={[styles.sectionTitle, { color: colors.error }]}>{t('profile.dangerZone', 'Danger Zone')}</Text>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.error + '40' }]}>
           <AccountSettingItem
             icon="trash"
-            title="Delete Account"
-            subtitle="Permanently remove your account and data"
+            title={t('profile.deleteAccount', 'Delete Account')}
+            subtitle={t('profile.permanentlyRemove', 'Permanently remove your account and data')}
             onPress={handleDeleteAccount}
             isDanger={true}
             colors={colors}
@@ -334,7 +379,7 @@ const ProfileAccountSetting: React.FC = () => {
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowPasswordModal(false)} />
           <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: changePasswordSlideAnim }] }]}>
             <View style={styles.modalHeader}>
-              <Text style={[typography.h3, { color: colors.textPrimary }]}>Change Password</Text>
+              <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('profile.changePassword', 'Change Password')}</Text>
               <Pressable onPress={() => setShowPasswordModal(false)} hitSlop={12}>
                 <Icon name="x" size={20} color={colors.textSecondary} />
               </Pressable>
@@ -342,14 +387,14 @@ const ProfileAccountSetting: React.FC = () => {
 
             <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Current Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('profileAccountSetting.currentPassword', 'Current Password')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <TextInput
                     style={[styles.input, { color: colors.textPrimary }]}
                     secureTextEntry={!passwordVisibility?.current}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
-                    placeholder="Enter current password"
+                    placeholder={t('profileAccountSetting.enterCurrentPassword', 'Enter current password')}
                     placeholderTextColor={colors.textPlaceholder}
                   />
                   <Pressable onPress={() => toggleVisibility('current')} style={styles.eyeIcon}>
@@ -359,14 +404,14 @@ const ProfileAccountSetting: React.FC = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>New Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('profileAccountSetting.newPassword', 'New Password')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <TextInput
                     style={[styles.input, { color: colors.textPrimary }]}
                     secureTextEntry={!passwordVisibility?.new}
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Enter new password"
+                    placeholder={t('profileAccountSetting.enterNewPassword', 'Enter new password')}
                     placeholderTextColor={colors.textPlaceholder}
                   />
                   <Pressable onPress={() => toggleVisibility('new')} style={styles.eyeIcon}>
@@ -382,7 +427,7 @@ const ProfileAccountSetting: React.FC = () => {
                         color={newPassword.length >= 8 ? colors.success : colors.textPlaceholder}
                       />
                       <Text style={[styles.requirementText, { color: newPassword.length >= 8 ? colors.textPrimary : colors.textSecondary }]}>
-                        At least 8 characters
+                        {t('profileAccountSetting.reqLength', 'At least 8 characters')}
                       </Text>
                     </View>
                     <View style={styles.requirementRow}>
@@ -392,7 +437,7 @@ const ProfileAccountSetting: React.FC = () => {
                         color={(/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) ? colors.success : colors.textPlaceholder}
                       />
                       <Text style={[styles.requirementText, { color: (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) ? colors.textPrimary : colors.textSecondary }]}>
-                        At least one uppercase & lowercase letter
+                        {t('profileAccountSetting.reqCase', 'At least one uppercase & lowercase letter')}
                       </Text>
                     </View>
                     <View style={styles.requirementRow}>
@@ -402,7 +447,7 @@ const ProfileAccountSetting: React.FC = () => {
                         color={(/[0-9]/.test(newPassword) && /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) ? colors.success : colors.textPlaceholder}
                       />
                       <Text style={[styles.requirementText, { color: (/[0-9]/.test(newPassword) && /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) ? colors.textPrimary : colors.textSecondary }]}>
-                        At least one number & special character
+                        {t('profileAccountSetting.reqChar', 'At least one number & special character')}
                       </Text>
                     </View>
                     <View style={styles.requirementRow}>
@@ -412,7 +457,7 @@ const ProfileAccountSetting: React.FC = () => {
                         color={(!/(.)\1{2,}/.test(newPassword)) ? colors.success : colors.error}
                       />
                       <Text style={[styles.requirementText, { color: (!/(.)\1{2,}/.test(newPassword)) ? colors.textPrimary : colors.error }]}>
-                        No 3+ consecutive identical characters
+                        {t('profileAccountSetting.reqConsecutive', 'No 3+ consecutive identical characters')}
                       </Text>
                     </View>
                   </View>
@@ -420,14 +465,14 @@ const ProfileAccountSetting: React.FC = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Confirm New Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('profileAccountSetting.confirmNewPassword', 'Confirm New Password')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <TextInput
                     style={[styles.input, { color: colors.textPrimary }]}
                     secureTextEntry={!passwordVisibility?.confirm}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
+                    placeholder={t('profileAccountSetting.confirmNewPasswordPlaceholder', 'Confirm new password')}
                     placeholderTextColor={colors.textPlaceholder}
                   />
                   <Pressable onPress={() => toggleVisibility('confirm')} style={styles.eyeIcon}>
@@ -443,7 +488,7 @@ const ProfileAccountSetting: React.FC = () => {
 
               <View style={{ marginTop: spacing.md }}>
                 <PrimaryButton
-                  title={pwdLoading ? "Updating..." : "Update Password"}
+                  title={pwdLoading ? t('profileAccountSetting.updating', 'Updating...') : t('profileAccountSetting.updatePassword', 'Update Password')}
                   onPress={handleChangePassword}
                   loading={pwdLoading}
                   colors={colors}
@@ -469,8 +514,8 @@ const ProfileAccountSetting: React.FC = () => {
           <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: deleteAccountSlideAnim }] }]}>
             <View style={styles.modalHeader}>
               <View>
-                <Text style={[typography.h3, { color: colors.error }]}>Delete Account</Text>
-                <Text style={[typography.small, { color: colors.textSecondary }]}>This action cannot be undone</Text>
+                <Text style={[typography.h3, { color: colors.error }]}>{t('profile.deleteAccount', 'Delete Account')}</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>{t('profileAccountSetting.actionUndoneMessage', 'This action cannot be undone')}</Text>
               </View>
               <Pressable onPress={() => setShowDeleteModal(false)} hitSlop={12}>
                 <Icon name="x" size={20} color={colors.textSecondary} />
@@ -479,14 +524,14 @@ const ProfileAccountSetting: React.FC = () => {
 
             <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Confirm Password</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('profileAccountSetting.confirmPasswordLabel', 'Confirm Password')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <TextInput
                     style={[styles.input, { color: colors.textPrimary }]}
                     secureTextEntry={!showDelPwd}
                     value={deletePassword}
                     onChangeText={setDeletePassword}
-                    placeholder="Enter your password"
+                    placeholder={t('profileAccountSetting.enterYourPassword', 'Enter your password')}
                     placeholderTextColor={colors.textPlaceholder}
                   />
                   <Pressable onPress={() => setShowDelPwd(!showDelPwd)} style={styles.eyeIcon}>
@@ -496,14 +541,14 @@ const ProfileAccountSetting: React.FC = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Reason for leaving</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('profileAccountSetting.reasonForLeaving', 'Reason for leaving')}</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, color: colors.textPrimary, height: 80, textAlignVertical: 'top', paddingTop: 12 }]}
                   multiline
                   numberOfLines={3}
                   value={deleteReason}
                   onChangeText={setDeleteReason}
-                  placeholder="Tell us why you are leaving..."
+                  placeholder={t('profileAccountSetting.reasonPlaceholder', 'Tell us why you are leaving...')}
                   placeholderTextColor={colors.textPlaceholder}
                 />
               </View>
@@ -517,7 +562,7 @@ const ProfileAccountSetting: React.FC = () => {
                   {delLoading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Permanently Delete My Account</Text>
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>{t('profileAccountSetting.permanentlyDeleteBtn', 'Permanently Delete My Account')}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -550,13 +595,13 @@ const ProfileAccountSetting: React.FC = () => {
                   onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
                   style={[styles.statusBtnSmall, { backgroundColor: colors.surfaceSecondary }]}
                 >
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>No, Cancel</Text>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileAccountSetting.noCancelBtn', 'No, Cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={statusModal.onConfirm}
                   style={[styles.statusBtnSmall, { backgroundColor: colors.error }]}
                 >
-                  <Text style={[typography.labelMedium, { color: '#fff' }]}>Yes, Delete</Text>
+                  <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('profileAccountSetting.yesDeleteBtn', 'Yes, Delete')}</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -569,11 +614,72 @@ const ProfileAccountSetting: React.FC = () => {
                 }}
                 style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
               >
-                <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('profileAccountSetting.gotItBtn', 'Got it')}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
+      </Modal>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
+          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: languageSlideAnim }] }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('profile.chooseLanguage', 'Choose your preferred language')}</Text>
+              </View>
+              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
+                <Icon name="x" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={[styles.modalContent, { gap: spacing.md }]} keyboardShouldPersistTaps="handled">
+              {[
+                { code: 'en', label: 'English' },
+                { code: 'hi', label: 'Hindi (हिंदी)' },
+                { code: 'mr', label: 'Marathi (मराठी)' },
+                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
+              ].map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  onPress={() => changeLanguage(lang.code)}
+                  style={[
+                    styles.item,
+                    {
+                      borderWidth: 1,
+                      borderColor: i18n.language === lang.code ? colors.primary : colors.border,
+                      backgroundColor: i18n.language === lang.code ? colors.surfaceHighlight : colors.surface,
+                      borderRadius: radius.md,
+                      paddingVertical: spacing.lg,
+                    }
+                  ]}
+                >
+                  <View style={[styles.itemIconContainer, { width: 40 }]}>
+                    <Icon name="globe" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
+                  </View>
+                  <View style={styles.itemTextContainer}>
+                    <Text style={[typography.labelMedium, { color: i18n.language === lang.code ? colors.primary : colors.textPrimary, fontSize: 16 }]}>
+                      {lang.label}
+                    </Text>
+                  </View>
+                  {i18n.language === lang.code && (
+                    <Icon name="check-circle" size={20} color={colors.primary} style={{ marginRight: spacing.sm }} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Modal>
     </ProfileEditLayout>
   );

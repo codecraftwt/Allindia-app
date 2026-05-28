@@ -21,6 +21,7 @@ import { radius } from '../../../theme/radius';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { setSelectedLocation } from '../../../redux/slice/addressSlice';
 import { fetchMetaCities } from '../../../redux/slice/metaSlice';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ const LocationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
   const { cities } = useSelector((state: RootState) => state.meta);
+  const { t } = useTranslation();
 
   const [search, setSearch] = useState('');
   const [activeStep, setActiveStep] = useState<'city' | 'area'>(selectedCity ? 'area' : 'city');
@@ -90,10 +92,10 @@ const LocationScreen = () => {
 
   const filteredAreas = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    const base = ['Entire City', ...currentAreas];
+    const base = [t('locationScreen.entireCity', 'Entire City'), ...currentAreas];
     if (!q) return base;
     return base.filter(a => a.toLowerCase().includes(q));
-  }, [currentAreas, search]);
+  }, [currentAreas, search, t]);
 
   const handleCitySelect = (city: string) => {
     setTempCity(city);
@@ -126,7 +128,7 @@ const LocationScreen = () => {
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Icon name="arrow-left" size={24} color={colors.textPrimary} />
         </Pressable>
-        <Text style={[typography.h3, { color: colors.textPrimary }]}>Choose Location</Text>
+        <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('locationScreen.title', 'Choose Location')}</Text>
       </View>
 
       <View style={styles.content}>
@@ -134,7 +136,7 @@ const LocationScreen = () => {
           <Icon name="search" size={20} color={colors.textPlaceholder} />
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
-            placeholder={activeStep === 'city' ? "Search your city" : "Search your area"}
+            placeholder={activeStep === 'city' ? t('locationScreen.searchCity', 'Search your city') : t('locationScreen.searchArea', 'Search your area')}
             placeholderTextColor={colors.textPlaceholder}
             value={search}
             onChangeText={setSearch}
@@ -155,7 +157,7 @@ const LocationScreen = () => {
               ]}
             >
               <Text style={[styles.selectionLabel, { color: activeStep === 'city' ? colors.primary : colors.textSecondary }]}>
-                CITY
+                {t('locationScreen.cityLabel', 'CITY')}
               </Text>
               <Text style={[styles.selectionValue, { color: colors.textPrimary }]} numberOfLines={1}>
                 {tempCity}
@@ -172,10 +174,10 @@ const LocationScreen = () => {
               ]}
             >
               <Text style={[styles.selectionLabel, { color: activeStep === 'area' ? colors.primary : colors.textSecondary }]}>
-                AREA
+                {t('locationScreen.areaLabel', 'AREA')}
               </Text>
               <Text style={[styles.selectionValue, { color: colors.textPrimary }]} numberOfLines={1}>
-                {activeStep === 'city' ? 'Select Area' : (selectedArea || 'Select Area')}
+                {activeStep === 'city' ? t('locationScreen.selectArea', 'Select Area') : (selectedArea || t('locationScreen.selectArea', 'Select Area'))}
               </Text>
             </Pressable>
           </View>
@@ -183,7 +185,7 @@ const LocationScreen = () => {
           {activeStep === 'city' ? (
             <View style={styles.section}>
               <Text style={[typography.labelMedium, { color: colors.textSecondary, marginBottom: 16 }]}>
-                {search.trim().length === 0 ? 'ALL CITIES' : 'SEARCH RESULTS'}
+                {search.trim().length === 0 ? t('locationScreen.allCities', 'ALL CITIES') : t('locationScreen.searchResults', 'SEARCH RESULTS')}
               </Text>
               <View style={styles.areasList}>
                 {filteredCities.map((city, index) => (
@@ -199,7 +201,7 @@ const LocationScreen = () => {
                 ))}
                 {filteredCities.length === 0 && (
                   <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                    <Text style={[typography.body, { color: colors.textSecondary }]}>No cities found</Text>
+                    <Text style={[typography.body, { color: colors.textSecondary }]}>{t('locationScreen.noCitiesFound', 'No cities found')}</Text>
                   </View>
                 )}
               </View>
@@ -207,7 +209,7 @@ const LocationScreen = () => {
           ) : (
             <View style={styles.section}>
               <Text style={[typography.labelMedium, { color: colors.textSecondary, marginBottom: 16 }]}>
-                AREAS IN {tempCity.toUpperCase()}
+                {t('locationScreen.areasIn', 'AREAS IN')} {tempCity.toUpperCase()}
               </Text>
               <View style={styles.areasList}>
                 {filteredAreas.map((area, index) => (
@@ -223,7 +225,7 @@ const LocationScreen = () => {
                 ))}
                 {filteredAreas.length === 0 && (
                   <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                    <Text style={[typography.body, { color: colors.textSecondary }]}>No areas found</Text>
+                    <Text style={[typography.body, { color: colors.textSecondary }]}>{t('locationScreen.noAreasFound', 'No areas found')}</Text>
                   </View>
                 )}
               </View>

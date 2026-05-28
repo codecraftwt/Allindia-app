@@ -6,6 +6,7 @@ import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../components/auth';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
@@ -43,6 +44,7 @@ const FEATURES: FeatureItem[] = [
 
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
@@ -63,19 +65,19 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.content}>
           <Text style={[typography.appTitle, styles.headline, { color: colors.textPrimary }]}>
-            Find your dream job{'\n'}in India
+            {t('auth.landingTitle')}
           </Text>
         </View>
 
         <View style={styles.ctaBlock}>
           <PrimaryButton
-            title="Login with Email"
+            title={t('auth.loginWithEmail')}
             onPress={() => navigation.navigate('EmailLogin')}
             colors={colors}
             iconLeft={<Icon name="envelope" size={18} color={colors.onPrimary} />}
           />
           <PrimaryButton
-            title="Create New Account"
+            title={t('auth.createNewAccount')}
             onPress={() => navigation.navigate('SignIn')}
             colors={colors}
             variant="outline"
@@ -84,7 +86,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.dividerRow}>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>OR</Text>
+            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>{t('auth.orDivider')}</Text>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
           </View>
 
@@ -95,13 +97,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               { borderColor: colors.border },
               pressed && { backgroundColor: colors.surfaceHighlight }
             ]}>
-            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Browse as Guest</Text>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>{t('auth.browseAsGuest')}</Text>
           </Pressable>
 
           <View style={styles.trustRow}>
             <Icon name="shield" size={14} color={colors.success} />
             <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-              Verified Employers • Secure Privacy
+              {t('auth.trustBadgeText')}
             </Text>
           </View>
         </View>

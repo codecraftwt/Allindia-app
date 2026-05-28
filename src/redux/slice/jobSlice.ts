@@ -324,6 +324,11 @@ const jobSlice = createSlice({
       })
       .addCase(toggleWishlist.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+      .addCase(reportJob.fulfilled, (state) => {
+        if (state.currentJob) {
+          state.currentJob.is_reported = true;
+        }
       });
   },
 });

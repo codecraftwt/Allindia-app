@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   FadeInDown,
   FadeIn,
@@ -118,6 +119,7 @@ const AnimatedInput: React.FC<any> = ({ style, onFocus, onBlur, ...props }) => {
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileExperience'>;
 
 const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
@@ -146,10 +148,10 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
         experience_type: isFresher ? 'fresher' : 'experienced',
         total_experience_years: isFresher ? null : yearsNum,
       })).unwrap();
-      showToast('Experience updated successfully!', 'success');
+      showToast(t('profileExperience.experienceUpdated', 'Experience updated successfully!'), 'success');
       setTimeout(() => navigation.goBack(), 3000);
     } catch (err: any) {
-      showToast(err?.message || 'Failed to update experience', 'error');
+      showToast(err?.message || t('profileExperience.failedToUpdateExperience', 'Failed to update experience'), 'error');
       console.error('Failed to update experience:', err);
     }
   };
@@ -165,15 +167,15 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ProfileEditLayout
-      title="Experience"
-      subtitle="Tell us if you’re starting out or already have work history.">
+      title={t('profileExperience.experience', 'Experience')}
+      subtitle={t('profileExperience.experienceSubtitle', 'Tell us if you’re starting out or already have work history.')}>
 
       {renderSection(
         <>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Work experience</Text>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileExperience.workExperience', 'Work experience')}</Text>
           <View style={styles.toggleRow}>
             <ExperienceCard
-              label="Fresher"
+              label={t('profileExperience.fresher', 'Fresher')}
               icon="leaf"
               selected={isFresher}
               onPress={() => {
@@ -183,7 +185,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
               colors={colors}
             />
             <ExperienceCard
-              label="Experienced"
+              label={t('profileExperience.experienced', 'Experienced')}
               icon="briefcase"
               selected={!isFresher}
               onPress={() => setIsFresher(false)}
@@ -199,18 +201,18 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
           {renderSection(
             <>
               <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
-                Total years of experience
+                {t('profileExperience.totalYearsOfExperience', 'Total years of experience')}
               </Text>
 
               <View style={styles.chipGrid}>
                 {[
-                  { label: '0 to 1 Year', value: '1' },
-                  { label: '1 to 2 Years', value: '2' },
-                  { label: '2 to 3 Years', value: '3' },
-                  { label: '3 to 5 Years', value: '5' },
-                  { label: '5 to 7 Years', value: '7' },
-                  { label: '7 to 10 Years', value: '10' },
-                  { label: '10+ Years', value: '15' },
+                  { label: t('profileExperience.years0_1', '0 to 1 Year'), value: '1' },
+                  { label: t('profileExperience.years1_2', '1 to 2 Years'), value: '2' },
+                  { label: t('profileExperience.years2_3', '2 to 3 Years'), value: '3' },
+                  { label: t('profileExperience.years3_5', '3 to 5 Years'), value: '5' },
+                  { label: t('profileExperience.years5_7', '5 to 7 Years'), value: '7' },
+                  { label: t('profileExperience.years7_10', '7 to 10 Years'), value: '10' },
+                  { label: t('profileExperience.years10_plus', '10+ Years'), value: '15' },
                 ].map((range) => (
                   <Pressable
                     key={range.label}
@@ -236,13 +238,13 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
               </View>
 
               <Text style={[typography.small, { color: colors.textSecondary, marginTop: spacing.xs, marginBottom: spacing.xs }]}>
-                Or enter manually:
+                {t('profileExperience.orEnterManually', 'Or enter manually:')}
               </Text>
 
               <AnimatedInput
                 value={years}
                 onChangeText={(t: string) => setYears(t.replace(/\D/g, '').slice(0, 2))}
-                placeholder="e.g. 12"
+                placeholder={t('profileExperience.eg12', 'e.g. 12')}
                 placeholderTextColor={colors.textPlaceholder}
                 keyboardType="number-pad"
                 style={[
@@ -251,7 +253,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
                 ]}
               />
               <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-                Whole years only (1–50).
+                {t('profileExperience.wholeYearsOnly', 'Whole years only (1–50).')}
               </Text>
             </>,
             1
@@ -267,7 +269,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
 
       <Animated.View entering={FadeInDown.delay(500).duration(500)}>
         <PrimaryButton
-          title={loading ? "Saving..." : "Save"}
+          title={loading ? t('profileExperience.saving', 'Saving...') : t('profileExperience.save', 'Save')}
           onPress={handleSave}
           disabled={!canSave || loading}
           colors={colors}

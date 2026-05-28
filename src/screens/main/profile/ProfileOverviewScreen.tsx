@@ -30,6 +30,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { logoutToLogin } from './logoutToLogin';
+import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '../../../api/axiosInstance';
 import LogoutModal from '../../../components/LogoutModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
@@ -57,6 +58,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const { t } = useTranslation();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -232,16 +234,9 @@ const ProfileOverviewScreen: React.FC = () => {
         {isMissing && (
           <Animated.View style={[styles.shimmerBeam, { backgroundColor: colors.primary + '25', transform: [{ translateX: shimmerTranslate }, { skewX: '-20deg' }] }]} />
         )}
-        <Animated.View style={[
-          styles.tileIconContainer,
-          { backgroundColor: (isMissing ? colors.error : (color || colors.primary)) + '15' },
-          isMissing && { transform: [{ translateY: floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }] }
-        ]}>
-          <Icon name={icon} size={20} color={isMissing ? colors.error : (color || colors.primary)} />
-        </Animated.View>
         <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 12 }]} numberOfLines={1}>{title}</Text>
         <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-          {isMissing ? 'Missing' : subtitle}
+          {isMissing ? t('profileOverview.missing', 'Missing') : subtitle}
         </Text>
         {isMissing ? (
           <View style={[styles.tileAddBadge, { backgroundColor: colors.error }]}><Icon name="plus" size={10} color="#FFF" /></View>
@@ -280,7 +275,7 @@ const ProfileOverviewScreen: React.FC = () => {
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{title}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary }]} numberOfLines={1}>
-              {isMissing ? 'Missing! Add now to boost profile ' : subtitle}
+              {isMissing ? t('profileOverview.missingAddNow', 'Missing! Add now to boost profile ') : subtitle}
             </Text>
             {isMissing && <Image source={require('../../../assets/rocket-bg.png')} style={{ width: 14, height: 14, marginLeft: 4, resizeMode: 'contain' }} />}
           </View>
@@ -337,7 +332,7 @@ const ProfileOverviewScreen: React.FC = () => {
       );
     }
 
-    if (!profileData || profileLoading) {
+    if (!profileData) {
       return <ProfileSkeleton />;
     }
 
@@ -391,7 +386,7 @@ const ProfileOverviewScreen: React.FC = () => {
               </View>
               <Text style={[typography.body, { color: colors.textSecondary }]} numberOfLines={1}>{displayEmail}</Text>
               <View style={[styles.editBadge, { backgroundColor: colors.primary + '10' }]}>
-                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>View Profile Details</Text>
+                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>{t('profileOverview.viewProfileDetails', 'View Profile Details')}</Text>
               </View>
             </View>
             <Icon name="chevron-right" size={24} color={colors.textPlaceholder} />
@@ -400,7 +395,7 @@ const ProfileOverviewScreen: React.FC = () => {
           {completion && completion.percentage < 100 && (
             <View style={[styles.strengthContainer, { marginTop: 20 }]}>
               <View style={styles.strengthHeader}>
-                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>Profile Strength</Text>
+                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('profileOverview.profileStrength', 'Profile Strength')}</Text>
                 <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
               </View>
               <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
@@ -425,11 +420,11 @@ const ProfileOverviewScreen: React.FC = () => {
               <Icon name="play-circle" size={28} color="#EC4899" />
             </View>
             <View style={styles.dashboardCardContent}>
-              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>Reels</Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>Watch short job videos</Text>
+              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>{t('profileOverview.reels', 'Reels')}</Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{t('profileOverview.watchReels', 'Watch short job videos')}</Text>
             </View>
             <View style={[styles.cardTag, { backgroundColor: '#EC489910' }]}>
-              <Text style={{ color: '#EC4899', fontSize: 10, fontWeight: 'bold' }}>REELS</Text>
+              <Text style={{ color: '#EC4899', fontSize: 10, fontWeight: 'bold' }}>{t('profileOverview.reelsTag', 'REELS')}</Text>
             </View>
           </Pressable>
 
@@ -446,7 +441,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#F59E0B15' }]}>
                 <Icon name="heart" size={18} color="#F59E0B" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Saved</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>{t('profileOverview.saved', 'Saved')}</Text>
             </Pressable>
 
             <Pressable
@@ -460,7 +455,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#3B82F615' }]}>
                 <Icon name="briefcase" size={18} color="#3B82F6" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>Applied</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>{t('profileOverview.applied', 'Applied')}</Text>
             </Pressable>
           </View>
         </View>
@@ -480,7 +475,7 @@ const ProfileOverviewScreen: React.FC = () => {
             <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
           </Pressable> */}
 
-          <SectionHeader title="Support" />
+          <SectionHeader title={t('profileOverview.support', 'Support')} />
           <Pressable
             onPress={() => navigation.navigate('HelpAndSupport')}
             style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -489,33 +484,33 @@ const ProfileOverviewScreen: React.FC = () => {
               <Icon name="help-circle" size={18} color="#10B981" />
             </View>
             <View style={styles.menuTextContainer}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Help & Support</Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>Contact us for any queries or issues</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.helpSupport', 'Help & Support')}</Text>
+              <Text style={[typography.small, { color: colors.textSecondary }]}>{t('profileOverview.contactUs', 'Contact us for any queries or issues')}</Text>
             </View>
             <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
           </Pressable>
 
-          <SectionHeader title="Settings" />
+          <SectionHeader title={t('profileOverview.settings', 'Settings')} />
           <View style={[styles.settingsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.settingsRow}>
               <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
                 <Icon name={mode === 'dark' ? 'moon' : 'sun'} size={18} color="#64748B" />
               </View>
-              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Dark Mode</Text></View>
+              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.darkMode', 'Dark Mode')}</Text></View>
               <Switch value={mode === 'dark'} onValueChange={v => setMode(v ? 'dark' : 'light')} trackColor={{ false: colors.border, true: colors.primaryLight }} thumbColor="#FFF" />
             </View>
             <Pressable onPress={() => navigation.navigate('ProfileAccountSetting')} style={styles.settingsRow}>
               <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
                 <Icon name="lock" size={18} color="#64748B" />
               </View>
-              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Account Security</Text></View>
+              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.accountSecurity', 'Account Security')}</Text></View>
               <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
             </Pressable>
           </View>
 
           <Pressable onPress={() => setShowLogoutModal(true)} style={[styles.logoutBtn, { borderColor: colors.error + '30' }]}>
             <Icon name="log-out" size={18} color={colors.error} />
-            <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 12 }]}>Sign Out from App</Text>
+            <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 12 }]}>{t('profileOverview.signOut', 'Sign Out from App')}</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -533,25 +528,25 @@ const ProfileOverviewScreen: React.FC = () => {
         <Pressable style={styles.modalOverlay} onPress={() => setShowImagePicker(false)}>
           <View style={[styles.pickerContainer, { backgroundColor: colors.surface }]}>
             <View style={[styles.pickerLine, { backgroundColor: colors.border }]} />
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 24 }]}>Profile Picture</Text>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 24 }]}>{t('profileOverview.profilePicture', 'Profile Picture')}</Text>
             {hasUploadedPhoto && (
               <Pressable style={styles.pickerMenuRow} onPress={() => { setShowImagePicker(false); setShowImageViewer(true); }}>
                 <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.primary + '10' }]}><Icon name="eye" size={18} color={colors.primary} /></View>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>View Profile Picture</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>{t('profileOverview.viewProfilePicture', 'View Profile Picture')}</Text>
               </Pressable>
             )}
             <Pressable style={styles.pickerMenuRow} onPress={() => processImage('camera')}>
               <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.primary + '10' }]}><Icon name="camera" size={18} color={colors.primary} /></View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Take Photo</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>{t('profileOverview.takePhoto', 'Take Photo')}</Text>
             </Pressable>
             <Pressable style={styles.pickerMenuRow} onPress={() => processImage('gallery')}>
               <View style={[styles.pickerIconWrapSmall, { backgroundColor: '#8B5CF610' }]}><Icon name="image" size={18} color="#8B5CF6" /></View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>Choose from Gallery</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16 }]}>{t('profileOverview.chooseGallery', 'Choose from Gallery')}</Text>
             </Pressable>
             {hasUploadedPhoto && (
               <Pressable style={styles.pickerMenuRow} onPress={handleDeletePicture}>
                 <View style={[styles.pickerIconWrapSmall, { backgroundColor: colors.error + '10' }]}><Icon name="trash-2" size={18} color={colors.error} /></View>
-                <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 16 }]}>Remove Photo</Text>
+                <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 16 }]}>{t('profileOverview.removePhoto', 'Remove Photo')}</Text>
               </Pressable>
             )}
           </View>
@@ -574,10 +569,10 @@ const ProfileOverviewScreen: React.FC = () => {
         visible={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDeletePicture}
-        title="Remove Photo"
-        message="Are you sure you want to remove your profile picture? This action cannot be undone."
-        confirmText="Remove"
-        cancelText="Keep Photo"
+        title={t('profileOverview.removePhotoTitle', 'Remove Photo')}
+        message={t('profileOverview.removePhotoMsg', 'Are you sure you want to remove your profile picture? This action cannot be undone.')}
+        confirmText={t('profileOverview.removeConfirm', 'Remove')}
+        cancelText={t('profileOverview.removeCancel', 'Keep Photo')}
         colors={colors}
         loading={isUploading}
         type="danger"

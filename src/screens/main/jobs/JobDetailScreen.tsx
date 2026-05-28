@@ -23,6 +23,7 @@ import {
   type ParamListBase,
   type RouteProp,
 } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { PrimaryButton } from '../../../components/auth';
@@ -197,6 +198,7 @@ const JobDetailScreen: React.FC = () => {
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { wishlistJobs } = useSelector((state: RootState) => state.profile);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (jobId) {
@@ -375,6 +377,17 @@ const JobDetailScreen: React.FC = () => {
     }
   }, [currentJob, companyName, locationLabel]);
 
+  const handleShareApp = useCallback(async () => {
+    try {
+      await Share.share({
+        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://jobindia.app/refer',
+        title: 'Refer JobIndia',
+      });
+    } catch (error: any) {
+      Alert.alert('Error', 'Could not open share menu');
+    }
+  }, []);
+
   const openActions = () => {
     setShowActionModal(true);
   };
@@ -441,11 +454,11 @@ const JobDetailScreen: React.FC = () => {
       )}
 
       <View style={[styles.topBar, { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn} accessibilityLabel="Go back">
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn} accessibilityLabel={t('jobDetail.goBack', 'Go back')}>
           <Icon name="chevron-left" size={22} color={colors.textPrimary} />
         </Pressable>
         <Text style={[typography.labelMedium, { color: colors.textPrimary, flex: 1, textAlign: 'left' }]} numberOfLines={1}>
-          Job details
+          {t('jobDetail.title', 'Job details')}
         </Text>
 
         <Pressable
@@ -495,10 +508,10 @@ const JobDetailScreen: React.FC = () => {
             <Icon name="check-circle" size={24} color={colors.success} />
             <View style={{ flex: 1 }}>
               <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
-                {justApplied ? 'You have successfully applied!' : 'You have already applied!'}
+                {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
               </Text>
               <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                Tap here to check your application status.
+                {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
               </Text>
             </View>
             <Icon name="chevron-right" size={14} color={colors.success} />
@@ -555,36 +568,36 @@ const JobDetailScreen: React.FC = () => {
         </View>
         <View style={[styles.typePill, { backgroundColor: colors.badgeBackground, alignSelf: 'flex-start' }]}>
           <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily }]}>
-            {jobTypeLabel} · Posted {postedDate}
+            {jobTypeLabel} · {t('jobDetail.posted', 'Posted')} {postedDate}
           </Text>
         </View>
 
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <SectionTitle title="Key Highlights" colors={colors} />
+          <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
           <View style={styles.infoGrid}>
-            <InfoRow label="Gender" value={currentJob.gender || 'Any'} icon="venus-mars" colors={colors} />
-            <InfoRow label="Openings" value={`${currentJob.openings || 0} Positions`} icon="users" colors={colors} />
-            <InfoRow label="Category" value={currentJob.category?.name || 'General'} icon="th-large" colors={colors} />
-            <InfoRow label="Experience" value={currentJob.experience_label || '-'} icon="briefcase" colors={colors} />
+            <InfoRow label={t('jobDetail.gender', 'Gender')} value={currentJob.gender || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
+            <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
+            <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
+            <InfoRow label={t('jobDetail.experience', 'Experience')} value={currentJob.experience_label || '-'} icon="briefcase" colors={colors} />
             {currentJob.working_hours && (
-              <InfoRow label="Working Hours" value={currentJob.working_hours} icon="clock-o" colors={colors} />
+              <InfoRow label={t('jobDetail.workingHours', 'Working Hours')} value={currentJob.working_hours} icon="clock-o" colors={colors} />
             )}
             {currentJob.application_deadline && (
-              <InfoRow label="Deadline" value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+              <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
             )}
           </View>
         </View>
 
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-          <SectionTitle title="Description" colors={colors} />
+          <SectionTitle title={t('jobDetail.description', 'Description')} colors={colors} />
           <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
-            {formatDescription(currentJob.description) || 'No description provided.'}
+            {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
           </Text>
         </View>
 
         {currentJob.employer?.company && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title="About Company" colors={colors} />
+            <SectionTitle title={t('jobDetail.aboutCompany', 'About Company')} colors={colors} />
 
             <View style={styles.companyHeader}>
               <View>
@@ -660,7 +673,7 @@ const JobDetailScreen: React.FC = () => {
                   <Icon name="map-marker" size={16} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>Address</Text>
+                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
                   <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13 }]} numberOfLines={2}>
                     {[
                       currentJob.employer.company.address,
@@ -676,19 +689,19 @@ const JobDetailScreen: React.FC = () => {
             {/* Key Company Stats */}
             <View style={styles.companyStatsGrid}>
               <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Employees</Text>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.employees', 'Employees')}</Text>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
                   {currentJob.employer.company.employee_count || '50+'}
                 </Text>
               </View>
               <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Type</Text>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.type', 'Type')}</Text>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
                   {currentJob.employer.company.register_as_label || 'Company'}
                 </Text>
               </View>
               <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Size</Text>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.size', 'Size')}</Text>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
                   {currentJob.employer.company.company_size || 'Mid Scale'}
                 </Text>
@@ -701,7 +714,7 @@ const JobDetailScreen: React.FC = () => {
                 <Icon name="user-circle" size={32} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>Hiring Manager</Text>
+                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.hiringManager', 'Hiring Manager')}</Text>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{currentJob.employer.name}</Text>
               </View>
             </View>
@@ -728,9 +741,56 @@ const JobDetailScreen: React.FC = () => {
           </View>
         )}
 
+        {/* Share & Refer Poster Card */}
+        <View style={[styles.referCard, { backgroundColor: colors.primary }]}>
+          {/* Decorative Background Art */}
+          <View style={[styles.referBlob1, { backgroundColor: '#FFFFFF', opacity: 0.12 }]} />
+          <View style={[styles.referBlob2, { backgroundColor: '#FFFFFF', opacity: 0.08 }]} />
+
+          <View style={styles.referHeader}>
+            <View style={[styles.referIconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+              <Icon name="gift" size={20} color="#FFFFFF" />
+            </View>
+            <View style={styles.referTextContainer}>
+              <View style={[styles.referBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+                <Text style={styles.referBadgeText}>{t('jobDetail.referSpreadWord', 'REFER & SPREAD THE WORD')}</Text>
+              </View>
+              <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 6 }]}>
+                {t('jobDetail.knowSomeone', 'Know someone who fits this?')}
+              </Text>
+              <Text style={[typography.small, { color: 'rgba(255, 255, 255, 0.85)', marginTop: 4, lineHeight: 18 }]}>
+                {t('jobDetail.helpFriends', 'Help friends get hired by sharing this job opening or refer them to JobIndia app.')}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.referActions}>
+            <TouchableOpacity
+              onPress={handleShare}
+              style={[styles.referBtnSecondary, { borderColor: 'rgba(255, 255, 255, 0.4)', backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
+              activeOpacity={0.8}
+            >
+              <Icon name="share-alt" size={14} color="#FFFFFF" />
+              <Text style={[typography.small, { color: '#FFFFFF', fontWeight: 'bold' }]}>
+                {t('jobDetail.shareJob', 'Share Job')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleShareApp}
+              style={[styles.referBtnPrimary, { backgroundColor: '#FFFFFF' }]}
+              activeOpacity={0.8}
+            >
+              <Icon name="paper-plane" size={14} color={colors.primary} />
+              <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>
+                {t('jobDetail.shareApp', 'Share App')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {currentJob.questions && currentJob.questions.length > 0 && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title="Screening Questions" colors={colors} />
+            <SectionTitle title={t('jobDetail.screeningQuestions', 'Screening Questions')} colors={colors} />
             {currentJob.questions.map((q: any) => (
               <View key={q.id} style={styles.questionBlock}>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
@@ -781,7 +841,7 @@ const JobDetailScreen: React.FC = () => {
         ]}>
         <View style={styles.footerContent}>
           <PrimaryButton
-            title={isApplying ? "Processing..." : (currentJob.is_applied ? "Already Applied" : "Apply now")}
+            title={isApplying ? t('jobDetail.processing', "Processing...") : (currentJob.is_applied ? t('jobDetail.alreadyApplied', "Already Applied") : t('jobDetail.applyNow', "Apply now"))}
             onPress={applyNow}
             colors={colors}
             disabled={isApplying || currentJob.is_applied}
@@ -789,7 +849,7 @@ const JobDetailScreen: React.FC = () => {
           {currentJob.allow_calls !== false && (
             <View style={styles.footerRow}>
               <PrimaryButton
-                title="Call employer"
+                title={t('jobDetail.callEmployer', "Call employer")}
                 onPress={callEmployer}
                 colors={colors}
                 variant="secondary"
@@ -1391,6 +1451,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 5,
+  },
+  referCard: {
+    padding: spacing.lg,
+    borderRadius: radius.card,
+    marginTop: spacing.md,
+    gap: spacing.md,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  referBlob1: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    top: -40,
+    right: -30,
+  },
+  referBlob2: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    bottom: -30,
+    left: -30,
+  },
+  referHeader: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    alignItems: 'flex-start',
+  },
+  referIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  referBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+  },
+  referBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  referTextContainer: {
+    flex: 1,
+  },
+  referActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  referBtnPrimary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: radius.button,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  referBtnSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    gap: 8,
   },
 });
 

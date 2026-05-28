@@ -14,16 +14,17 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, clearAllNotifications, ApiNotification } from '../../../redux/slice/notificationSlice';
 import type { RootState, AppDispatch } from '../../../redux/store';
+import { useTranslation } from 'react-i18next';
 
 type Props = StackScreenProps<HomeStackParamList, 'Notifications'>;
 
-function timeAgo(dateString: string) {
+function timeAgo(dateString: string, justNowLabel: string) {
   if (!dateString) return '';
   const now = new Date();
   const past = new Date(dateString);
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
   
-  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 60) return justNowLabel;
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
   const diffInHours = Math.floor(diffInMinutes / 60);
@@ -33,7 +34,7 @@ function timeAgo(dateString: string) {
   return past.toLocaleDateString();
 }
 
-function NotificationRow({ item, colors, onPress }: { item: ApiNotification; colors: ThemeColors; onPress: () => void }) {
+function NotificationRow({ item, colors, onPress, t }: { item: ApiNotification; colors: ThemeColors; onPress: () => void; t: (key: string, fallback: string) => string }) {
   const isJob = item.type?.includes('Job') || false;
   const iconBg = isJob ? colors.surfaceHighlight : colors.successBackground;
   const iconColor = isJob ? colors.primary : colors.success;
@@ -64,10 +65,10 @@ function NotificationRow({ item, colors, onPress }: { item: ApiNotification; col
         <View style={styles.cardFooter}>
           <View style={[styles.typePill, { backgroundColor: pillBg }]}>
             <Text style={[typography.small, { color: pillFg, fontFamily: typography.labelMedium.fontFamily }]}>
-              {isJob ? 'Job alert' : 'Employer activity'}
+              {isJob ? t('notificationsScreen.jobAlertPill', 'Job alert') : t('notificationsScreen.employerPill', 'Employer activity')}
             </Text>
           </View>
-          <Text style={[typography.small, { color: colors.textPlaceholder }]}>{timeAgo(item.created_at)}</Text>
+          <Text style={[typography.small, { color: colors.textPlaceholder }]}>{timeAgo(item.created_at, t('notificationsScreen.justNow', 'Just now'))}</Text>
         </View>
       </View>
     </Pressable>
@@ -78,6 +79,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   
   const { notifications, loading } = useSelector((state: RootState) => state.notifications);
 
@@ -120,10 +122,10 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     });
     
     const s = [];
-    if (jobAlerts.length > 0) s.push({ title: 'Job alerts', data: jobAlerts });
-    if (employerActivity.length > 0) s.push({ title: 'Employer activity', data: employerActivity });
+    if (jobAlerts.length > 0) s.push({ title: t('notificationsScreen.jobAlerts', 'Job alerts'), data: jobAlerts });
+    if (employerActivity.length > 0) s.push({ title: t('notificationsScreen.employerActivity', 'Employer activity'), data: employerActivity });
     return s;
-  }, [notifications]);
+  }, [notifications, t]);
 
   const handleRefresh = () => {
     dispatch(fetchNotifications(50));
@@ -138,15 +140,19 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
           </Pressable>
         </View>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
-          Notifications
+          {t('notificationsScreen.title', 'Notifications')}
         </Text>
         <View style={styles.headerRight}>
-          <Pressable onPress={handleMarkAllRead} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Mark all read">
-            <Icon name="check-square-o" size={22} color={colors.primary} />
-          </Pressable>
-          <Pressable onPress={handleClearAll} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Clear all">
-            <Icon name="trash-o" size={22} color={colors.error} />
-          </Pressable>
+          {notifications.length > 0 && (
+            <>
+              <Pressable onPress={handleMarkAllRead} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Mark all read">
+                <Icon name="check-square-o" size={22} color={colors.primary} />
+              </Pressable>
+              <Pressable onPress={handleClearAll} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Clear all">
+                <Icon name="trash-o" size={22} color={colors.error} />
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
 
@@ -156,7 +162,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       ) : sections.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Text style={[typography.body, { color: colors.textSecondary }]}>No notifications yet.</Text>
+          <Text style={[typography.body, { color: colors.textSecondary }]}>{t('notificationsScreen.noNotifications', 'No notifications yet.')}</Text>
         </View>
       ) : (
         <SectionList
@@ -185,7 +191,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
               }}
               rightThreshold={80}
             >
-              <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} />
+              <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} t={t} />
             </Swipeable>
           )}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}

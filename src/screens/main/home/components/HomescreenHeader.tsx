@@ -20,6 +20,7 @@ import { radius } from '../../../../theme/radius';
 import { components } from '../../../../theme/components';
 import type { ThemeColors } from '../../../../theme/colors';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -243,13 +244,14 @@ const styles = StyleSheet.create({
 });
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
+  const { t } = useTranslation();
   const suggestions = [
-    'a job or company',
-    'Graphic Designer',
-    'Software Engineer',
-    'Sales Executive',
-    'Part-time jobs',
-    'Remote opportunities'
+    t('home.searchSuggestion1', 'a job or company'),
+    t('home.searchSuggestion2', 'Graphic Designer'),
+    t('home.searchSuggestion3', 'Software Engineer'),
+    t('home.searchSuggestion4', 'Sales Executive'),
+    t('home.searchSuggestion5', 'Part-time jobs'),
+    t('home.searchSuggestion6', 'Remote opportunities')
   ];
 
   const [index, setIndex] = useState(0);
@@ -278,7 +280,7 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
 
   return (
     <View style={styles.tickerContainer}>
-      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>Search for</Text>
+      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>{t('home.searchFor', 'Search for')}</Text>
       <Animated.Text
         style={[
           styles.searchPlaceholderWide,
@@ -311,6 +313,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   onHeaderLayout,
   onPressNotifyHint,
 }) => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
   const COLLAPSE_DISTANCE = 80;
@@ -477,7 +480,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                 accessibilityRole="button"
                 accessibilityLabel="Refer app">
                 <Icon name="gift" size={18} color={colors.primary} />
-                <Text style={[styles.referBtnText, { color: colors.textPrimary }]}>Refer</Text>
+                <Text style={[styles.referBtnText, { color: colors.textPrimary }]}>{t('home.referBtn', 'Refer')}</Text>
               </Pressable>
 
               <Pressable

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -12,6 +12,7 @@ import {
   ToastAndroid,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { typography } from '../theme/typography';
 import { radius } from '../theme/radius';
@@ -52,6 +53,34 @@ const JobActionModal: React.FC<JobActionModalProps> = ({
   const [view, setView] = useState<'menu' | 'report'>('menu');
   const [reportReason, setReportReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAlreadyReported, setIsAlreadyReported] = useState(false);
+
+  useEffect(() => {
+    const checkReportedStatus = async () => {
+      if (!job) return;
+      if (job.is_reported) {
+        setIsAlreadyReported(true);
+        return;
+      }
+      try {
+        const stored = await AsyncStorage.getItem('reported_jobs');
+        if (stored) {
+          const list = JSON.parse(stored);
+          if (Array.isArray(list) && list.includes(job.id)) {
+            setIsAlreadyReported(true);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+      setIsAlreadyReported(false);
+    };
+
+    if (visible) {
+      checkReportedStatus();
+    }
+  }, [job, visible]);
 
   const handleReport = () => {
     setView('report');
@@ -62,6 +91,20 @@ const JobActionModal: React.FC<JobActionModalProps> = ({
     setIsSubmitting(true);
     try {
       await dispatch(reportJob({ jobId: job.id, reason: reportReason })).unwrap();
+      
+      try {
+        const stored = await AsyncStorage.getItem('reported_jobs');
+        const list = stored ? JSON.parse(stored) : [];
+        if (Array.isArray(list) && !list.includes(job.id)) {
+          list.push(job.id);
+          await AsyncStorage.setItem('reported_jobs', JSON.stringify(list));
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+
+      setIsAlreadyReported(true);
+
       // On success
       if (Platform.OS === 'android') {
         ToastAndroid.show('Job has been reported successfully.', ToastAndroid.SHORT);
@@ -128,13 +171,16 @@ const JobActionModal: React.FC<JobActionModalProps> = ({
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={styles.menuItem} 
+                style={[styles.menuItem, isAlreadyReported && { opacity: 0.6 }]} 
+                disabled={isAlreadyReported}
                 onPress={handleReport}
               >
-                <View style={[styles.iconCircle, { backgroundColor: '#fee2e2' }]}>
-                  <Icon name="flag" size={16} color="#ef4444" />
+                <View style={[styles.iconCircle, { backgroundColor: isAlreadyReported ? colors.border : '#fee2e2' }]}>
+                  <Icon name="flag" size={16} color={isAlreadyReported ? colors.textPlaceholder : '#ef4444'} />
                 </View>
-                <Text style={[typography.body, { color: colors.textPrimary }]}>Report</Text>
+                <Text style={[typography.body, { color: isAlreadyReported ? colors.textPlaceholder : colors.textPrimary }]}>
+                  {isAlreadyReported ? 'Reported' : 'Report'}
+                </Text>
               </TouchableOpacity>
 
               {type === 'modal' && (

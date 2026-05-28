@@ -4,6 +4,7 @@ import { Platform, Pressable, View, StyleSheet, Text, Animated } from 'react-nat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../context/ThemeContext';
 import ApplicationsStackNavigator from './ApplicationsStackNavigator';
 import HomeStackNavigator from './HomeStackNavigator';
@@ -63,6 +64,7 @@ const TabIcon = ({ name, color, focused, label }: any) => {
 
 const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
 
   useEffect(() => {
     Animated.loop(
@@ -100,13 +102,14 @@ const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
       <Text
         style={[styles.label, { color: aiColor, fontWeight: focused ? '800' : '600', marginTop: focused ? 2 : 0 }]}
       >
-        Ai
+        {t('navigation.ai', 'Ai')}
       </Text>
     </View>
   );
 };
 
 const MainTabNavigator: React.FC = () => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -258,7 +261,7 @@ const MainTabNavigator: React.FC = () => {
         component={HomeStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="home" color={color} focused={focused} label="Home" />
+            <TabIcon name="home" color={color} focused={focused} label={t('navigation.home', 'Home')} />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}
@@ -273,7 +276,7 @@ const MainTabNavigator: React.FC = () => {
         component={AllJobsStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="grid" color={color} focused={focused} label="All Jobs" />
+            <TabIcon name="grid" color={color} focused={focused} label={t('navigation.allJobs', 'All Jobs')} />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}
@@ -294,7 +297,7 @@ const MainTabNavigator: React.FC = () => {
         component={ApplicationsStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="briefcase" color={color} focused={focused} label="My Activity" />
+            <TabIcon name="briefcase" color={color} focused={focused} label={t('navigation.myActivity', 'My Activity')} />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}
@@ -320,7 +323,7 @@ const MainTabNavigator: React.FC = () => {
         component={ProfileStackNavigator}
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name="person" color={color} focused={focused} label="Profile" />
+            <TabIcon name="person" color={color} focused={focused} label={t('navigation.profile', 'Profile')} />
           ),
           tabBarButton: (props) => <CustomTabBarButton {...props} />
         }}

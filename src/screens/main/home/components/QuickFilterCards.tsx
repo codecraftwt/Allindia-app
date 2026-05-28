@@ -6,6 +6,7 @@ import { radius } from '../../../../theme/radius';
 import { typography } from '../../../../theme/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../../redux/store';
 import { HomeStackParamList } from '../../../../navigation/types';
@@ -84,25 +85,26 @@ export const QuickFilterCards = React.memo(({ colors }: { colors: any }) => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
     const dispatch = useDispatch<AppDispatch>();
+    const { t } = useTranslation();
 
     const quickFilters = [
         {
             id: 'high_paying',
-            title: 'High Paying Jobs',
+            title: t('home.quickFilterHighPaying', 'High Paying Jobs'),
             icon: 'money',
             color: '#10b981', // Emerald
             filters: { salary_min: 600000 }
         },
         {
             id: 'nearby',
-            title: 'Nearby Jobs',
+            title: t('home.quickFilterNearby', 'Nearby Jobs'),
             icon: 'map-marker',
             color: '#3b82f6', // Blue
             filters: { section: 'nearby' }
         },
         {
             id: 'all_jobs',
-            title: 'All Jobs',
+            title: t('home.quickFilterAll', 'All Jobs'),
             icon: 'briefcase',
             color: '#f59e0b', // Amber
             filters: {}
@@ -123,7 +125,7 @@ export const QuickFilterCards = React.memo(({ colors }: { colors: any }) => {
     return (
         <View style={styles.container}>
             <Text style={[typography.sectionTitle, { color: colors.textPrimary, marginBottom: spacing.sm, marginLeft: spacing.xs }]}>
-                Quick Filters
+                {t('home.quickFilters', 'Quick Filters')}
             </Text>
             <View style={styles.row}>
                 {quickFilters.map((item) => (

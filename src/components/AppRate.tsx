@@ -13,6 +13,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { typography, fontFamilies } from '../theme/typography';
+import { useTranslation } from 'react-i18next';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import type { ThemeColors } from '../theme/colors';
@@ -26,6 +27,7 @@ interface AppRateProps {
 }
 
 const AppRate: React.FC<AppRateProps> = ({ colors }) => {
+  const { t } = useTranslation();
   const [rating, setRating] = useState<number>(0);
   const [feedback, setFeedback] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -134,10 +136,10 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
             <Icon name="check-decagram" size={48} color={colors.success || '#10b981'} />
           </View>
           <Text style={[typography.sectionTitle, { fontFamily: fontFamilies.bold, color: colors.textPrimary, textAlign: 'center', marginTop: spacing.sm }]}>
-            Thank You!
+            {t('appRate.thankYou')}
           </Text>
           <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, paddingHorizontal: 12 }]}>
-            Your feedback helps us make JobIndia better for everyone.
+            {t('appRate.feedbackSuccessSub')}
           </Text>
         </View>
       ) : (
@@ -148,10 +150,10 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
             </View>
             <View style={styles.titleCol}>
               <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: 16 }]}>
-                Enjoying JobIndia?
+                {t('appRate.enjoyingTitle')}
               </Text>
               <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                Please rate your experience with us!
+                {t('appRate.enjoyingSub')}
               </Text>
             </View>
           </View>
@@ -178,7 +180,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
           {rating > 0 && rating <= 3 && (
             <View style={styles.feedbackContainer}>
               <TextInput
-                placeholder="What can we do to improve? Tell us here..."
+                placeholder={t('appRate.placeholderImprove')}
                 placeholderTextColor={colors.textPlaceholder}
                 value={feedback}
                 onChangeText={setFeedback}
@@ -201,7 +203,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                 style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
               >
                 <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
-                  Submit Feedback
+                  {t('appRate.submitFeedback')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -210,7 +212,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
           {rating >= 4 && (
             <View style={styles.successCta}>
               <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 16, lineHeight: 20 }]}>
-                We're glad you love using JobIndia! Would you like to rate us on the Play Store?
+                {t('appRate.ratingCtaPlayStore')}
               </Text>
               <View style={styles.btnRow}>
                 <TouchableOpacity
@@ -219,7 +221,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                   style={[styles.subBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
                   <Text style={[typography.labelMedium, { fontFamily: fontFamilies.semiBold, color: colors.textSecondary }]}>
-                    Later
+                    {t('appRate.later')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -228,7 +230,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                   style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1, marginLeft: 12 }]}
                 >
                   <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
-                    Rate Now
+                    {t('appRate.rateNow')}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -20,7 +20,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/typography';
-// Removed unused TextInput from gesture handler
+import { useTranslation } from 'react-i18next';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -79,6 +79,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const { categories, cities, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { completion } = useSelector((state: RootState) => state.profile);
+  const { t } = useTranslation();
 
   const [selectedCategory, setSelectedCategory] = useState('jobType');
   const [searchQuery, setSearchQuery] = useState('');
@@ -157,14 +158,32 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
   }, [visible, dispatch, categories.length, cities.length]);
 
   const CATEGORIES_LIST = [
-    { id: 'jobType', label: 'Job Type', icon: 'bolt' },
-    { id: 'category', label: 'Category', icon: 'th-large' },
-    { id: 'city', label: 'City', icon: 'map-marker' },
-    { id: 'salary', label: 'Salary', icon: 'money' },
-    { id: 'freshness', label: 'Posted In', icon: 'clock-o' },
+    { id: 'jobType', label: t('sideFilter.sectionType', 'Job Type'), icon: 'bolt' },
+    { id: 'category', label: t('sideFilter.sectionCategory', 'Category'), icon: 'th-large' },
+    { id: 'city', label: t('sideFilter.sectionCity', 'City'), icon: 'map-marker' },
+    { id: 'salary', label: t('sideFilter.sectionSalary', 'Salary'), icon: 'money' },
+    { id: 'freshness', label: t('sideFilter.sectionPostedIn', 'Posted In'), icon: 'clock-o' },
   ];
 
-  const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote', 'Work from office', 'Apprenticeship', 'Freelance', 'Work from home', 'Hybrid'];
+  const JOB_TYPES = [
+    t('sideFilter.jobTypeFullTime', 'Full-time'),
+    t('sideFilter.jobTypePartTime', 'Part-time'),
+    t('sideFilter.jobTypeContract', 'Contract'),
+    t('sideFilter.jobTypeInternship', 'Internship'),
+    t('sideFilter.jobTypeRemote', 'Remote'),
+    t('sideFilter.jobTypeWorkFromOffice', 'Work from office'),
+    t('sideFilter.jobTypeApprenticeship', 'Apprenticeship'),
+    t('sideFilter.jobTypeFreelance', 'Freelance'),
+    t('sideFilter.jobTypeWorkFromHome', 'Work from home'),
+    t('sideFilter.jobTypeHybrid', 'Hybrid'),
+  ];
+
+  const FRESHNESS_OPTIONS = [
+    t('sideFilter.freshnessAll', 'All'),
+    t('sideFilter.freshnessLast24h', 'Last 24 Hours'),
+    t('sideFilter.freshnessLast3Days', 'Last 3 Days'),
+    t('sideFilter.freshnessLast7Days', 'Last 7 Days'),
+  ];
 
   const slideAnim = useRef(new Animated.Value(-300)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -484,7 +503,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
         if (browsingCategory) {
           const subcats = browsingCategory.subcategories || [];
           return [
-            { id: 'select-all', name: 'Select All', isSelectAll: true, parent_id: browsingCategory.id },
+            { id: 'select-all', name: t('sideFilter.selectAll', 'Select All'), isSelectAll: true, parent_id: browsingCategory.id },
             ...subcats
           ];
         }
@@ -493,13 +512,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
         if (browsingCity) {
           const areas = browsingCity.areas || [];
           return [
-            { id: 'select-all-city', area: 'Select All', isSelectAll: true, parent_id: browsingCity.id },
+            { id: 'select-all-city', area: t('sideFilter.selectAll', 'Select All'), isSelectAll: true, parent_id: browsingCity.id },
             ...areas
           ];
         }
         return uniqueCitiesWithAreas;
       case 'salary': return OPTIONS.salary;
-      case 'freshness': return OPTIONS.freshness;
+      case 'freshness': return FRESHNESS_OPTIONS;
       default: return [];
     }
   };
@@ -670,7 +689,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                     <Icon name="search" size={12} color={colors.textPlaceholder} />
                     <RNTextInput
                       style={[styles.searchInput, { color: colors.textPrimary, fontSize: 13 }]}
-                      placeholder={`Search ${selectedCategory === 'category' ? 'categories' : 'cities'}...`}
+                      placeholder={`${t('sideFilter.searchPlaceholder', 'Search')} ${selectedCategory === 'category' ? CATEGORIES_LIST.find(c => c.id === 'category')?.label : CATEGORIES_LIST.find(c => c.id === 'city')?.label}...`}
                       placeholderTextColor={colors.textPlaceholder}
                       value={searchQuery}
                       onChangeText={setSearchQuery}
@@ -693,13 +712,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
               <View style={{ marginBottom: 12 }}>
                 <View style={[styles.manualSalaryRow, { marginTop: 4, marginBottom: 0 }]}>
                   <View style={styles.manualInputBox}>
-                    <Text style={styles.manualLabel}>Min Salary</Text>
+                    <Text style={styles.manualLabel}>{t('sideFilter.salaryMin', 'Min Salary')}</Text>
                     <RNTextInput
                       style={[
                         styles.manualInput,
                         { color: colors.textPrimary, borderColor: isSalaryInvalid ? colors.error : colors.border }
                       ]}
-                      placeholder="e.g. 15000"
+                      placeholder={t('sideFilter.salaryMinPlaceholder', 'e.g. 15000')}
                       placeholderTextColor={colors.textPlaceholder}
                       keyboardType="numeric"
                       value={selectedFilters.manualSalary.min}
@@ -711,13 +730,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                     />
                   </View>
                   <View style={styles.manualInputBox}>
-                    <Text style={styles.manualLabel}>Max Salary</Text>
+                    <Text style={styles.manualLabel}>{t('sideFilter.salaryMax', 'Max Salary')}</Text>
                     <RNTextInput
                       style={[
                         styles.manualInput,
                         { color: colors.textPrimary, borderColor: isSalaryInvalid ? colors.error : colors.border }
                       ]}
-                      placeholder="e.g. 25000"
+                      placeholder={t('sideFilter.salaryMaxPlaceholder', 'e.g. 25000')}
                       placeholderTextColor={colors.textPlaceholder}
                       keyboardType="numeric"
                       value={selectedFilters.manualSalary.max}
@@ -731,7 +750,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                 </View>
                 {isSalaryInvalid && (
                   <Text style={{ color: colors.error, fontSize: 11, fontWeight: '600', marginLeft: 4, marginTop: 6 }}>
-                    Min salary cannot be greater than max salary
+                    {t('sideFilter.salaryInvalidMsg', 'Min salary cannot be greater than max salary')}
                   </Text>
                 )}
               </View>
@@ -810,7 +829,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                 })
               )}
               {!(isSwitching || metaLoading) && filteredOptions.length === 0 && (
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No options available</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{t('sideFilter.noOptions', 'No options available')}</Text>
               )}
             </ScrollView>
           </View>
@@ -824,13 +843,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
           }}
             style={[styles.resetBtn, { borderColor: colors.primary }]}
           >
-            <Text style={[styles.resetText, { color: colors.primary }]}>RESET</Text>
+            <Text style={[styles.resetText, { color: colors.primary }]}>{t('sideFilter.resetAll', 'RESET')}</Text>
           </TouchableOpacity>
           <View style={styles.footerRight}>
             <TouchableOpacity
               style={[styles.applyBtn, { backgroundColor: colors.primary }]}
               onPress={handleApply}>
-              <Text style={styles.applyText}>APPLY</Text>
+              <Text style={styles.applyText}>{t('sideFilter.apply', 'APPLY')}</Text>
             </TouchableOpacity>
           </View>
         </View>

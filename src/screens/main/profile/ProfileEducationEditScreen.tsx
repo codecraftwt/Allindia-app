@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View, TextInput, ActivityIndicator } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   FadeInDown,
   SlideInDown,
@@ -32,6 +33,7 @@ type Props = StackScreenProps<ProfileStackParamList, 'ProfileEducation'>;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
@@ -70,14 +72,14 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
         education_notes: notes,
       })).unwrap();
 
-      showToast('Education updated successfully!', 'success');
+      showToast(t('profileEducation.educationUpdated', 'Education updated successfully!'), 'success');
 
       // Delay navigation to let the user see the success message and progress bar
       setTimeout(() => {
         navigation.goBack();
       }, 3000); // 2.5s progress + 0.5s fade out
     } catch (err: any) {
-      showToast(err || 'Failed to save education', 'error');
+      showToast(err?.message || t('profileEducation.failedToUpdateEducation', 'Failed to save education'), 'error');
       console.error('Failed to save education:', err);
     }
   };
@@ -100,8 +102,8 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ProfileEditLayout
-      title="Education"
-      subtitle="Your highest qualification helps match you to the right roles.">
+      title={t('profileEducation.education', 'Education')}
+      subtitle={t('profileEducation.educationSubtitle', 'Your highest qualification helps match you to the right roles.')}>
 
       {loading && !data ? (
         <View style={styles.centerLoader}>
@@ -111,7 +113,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
         <>
           {renderSection(
             <>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Qualification</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileEducation.qualification', 'Qualification')}</Text>
               <AnimatedPressable
                 onPressIn={() => (scale.value = withSpring(0.97))}
                 onPressOut={() => (scale.value = withSpring(1))}
@@ -133,7 +135,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
                       flex: 1,
                     },
                   ]}>
-                  {selectedQual ? selectedQual.name : 'Select qualification'}
+                  {selectedQual ? selectedQual.name : t('profileEducation.selectQualification', 'Select qualification')}
                 </Text>
                 <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
               </AnimatedPressable>
@@ -144,14 +146,14 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
           {renderSection(
             <>
               <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
-                Education Notes
+                {t('profileEducation.educationNotes', 'Education Notes')}
               </Text>
               <TextInput
                 multiline
                 numberOfLines={4}
                 value={notes}
                 onChangeText={setNotes}
-                placeholder="Describe your education background..."
+                placeholder={t('profileEducation.notesPlaceholder', 'Describe your education background...')}
                 placeholderTextColor={colors.textPlaceholder}
                 style={[
                   styles.textArea,
@@ -188,7 +190,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
             onPress={(e: any) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
-                Qualification
+                {t('profileEducation.qualification', 'Qualification')}
               </Text>
               <Pressable onPress={() => setOpen(false)} hitSlop={12}>
                 <Icon name="times" size={20} color={colors.textSecondary} />
@@ -226,7 +228,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
 
       <Animated.View entering={FadeInDown.delay(600).duration(500)}>
         <PrimaryButton
-          title={loading ? "Saving..." : "Save"}
+          title={loading ? t('profileEducation.saving', 'Saving...') : t('profileEducation.save', 'Save')}
           onPress={handleSave}
           disabled={!canSave || loading}
           colors={colors}

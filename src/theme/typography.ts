@@ -53,4 +53,16 @@ export const typography = {
     fontSize: 14,
     lineHeight: 20,
   },
+  /** Heading 4 */
+  h4: {
+    fontFamily: fontFamilies.bold,
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  /** Large label */
+  labelLarge: {
+    fontFamily: fontFamilies.semiBold,
+    fontSize: 16,
+    lineHeight: 22,
+  },
 } as const;

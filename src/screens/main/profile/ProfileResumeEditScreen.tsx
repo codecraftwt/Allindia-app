@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, TouchableOpacity, StyleSheet, Text, View, Alert, Linking, Platform, Modal, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { uploadResume, deleteResume } from '../../../redux/slice/profileSlice';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
@@ -19,6 +20,7 @@ import { ProfileEditLayout } from './ProfileEditLayout';
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileResume'>;
 
 const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { showToast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
@@ -52,17 +54,17 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
 
       if (uploadResume.fulfilled.match(resultAction)) {
         updateDraft({ resumeUri: file.uri, resumeName: file.name || 'resume.pdf' });
-        showToast('Resume uploaded successfully \u2705', 'success');
+        showToast(t('profileResume.uploadSuccess', 'Resume uploaded successfully \u2705'), 'success');
       } else {
         let errorMsg = resultAction.payload as string;
         if (errorMsg?.includes('5120 kilobytes')) {
-          errorMsg = 'File size is too large. Please upload a resume smaller than 5 MB.';
+          errorMsg = t('profileResume.fileTooLarge', 'File size is too large. Please upload a resume smaller than 5 MB.');
         }
-        showToast(errorMsg || 'Something went wrong while uploading.', 'error');
+        showToast(errorMsg || t('profileResume.uploadFailedGeneral', 'Something went wrong while uploading.'), 'error');
       }
     } catch (err) {
       if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) return;
-      showToast('Could not pick file. Please try again.', 'error');
+      showToast(t('profileResume.couldNotPickFile', 'Could not pick file. Please try again.'), 'error');
     }
   };
 
@@ -72,9 +74,9 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
       const resultAction = await dispatch(deleteResume());
       if (deleteResume.fulfilled.match(resultAction)) {
         updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
-        showToast('Resume removed successfully 🗑️', 'success');
+        showToast(t('profileResume.deleteSuccess', 'Resume removed successfully \u2705'), 'success');
       } else {
-        showToast(resultAction.payload as string || 'Failed to delete resume.', 'error');
+        showToast(resultAction.payload as string || t('profileResume.deleteFailed', 'Failed to delete resume.'), 'error');
       }
     } catch (err) {
       console.error('Delete error:', err);
@@ -85,7 +87,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
     const url = resume?.resume_url || draft.resumeUri;
     if (url) {
       Linking.openURL(url).catch(() => {
-        Alert.alert('Error', 'Could not open resume link');
+        Alert.alert(t('profileResume.error', 'Error'), t('profileResume.couldNotOpenLink', 'Could not open resume link'));
       });
     }
   };
@@ -102,8 +104,8 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ProfileEditLayout
-      title="Resume"
-      subtitle="Upload your CV so employers can review it when you apply.">
+      title={t('profileResume.resume', 'Resume')}
+      subtitle={t('profileResume.subtitle', 'Upload your CV so employers can review it when you apply.')}>
       
       {draft.resumeName ? (
         <View style={styles.cardContainer}>
@@ -116,7 +118,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
                 {decodeFileName(draft.resumeName)}
               </Text>
               <Text style={[typography.small, { color: colors.success, fontWeight: '600' }]}>
-                {resume?.has_resume ? '✓ Professionally Uploaded' : 'Ready to save'}
+                {resume?.has_resume ? t('profileResume.professionallyUploaded', '✓ Professionally Uploaded') : t('profileResume.readyToSave', 'Ready to save')}
               </Text>
             </View>
             <View style={styles.actionRow}>
@@ -130,7 +132,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           
           <Pressable onPress={handlePickFile} style={styles.reUploadBtn}>
-            <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>Replace with new file</Text>
+            <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>{t('profileResume.replaceWithNewFile', 'Replace with new file')}</Text>
           </Pressable>
         </View>
       ) : (
@@ -142,10 +144,10 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
             <Icon name="cloud-upload" size={32} color={colors.primary} />
           </View>
           <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
-            {profileLoading ? 'Uploading...' : 'Tap to upload resume'}
+            {profileLoading ? t('profileResume.uploading', 'Uploading...') : t('profileResume.tapToUpload', 'Tap to upload resume')}
           </Text>
           <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center', marginTop: 4 }]}>
-            PDF, DOC, DOCX up to 5MB
+            {t('profileResume.fileRequirements', 'PDF, DOC, DOCX up to 5MB')}
           </Text>
         </Pressable>
       )}
@@ -154,14 +156,14 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.skipBanner, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
           <Icon name="info-circle" size={18} color={colors.textSecondary} />
           <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]}>
-            You haven’t attached a file yet. You can skip and add one later.
+            {t('profileResume.skipInfo', 'You haven’t attached a file yet. You can skip and add one later.')}
           </Text>
         </View>
       )}
 
       <View style={styles.footer}>
         <PrimaryButton
-          title="Save & Continue"
+          title={t('profileResume.saveAndContinue', 'Save & Continue')}
           onPress={() => navigation.goBack()}
           disabled={!canSave}
           colors={colors}
@@ -176,7 +178,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.skipBtn}
             hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
           >
-            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Skip for now</Text>
+            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>{t('profileResume.skipForNow', 'Skip for now')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -185,11 +187,11 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
         <Pressable style={styles.modalOverlay} onPress={() => setShowDeleteModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={[styles.deleteIconWrap, { backgroundColor: colors.error + '15' }]}><Icon name="trash" size={28} color={colors.error} /></View>
-            <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.xs }]}>Delete Resume?</Text>
-            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.lg }]}>Are you sure you want to remove your resume?</Text>
+            <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.xs }]}>{t('profileResume.deleteResumeTitle', 'Delete Resume?')}</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.lg }]}>{t('profileResume.deleteResumeMessage', 'Are you sure you want to remove your resume?')}</Text>
             <View style={styles.modalActions}>
-              <Pressable style={[styles.modalBtn, { backgroundColor: colors.surfaceSecondary }]} onPress={() => setShowDeleteModal(false)}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Cancel</Text></Pressable>
-              <Pressable style={[styles.modalBtn, { backgroundColor: colors.error }]} onPress={confirmDelete}><Text style={[typography.labelMedium, { color: '#FFF' }]}>Delete</Text></Pressable>
+              <Pressable style={[styles.modalBtn, { backgroundColor: colors.surfaceSecondary }]} onPress={() => setShowDeleteModal(false)}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileResume.cancel', 'Cancel')}</Text></Pressable>
+              <Pressable style={[styles.modalBtn, { backgroundColor: colors.error }]} onPress={confirmDelete}><Text style={[typography.labelMedium, { color: '#FFF' }]}>{t('profileResume.delete', 'Delete')}</Text></Pressable>
             </View>
           </View>
         </Pressable>

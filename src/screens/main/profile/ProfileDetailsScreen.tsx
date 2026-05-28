@@ -17,6 +17,7 @@ import { BASE_URL } from '../../../api/axiosInstance';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import ConfirmationModal from '../../../components/ConfirmationModal';
+import { useTranslation } from 'react-i18next';
 
 type Nav = StackNavigationProp<ProfileStackParamList, 'ProfileDetails'>;
 
@@ -45,6 +46,7 @@ const ProfileDetailsScreen = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const { t } = useTranslation();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -164,12 +166,12 @@ const ProfileDetailsScreen = () => {
       <View style={styles.sectionText}>
         <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>{title}</Text>
         <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 2 }]}>
-          {isMissing ? 'Not added yet' : subtitle}
+          {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
         </Text>
       </View>
       {isMissing ? (
         <View style={[styles.statusBadge, { backgroundColor: colors.error + '15' }]}>
-          <Text style={[typography.tiny, { color: colors.error, fontWeight: 'bold' }]}>ADD</Text>
+          <Text style={[typography.tiny, { color: colors.error, fontWeight: 'bold' }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
         </View>
       ) : (
         <FeatherIcon name="chevron-right" size={20} color={colors.textPlaceholder} />
@@ -188,7 +190,7 @@ const ProfileDetailsScreen = () => {
             <Pressable onPress={() => navigation.goBack()} style={styles.iconBtn}>
               <FeatherIcon name="arrow-left" size={24} color="#FFFFFF" />
             </Pressable>
-            <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold' }]}>My Profile</Text>
+            <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold' }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
             <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={styles.iconBtn}>
               <FeatherIcon name="edit-3" size={22} color="#FFFFFF" />
             </Pressable>
@@ -256,9 +258,9 @@ const ProfileDetailsScreen = () => {
           <View style={[styles.strengthCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.strengthInfo}>
               <View>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Profile Completeness</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileDetails.profileCompleteness', 'Profile Completeness')}</Text>
                 <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: 2 }]}>
-                  {completion.percentage === 100 ? 'Your profile is perfect!' : 'Add missing details to get more job calls'}
+                  {completion.percentage === 100 ? t('profileDetails.profilePerfect', 'Your profile is perfect!') : t('profileDetails.addMissingDetails', 'Add missing details to get more job calls')}
                 </Text>
               </View>
               <Text style={[typography.h4, { color: colors.primary }]}>{completion.percentage}%</Text>
@@ -270,12 +272,12 @@ const ProfileDetailsScreen = () => {
         )}
 
         <View style={styles.sectionTitleRow}>
-          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PROFESSIONAL DETAILS</Text>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}</Text>
         </View>
 
         <SectionItem
-          title="Work Experience"
-          subtitle={profile?.experience?.length ? `${profile.experience.length} Experience added` : "Add your past jobs"}
+          title={t('profileDetails.workExperience', 'Work Experience')}
+          subtitle={profile?.experience?.length ? `${profile.experience.length} ${t('profileDetails.experienceAdded', 'Experience added')}` : t('profileDetails.addPastJobs', 'Add your past jobs')}
           icon="briefcase-variant-outline"
           color="#3B82F6"
           onPress={() => navigation.navigate('ProfileExperience')}
@@ -283,8 +285,8 @@ const ProfileDetailsScreen = () => {
         />
 
         <SectionItem
-          title="Education"
-          subtitle={profile?.education?.length ? `${profile.education.length} Education added` : "Add your degree/college"}
+          title={t('profileDetails.education', 'Education')}
+          subtitle={profile?.education?.length ? `${profile.education.length} ${t('profileDetails.educationAdded', 'Education added')}` : t('profileDetails.addEducation', 'Add your degree/college')}
           icon="school-outline"
           color="#10B981"
           onPress={() => navigation.navigate('ProfileEducation')}
@@ -292,8 +294,8 @@ const ProfileDetailsScreen = () => {
         />
 
         <SectionItem
-          title="Job Preferences"
-          subtitle="Preferred roles & locations"
+          title={t('profileDetails.jobPreferences', 'Job Preferences')}
+          subtitle={t('profileDetails.preferredRoles', 'Preferred roles & locations')}
           icon="bullseye-arrow"
           color="#F59E0B"
           onPress={() => navigation.navigate('ProfileJobPreferences')}
@@ -301,8 +303,8 @@ const ProfileDetailsScreen = () => {
         />
 
         <SectionItem
-          title="Resume / CV"
-          subtitle="Upload your resume to get hired fast"
+          title={t('profileDetails.resumeCv', 'Resume / CV')}
+          subtitle={t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
           icon="file-document-outline"
           color="#8B5CF6"
           onPress={() => navigation.navigate('ProfileResume')}
@@ -310,12 +312,12 @@ const ProfileDetailsScreen = () => {
         />
 
         <View style={[styles.sectionTitleRow, { marginTop: 24 }]}>
-          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>PERSONAL DETAILS</Text>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.personalDetails', 'PERSONAL DETAILS')}</Text>
         </View>
 
         <SectionItem
-          title="Personal Info"
-          subtitle="Name, DOB, Gender, Language"
+          title={t('profileDetails.personalInfo', 'Personal Info')}
+          subtitle={t('profileDetails.nameDobGender', 'Name, DOB, Gender, Language')}
           icon="account-outline"
           color="#EC4899"
           onPress={() => navigation.navigate('ProfilePersonalInfo')}
@@ -335,9 +337,9 @@ const ProfileDetailsScreen = () => {
         <View style={[styles.proTip, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30' }]}>
           <Icon name="lightbulb-on-outline" size={24} color={colors.primary} />
           <View style={styles.proTipText}>
-            <Text style={[typography.labelMedium, { color: colors.primary }]}>Pro Tip</Text>
+            <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
             <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-              Profiles with photos and resumes get 5x more attention from employers.
+              {t('profileDetails.proTipDesc', 'Profiles with photos and resumes get 5x more attention from employers.')}
             </Text>
           </View>
         </View>
@@ -348,26 +350,26 @@ const ProfileDetailsScreen = () => {
         <Pressable style={styles.modalOverlay} onPress={() => setShowImagePicker(false)}>
           <View style={[styles.bottomSheet, { backgroundColor: colors.surface }]}>
             <View style={[styles.dragHandle, { backgroundColor: colors.border }]} />
-            <Text style={[typography.h4, { color: colors.textPrimary, marginBottom: 20 }]}>Profile Photo</Text>
+            <Text style={[typography.h4, { color: colors.textPrimary, marginBottom: 20 }]}>{t('profileDetails.profilePhoto', 'Profile Photo')}</Text>
             <View style={styles.pickerOptions}>
               <Pressable style={styles.pickerOption} onPress={() => processImage('camera')}>
                 <View style={[styles.pickerIcon, { backgroundColor: colors.primary + '10' }]}>
                   <FeatherIcon name="camera" size={24} color={colors.primary} />
                 </View>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Camera</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>{t('profileDetails.camera', 'Camera')}</Text>
               </Pressable>
               <Pressable style={styles.pickerOption} onPress={() => processImage('gallery')}>
                 <View style={[styles.pickerIcon, { backgroundColor: '#10B98110' }]}>
                   <FeatherIcon name="image" size={24} color="#10B981" />
                 </View>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Gallery</Text>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>{t('profileDetails.gallery', 'Gallery')}</Text>
               </Pressable>
               {hasUploadedPhoto && (
                 <Pressable style={styles.pickerOption} onPress={() => { setShowImagePicker(false); setShowDeleteConfirm(true); }}>
                   <View style={[styles.pickerIcon, { backgroundColor: colors.error + '10' }]}>
                     <FeatherIcon name="trash-2" size={24} color={colors.error} />
                   </View>
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>Remove</Text>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 8 }]}>{t('profileDetails.remove', 'Remove')}</Text>
                 </Pressable>
               )}
             </View>
@@ -389,10 +391,10 @@ const ProfileDetailsScreen = () => {
         visible={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={confirmDeletePicture}
-        title="Remove Photo"
-        message="Are you sure you want to remove your profile picture?"
-        confirmText="Remove"
-        cancelText="Cancel"
+        title={t('profileDetails.removePhotoTitle', 'Remove Photo')}
+        message={t('profileDetails.removePhotoMsg', 'Are you sure you want to remove your profile picture?')}
+        confirmText={t('profileDetails.remove', 'Remove')}
+        cancelText={t('profileDetails.cancel', 'Cancel')}
         colors={colors}
         loading={isUploading}
         type="danger"

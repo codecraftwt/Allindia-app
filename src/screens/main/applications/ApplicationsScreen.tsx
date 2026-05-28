@@ -16,6 +16,7 @@ import {
   Share,
   Modal,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -41,32 +42,33 @@ import JobActionModal from '../../../components/JobActionModal';
 
 
 function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; colors: ThemeColors; onPress: () => void; profileData: any }) {
+  const { t } = useTranslation();
   const [showMenu, setShowMenu] = React.useState(false);
   const [menuAnchor, setMenuAnchor] = React.useState({ top: 0, right: 0 });
   const application = job.application || {};
   const status = application.status || 'pending';
 
   const company = job.employer?.company || {};
-  const location = job.location?.label || 'Remote';
-  const managerName = job.employer?.name || 'Manager';
+  const location = job.location?.label || t('applications.remote', 'Remote');
+  const managerName = job.employer?.name || t('applications.manager', 'Manager');
 
   const appliedDate = application.applied_at
     ? new Date(application.applied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
     : '';
 
   const salaryLabel = job.salary_min && job.salary_max
-    ? `Rs. ${job.salary_min.toLocaleString()} - Rs. ${job.salary_max.toLocaleString()} / month`
-    : 'Salary Negotiable';
+    ? t('applications.salaryRange', 'Rs. {{min}} - Rs. {{max}} / month', { min: job.salary_min.toLocaleString(), max: job.salary_max.toLocaleString() })
+    : t('applications.salaryNegotiable', 'Salary Negotiable');
 
   const getStatusLabel = (s: string) => {
     const statusLower = s.toLowerCase();
-    if (statusLower === 'pending') return 'In Review / Pending';
-    if (statusLower === 'shortlisted') return 'You are Shortlisted! 🎉';
-    if (statusLower === 'contacted') return 'HR has contacted you';
-    if (statusLower === 'interview_scheduled') return 'Interview Scheduled';
-    if (statusLower === 'selected') return 'Congratulations! Selected';
-    if (statusLower === 'rejected') return 'Application Rejected';
-    return 'HR is reviewing your profile';
+    if (statusLower === 'pending') return t('applications.statusPending', 'In Review / Pending');
+    if (statusLower === 'shortlisted') return t('applications.statusShortlisted', 'You are Shortlisted! 🎉');
+    if (statusLower === 'contacted') return t('applications.statusContacted', 'HR has contacted you');
+    if (statusLower === 'interview_scheduled') return t('applications.statusInterview', 'Interview Scheduled');
+    if (statusLower === 'selected') return t('applications.statusSelected', 'Congratulations! Selected');
+    if (statusLower === 'rejected') return t('applications.statusRejected', 'Application Rejected');
+    return t('applications.statusReviewing', 'HR is reviewing your profile');
   };
 
   const getStatusColor = (s: string) => {
@@ -89,7 +91,17 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
       const userResume = profileData?.resume_url || 'Resume attached to profile';
       const userSkills = profileData?.skills?.map((s: any) => s.name).join(', ') || 'Skills mentioned in profile';
 
-      const message = `Dear ${managerName},\nI came across your job posting on *Job India*, Job Title - *${job.title}*.\nI tried to contact you over the phone but could not reach you. I am interested in the profile. Please find my details below;\n\n*Full Name*: ${userName}\n*Experience*: ${userExp}\n*Location*: ${userLoc}\n*Mobile No*: ${userPhone}\n*Qualification*: ${userQual}\n*Resume Link*: ${userResume}\n*Skills*: ${userSkills}`;
+      const message = t('applications.whatsappMessage', `Dear {{managerName}},\nI came across your job posting on *Job India*, Job Title - *{{jobTitle}}*.\nI tried to contact you over the phone but could not reach you. I am interested in the profile. Please find my details below;\n\n*Full Name*: {{userName}}\n*Experience*: {{userExp}}\n*Location*: {{userLoc}}\n*Mobile No*: {{userPhone}}\n*Qualification*: {{userQual}}\n*Resume Link*: {{userResume}}\n*Skills*: {{userSkills}}`, {
+        managerName,
+        jobTitle: job.title,
+        userName,
+        userExp,
+        userLoc,
+        userPhone,
+        userQual,
+        userResume,
+        userSkills
+      });
 
       const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
       Linking.openURL(url).catch(() => Alert.alert('Error', 'WhatsApp is not installed'));
@@ -105,10 +117,10 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
 
   const handleShare = () => {
     setShowMenu(false);
-    const companyName = job.employer?.company?.company_name || 'Hiring Company';
+    const companyName = job.employer?.company?.company_name || t('applications.anonymousCompany', 'Hiring Company');
     Share.share({
-      message: `Check out this job: ${job.title} at ${companyName}\nApply here: https://jobindia.app/job/${job.slug || job.id}`,
-      title: 'Job Opening',
+      message: t('applications.shareMessage', 'Check out this job: {{title}} at {{company}}\nApply here: {{link}}', { title: job.title, company: companyName, link: `https://jobindia.app/job/${job.slug || job.id}` }),
+      title: t('applications.shareTitle', 'Job Opening'),
     });
   };
 
@@ -137,7 +149,7 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
         </View>
         <View style={styles.wiHeaderInfo}>
           <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>{job.title}</Text>
-          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>{company.company_name || 'Anonymous Company'}</Text>
+          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>{company.company_name || t('applications.anonymousCompany', 'Anonymous Company')}</Text>
         </View>
         <TouchableOpacity
           onPress={(event) => {
@@ -185,7 +197,7 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
             <View style={[styles.wiJourneyLine, { borderColor: colors.border }]} />
           </View>
           <View>
-            <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>Applied successfully</Text>
+            <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>{t('applications.appliedSuccessfully', 'Applied successfully')}</Text>
             {appliedDate ? <Text style={{ fontSize: 10, color: colors.textSecondary }}>{appliedDate}</Text> : null}
           </View>
         </View>
@@ -204,19 +216,19 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
       {/* Manager Info */}
       <View style={styles.wiManagerRow}>
         <Icon name="user-circle" size={16} color={colors.textSecondary} />
-        <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>{managerName} (Manager)</Text>
+        <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>{managerName} {t('applications.managerRole', '(Manager)')}</Text>
       </View>
 
       {/* Action Buttons */}
       <View style={styles.wiActionRow}>
         <TouchableOpacity style={[styles.wiBtn, styles.wiBtnWhatsapp, { backgroundColor: colors.surface, borderColor: '#22c55e' }]} onPress={handleWhatsApp}>
           <Icon name="whatsapp" size={18} color="#22c55e" />
-          <Text style={styles.wiBtnTextWhatsapp}>WhatsApp</Text>
+          <Text style={styles.wiBtnTextWhatsapp}>{t('applications.whatsappBtn', 'WhatsApp')}</Text>
         </TouchableOpacity>
         {job.allow_calls !== false && (
           <TouchableOpacity style={[styles.wiBtn, styles.wiBtnCall, { backgroundColor: colors.primary }]} onPress={handleCall}>
             <Icon name="phone" size={18} color="#fff" />
-            <Text style={styles.wiBtnTextCall}>Call Now</Text>
+            <Text style={styles.wiBtnTextCall}>{t('applications.callNowBtn', 'Call Now')}</Text>
             <Icon name="arrow-right" size={14} color="#fff" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         )}
@@ -254,6 +266,7 @@ const ApplicationsSkeleton: React.FC = () => {
 const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData } = useSelector((state: RootState) => state.profile);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,10 +306,10 @@ const ApplicationsScreen: React.FC = () => {
     <View style={styles.emptyContainer}>
       <Icon name={searchQuery ? "search-minus" : "file-text-o"} size={48} color={colors.border} />
       <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-        {searchQuery ? "No matching applications" : "No applications yet"}
+        {searchQuery ? t('applications.noMatching', "No matching applications") : t('applications.noApplications', "No applications yet")}
       </Text>
       <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-        {searchQuery ? "Try a different search term" : "Applied jobs will appear here"}
+        {searchQuery ? t('applications.tryDifferentSearch', "Try a different search term") : t('applications.appliedJobsAppearHere', "Applied jobs will appear here")}
       </Text>
     </View>
   );
@@ -313,8 +326,8 @@ const ApplicationsScreen: React.FC = () => {
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       {!isLoggedIn ? (
         <GuestView
-          title="Track Your Success"
-          subtitle="Register now to keep track of all your job applications and their current status."
+          title={t('applications.trackSuccess', "Track Your Success")}
+          subtitle={t('applications.registerToTrack', "Register now to keep track of all your job applications and their current status.")}
           image={JobIndiaIcon}
         />
       ) : (
@@ -333,7 +346,7 @@ const ApplicationsScreen: React.FC = () => {
             <>
               <AuthHeadline
                 colors={colors}
-                title="Applications"
+                title={t('applications.applicationsTitle', "Applications")}
                 style={{ marginBottom: 4 }}
               />
               <View style={{ height: spacing.xs }} />
@@ -345,8 +358,8 @@ const ApplicationsScreen: React.FC = () => {
               />
               <View style={styles.sectionHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
-                  <Text style={{ color: colors.textPlaceholder, fontSize: 12 }}>{filteredAppliedJobs.length} Applications</Text>
+                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('applications.recentActivity', 'Recent Activity')}</Text>
+                  <Text style={{ color: colors.textPlaceholder, fontSize: 12 }}>{t('applications.applicationCount', '{{count}} Applications', { count: filteredAppliedJobs.length })}</Text>
                 </View>
 
                 <TouchableOpacity
@@ -367,11 +380,11 @@ const ApplicationsScreen: React.FC = () => {
                   <Pressable style={styles.menuOverlay} onPress={() => setShowFilterMenu(false)}>
                     <View style={[styles.filterDropdownContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                       {[
-                        { label: 'All Applications', value: 'all' },
-                        { label: 'Shortlisted', value: 'shortlisted' },
-                        { label: 'Pending', value: 'pending' },
-                        { label: 'Interview Scheduled', value: 'interview_scheduled' },
-                        { label: 'Rejected', value: 'rejected' }
+                        { label: t('applications.filterAll', 'All Applications'), value: 'all' },
+                        { label: t('applications.filterShortlisted', 'Shortlisted'), value: 'shortlisted' },
+                        { label: t('applications.filterPending', 'Pending'), value: 'pending' },
+                        { label: t('applications.filterInterview', 'Interview Scheduled'), value: 'interview_scheduled' },
+                        { label: t('applications.filterRejected', 'Rejected'), value: 'rejected' }
                       ].map((f) => (
                         <TouchableOpacity
                           key={f.value}
@@ -402,7 +415,7 @@ const ApplicationsScreen: React.FC = () => {
               <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="search" size={16} color={colors.textPlaceholder} />
                 <TextInput
-                  placeholder="Search applications..."
+                  placeholder={t('applications.searchPlaceholder', 'Search applications...')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.searchInput, { color: colors.textPrimary }]}
                   value={searchQuery}

@@ -16,6 +16,7 @@ import { typography, fontFamilies } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import type { ThemeColors } from '../theme/colors';
+import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 48;
@@ -51,6 +52,7 @@ interface AdItem {
 const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
   const navigation = useNavigation<any>();
   const { isDark } = useTheme();
+  const { t } = useTranslation();
 
   const [activeIndex, setActiveIndex] = React.useState(0);
 
@@ -96,9 +98,9 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
       id: 'ad-refer',
       badge: 'REFERRAL REWARDS',
       badgeColor: '#FFB020', // Vibrant Golden Amber
-      title: 'Refer & Earn Coins!',
-      subtitle: 'Invite friends & get 100 gold coins per referral. Use coins to unlock premium jobs!',
-      ctaText: 'Invite Friends',
+      title: t('home.promoReferTitle', 'Refer & Earn Coins!'),
+      subtitle: t('home.promoReferSub', 'Invite friends & get 100 gold coins per referral. Use coins to unlock premium jobs!'),
+      ctaText: t('home.promoReferCta', 'Invite Friends'),
       icon: 'gift-outline',
       actionType: 'share',
       bgLight: '#FFFBF0', // Soft warm cream
@@ -114,9 +116,9 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
       id: 'ad-cv',
       badge: 'AI CV BUILDER',
       badgeColor: '#3B82F6', // Tech Blue
-      title: 'Free Professional CV',
-      subtitle: 'Create a premium, recruiter-approved AI resume in less than 2 minutes!',
-      ctaText: 'Build Resume',
+      title: t('home.promoCvTitle', 'Free Professional CV'),
+      subtitle: t('home.promoCvSub', 'Create a premium, recruiter-approved AI resume in less than 2 minutes!'),
+      ctaText: t('home.promoCvCta', 'Build Resume'),
       icon: 'file-document-outline',
       actionType: 'navigate',
       targetRoute: 'AvatarAi',
@@ -133,9 +135,9 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
       id: 'ad-premium',
       badge: 'VIP ACCESS',
       badgeColor: '#A855F7', // Violet
-      title: 'Direct HR Contacts',
-      subtitle: 'Upgrade to VIP member to get direct phone numbers of 500+ active recruiters.',
-      ctaText: 'Get VIP Access',
+      title: t('home.promoVipTitle', 'Direct HR Contacts'),
+      subtitle: t('home.promoVipSub', 'Upgrade to VIP member to get direct phone numbers of 500+ active recruiters.'),
+      ctaText: t('home.promoVipCta', 'Get VIP Access'),
       icon: 'crown-outline',
       actionType: 'alert',
       alertTitle: 'Upgrade to VIP',
@@ -154,7 +156,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
   return (
     <View style={styles.outerContainer}>
       <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase', marginBottom: spacing.sm, marginHorizontal: spacing.xs }]}>
-        Actions & Promos For You
+        {t('home.actionsAndPromos', 'Actions & Promos For You')}
       </Text>
       
       <FlatList

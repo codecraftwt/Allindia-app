@@ -41,6 +41,7 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { INDIAN_CITIES } from '../../ProfileSetup/profileSetupConstants';
 import { ProfileEditLayout } from './ProfileEditLayout';
+import { useTranslation } from 'react-i18next';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfilePersonalInfo'>;
 
@@ -173,6 +174,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
   colors,
   years,
 }) => {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(initialDate || new Date().toISOString().slice(0, 10));
   const [viewMode, setViewMode] = useState<'calendar' | 'year' | 'month'>('calendar');
 
@@ -221,7 +223,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
           onPress={e => e.stopPropagation()}>
           <View style={styles.modalHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>DOB</Text>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('profileEdit.dob', 'DOB')}</Text>
               <Pressable
                 onPress={() => setViewMode(viewMode === 'month' ? 'calendar' : 'month')}
                 style={[styles.yearToggle, { backgroundColor: colors.surfaceHighlight }]}
@@ -248,7 +250,7 @@ const DobPickerModal: React.FC<DobPickerModalProps> = React.memo(({
               }} 
               hitSlop={12}
             >
-              <Text style={[typography.labelMedium, { color: colors.primary }]}>Done</Text>
+              <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('profileEdit.done', 'Done')}</Text>
             </Pressable>
           </View>
 
@@ -349,6 +351,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
   colors,
   cities,
 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -376,7 +379,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
           style={[styles.citySheet, { backgroundColor: colors.surface }]}
           onPress={e => e.stopPropagation()}>
           <View style={styles.modalHeader}>
-            <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>Select city</Text>
+            <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('profileEdit.selectCity', 'Select city')}</Text>
             <Pressable onPress={onClose} hitSlop={12}>
               <Icon name="times" size={20} color={colors.textSecondary} />
             </Pressable>
@@ -384,7 +387,7 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Type to search…"
+            placeholder={t('profileEdit.searchCity', 'Search or select city')}
             placeholderTextColor={colors.textPlaceholder}
             style={[
               styles.searchInput,
@@ -425,6 +428,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: profileData, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const { cities } = useSelector((state: RootState) => state.meta);
+  const { t } = useTranslation();
   const [dobOpen, setDobOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
@@ -554,14 +558,14 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ProfileEditLayout
-      title="Personal info">
+      title={t('profileEdit.personalInfo', 'Personal info')}>
         {renderSection(
         <>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Full name</Text>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileEdit.fullName', 'Full name')}</Text>
           <AnimatedInput
             value={fullName}
             onChangeText={t => updateDraft({ fullName: t })}
-            placeholder="As on your ID / resume"
+            placeholder={t('profileEdit.fullNamePlaceholder', 'As on your ID / resume')}
             placeholderTextColor={colors.textPlaceholder}
             style={[
               styles.input,
@@ -580,7 +584,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Email Address
+            {t('profileEdit.emailAddress', 'Email Address')}
           </Text>
           <TextInput
             value={email}
@@ -601,7 +605,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Phone Number
+            {t('profileEdit.phoneNumber', 'Phone Number')}
           </Text>
           <AnimatedInput
             value={phoneNumber}
@@ -609,7 +613,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
               const clean = text.replace(/[^0-9]/g, '');
               setPhoneNumber(clean);
             }}
-            placeholder="Enter phone number"
+            placeholder={t('profileEdit.phonePlaceholder', 'Enter phone number')}
             placeholderTextColor={colors.textPlaceholder}
             keyboardType="phone-pad"
             maxLength={10}
@@ -623,7 +627,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           />
           {phoneNumber.length > 0 && phoneNumber.length < 10 && (
             <Text style={[typography.small, { color: colors.error, marginTop: 4, fontWeight: '500' }]}>
-              Phone number must be exactly 10 digits
+              {t('profileEdit.phoneError', 'Phone number must be exactly 10 digits')}
             </Text>
           )}
         </>,
@@ -633,7 +637,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Gender
+            {t('profileEdit.gender', 'Gender')}
           </Text>
           <View style={styles.genderRow}>
             {GENDERS.map((g, idx) => {
@@ -642,7 +646,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
               return (
                 <GenderChip
                   key={g.id}
-                  label={g.label}
+                  label={t(`profileEdit.${g.id}`, g.label)}
                   selected={selected}
                   onPress={() => updateDraft({ gender: g.id })}
                   colors={colors}
@@ -657,7 +661,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Date of birth
+            {t('profileEdit.dateOfBirth', 'Date of birth')}
           </Text>
           <Pressable
             onPress={() => setDobOpen(true)}
@@ -677,7 +681,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
                   flex: 1,
                 },
               ]}>
-              {draft.dateOfBirth ? formatDobDisplay(draft.dateOfBirth) : 'Select date of birth'}
+              {draft.dateOfBirth ? formatDobDisplay(draft.dateOfBirth) : t('profileEdit.selectDob', 'Select date of birth')}
             </Text>
             <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
           </Pressable>
@@ -688,7 +692,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            City
+            {t('profileEdit.city', 'City')}
           </Text>
           <Pressable
             onPress={() => setCityOpen(true)}
@@ -708,7 +712,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
                   flex: 1,
                 },
               ]}>
-              {draft.city || 'Search or select city'}
+              {draft.city || t('profileEdit.searchCity', 'Search or select city')}
             </Text>
             <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
           </Pressable>
@@ -719,14 +723,14 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
       {renderSection(
         <>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            Bio
+            {t('profileEdit.bio', 'Bio')}
           </Text>
           <AnimatedInput
             multiline
             numberOfLines={4}
             value={draft.bio}
             onChangeText={t => updateDraft({ bio: t })}
-            placeholder="A short introduction about yourself..."
+            placeholder={t('profileEdit.bioPlaceholder', 'A short introduction about yourself...')}
             placeholderTextColor={colors.textPlaceholder}
             style={[
               styles.textArea,
@@ -742,7 +746,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       <Animated.View entering={FadeInDown.delay(900).duration(500)}>
         <PrimaryButton
-          title={profileLoading ? "Saving..." : "Save"}
+          title={profileLoading ? t('profileEdit.saving', 'Saving...') : t('profileEdit.save', 'Save')}
           onPress={handleSave}
           disabled={!canSave}
           colors={colors}

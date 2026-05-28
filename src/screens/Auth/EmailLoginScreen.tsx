@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   AuthHeadline,
   AuthScreenHeader,
@@ -33,6 +34,7 @@ import type { RootState, AppDispatch } from '../../redux/store';
 type Props = StackScreenProps<AuthStackParamList, 'EmailLogin'>;
 
 const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const [email, setEmail] = useState('');
@@ -69,7 +71,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const onLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      showStatus('error', 'Required Field', 'Please enter both email and password');
+      showStatus('error', t('auth.requiredField'), t('auth.enterEmailPass'));
       return;
     }
 
@@ -80,12 +82,12 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
     console.log("resultAction ", resultAction)
 
     if (loginCandidate.fulfilled.match(resultAction)) {
-      showStatus('success', 'Success!', 'Redirecting to Your Job...');
+      showStatus('success', t('auth.success'), t('auth.redirectingJob'));
       setTimeout(() => {
         navigation.replace('Main');
       }, 1500);
     } else {
-      showStatus('error', 'Login Failed', (resultAction.payload as string) || 'Invalid credentials');
+      showStatus('error', t('auth.loginFailed'), (resultAction.payload as string) || t('auth.invalidCredentials'));
     }
   };
 
@@ -99,7 +101,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled">
           <AuthScreenHeader
-            title="Login"
+            title={t('auth.loginHeader')}
             onBack={() => navigation.goBack()}
             colors={colors}
           />
@@ -107,8 +109,8 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.content}>
             <AuthHeadline
               colors={colors}
-              title="Welcome Back"
-              subtitle="Please enter your credentials to access your job dashboard."
+              title={t('auth.welcomeBack')}
+              subtitle={t('auth.welcomeSubtitle')}
               centerDecor
               decor={
                 <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}40` }]}>
@@ -119,11 +121,11 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.inputContainer}>
               <View style={[styles.inputGroup]}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email Address</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.emailLabel')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <Icon name="envelope-o" size={16} color={colors.primary} style={styles.inputIcon} />
                   <TextInput
-                    placeholder="Enter your email"
+                    placeholder={t('auth.emailPlaceholder')}
                     placeholderTextColor={colors.textPlaceholder}
                     style={[styles.input, { color: colors.textPrimary }]}
                     value={email}
@@ -136,15 +138,15 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
               <View style={[styles.inputGroup]}>
                 <View style={styles.passwordHeader}>
-                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Password</Text>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.passwordLabel')}</Text>
                   <Pressable onPress={() => navigation.navigate('ForgotPass')}>
-                    <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
+                    <Text style={[styles.forgotText, { color: colors.primary }]}>{t('auth.forgotPassword')}</Text>
                   </Pressable>
                 </View>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
                   <Icon name="lock" size={16} color={colors.primary} style={styles.inputIcon} />
                   <TextInput
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     placeholderTextColor={colors.textPlaceholder}
                     style={[styles.input, { color: colors.textPrimary }]}
                     value={password}
@@ -163,7 +165,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <PrimaryButton
-              title={loading ? "Authenticating..." : "Sign In"}
+              title={loading ? t('auth.authenticating') : t('auth.signInBtn')}
               onPress={onLogin}
               disabled={loading}
               colors={colors}
@@ -173,11 +175,11 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.footer}>
               <Text style={[typography.body, { color: colors.textSecondary }]}>
-                New here?{' '}
+                {t('auth.newHere')}{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('SignIn')}>
                 <Text style={[typography.body, { color: colors.primary, fontWeight: '800' }]}>
-                  Create Account
+                  {t('auth.createAccountLink')}
                 </Text>
               </Pressable>
             </View>
@@ -219,7 +221,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
                 style={[styles.statusBtn, { backgroundColor: colors.primary }]}
               >
-                <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('auth.gotIt')}</Text>
               </TouchableOpacity>
             )}
             

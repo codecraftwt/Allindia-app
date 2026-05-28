@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   AuthHeadline,
   AuthScreenHeader,
@@ -31,6 +32,7 @@ import type { RootState, AppDispatch } from '../../redux/store';
 type Props = StackScreenProps<AuthStackParamList, 'SignIn'>;
 
 const SignInScreen: React.FC<Props> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -71,25 +73,25 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
     const { name, email, password, password_confirmation } = formData;
 
     if (!name || !email || !password || !password_confirmation) {
-      showStatus('error', 'Required Fields', 'Please fill in all required fields');
+      showStatus('error', t('auth.requiredFields'), t('auth.fillRequiredFields'));
       return;
     }
 
     if (password !== password_confirmation) {
-      showStatus('error', 'Password Mismatch', 'Passwords do not match');
+      showStatus('error', t('auth.passwordMismatch'), t('auth.passwordsDoNotMatch'));
       return;
     }
 
     const resultAction = await dispatch(registerCandidate(formData));
 
     if (registerCandidate.fulfilled.match(resultAction)) {
-      showStatus('success', 'Success', 'Account created successfully!');
+      showStatus('success', t('auth.success'), t('auth.accountCreated'));
       setTimeout(() => {
         setStatusModal(prev => ({ ...prev, visible: false }));
         navigation.replace('Main');
       }, 1500);
     } else {
-      showStatus('error', 'Registration Failed', (resultAction.payload as string) || 'Something went wrong');
+      showStatus('error', t('auth.registrationFailed'), (resultAction.payload as string) || t('auth.somethingWentWrong'));
     }
   };
 
@@ -109,7 +111,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <AuthScreenHeader
-            title="Create Account"
+            title={t('auth.createAccountHeader')}
             onBack={() => {
               if (navigation.canGoBack()) {
                 navigation.goBack();
@@ -123,8 +125,8 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.content}>
             <AuthHeadline
               colors={colors}
-              title="Join JobIndia"
-              subtitle="Create your account to start applying for jobs."
+              title={t('auth.joinTitle')}
+              subtitle={t('auth.joinSubtitle')}
               centerDecor
               decor={
                 <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}33`, shadowColor: colors.shadow }]}>
@@ -138,7 +140,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="user" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Full Name"
+                  placeholder={t('auth.namePlaceholder')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={formData.name}
@@ -150,7 +152,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="at" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Email Address"
+                  placeholder={t('auth.emailPlaceholder')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={formData.email}
@@ -164,7 +166,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="phone" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Phone Number (Optional)"
+                  placeholder={t('auth.phonePlaceholder')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={formData.phone}
@@ -178,7 +180,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="lock" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Password"
+                  placeholder={t('auth.passwordPlaceholder')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={formData.password}
@@ -198,7 +200,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="shield" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
-                  placeholder="Confirm Password"
+                  placeholder={t('auth.confirmPasswordPlaceholder')}
                   placeholderTextColor={colors.textPlaceholder}
                   style={[styles.input, { color: colors.textPrimary }]}
                   value={formData.password_confirmation}
@@ -216,7 +218,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <PrimaryButton
-              title={loading ? "Creating Account..." : "Register"}
+              title={loading ? t('auth.creatingAccount') : t('auth.registerBtn')}
               onPress={onRegister}
               disabled={loading}
               colors={colors}
@@ -225,11 +227,11 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.footer}>
               <Text style={[typography.body, { color: colors.textSecondary }]}>
-                Already have an account?{' '}
+                {t('auth.alreadyHaveAccount')}{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('EmailLogin')}>
                 <Text style={[typography.body, { color: colors.primary, fontWeight: '700' }]}>
-                  Login
+                  {t('auth.loginLink')}
                 </Text>
               </Pressable>
             </View>
@@ -259,7 +261,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
               style={[styles.statusBtn, { backgroundColor: statusModal.type === 'success' ? colors.success : colors.primary }]}
             >
-              <Text style={[typography.labelMedium, { color: '#fff' }]}>Got it</Text>
+              <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('auth.gotIt')}</Text>
             </TouchableOpacity>
           </View>
         </View>

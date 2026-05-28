@@ -19,6 +19,7 @@ import {
   ToastAndroid,
   Keyboard,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ReAnimated, {
   useSharedValue,
@@ -37,6 +38,7 @@ import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
 import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
+import { fetchNotifications } from '../../../redux/slice/notificationSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -168,6 +170,7 @@ function SectionHeader({
   colors: ThemeColors;
   onPress?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.sectionHeader}>
       {icon ? (
@@ -175,7 +178,7 @@ function SectionHeader({
       ) : null}
       <Text style={[typography.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
       <Pressable hitSlop={8} onPress={onPress}>
-        <Text style={[typography.labelMedium, { color: colors.primary }]}>See all</Text>
+        <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('home.seeAll', 'See all')}</Text>
       </Pressable>
     </View>
   );
@@ -424,13 +427,14 @@ function JobListCard({
 };
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
+  const { t } = useTranslation();
   const suggestions = [
-    'a job or company',
-    'Graphic Designer',
-    'Software Engineer',
-    'Sales Executive',
-    'Part-time jobs',
-    'Remote opportunities'
+    t('home.searchSuggestion1', 'a job or company'),
+    t('home.searchSuggestion2', 'Graphic Designer'),
+    t('home.searchSuggestion3', 'Software Engineer'),
+    t('home.searchSuggestion4', 'Sales Executive'),
+    t('home.searchSuggestion5', 'Part-time jobs'),
+    t('home.searchSuggestion6', 'Remote opportunities')
   ];
 
   const [index, setIndex] = useState(0);
@@ -463,7 +467,7 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
 
   return (
     <View style={styles.tickerContainer}>
-      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>Search for</Text>
+      <Text style={[styles.searchPlaceholderWide, { color: colors.textPlaceholder, flex: 0 }]}>{t('home.searchFor', 'Search for')}</Text>
       <Animated.Text
         style={[
           styles.searchPlaceholderWide,
@@ -530,6 +534,7 @@ const MemoizedHomeContent = React.memo(({
   navigation,
   homeMedia
 }: any) => {
+  const { t } = useTranslation();
   return (
     <Animated.ScrollView
       onScroll={handleScroll}
@@ -565,7 +570,7 @@ const MemoizedHomeContent = React.memo(({
           {latest && latest.length > 0 && (
             <>
               <SectionHeader
-                title="Latest jobs"
+                title={t('home.latestJobs', 'Latest jobs')}
                 icon="clock-o"
                 iconColor={colors.success}
                 colors={colors}
@@ -592,7 +597,7 @@ const MemoizedHomeContent = React.memo(({
           {trending && trending.length > 0 && (
             <>
               <SectionHeader
-                title="Trending jobs"
+                title={t('home.trendingJobs', 'Trending jobs')}
                 icon="fire"
                 iconColor={colors.warning}
                 colors={colors}
@@ -619,7 +624,7 @@ const MemoizedHomeContent = React.memo(({
           {nearby && nearby.length > 0 && (
             <>
               <SectionHeader
-                title="Nearby jobs"
+                title={t('home.nearbyJobs', 'Nearby jobs')}
                 icon="map-marker"
                 colors={colors}
                 onPress={() => navigation.navigate('CategoryJobs', { section: 'nearby' })}
@@ -634,7 +639,7 @@ const MemoizedHomeContent = React.memo(({
                   onPress={() => setShowAllNearby(true)}
                   style={styles.viewMoreVertical}
                 >
-                  <Text style={[typography.labelMedium, { color: colors.primary }]}>View {nearby.length - 5} More Nearby Jobs</Text>
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('home.viewMoreNearby', 'View {{count}} More Nearby Jobs', { count: nearby.length - 5 })}</Text>
                   <Icon name="chevron-down" size={14} color={colors.primary} />
                 </TouchableOpacity>
               )}
@@ -646,7 +651,7 @@ const MemoizedHomeContent = React.memo(({
             <>
               <View style={{ height: spacing.md }} />
               <SectionHeader
-                title="Recommended for you"
+                title={t('home.recommendedJobs', 'Recommended for you')}
                 icon="bullseye"
                 iconColor={colors.primary}
                 colors={colors}
@@ -662,7 +667,7 @@ const MemoizedHomeContent = React.memo(({
                   onPress={() => setShowAllRecommended(true)}
                   style={styles.viewMoreVertical}
                 >
-                  <Text style={[typography.labelMedium, { color: colors.primary }]}>View {recommended.length - 5} More Recommendations</Text>
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('home.viewMoreRecommendations', 'View {{count}} More Recommendations', { count: recommended.length - 5 })}</Text>
                   <Icon name="chevron-down" size={14} color={colors.primary} />
                 </TouchableOpacity>
               )}
@@ -670,7 +675,7 @@ const MemoizedHomeContent = React.memo(({
           )}
           {!homeLoading && trending.length === 0 && nearby.length === 0 && recommended.length === 0 && latest.length === 0 && (
             <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginVertical: spacing.md }]}>
-              No jobs found at the moment.
+              {t('home.noJobsFound', 'No jobs found at the moment.')}
             </Text>
           )}
           <ActionForYou colors={colors} />
@@ -692,12 +697,14 @@ const HomeScreen: React.FC = () => {
   const { data: profileData } = useSelector((state: RootState) => state.profile);
   const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
+  const { unreadCount } = useSelector((state: RootState) => state.notifications);
   const isAnyLoading = homeLoading || metaLoading;
+  const { t } = useTranslation();
 
   const [showNotifyHint, setShowNotifyHint] = useState(false);
   const notifyHintAnim = useRef(new Animated.Value(0)).current;
   const bellAnim = useRef(new Animated.Value(0)).current;
-  const badgeAnim = useRef(new Animated.Value(1)).current;
+  const badgeAnim = useRef(new Animated.Value(0)).current;
   const tagShakeAnim = useSharedValue(0);
 
   // Filter Grid States
@@ -723,6 +730,20 @@ const HomeScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState(profileData?.preferences?.current_city?.city || '');
   const [overlayRecent, setOverlayRecent] = useState<string[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchNotifications());
+    }, [dispatch])
+  );
+
+  useEffect(() => {
+    Animated.timing(badgeAnim, {
+      toValue: unreadCount > 0 ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [unreadCount, badgeAnim]);
 
   // Load recent searches from AsyncStorage on screen focus
   useFocusEffect(
@@ -796,11 +817,11 @@ const HomeScreen: React.FC = () => {
 
     Animated.sequence([
       Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
-      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(badgeAnim, { toValue: unreadCount > 0 ? 1 : 0, duration: 200, useNativeDriver: true }),
       Animated.timing(badgeAnim, { toValue: 1.5, duration: 200, useNativeDriver: true }),
-      Animated.timing(badgeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.timing(badgeAnim, { toValue: unreadCount > 0 ? 1 : 0, duration: 200, useNativeDriver: true }),
     ]).start();
-  }, [bellAnim, badgeAnim]);
+  }, [bellAnim, badgeAnim, unreadCount]);
 
   const dismissNotifyHint = useCallback(() => {
     Animated.timing(notifyHintAnim, {
@@ -878,6 +899,7 @@ const HomeScreen: React.FC = () => {
       dispatch(fetchHomeFeed());
     }
     dispatch(fetchAdminMedia({ media_section: 'home page', limit: 20 }));
+    dispatch(fetchNotifications());
   }, [dispatch]);
 
   useEffect(() => {
@@ -927,6 +949,7 @@ const HomeScreen: React.FC = () => {
     dispatch(fetchMetaCategories());
     dispatch(fetchHomeFeed());
     dispatch(fetchProfile());
+    dispatch(fetchNotifications());
   }, [dispatch]);
 
   return (
@@ -1020,7 +1043,7 @@ const HomeScreen: React.FC = () => {
                     <Icon name="search" size={18} color={colors.primary} />
                     <TextInput
                       autoFocus
-                      placeholder='Search "Delivery", "Sales"...'
+                      placeholder={t('home.searchPlaceholder', 'Search "Delivery", "Sales"...')}
                       placeholderTextColor={colors.textPlaceholder}
                       value={searchQuery}
                       onChangeText={setSearchQuery}
@@ -1030,7 +1053,7 @@ const HomeScreen: React.FC = () => {
                   <View style={[styles.overlayInputRow, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, marginTop: 12 }]}>
                     <Icon name="map-pin" size={18} color={colors.textSecondary} />
                     <TextInput
-                      placeholder="In which city?"
+                      placeholder={t('home.cityPlaceholder', 'In which city?')}
                       placeholderTextColor={colors.textPlaceholder}
                       value={searchLocation}
                       onChangeText={setSearchLocation}
@@ -1043,7 +1066,7 @@ const HomeScreen: React.FC = () => {
               <ScrollView style={{ flex: 1, padding: spacing.md }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }}>
                   <Text style={[typography.labelMedium, { color: colors.textSecondary, textTransform: 'uppercase' }]}>
-                    RECENT SEARCHES
+                    {t('home.recentSearches', 'RECENT SEARCHES')}
                   </Text>
                   {overlayRecent.length > 0 && (
                     <Pressable
@@ -1057,7 +1080,7 @@ const HomeScreen: React.FC = () => {
                       }}
                       style={{ paddingVertical: 2, paddingHorizontal: 6 }}
                     >
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>Clear All</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>{t('home.clearAll', 'Clear All')}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -1127,7 +1150,7 @@ const HomeScreen: React.FC = () => {
                     });
                   }}
                   style={[styles.mainSearchBtn, { backgroundColor: colors.primary }]}>
-                  <Text style={[typography.button, { color: colors.onPrimary }]}>Search Jobs</Text>
+                  <Text style={[typography.button, { color: colors.onPrimary }]}>{t('home.searchJobs', 'Search Jobs')}</Text>
                   <Icon name="arrow-right" size={18} color={colors.onPrimary} style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
               </View>
