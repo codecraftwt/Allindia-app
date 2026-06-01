@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '../i18n';
 import {
   ThemeColors,
   ThemeMode,
@@ -28,21 +29,28 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   const [mode, setModeState] = useState<ThemeMode>('light');
   const [isThemeLoading, setIsThemeLoading] = useState(true);
 
-  // Load saved theme from AsyncStorage on startup
+  // Load saved theme and language from AsyncStorage on startup
   useEffect(() => {
-    const loadTheme = async () => {
+    const loadSettings = async () => {
       try {
+        // Load theme
         const savedTheme = await AsyncStorage.getItem('theme_mode');
         if (savedTheme === 'dark' || savedTheme === 'light') {
           setModeState(savedTheme);
         }
+
+        // Load language
+        const savedLanguage = await AsyncStorage.getItem('settings.lang');
+        if (savedLanguage) {
+          await i18n.changeLanguage(savedLanguage);
+        }
       } catch (e) {
-        console.error('Failed to load theme from storage:', e);
+        console.error('Failed to load settings from storage:', e);
       } finally {
         setIsThemeLoading(false);
       }
     };
-    loadTheme();
+    loadSettings();
   }, []);
 
   const colors = useMemo<ThemeColors>(

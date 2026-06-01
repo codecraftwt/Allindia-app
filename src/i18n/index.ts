@@ -42,8 +42,8 @@ const resources = {
 };
 
 i18n
-  .use(initReactI18next)
   .use(languageDetectorPlugin)
+  .use(initReactI18next)
   .init({
     resources,
     compatibilityJSON: 'v3',

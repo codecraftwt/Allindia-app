@@ -6,8 +6,9 @@ export const fetchJobs = createAsyncThunk(
   async (params: {
     sort?: string;
     q?: string;
-    category_id?: number;
-    city_id?: number;
+    category_id?: number | string;
+    city_id?: number | string;
+    location?: string;
     job_type?: string;
     applied?: boolean;
     wishlisted?: boolean;
@@ -44,18 +45,21 @@ export const searchJobs = createAsyncThunk(
 export const filterJobs = createAsyncThunk(
   'jobs/filterJobs',
   async (params: {
-    category_id?: number;
-    subcategory_id?: number;
-    city_id?: number;
+    category_id?: number | string;
+    subcategory_id?: number | string;
+    city_id?: number | string;
     job_type?: string;
     q?: string;
     salary_min?: number;
     salary_max?: number;
     freshness?: string;
     location?: string;
-  }, { rejectWithValue }) => {
+  }, { getState, rejectWithValue }) => {
     try {
-      const response = await api.get('api/candidate/jobs/filter', { params });
+      const state = getState() as any;
+      const token = state.auth.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await api.get('api/candidate/jobs', { params, headers });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to filter jobs');

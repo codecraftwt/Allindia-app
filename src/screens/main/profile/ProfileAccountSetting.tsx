@@ -31,6 +31,7 @@ import { useNavigation } from '@react-navigation/native';
 import { logoutToLogin } from './logoutToLogin';
 import { PrimaryButton } from '../../../components/auth';
 import { useToast } from '../../../context/ToastContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AccountSettingItem = ({
   icon,
@@ -289,8 +290,13 @@ const ProfileAccountSetting: React.FC = () => {
     );
   };
 
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+  const changeLanguage = async (lng: string) => {
+    try {
+      await i18n.changeLanguage(lng);
+      await AsyncStorage.setItem('settings.lang', lng);
+    } catch (e) {
+      console.error('Failed to save language to storage:', e);
+    }
     setShowLanguageModal(false);
   };
 

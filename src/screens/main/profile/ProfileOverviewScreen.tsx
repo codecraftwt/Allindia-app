@@ -501,9 +501,9 @@ const ProfileOverviewScreen: React.FC = () => {
             </View>
             <Pressable onPress={() => navigation.navigate('ProfileAccountSetting')} style={styles.settingsRow}>
               <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
-                <Icon name="lock" size={18} color="#64748B" />
+                <Icon name="settings" size={18} color="#64748B" />
               </View>
-              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.accountSecurity', 'Account Security')}</Text></View>
+              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.accountSettings', 'Account Settings')}</Text></View>
               <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
             </Pressable>
           </View>
