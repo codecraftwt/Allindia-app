@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import { typography } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
@@ -104,6 +105,8 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
   slideAnim,
   ORANGE_COLOR,
 }) => {
+  const navigation = useNavigation<any>();
+
   const { width: screenWidth } = useWindowDimensions();
   const sheetWidth = screenWidth - (spacing.md * 2);
   const sheetHeight = sheetWidth * 1.414;
@@ -229,7 +232,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
     <Animated.View style={[styles.screenContainer, { transform: [{ scale: slideAnim }] }]}>
       <View style={[styles.workspaceHeader, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
         <Pressable
-          onPress={() => setCurrentScreen('CHAT')}
+          onPress={() => navigation.goBack()}
           style={({ pressed }) => ({
             padding: 4,
             opacity: pressed ? 0.7 : 1
@@ -705,25 +708,47 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
         )}
 
         {/* Action Buttons */}
-        <View style={{ marginTop: spacing.md, width: '100%', alignItems: 'center' }}>
+        <View style={{ marginTop: spacing.md, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 12, paddingHorizontal: 12 }}>
           <Pressable
             onPress={handleSaveToProfile}
             style={({ pressed }) => [
               styles.workspaceBtn,
               {
-                backgroundColor: ORANGE_COLOR,
-                height: 36,
-                width: 130,
-                borderRadius: 18,
-                alignSelf: 'center',
-                flex: 0,
+                backgroundColor: '#f1f5f9',
+                height: 48,
+                flex: 1,
+                borderRadius: 24,
                 opacity: pressed ? 0.85 : 1,
               }
             ]}
           >
-            <Icon name="save" size={16} color="#fff" />
+            <Icon name="save-outline" size={18} color="#475569" />
+            <Text style={[typography.small, { color: '#475569', fontWeight: 'bold', fontSize: 13 }]}>
+              Save Draft
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setCurrentScreen('TEMPLATES')}
+            style={({ pressed }) => [
+              styles.workspaceBtn,
+              {
+                backgroundColor: ORANGE_COLOR,
+                height: 48,
+                flex: 1.5,
+                borderRadius: 24,
+                opacity: pressed ? 0.85 : 1,
+                shadowColor: ORANGE_COLOR,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }
+            ]}
+          >
+            <Icon name="document-text" size={18} color="#fff" />
             <Text style={[typography.small, { color: '#fff', fontWeight: 'bold', fontSize: 13 }]}>
-              Save
+              Select Template
             </Text>
           </Pressable>
         </View>

@@ -14,15 +14,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  NativeModules,
   BackHandler,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
+import DocumentPicker from '@react-native-documents/picker';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
@@ -35,10 +37,11 @@ import {
 } from '../../../redux/slice/profileSlice';
 import { fetchMetaQualifications } from '../../../redux/slice/metaSlice';
 import { generateAIResume, AIResumeResponse, generateAISuggestions } from '../../../services/geminiService';
+import { extractResumeFromPDF } from '../../../services/giminiServiceNew';
 import GuestView from '../../../components/GuestView';
 import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
-import { AiProfileCoPilot } from './components/AiResumeBuilderScreen';
 import { AiResumeWorkspace } from './components/AiResumeWorkspace';
+import { ResumeTemplateSelector } from './components/ResumeTemplateSelector';
 import { generatePDF } from 'react-native-html-to-pdf';
 
 const { width } = Dimensions.get('window');
@@ -831,8 +834,8 @@ const AIAssistantScreen: React.FC = () => {
     };
   }, []);
 
-  // Screen States: 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE'
-  const [currentScreen, setCurrentScreen] = useState<'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE'>('SCANNING');
+  // Screen States: 'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE'
+  const [currentScreen, setCurrentScreen] = useState<'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES'>('UPLOAD');
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -842,10 +845,6 @@ const AIAssistantScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        if (currentScreen === 'CHAT') {
-          setCurrentScreen('ATS_REPORT');
-          return true; // prevent default (exiting screen)
-        }
         if (currentScreen === 'ATS_REPORT') {
           if (navigation.canGoBack()) {
             navigation.goBack();
@@ -854,14 +853,16 @@ const AIAssistantScreen: React.FC = () => {
           return false;
         }
         if (currentScreen === 'GENERATING') {
-          setCurrentScreen('CHAT');
+          setCurrentScreen('UPLOAD');
           return true;
         }
         if (currentScreen === 'WORKSPACE') {
-          setCurrentScreen('CHAT');
-          return true;
+          return false;
         }
-        return false; // LANDING & SCANNING: allow default navigation back
+        if (currentScreen === 'TEMPLATES') {
+          return false;
+        }
+        return false; // UPLOAD, LANDING & SCANNING: allow default navigation back
       };
 
       const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
@@ -904,6 +905,7 @@ const AIAssistantScreen: React.FC = () => {
   const [resumeLinkedin, setResumeLinkedin] = useState('');
   const [resumeGithub, setResumeGithub] = useState('');
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Quick profile review wizard state
   const [showQuickEdit, setShowQuickEdit] = useState(false);
@@ -984,19 +986,16 @@ const AIAssistantScreen: React.FC = () => {
     }
   }, [isLoggedIn, dispatch]);
 
-  // 2. Trigger initial scan on mount to guarantee transition to ATS_REPORT within 1.8s
+  // 2. Transition from SCANNING to ATS_REPORT after delay
   useEffect(() => {
-    if (!initialScanDone.current) {
-      initialScanDone.current = true;
-
-      setCurrentScreen('SCANNING');
+    if (currentScreen === 'SCANNING') {
       const timer = setTimeout(() => {
         setCurrentScreen('ATS_REPORT');
       }, 1800);
 
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [currentScreen]);
 
   // Pulsing animation for AI elements
   useEffect(() => {
@@ -1081,11 +1080,6 @@ const AIAssistantScreen: React.FC = () => {
     return Math.min(score, 90);
   };
 
-  // Launch interview chat
-  const handleProceedToInterview = () => {
-    setCurrentScreen('CHAT');
-  };
-
   // Wizard: Generate premium resume
   const handleGenerateResume = async () => {
     if (!targetJob.trim()) return;
@@ -1117,49 +1111,168 @@ const AIAssistantScreen: React.FC = () => {
       setEditedBullets(response.experienceBullets);
       setCurrentScreen('WORKSPACE');
     } catch (error) {
-      setCurrentScreen('CHAT');
+      setCurrentScreen('UPLOAD');
       alert('Failed to connect to Gemini AI. Please try again.');
     }
   };
 
-  // Generate resume directly from chat completion
-  const handleGenerateResumeFromChat = async () => {
-    let jobRole = targetJob.trim();
-    if (!jobRole) {
-      jobRole = profile?.experience?.[0]?.designation || profile?.personal?.name || 'Professional Candidate';
-      setTargetJob(jobRole);
-    }
+  // ===================== PDF UPLOAD LOGIC =====================
+  const processParsedPDFData = (parsedData: any) => {
+    if (parsedData.personal?.name) setEditedSummary(parsedData.summary || '');
+    if (parsedData.personal?.email) setResumeEmail(parsedData.personal.email);
+    if (parsedData.personal?.phone) setResumePhone(parsedData.personal.phone);
+    if (parsedData.personal?.linkedin) setResumeLinkedin(parsedData.personal.linkedin);
+    if (parsedData.personal?.github) setResumeGithub(parsedData.personal.github);
+    if (parsedData.targetJob) setTargetJob(parsedData.targetJob);
+    if (parsedData.projects) setProjects(parsedData.projects);
+    if (parsedData.certifications) setCertifications(parsedData.certifications);
+    if (parsedData.languages) setLanguages(parsedData.languages);
+    if (parsedData.achievements) setAchievements(parsedData.achievements);
+    if (parsedData.hobbies) setHobbies(parsedData.hobbies);
 
-    setCurrentScreen('GENERATING');
+    const builtResume: any = {
+      summary: parsedData.summary || '',
+      experiences: parsedData.experiences || [],
+      education: parsedData.education || [],
+      skills: parsedData.skills || [],
+      score: 95
+    };
+
+    const expHtml = (parsedData.experiences || []).map((exp: any) => 
+      `${exp.designation} at ${exp.company} (${exp.startDate} - ${exp.endDate})\n${(exp.bullets || []).map((b:string)=>`• ${b}`).join('\n')}`
+    ).join('\n\n');
+
+    const eduHtml = (parsedData.education || []).map((edu: any) => 
+      `${edu.degree} from ${edu.school}`
+    ).join('\n');
+
+    setInterviewData({
+      experienceText: expHtml,
+      educationText: eduHtml
+    });
+    
+    setGeneratedResume(builtResume);
+    setIsUploading(false);
+    setCurrentScreen('WORKSPACE');
+  };
+
+  const handleUploadPDF = async () => {
+    try {
+      const result = await DocumentPicker.pickSingle({
+        type: [DocumentPicker.types.pdf],
+      });
+
+      if (result && result.uri) {
+        setIsUploading(true);
+        setLoadingSubtitle('Extracting text from PDF via AI...');
+        setCurrentScreen('GENERATING');
+        
+        let path = result.uri;
+        if (Platform.OS === 'android' && path.startsWith('content://')) {
+          const stat = await ReactNativeBlobUtil.fs.stat(path);
+          path = stat.path;
+        } else {
+          path = path.replace('file://', '');
+        }
+
+        const base64Data = await ReactNativeBlobUtil.fs.readFile(path, 'base64');
+        const parsedData = await extractResumeFromPDF(base64Data, result.type || 'application/pdf');
+
+        processParsedPDFData(parsedData);
+      }
+    } catch (err: any) {
+      setIsUploading(false);
+      if (!DocumentPicker.isCancel(err)) {
+        Alert.alert('Upload Error', 'Failed to pick or parse the PDF. ' + err.message);
+        setCurrentScreen('UPLOAD');
+      }
+    }
+  };
+
+  const handleFetchExistingResume = async () => {
+    const resumeUrl = profile?.resume?.resume_url;
+    if (!resumeUrl) return;
+
+    const originalName = profile?.resume?.resume_original_name || '';
+    const isPDF = originalName.toLowerCase().endsWith('.pdf') || resumeUrl.toLowerCase().split('?')[0].endsWith('.pdf');
+    
+    if (!isPDF) {
+      Alert.alert(
+        'Unsupported Format',
+        'Your uploaded resume is not a PDF. AI extraction currently requires a PDF file. We will generate your resume using your profile data instead.',
+        [{ text: 'OK', onPress: handleSkipAndUseProfile }]
+      );
+      return;
+    }
 
     try {
-      const enrichedProfile = {
-        ...profile,
-        personal: {
-          ...profile?.personal,
-          email: resumeEmail || profile?.personal?.email,
-          phone: resumePhone || profile?.personal?.phone || profile?.personal?.mobile,
-          mobile: resumePhone || profile?.personal?.mobile || profile?.personal?.phone,
-          linkedin: resumeLinkedin,
-          github: resumeGithub,
-        }
-      };
+      setIsUploading(true);
+      setLoadingSubtitle('Fetching your existing resume...');
+      setCurrentScreen('GENERATING');
 
-      const response = await generateAIResume(
-        enrichedProfile,
-        jobRole,
-        selectedTone,
-        jobDescription
+      // Download file to base64
+      const response = await ReactNativeBlobUtil.config({
+        fileCache: true,
+      }).fetch('GET', resumeUrl);
+      
+      const status = response.info().status;
+      if (status < 200 || status >= 300) {
+        throw new Error(`HTTP ${status}`);
+      }
+      
+      const base64Data = await response.base64();
+      
+      setLoadingSubtitle('Extracting text from PDF via AI...');
+      const parsedData = await extractResumeFromPDF(base64Data, 'application/pdf');
+      
+      // Clean up cached file
+      response.flush();
+
+      processParsedPDFData(parsedData);
+    } catch (err: any) {
+      setIsUploading(false);
+      Alert.alert(
+        'Extraction Failed',
+        'Failed to parse your existing resume: ' + err.message + '. Generating from profile data instead.',
+        [{ text: 'OK', onPress: handleSkipAndUseProfile }]
       );
-
-      setGeneratedResume(response);
-      setEditedSummary(response.summary);
-      setEditedBullets(response.experienceBullets);
-      setCurrentScreen('WORKSPACE');
-    } catch (error) {
-      setCurrentScreen('CHAT');
-      alert('Failed to connect to Gemini AI. Please try again.');
     }
+  };
+
+  const handleSkipAndUseProfile = () => {
+    setIsUploading(true);
+    setLoadingSubtitle('Generating resume from your profile...');
+    setCurrentScreen('GENERATING');
+    
+    setTimeout(() => {
+      const parsedData = {
+        summary: profile?.personal?.bio || '',
+        personal: {
+          name: profile?.personal?.name || '',
+          email: profile?.personal?.email || '',
+          phone: profile?.personal?.phone || profile?.personal?.mobile || '',
+          linkedin: profile?.personal?.linkedin || '',
+          github: profile?.personal?.github || '',
+        },
+        experiences: profile?.experience?.map((exp: any) => ({
+          company: exp.company_name,
+          designation: exp.job_title,
+          startDate: exp.start_date,
+          endDate: exp.end_date || 'Present',
+          bullets: exp.description ? [exp.description] : []
+        })) || [],
+        education: profile?.education?.map((edu: any) => ({
+          school: edu.institute_name,
+          degree: edu.highest_qualification,
+          startDate: edu.passing_year,
+          endDate: edu.passing_year
+        })) || [],
+        skills: profile?.skills || [],
+        targetJob: profile?.preferences?.job_role || '',
+      };
+      
+      processParsedPDFData(parsedData);
+    }, 1500); // Small fake delay for UX
   };
 
   // Workspace: Save generated professional summary back to candidate profile bio
@@ -1550,6 +1663,121 @@ ${generatedResume?.skills.join(', ')}
     >
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
 
+        {/* ==================== SCREEN: UPLOAD ==================== */}
+        {currentScreen === 'UPLOAD' && (
+          <View style={[styles.screenContainer, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+            <View style={{
+              width: 80, height: 80, borderRadius: 40, backgroundColor: ORANGE_COLOR + '20',
+              justifyContent: 'center', alignItems: 'center', marginBottom: 24
+            }}>
+              <Icon name="document-text" size={40} color={ORANGE_COLOR} />
+            </View>
+            <Text style={[typography.headingMedium, { color: colors.textPrimary, textAlign: 'center', marginBottom: 12 }]}>
+              Upload Old Resume
+            </Text>
+            <Text style={[typography.bodyMedium, { color: colors.textSecondary, textAlign: 'center', marginBottom: 32 }]}>
+              Upload your old resume PDF. Our AI will automatically extract all your experiences, skills, and education to generate stunning new templates!
+            </Text>
+            
+            {profile?.resume?.has_resume ? (
+              <View style={{ width: '100%', alignItems: 'center' }}>
+                <View style={{ backgroundColor: '#f0fdf4', padding: 16, borderRadius: 12, marginBottom: 24, width: '100%', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                  <Text style={[typography.labelMedium, { color: '#166534', textAlign: 'center', marginBottom: 4 }]}>
+                    We found your uploaded resume:
+                  </Text>
+                  <Text style={[typography.bodyMedium, { color: '#14532d', textAlign: 'center', fontWeight: 'bold' }]}>
+                    {profile.resume.resume_original_name || 'resume.pdf'}
+                  </Text>
+                </View>
+
+                <Pressable
+                  onPress={handleFetchExistingResume}
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: ORANGE_COLOR,
+                      paddingVertical: 16,
+                      paddingHorizontal: 32,
+                      borderRadius: 100,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      opacity: pressed ? 0.8 : 1,
+                      shadowColor: ORANGE_COLOR,
+                      shadowOffset: { width: 0, height: 8 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 16,
+                      elevation: 8,
+                      marginBottom: 16,
+                      width: '100%',
+                      justifyContent: 'center',
+                    }
+                  ]}
+                >
+                  <Icon name="sparkles" size={20} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={[typography.button, { color: '#fff' }]}>Use Existing Resume</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleUploadPDF}
+                  style={({ pressed }) => [
+                    {
+                      paddingVertical: 12,
+                      paddingHorizontal: 24,
+                      borderRadius: 100,
+                      borderWidth: 1,
+                      borderColor: ORANGE_COLOR,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      opacity: pressed ? 0.6 : 1,
+                    }
+                  ]}
+                >
+                  <Icon name="cloud-upload-outline" size={18} color={ORANGE_COLOR} style={{ marginRight: 8 }} />
+                  <Text style={[typography.button, { color: ORANGE_COLOR }]}>Upload a Different PDF</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={handleUploadPDF}
+                style={({ pressed }) => [
+                  {
+                    backgroundColor: ORANGE_COLOR,
+                    paddingVertical: 16,
+                    paddingHorizontal: 32,
+                    borderRadius: 100,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    opacity: pressed ? 0.8 : 1,
+                    shadowColor: ORANGE_COLOR,
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 16,
+                    elevation: 8,
+                  }
+                ]}
+              >
+                <Icon name="cloud-upload-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={[typography.button, { color: '#fff' }]}>Select PDF File</Text>
+              </Pressable>
+            )}
+
+            <Pressable
+              onPress={handleSkipAndUseProfile}
+              style={({ pressed }) => [
+                {
+                  marginTop: 24,
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
+                  opacity: pressed ? 0.6 : 1,
+                }
+              ]}
+            >
+              <Text style={[typography.button, { color: colors.textSecondary, textDecorationLine: 'underline' }]}>
+                Skip & Use Profile Data Instead
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
 
         {/* ==================== SCREEN 2: SCANNING ==================== */}
         {currentScreen === 'SCANNING' && (
@@ -1608,154 +1836,10 @@ ${generatedResume?.skills.join(', ')}
                 alignItems: 'center'
               }}>
 
-                {/* 1. Main Action Button: Grand Double-Stacked Branded Console */}
-                {/* <Pressable
-                  onPress={handleProceedToInterview}
-                  style={({ pressed }) => [
-                    {
-                      backgroundColor: ORANGE_COLOR,
-                      width: '85%',
-                      paddingVertical: 16,
-                      borderRadius: 24,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingHorizontal: 20,
-                      shadowColor: ORANGE_COLOR,
-                      shadowOffset: { width: 0, height: 8 },
-                      shadowOpacity: 0.45,
-                      shadowRadius: 14,
-                      elevation: 8,
-                      position: 'relative',
-                      overflow: 'hidden',
-                      borderWidth: 1.5,
-                      borderColor: 'rgba(255,255,255,0.2)',
-                      transform: [{ scale: pressed ? 0.97 : 1 }]
-                    }
-                  ]}
-                >
-
-              
-                  <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 }}>
-                      Auto-Complete With AI
-                    </Text>
-                    <Text style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: 11, fontWeight: '600', marginTop: 2, letterSpacing: 0.3 }}>
-                      Fill missing details instantly
-                    </Text>
-                  </View>
-
-                
-                  <View style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(0,0,0,0.15)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <Icon name="chevron-forward" size={16} color="#fff" />
-                  </View>
-                </Pressable> */}
-
-                {/* 2. Sleek Secondary Action: Underlined Skip Link */}
-                {/* <Pressable
-                  onPress={handleGenerateResumeFromChat}
-                  style={({ pressed }) => [
-                    {
-                      marginTop: 18,
-                      paddingVertical: 6,
-                      paddingHorizontal: 16,
-                      opacity: pressed ? 0.6 : 0.85,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }
-                  ]}
-                >
-                  <Text style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    fontWeight: '700',
-                    letterSpacing: 0.1,
-                    textDecorationLine: 'underline',
-                  }}>
-                    Your resume
-                  </Text>
-                  <Icon name="chevron-forward" size={13} color={colors.textSecondary} style={{ marginLeft: 3 }} />
-                </Pressable> */}
-
-
-
-      
-
               </View>
             </ScrollView>
           </Animated.View>
         )}
-
-        {/* ==================== SCREEN 3: CHAT INTERVIEW (AI PROFILE CO-PILOT) ==================== */}
-        {currentScreen === 'CHAT' && (
-          <Animated.View style={[styles.screenContainer, { transform: [{ scale: slideAnim }] }]}>
-            <AiProfileCoPilot
-              colors={colors}
-              isDark={isDark}
-              setCurrentScreen={setCurrentScreen}
-              ORANGE_COLOR={ORANGE_COLOR}
-              isKeyboardVisible={isKeyboardVisible}
-              onInterviewComplete={async (interviewData) => {
-                setInterviewData(interviewData);
-                setResumeEmail(interviewData.resumeEmail);
-                setResumePhone(interviewData.resumePhone);
-                setResumeLinkedin(interviewData.resumeLinkedin);
-                setResumeGithub(interviewData.resumeGithub);
-                setCareerObjective(interviewData.careerObjective);
-                setCertifications(interviewData.certifications);
-                setLanguages(interviewData.languages);
-                setAchievements(interviewData.achievements);
-                setHobbies(interviewData.hobbies);
-                setProjects(interviewData.projects);
-
-                const jobRole = interviewData.resumeHeadline || targetJob || profile?.experience?.[0]?.designation || profile?.personal?.name || 'Professional Candidate';
-                setTargetJob(jobRole);
-
-                setEducationConfirmed(true);
-                setExperienceConfirmed(true);
-
-                // Auto-generate AI Resume and switch directly to WORKSPACE screen
-                setCurrentScreen('GENERATING');
-                try {
-                  const enrichedProfile = {
-                    ...profile,
-                    personal: {
-                      ...profile?.personal,
-                      email: interviewData.resumeEmail || profile?.personal?.email,
-                      phone: interviewData.resumePhone || profile?.personal?.phone || profile?.personal?.mobile,
-                      mobile: interviewData.resumePhone || profile?.personal?.mobile || profile?.personal?.phone,
-                      linkedin: interviewData.resumeLinkedin,
-                      github: interviewData.resumeGithub,
-                    }
-                  };
-
-                  const response = await generateAIResume(
-                    enrichedProfile,
-                    jobRole,
-                    selectedTone,
-                    jobDescription
-                  );
-
-                  setGeneratedResume(response);
-                  setEditedSummary(response.summary);
-                  setEditedBullets(response.experienceBullets);
-                  setCurrentScreen('WORKSPACE');
-                } catch (error) {
-                  setCurrentScreen('ATS_REPORT');
-                  alert('Resume updated, but failed to generate AI summary automatically.');
-                }
-              }}
-            />
-          </Animated.View>
-        )}
-
-
 
         {/* ==================== SCREEN 5: GENERATING ==================== */}
         {currentScreen === 'GENERATING' && (
@@ -1815,6 +1899,38 @@ ${generatedResume?.skills.join(', ')}
             setCurrentScreen={setCurrentScreen}
             slideAnim={slideAnim}
             ORANGE_COLOR={ORANGE_COLOR}
+          />
+        )}
+
+        {/* ==================== SCREEN 7: TEMPLATES ==================== */}
+        {currentScreen === 'TEMPLATES' && generatedResume && (
+          <ResumeTemplateSelector
+            colors={colors}
+            isDark={isDark}
+            profile={profile}
+            generatedResume={generatedResume}
+            targetJob={targetJob}
+            educationText={interviewData.educationText}
+            experienceText={interviewData.experienceText}
+            editedSummary={editedSummary}
+            editedBullets={editedBullets}
+            careerObjective={careerObjective}
+            certifications={certifications}
+            languages={languages}
+            projects={projects}
+            achievements={achievements}
+            hobbies={hobbies}
+            resumeEmail={resumeEmail}
+            resumePhone={resumePhone}
+            resumeLinkedin={resumeLinkedin}
+            resumeGithub={resumeGithub}
+            selectedTheme={selectedTheme}
+            setSelectedTheme={setSelectedTheme}
+            themeColors={themeColors}
+            setCurrentScreen={setCurrentScreen}
+            slideAnim={slideAnim}
+            ORANGE_COLOR={ORANGE_COLOR}
+            qualifications={[]}
           />
         )}
       </SafeAreaView>

@@ -60,6 +60,7 @@ export type MainTabParamList = {
   JobReels: undefined;
   Profile: undefined;
   SavedPost: undefined;
+  AIAssistant: undefined;
 };
 
 export type AuthStackParamList = {

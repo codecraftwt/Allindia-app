@@ -58,6 +58,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const profile = profileData;
   const { t } = useTranslation();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -98,8 +99,6 @@ const ProfileOverviewScreen: React.FC = () => {
     };
   }, [shimmerAnim, floatAnim]);
 
-  const profile = profileData;
-
   React.useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchProfile());
@@ -120,7 +119,7 @@ const ProfileOverviewScreen: React.FC = () => {
     setShowImagePicker(false);
     try {
       const options = { mediaType: 'photo' as const, quality: 0.8, saveToPhotos: true };
-      const result = type === 'camera' ? await launchCamera(options) : await launchImageLibrary(options);
+      const result = type === 'camera' ? await launchCamera(options as any) : await launchImageLibrary(options as any);
       if (result.didCancel || !result.assets || result.assets.length === 0) return;
       const asset = result.assets[0];
       if (asset.uri) {
@@ -168,7 +167,7 @@ const ProfileOverviewScreen: React.FC = () => {
   };
 
   const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
-  const displayEmail = profile?.personal?.email || user?.email || draft.email || '';
+  const displayEmail = profile?.personal?.email || user?.email || '';
   const isValidPhotoUrl = (url: string | null | undefined): boolean => {
     if (!url) return false;
     const lowerUrl = url.toLowerCase().trim();
@@ -361,7 +360,7 @@ const ProfileOverviewScreen: React.FC = () => {
                 ) : (
                   <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '10' }]}>
                     {displayName && displayName !== 'User' ? (
-                      <Text style={[typography.h3, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+                      <Text style={[typography.appTitle, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
                         {profileInitials(displayName)}
                       </Text>
                     ) : (

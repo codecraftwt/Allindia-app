@@ -116,7 +116,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             title={t('auth.createNewAccount')}
             onPress={() => navigation.navigate('SignIn')}
             colors={colors}
-            variant="outline"
+            variant="secondary"
             iconLeft={<Icon name="user-plus" size={18} color={colors.primary} />}
           />
 

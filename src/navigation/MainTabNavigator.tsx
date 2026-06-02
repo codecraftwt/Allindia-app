@@ -12,7 +12,7 @@ import AllJobsStackNavigator from './AllJobsStackNavigator';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import SavedStackNavigator from './SavedStackNavigator';
 import JobReelsStackNavigator from './JobReelsStackNavigator';
-import ResumeScreen from '../screens/main/AvatarAi/ResumeScreen';
+import AvatarAiStackNavigator from './AvatarAiStackNavigator';
 import { typography } from '../theme/typography';
 import type { MainTabParamList } from './types';
 
@@ -305,7 +305,7 @@ const MainTabNavigator: React.FC = () => {
 
       <Tab.Screen
         name="AIAssistant"
-        component={ResumeScreen}
+        component={AvatarAiStackNavigator}
         options={{
           tabBarIcon: ({ focused }) => (
             <AnimatedAIIcon focused={focused} />
