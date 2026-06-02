@@ -16,6 +16,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { WebView } from 'react-native-webview';
 import ReactNativeBlobUtil from 'react-native-blob-util';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { typography } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
@@ -270,6 +271,13 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
       setIsExportingPdf(false);
 
       if (file.filePath) {
+        // Mark as generated
+        try {
+          await AsyncStorage.setItem(`@AI_Resume_Downloaded_${profile?.id || 'default'}`, 'true');
+        } catch (e) {
+          console.log('Failed to save download state', e);
+        }
+
         if (Platform.OS === 'android') {
           try {
             await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(

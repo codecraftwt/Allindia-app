@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../../../context/ThemeContext';
 import { spacing } from '../../../../theme/spacing';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 
 const ORANGE_COLOR = '#FF9800';
 
@@ -14,8 +15,26 @@ interface AiResumeAnalyzerProps {
 export const AiResumeAnalyzer: React.FC<AiResumeAnalyzerProps> = ({ profile }) => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp<any>>();
+  const [hasGenerated, setHasGenerated] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const checkStatus = async () => {
+        try {
+          const val = await AsyncStorage.getItem(`@AI_Resume_Downloaded_${profile?.id || 'default'}`);
+          if (val === 'true') {
+            setHasGenerated(true);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      checkStatus();
+    }, [profile?.id])
+  );
 
   const handleGenerateResume = () => {
+    if (hasGenerated) return;
     // Navigate to the full-screen AIAssistantScreen with a param to automatically skip the chat
     navigation.navigate('AIAssistantScreen', { autoGenerate: true });
   };
@@ -42,12 +61,21 @@ export const AiResumeAnalyzer: React.FC<AiResumeAnalyzerProps> = ({ profile }) =
         </Text>
 
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: ORANGE_COLOR, shadowColor: ORANGE_COLOR }]}
+          style={[
+            styles.actionBtn,
+            {
+              backgroundColor: hasGenerated ? colors.border : ORANGE_COLOR,
+              shadowColor: hasGenerated ? 'transparent' : ORANGE_COLOR
+            }
+          ]}
           onPress={handleGenerateResume}
-          activeOpacity={0.85}
+          activeOpacity={hasGenerated ? 1 : 0.85}
+          disabled={hasGenerated}
         >
-          <Icon name="sparkles" size={16} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={styles.actionBtnText}>Generate AI Resume</Text>
+          <Icon name={hasGenerated ? "checkmark-circle" : "sparkles"} size={16} color={hasGenerated ? colors.textSecondary : "#fff"} style={{ marginRight: 6 }} />
+          <Text style={[styles.actionBtnText, hasGenerated && { color: colors.textSecondary }]}>
+            {hasGenerated ? "AI Resume Generated" : "Generate AI Resume"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
