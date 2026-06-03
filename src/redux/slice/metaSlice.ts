@@ -65,7 +65,14 @@ const metaSlice = createSlice({
       })
       .addCase(fetchMetaCities.fulfilled, (state, action) => {
         state.loading = false;
-        state.cities = action.payload.data.cities || [];
+        const rawCities = action.payload.data.cities || [];
+        const seen = new Set();
+        state.cities = rawCities.filter((city: any) => {
+          if (!city.label) return false;
+          if (seen.has(city.label.toLowerCase())) return false;
+          seen.add(city.label.toLowerCase());
+          return true;
+        });
       })
       .addCase(fetchMetaCities.rejected, (state, action) => {
         state.loading = false;

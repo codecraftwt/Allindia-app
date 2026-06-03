@@ -214,11 +214,10 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         })}
       </View>
 
-      <Modal visible={dobOpen} animationType="slide" transparent>
-        <Pressable style={styles.modalOverlay} onPress={() => setDobOpen(false)}>
-          <Pressable
-            style={[styles.modalSheet, { backgroundColor: colors.surface }]}
-            onPress={e => e.stopPropagation()}>
+      <Modal visible={dobOpen} animationType="slide" transparent onRequestClose={() => setDobOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setDobOpen(false)} />
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
                 {pickerMode === 'calendar' ? 'Date of birth' : pickerMode === 'year' ? 'Select Year' : 'Select Month'}
@@ -302,8 +301,8 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </ScrollView>
             )}
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </Modal>
 
       <PrimaryButton

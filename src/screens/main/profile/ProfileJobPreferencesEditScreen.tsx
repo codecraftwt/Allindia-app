@@ -574,12 +574,18 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     }
 
     const validCityIds = cities.map(c => Number(c.id));
+    
+    const parentCategory = categories.find((cat: any) =>
+      cat.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)))
+    );
+    const parentCategoryId = parentCategory ? Number(parentCategory.id) : null;
+
     const payload = {
       current_city_id: currentCityId ? Number(currentCityId) : null,
       preferred_city_ids: preferredCityIds
         .map(id => Number(id))
         .filter(id => validCityIds.includes(id)),
-      job_category_id: jobCategoryIds[0] ? Number(jobCategoryIds[0]) : null,
+      job_category_id: parentCategoryId,
       job_category_ids: jobCategoryIds.map(Number),
       expected_salary_min: Number(minSalary) * 100000,
       expected_salary_max: Number(maxSalary) * 100000,
