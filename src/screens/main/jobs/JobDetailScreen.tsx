@@ -497,35 +497,6 @@ const JobDetailScreen: React.FC = () => {
         </View>
 
         <View style={styles.scrollContent}>
-          {/* Already Applied Status Banner */}
-          {currentJob.is_applied && (
-            <Pressable
-              onPress={() => navigation.navigate('Applications', { screen: 'ApplicationsList' })}
-              style={{
-                backgroundColor: colors.successBackground,
-                borderWidth: 1,
-                borderColor: colors.success + '40',
-                padding: spacing.md,
-                borderRadius: radius.md,
-                marginBottom: spacing.md,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.sm,
-              }}
-            >
-              <Icon name="check-circle" size={24} color={colors.success} />
-              <View style={{ flex: 1 }}>
-                <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
-                  {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
-                </Text>
-                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                  {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
-                </Text>
-              </View>
-              <Icon name="chevron-right" size={14} color={colors.success} />
-            </Pressable>
-          )}
-
           {/* Overlapping Hero Section */}
           <View style={styles.headerHero}>
             <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight, marginTop: -40, borderColor: colors.surface }]}>
@@ -543,6 +514,36 @@ const JobDetailScreen: React.FC = () => {
                 <Icon name="briefcase" size={32} color={colors.primary} />
               )}
             </View>
+
+            {/* Already Applied Status Banner */}
+            {currentJob.is_applied && (
+              <Pressable
+                onPress={() => navigation.navigate('Applications', { screen: 'ApplicationsList' })}
+                style={{
+                  backgroundColor: colors.successBackground,
+                  borderWidth: 1,
+                  borderColor: colors.success + '40',
+                  padding: spacing.md,
+                  borderRadius: radius.md,
+                  marginTop: spacing.md,
+                  marginBottom: spacing.xs,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                }}
+              >
+                <Icon name="check-circle" size={24} color={colors.success} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
+                    {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
+                  </Text>
+                  <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+                    {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={14} color={colors.success} />
+              </Pressable>
+            )}
 
             <View style={{ marginTop: spacing.md }}>
               <Text style={[typography.h2, { color: colors.textPrimary }]} numberOfLines={2}>

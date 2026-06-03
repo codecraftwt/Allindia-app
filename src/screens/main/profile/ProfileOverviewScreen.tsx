@@ -384,7 +384,8 @@ const ProfileOverviewScreen: React.FC = () => {
             onPress={() => navigation.navigate('ProfileDetails')}
             style={({ pressed }) => [
               styles.headerTop,
-              pressed && { opacity: 0.7 }
+              { padding: 16, backgroundColor: colors.surface, borderRadius: 28, borderWidth: 1.5, borderColor: colors.border, elevation: 4, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 16 },
+              pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
             ]}
           >
             <View style={styles.avatarWrapper}>
@@ -430,7 +431,7 @@ const ProfileOverviewScreen: React.FC = () => {
           </Pressable>
 
           {completion && completion.percentage < 100 && (
-            <View style={[styles.strengthContainer, { marginTop: 20 }]}>
+            <View style={[styles.strengthContainer, { marginTop: 24, paddingHorizontal: 4 }]}>
               <View style={styles.strengthHeader}>
                 <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('profileOverview.profileStrength', 'Profile Strength')}</Text>
                 <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
@@ -512,21 +513,6 @@ const ProfileOverviewScreen: React.FC = () => {
             <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
           </Pressable> */}
 
-          <SectionHeader title={t('profileOverview.support', 'Support')} />
-          <Pressable
-            onPress={() => navigation.navigate('HelpAndSupport')}
-            style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={[styles.menuIconContainer, { backgroundColor: '#10B98115' }]}>
-              <Icon name="help-circle" size={18} color="#10B981" />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.helpSupport', 'Help & Support')}</Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>{t('profileOverview.contactUs', 'Contact us for any queries or issues')}</Text>
-            </View>
-            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-          </Pressable>
-
           <SectionHeader title={t('profileOverview.settings', 'Settings')} />
           <View style={[styles.settingsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.settingsRow}>
@@ -557,7 +543,26 @@ const ProfileOverviewScreen: React.FC = () => {
             </Pressable>
           </View>
 
-          <Pressable onPress={() => setShowLogoutModal(true)} style={[styles.logoutBtn, { borderColor: colors.error + '30' }]}>
+          <SectionHeader title={t('profileOverview.support', 'Support')} />
+          <Pressable
+            onPress={() => navigation.navigate('HelpAndSupport')}
+            style={({ pressed }) => [
+              styles.wideItem,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+            ]}
+          >
+            <View style={[styles.menuIconContainer, { backgroundColor: '#10B98115' }]}>
+              <Icon name="help-circle" size={18} color="#10B981" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.helpSupport', 'Help & Support')}</Text>
+              <Text style={[typography.small, { color: colors.textSecondary }]}>{t('profileOverview.contactUs', 'Contact us for any queries or issues')}</Text>
+            </View>
+            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+          </Pressable>
+
+          <Pressable onPress={() => setShowLogoutModal(true)} style={({ pressed }) => [styles.logoutBtn, { borderColor: colors.error + '40', backgroundColor: colors.error + '05' }, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}>
             <Icon name="log-out" size={18} color={colors.error} />
             <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 12 }]}>{t('profileOverview.signOut', 'Sign Out from App')}</Text>
           </Pressable>
@@ -711,20 +716,20 @@ const styles = StyleSheet.create({
   tileIconContainer: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   tileAddBadge: { position: 'absolute', top: 10, right: 10, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   tileDoneBadge: { position: 'absolute', top: 10, right: 10, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  wideItem: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 20, borderWidth: 1, marginBottom: 10, overflow: 'hidden' },
-  menuIconContainer: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  menuTextContainer: { flex: 1, marginLeft: 12 },
-  settingsCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
-  settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
-  logoutBtn: { marginTop: 24, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 20, borderWidth: 1, borderStyle: 'dashed' },
-  dashboardGrid: { flexDirection: 'row', gap: 12, paddingHorizontal: spacing.md, marginBottom: 25, marginTop: 15 },
-  dashboardCardLarge: { flex: 1.2, padding: 16, borderRadius: 24, borderWidth: 1, minHeight: 140, justifyContent: 'space-between', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 },
-  dashboardIconBoxLarge: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  dashboardCardContent: { marginTop: 12 },
-  cardTag: { position: 'absolute', top: 16, right: 16, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  dashboardStack: { flex: 1, gap: 12 },
-  dashboardCardSmall: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 20, borderWidth: 1, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
-  dashboardIconBoxSmall: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  wideItem: { flexDirection: 'row', alignItems: 'center', padding: 18, borderRadius: 24, borderWidth: 1.5, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, overflow: 'hidden' },
+  menuIconContainer: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  menuTextContainer: { flex: 1, marginLeft: 16 },
+  settingsCard: { borderRadius: 24, borderWidth: 1.5, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 12 },
+  settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 18, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  logoutBtn: { marginTop: 24, marginBottom: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 24, borderWidth: 1.5, borderStyle: 'dashed' },
+  dashboardGrid: { flexDirection: 'row', gap: 14, paddingHorizontal: spacing.md, marginBottom: 25, marginTop: 15 },
+  dashboardCardLarge: { flex: 1.2, padding: 20, borderRadius: 28, borderWidth: 1.5, minHeight: 160, justifyContent: 'space-between', elevation: 8, shadowColor: '#EC4899', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16 },
+  dashboardIconBoxLarge: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  dashboardCardContent: { marginTop: 16 },
+  cardTag: { position: 'absolute', top: 18, right: 18, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  dashboardStack: { flex: 1, gap: 14 },
+  dashboardCardSmall: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1.5, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
+  dashboardIconBoxSmall: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
