@@ -24,25 +24,31 @@ import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { useDispatch } from 'react-redux';
+import { verifyRegisterOtp, resendRegisterOtp } from '../../redux/slice/authSlice';
+import type { AppDispatch } from '../../redux/store';
 
 const RESEND_SECONDS = 30;
 
 type Props = StackScreenProps<AuthStackParamList, 'OtpVerification'>;
 
-function maskPhone(digits: string) {
-  if (digits.length < 4) {
-    return `+91 ${digits}`;
-  }
-  return `+91 ••••••${digits.slice(-4)}`;
+function maskEmail(email: string) {
+  if (!email || !email.includes('@')) return email;
+  const [local, domain] = email.split('@');
+  if (local.length <= 2) return `${local[0]}***@${domain}`;
+  return `${local[0]}***${local[local.length - 1]}@${domain}`;
 }
 
 const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { resetDraft } = useProfileSetup();
-  const { phoneDigits } = route.params;
+  const dispatch = useDispatch<AppDispatch>();
+  const { email } = route.params;
   const [otp, setOtp] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
   const [verifying, setVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     if (secondsLeft <= 0) {
@@ -55,25 +61,40 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const canResend = secondsLeft === 0;
   const otpComplete = otp.length === OTP_LENGTH;
 
-  const handleResend = useCallback(() => {
+  const handleResend = useCallback(async () => {
     if (!canResend) {
       return;
     }
-    setSecondsLeft(RESEND_SECONDS);
-    setOtp('');
-  }, [canResend]);
+    setErrorMsg('');
+    const result = await dispatch(resendRegisterOtp(email));
+    if (resendRegisterOtp.fulfilled.match(result)) {
+      setSecondsLeft(RESEND_SECONDS);
+      setOtp('');
+    } else {
+      setErrorMsg((result.payload as string) || 'Failed to resend OTP');
+    }
+  }, [canResend, dispatch, email]);
 
-  const handleVerify = useCallback(() => {
+  const handleVerify = useCallback(async () => {
     if (!otpComplete) {
       return;
     }
     setVerifying(true);
-    setTimeout(() => {
-      setVerifying(false);
-      resetDraft();
-      navigation.reset({ index: 0, routes: [{ name: 'ProfileBasicInfo' }] });
-    }, 600);
-  }, [navigation, otpComplete, resetDraft]);
+    setErrorMsg('');
+    
+    const result = await dispatch(verifyRegisterOtp({ email, otp }));
+    setVerifying(false);
+    
+    if (verifyRegisterOtp.fulfilled.match(result)) {
+      setSuccessMsg('OTP Verified Successfully!');
+      setTimeout(() => {
+        resetDraft();
+        navigation.reset({ index: 0, routes: [{ name: 'ProfileBasicInfo' }] });
+      }, 1500);
+    } else {
+      setErrorMsg((result.payload as string) || 'Invalid verification code');
+    }
+  }, [dispatch, email, otp, otpComplete, resetDraft, navigation]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
@@ -101,7 +122,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
             <AuthHeadline
               colors={colors}
               title="Enter OTP"
-              subtitle="Use the 6-digit code from your SMS. It expires in a few minutes — request a new one if needed."
+              subtitle="Use the 4-digit code sent to your email. It expires in a few minutes — request a new one if needed."
               centerDecor
               decor={
                 <View
@@ -113,7 +134,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
                       shadowColor: colors.shadow,
                     },
                   ]}>
-                  <Icon name="shield" size={32} color={colors.primary} />
+                  <Icon name="envelope" size={32} color={colors.primary} />
                 </View>
               }
             />
@@ -127,18 +148,30 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
                   shadowColor: colors.shadow,
                 },
               ]}>
-              <Icon name="comment" size={16} color={colors.primary} />
+              <Icon name="envelope-o" size={16} color={colors.primary} />
               <Text style={[typography.labelMedium, styles.phoneText, { color: colors.textPrimary }]}>
-                {maskPhone(phoneDigits)}
+                {maskEmail(email)}
               </Text>
             </View>
 
             <Text style={[typography.small, styles.otpLabel, { color: colors.textSecondary }]}>
-              6-digit code
+              4-digit code
             </Text>
             <View style={styles.otpBlock}>
               <OtpDigitInputs value={otp} onChange={setOtp} colors={colors} />
             </View>
+            
+            {!!errorMsg && (
+              <Text style={[typography.small, { color: colors.error, marginBottom: spacing.md, textAlign: 'center' }]}>
+                {errorMsg}
+              </Text>
+            )}
+
+            {!!successMsg && (
+              <Text style={[typography.small, { color: colors.success, marginBottom: spacing.md, textAlign: 'center', fontWeight: 'bold' }]}>
+                {successMsg}
+              </Text>
+            )}
 
             <PrimaryButton
               title="Verify & continue"

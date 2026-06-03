@@ -4,8 +4,8 @@ const addressSlice = createSlice({
   name: 'address',
   initialState: {
     addresses: [],
-    selectedCity: 'Mumbai',
-    selectedArea: 'Andheri East',
+    selectedCity: '',
+    selectedArea: '',
     loading: false,
     error: null as string | null,
   },

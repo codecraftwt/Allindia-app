@@ -69,7 +69,7 @@ export type AuthStackParamList = {
   SignIn: undefined;
   EmailLogin: undefined;
   ForgotPass: undefined;
-  OtpVerification: { phoneDigits: string };
+  OtpVerification: { email: string };
   ProfileBasicInfo: undefined;
   ProfileLocation: undefined;
   ProfileEducation: undefined;

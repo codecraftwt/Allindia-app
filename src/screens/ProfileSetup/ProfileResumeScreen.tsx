@@ -1,6 +1,6 @@
-import React from 'react';
-import { Pressable, TouchableOpacity, StyleSheet, Text, View } from 'react-native';
-// import DocumentPicker, { isCancel, types } from 'react-native-document-picker';
+import React, { useState, useCallback } from 'react';
+import { Pressable, TouchableOpacity, StyleSheet, Text, View, Alert } from 'react-native';
+import DocumentPicker, { isCancel, types } from '@react-native-documents/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../components/auth';
@@ -18,29 +18,29 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const { draft, updateDraft } = useProfileSetup();
 
-  // const [picking, setPicking] = useState(false);
-  // const pickFile = useCallback(async () => {
-  //   setPicking(true);
-  //   try {
-  //     const res = await DocumentPicker.pickSingle({
-  //       type: [types.pdf, types.images],
-  //       copyTo: 'cachesDirectory',
-  //     });
-  //     const uri = res.fileCopyUri ?? res.uri;
-  //     updateDraft({
-  //       resumeUri: uri,
-  //       resumeName: res.name ?? 'Resume',
-  //       resumeSkipped: false,
-  //     });
-  //   } catch (e) {
-  //     if (isCancel(e)) {
-  //       return;
-  //     }
-  //     Alert.alert('Upload failed', 'Could not read the file. Try another file.');
-  //   } finally {
-  //     setPicking(false);
-  //   }
-  // }, [updateDraft]);
+  const [picking, setPicking] = useState(false);
+  const pickFile = useCallback(async () => {
+    setPicking(true);
+    try {
+      const res = await DocumentPicker.pickSingle({
+        type: [types.pdf, types.images],
+        copyTo: 'cachesDirectory',
+      });
+      const uri = res.fileCopyUri ?? res.uri;
+      updateDraft({
+        resumeUri: uri,
+        resumeName: res.name ?? 'Resume',
+        resumeSkipped: false,
+      });
+    } catch (e) {
+      if (isCancel(e)) {
+        return;
+      }
+      Alert.alert('Upload failed', 'Could not read the file. Try another file.');
+    } finally {
+      setPicking(false);
+    }
+  }, [updateDraft]);
 
   const clearFile = () => {
     updateDraft({ resumeUri: null, resumeName: null, resumeSkipped: false });
@@ -79,7 +79,7 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
       step={6}
       title="Resume"
       subtitle="Upload a PDF or image of your CV. Employers see this when you apply — or skip and add it later.">
-      {/* <Pressable
+      <Pressable
         onPress={pickFile}
         disabled={picking}
         style={[
@@ -99,7 +99,7 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center' }]}>
           PDF, JPG, or PNG · max size depends on your device
         </Text>
-      </Pressable> */}
+      </Pressable>
 
       {draft.resumeUri && draft.resumeName ? (
         <View

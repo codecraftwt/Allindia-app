@@ -834,6 +834,8 @@ const HomeScreen: React.FC = () => {
   }, [notifyHintAnim]);
 
   useEffect(() => {
+    if (unreadCount === 0) return;
+
     let hideTimer: ReturnType<typeof setTimeout>;
     const timer = setTimeout(() => {
       setShowNotifyHint(true);
@@ -856,7 +858,7 @@ const HomeScreen: React.FC = () => {
         clearTimeout(hideTimer);
       }
     };
-  }, [notifyHintAnim, shakeBell, dismissNotifyHint]);
+  }, [notifyHintAnim, shakeBell, dismissNotifyHint, unreadCount]);
 
   useEffect(() => {
     tagShakeAnim.value = withRepeat(

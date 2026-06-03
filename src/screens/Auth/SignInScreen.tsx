@@ -85,11 +85,16 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
     const resultAction = await dispatch(registerCandidate(formData));
 
     if (registerCandidate.fulfilled.match(resultAction)) {
-      showStatus('success', t('auth.success'), t('auth.accountCreated'));
-      setTimeout(() => {
-        setStatusModal(prev => ({ ...prev, visible: false }));
-        navigation.replace('Main');
-      }, 1500);
+      const payloadData = resultAction.payload?.data;
+      if (payloadData?.verification_required) {
+        navigation.navigate('OtpVerification', { email: formData.email });
+      } else {
+        showStatus('success', t('auth.success'), t('auth.accountCreated'));
+        setTimeout(() => {
+          setStatusModal(prev => ({ ...prev, visible: false }));
+          navigation.replace('Main');
+        }, 1500);
+      }
     } else {
       showStatus('error', t('auth.registrationFailed'), (resultAction.payload as string) || t('auth.somethingWentWrong'));
     }

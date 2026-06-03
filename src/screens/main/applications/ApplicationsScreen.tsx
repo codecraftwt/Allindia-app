@@ -272,6 +272,7 @@ const ApplicationsScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [isPending, setIsPending] = useState(true);
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
   const openJobDetail = (job: any) => {
@@ -298,8 +299,10 @@ const ApplicationsScreen: React.FC = () => {
   }, [appliedJobs, searchQuery, statusFilter]);
 
   const onRefresh = React.useCallback(() => {
+    setIsPending(true);
     dispatch(fetchAppliedJobs());
     dispatch(fetchApplicationCounts());
+    setTimeout(() => setIsPending(false), 100);
   }, [dispatch]);
 
   const renderEmpty = () => (
@@ -428,12 +431,12 @@ const ApplicationsScreen: React.FC = () => {
                 )}
               </View>
 
-              {loading && filteredAppliedJobs.length === 0 && (
+              {(loading || isPending) && filteredAppliedJobs.length === 0 && (
                 <ApplicationsSkeleton />
               )}
             </>
           }
-          ListEmptyComponent={!loading ? renderEmpty() : null}
+          ListEmptyComponent={!(loading || isPending) ? renderEmpty() : null}
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           refreshControl={

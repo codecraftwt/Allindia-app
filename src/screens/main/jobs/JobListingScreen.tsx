@@ -257,7 +257,7 @@ const JobListingScreen: React.FC = () => {
             keyExtractor={item => item.id.toString()}
             contentContainerStyle={[
               styles.listContent,
-              { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) },
+              { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) + 90 },
             ]}
             ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
             renderItem={({ item }) => (

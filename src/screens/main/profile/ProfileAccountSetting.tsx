@@ -105,21 +105,7 @@ const ProfileAccountSetting: React.FC = () => {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
 
-  // Language Modal State
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const languageSlideAnim = React.useRef(new Animated.Value(350)).current;
 
-  React.useEffect(() => {
-    if (showLanguageModal) {
-      languageSlideAnim.setValue(350);
-      Animated.spring(languageSlideAnim, {
-        toValue: 0,
-        tension: 65,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showLanguageModal]);
 
   const [delLoading, setDelLoading] = useState(false);
   const [showDelPwd, setShowDelPwd] = useState(false);
@@ -290,42 +276,14 @@ const ProfileAccountSetting: React.FC = () => {
     );
   };
 
-  const changeLanguage = async (lng: string) => {
-    try {
-      await i18n.changeLanguage(lng);
-      await AsyncStorage.setItem('settings.lang', lng);
-    } catch (e) {
-      console.error('Failed to save language to storage:', e);
-    }
-    setShowLanguageModal(false);
-  };
 
-  const getLanguageLabel = (lngCode: string) => {
-    switch (lngCode) {
-      case 'hi': return t('profileAccountSetting.hindi', 'Hindi');
-      case 'mr': return t('profileAccountSetting.marathi', 'Marathi');
-      case 'kn': return t('profileAccountSetting.kannada', 'Kannada');
-      case 'en': default: return t('profileAccountSetting.english', 'English');
-    }
-  };
 
   return (
     <ProfileEditLayout
       title={t('profile.accountSettings', 'Account Settings')}
       subtitle={t('profile.manageSecurity', 'Manage your security, privacy and account status.')}>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{t('profile.preferences', 'Preferences')}</Text>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <AccountSettingItem
-            icon="globe"
-            title={t('profile.language', 'Language')}
-            subtitle={getLanguageLabel(i18n.language)}
-            onPress={() => setShowLanguageModal(true)}
-            colors={colors}
-          />
-        </View>
-      </View>
+
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPlaceholder }]}>{t('profile.security', 'Security')}</Text>
@@ -627,66 +585,7 @@ const ProfileAccountSetting: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Language Selection Modal */}
-      <Modal
-        visible={showLanguageModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalOverlay}
-        >
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
-          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, spacing.md), transform: [{ translateY: languageSlideAnim }] }]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('profile.chooseLanguage', 'Choose your preferred language')}</Text>
-              </View>
-              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
-                <Icon name="x" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
 
-            <ScrollView contentContainerStyle={[styles.modalContent, { gap: spacing.md }]} keyboardShouldPersistTaps="handled">
-              {[
-                { code: 'en', label: 'English' },
-                { code: 'hi', label: 'Hindi (हिंदी)' },
-                { code: 'mr', label: 'Marathi (मराठी)' },
-                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
-              ].map((lang) => (
-                <TouchableOpacity
-                  key={lang.code}
-                  onPress={() => changeLanguage(lang.code)}
-                  style={[
-                    styles.item,
-                    {
-                      borderWidth: 1,
-                      borderColor: i18n.language === lang.code ? colors.primary : colors.border,
-                      backgroundColor: i18n.language === lang.code ? colors.surfaceHighlight : colors.surface,
-                      borderRadius: radius.md,
-                      paddingVertical: spacing.lg,
-                    }
-                  ]}
-                >
-                  <View style={[styles.itemIconContainer, { width: 40 }]}>
-                    <Icon name="globe" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
-                  </View>
-                  <View style={styles.itemTextContainer}>
-                    <Text style={[typography.labelMedium, { color: i18n.language === lang.code ? colors.primary : colors.textPrimary, fontSize: 16 }]}>
-                      {lang.label}
-                    </Text>
-                  </View>
-                  {i18n.language === lang.code && (
-                    <Icon name="check-circle" size={20} color={colors.primary} style={{ marginRight: spacing.sm }} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </Modal>
     </ProfileEditLayout>
   );
 };

@@ -13,6 +13,8 @@ import {
   Modal,
   Dimensions,
   StatusBar,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -31,6 +33,7 @@ import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { logoutToLogin } from './logoutToLogin';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../../api/axiosInstance';
 import LogoutModal from '../../../components/LogoutModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
@@ -59,7 +62,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
   const profile = profileData;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
@@ -68,6 +71,41 @@ const ProfileOverviewScreen: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
   const [imageError, setImageError] = useState(false);
+
+  // Language Modal State
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const languageSlideAnim = React.useRef(new Animated.Value(350)).current;
+
+  React.useEffect(() => {
+    if (showLanguageModal) {
+      languageSlideAnim.setValue(350);
+      Animated.spring(languageSlideAnim, {
+        toValue: 0,
+        tension: 65,
+        friction: 10,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showLanguageModal]);
+
+  const changeLanguage = async (lng: string) => {
+    try {
+      await i18n.changeLanguage(lng);
+      await AsyncStorage.setItem('settings.lang', lng);
+    } catch (e) {
+      console.error('Failed to save language to storage:', e);
+    }
+    setShowLanguageModal(false);
+  };
+
+  const getLanguageLabel = (lngCode: string) => {
+    switch (lngCode) {
+      case 'hi': return t('profileAccountSetting.hindi', 'Hindi');
+      case 'mr': return t('profileAccountSetting.marathi', 'Marathi');
+      case 'kn': return t('profileAccountSetting.kannada', 'Kannada');
+      case 'en': default: return t('profileAccountSetting.english', 'English');
+    }
+  };
 
   useEffect(() => {
     setImageError(false);
@@ -498,6 +536,18 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.darkMode', 'Dark Mode')}</Text></View>
               <Switch value={mode === 'dark'} onValueChange={v => setMode(v ? 'dark' : 'light')} trackColor={{ false: colors.border, true: colors.primaryLight }} thumbColor="#FFF" />
             </View>
+
+            <Pressable onPress={() => setShowLanguageModal(true)} style={styles.settingsRow}>
+              <View style={[styles.menuIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                <Icon name="globe" size={18} color={colors.primary} />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profile.language', 'Language')}</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>{getLanguageLabel(i18n.language)}</Text>
+              </View>
+              <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+            </Pressable>
+
             <Pressable onPress={() => navigation.navigate('ProfileAccountSetting')} style={styles.settingsRow}>
               <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
                 <Icon name="settings" size={18} color="#64748B" />
@@ -563,6 +613,63 @@ const ProfileOverviewScreen: React.FC = () => {
       </Modal>
 
       <LogoutModal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} colors={colors} loading={authLoading} />
+
+      <Modal
+        visible={showLanguageModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
+          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 24), transform: [{ translateY: languageSlideAnim }] }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('profile.chooseLanguage', 'Choose your preferred language')}</Text>
+              </View>
+              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
+                <Icon name="x" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={[styles.modalContent, { gap: 16 }]} keyboardShouldPersistTaps="handled">
+              {[
+                { code: 'en', label: 'English' },
+                { code: 'hi', label: 'Hindi (हिंदी)' },
+                { code: 'mr', label: 'Marathi (मराठी)' },
+                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
+              ].map((lang) => (
+                <Pressable
+                  key={lang.code}
+                  onPress={() => changeLanguage(lang.code)}
+                  style={[
+                    styles.languageItem,
+                    {
+                      borderColor: i18n.language === lang.code ? colors.primary : colors.border,
+                      backgroundColor: i18n.language === lang.code ? colors.surfaceHighlight : colors.surface,
+                    }
+                  ]}
+                >
+                  <View style={[styles.languageItemIcon, { width: 40 }]}>
+                    <Icon name="globe" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
+                  </View>
+                  <View style={styles.languageItemText}>
+                    <Text style={[typography.labelMedium, { color: i18n.language === lang.code ? colors.primary : colors.textPrimary, fontSize: 16 }]}>
+                      {lang.label}
+                    </Text>
+                  </View>
+                  {i18n.language === lang.code && (
+                    <Icon name="check-circle" size={20} color={colors.primary} style={{ marginRight: 12 }} />
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       <ConfirmationModal
         visible={showDeleteConfirm}
@@ -672,6 +779,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  modalContainer: { borderTopLeftRadius: 32, borderTopRightRadius: 32, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  modalContent: { padding: 24, paddingBottom: 40 },
+  languageItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderWidth: 1, borderRadius: 16 },
+  languageItemIcon: { alignItems: 'center' },
+  languageItemText: { flex: 1, marginLeft: 12 },
 });
 
 export default ProfileOverviewScreen;

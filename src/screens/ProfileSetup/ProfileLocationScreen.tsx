@@ -41,7 +41,7 @@ const ProfileLocationScreen: React.FC<Props> = ({ navigation }) => {
 
   const filteredCities = useMemo(() => {
     const q = cityQuery.trim().toLowerCase();
-    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
+    const source = Array.from(new Set(cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES));
     if (!q) {
       return source;
     }

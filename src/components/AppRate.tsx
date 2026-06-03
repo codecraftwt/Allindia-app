@@ -9,6 +9,7 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  Linking,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -76,6 +77,12 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setIsVisible(false);
     }, 3000);
+  };
+
+  const handleRateNow = async () => {
+    const url = 'https://play.google.com/store/apps/details?id=com.jobsindia';
+    Linking.openURL(url).catch(err => console.error('An error occurred opening Play Store', err));
+    handleSubmit();
   };
 
   if (!isVisible) return null;
@@ -225,7 +232,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={handleSubmit}
+                  onPress={handleRateNow}
                   activeOpacity={0.8}
                   style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1, marginLeft: 12 }]}
                 >

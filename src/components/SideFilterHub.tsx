@@ -353,6 +353,10 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     setBrowsingCategory(null);
     setBrowsingCity(null);
     setSearchQuery('');
+    
+    // Clear parent filters and close drawer
+    onFilterSelect({});
+    toggleDrawer();
   };
 
   const isAllSubcategoriesSelected = browsingCategory?.subcategories &&

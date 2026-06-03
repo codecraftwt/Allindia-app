@@ -6,6 +6,8 @@ import {
   Text,
   TextInput,
   View,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -65,6 +67,15 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const { draft, updateDraft } = useProfileSetup();
   const [dobOpen, setDobOpen] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'calendar' | 'year' | 'month'>('calendar');
+  const [currentDateStr, setCurrentDateStr] = useState(draft.dateOfBirth || new Date().toISOString().slice(0, 10));
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   const markedDates = useMemo(
     () =>
@@ -210,35 +221,87 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
             onPress={e => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
-                Date of birth
+                {pickerMode === 'calendar' ? 'Date of birth' : pickerMode === 'year' ? 'Select Year' : 'Select Month'}
               </Text>
-              <Pressable onPress={() => setDobOpen(false)} hitSlop={12}>
+              <Pressable onPress={() => { setDobOpen(false); setPickerMode('calendar'); }} hitSlop={12}>
                 <Text style={[typography.labelMedium, { color: colors.primary }]}>Done</Text>
               </Pressable>
             </View>
-            <Calendar
-              current={draft.dateOfBirth || undefined}
-              minDate="1950-01-01"
-              maxDate={new Date().toISOString().slice(0, 10)}
-              onDayPress={day => {
-                updateDraft({ dateOfBirth: day.dateString });
-                setDobOpen(false);
-              }}
-              markedDates={markedDates}
-              enableSwipeMonths
-              theme={{
-                backgroundColor: colors.surface,
-                calendarBackground: colors.surface,
-                textSectionTitleColor: colors.textSecondary,
-                selectedDayBackgroundColor: colors.primary,
-                selectedDayTextColor: colors.onPrimary,
-                todayTextColor: colors.primary,
-                dayTextColor: colors.textPrimary,
-                textDisabledColor: colors.textPlaceholder,
-                monthTextColor: colors.textPrimary,
-                arrowColor: colors.primary,
-              }}
-            />
+
+            {pickerMode === 'calendar' && (
+              <>
+                <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginBottom: spacing.sm }}>
+                  <TouchableOpacity onPress={() => setPickerMode('month')} style={{ paddingVertical: 6, paddingHorizontal: 12, backgroundColor: colors.surfaceHighlight, borderRadius: 8 }}>
+                     <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{months[parseInt(currentDateStr.split('-')[1], 10) - 1]}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setPickerMode('year')} style={{ paddingVertical: 6, paddingHorizontal: 12, backgroundColor: colors.surfaceHighlight, borderRadius: 8 }}>
+                     <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{currentDateStr.split('-')[0]}</Text>
+                  </TouchableOpacity>
+                </View>
+                <Calendar
+                  key={currentDateStr.slice(0, 7)}
+                  current={currentDateStr}
+                  minDate="1950-01-01"
+                  maxDate={new Date().toISOString().slice(0, 10)}
+                  onDayPress={day => {
+                    updateDraft({ dateOfBirth: day.dateString });
+                    setCurrentDateStr(day.dateString);
+                    setDobOpen(false);
+                  }}
+                  onMonthChange={month => setCurrentDateStr(month.dateString)}
+                  markedDates={markedDates}
+                  enableSwipeMonths
+                  hideExtraDays={true}
+                  renderHeader={() => null}
+                  theme={{
+                    backgroundColor: colors.surface,
+                    calendarBackground: colors.surface,
+                    textSectionTitleColor: colors.textSecondary,
+                    selectedDayBackgroundColor: colors.primary,
+                    selectedDayTextColor: colors.onPrimary,
+                    todayTextColor: colors.primary,
+                    dayTextColor: colors.textPrimary,
+                    textDisabledColor: colors.textPlaceholder,
+                    monthTextColor: colors.textPrimary,
+                    arrowColor: colors.primary,
+                  }}
+                />
+              </>
+            )}
+
+            {pickerMode === 'year' && (
+              <ScrollView style={{ maxHeight: 300 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, justifyContent: 'center', gap: 10 }}>
+                  {years.map(y => (
+                    <TouchableOpacity key={y} onPress={() => {
+                        const [, m, d] = currentDateStr.split('-');
+                        setCurrentDateStr(`${y}-${m}-${d}`);
+                        setPickerMode('calendar');
+                      }}
+                      style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: colors.surfaceHighlight, borderRadius: 8 }}>
+                      <Text style={{ color: colors.textPrimary }}>{y}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+
+            {pickerMode === 'month' && (
+              <ScrollView style={{ maxHeight: 300 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: spacing.md, justifyContent: 'center', gap: 10 }}>
+                  {months.map((m, i) => (
+                    <TouchableOpacity key={m} onPress={() => {
+                        const [y, , d] = currentDateStr.split('-');
+                        setCurrentDateStr(`${y}-${String(i + 1).padStart(2, '0')}-${d}`);
+                        setPickerMode('calendar');
+                      }}
+                      style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: colors.surfaceHighlight, borderRadius: 8 }}>
+                      <Text style={{ color: colors.textPrimary }}>{m}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
           </Pressable>
         </Pressable>
       </Modal>

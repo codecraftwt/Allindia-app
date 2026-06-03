@@ -430,8 +430,8 @@ const JobDetailScreen: React.FC = () => {
 
 
   return (
-    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: actualTop }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
+    <View style={[styles.safe, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={'light-content'} translucent backgroundColor="transparent" />
       {/* Animated Toast */}
       {toast.visible && (
         <Animated.View
@@ -453,75 +453,82 @@ const JobDetailScreen: React.FC = () => {
         </Animated.View>
       )}
 
-      <View style={[styles.topBar, { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth }]}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn} accessibilityLabel={t('jobDetail.goBack', 'Go back')}>
-          <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+      <View style={[styles.topBar, { position: 'absolute', top: actualTop, left: 0, right: 0, zIndex: 10 }]}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]} accessibilityLabel={t('jobDetail.goBack', 'Go back')}>
+          <Icon name="chevron-left" size={20} color="#FFF" />
         </Pressable>
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, flex: 1, textAlign: 'left' }]} numberOfLines={1}>
-          {t('jobDetail.title', 'Job details')}
-        </Text>
+        <View style={{ flex: 1 }} />
 
         <Pressable
           onPress={handleToggleWishlist}
           disabled={isWishlisting}
           hitSlop={12}
-          style={[styles.iconBtn, { backgroundColor: colors.surfaceHighlight }]}
+          style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)', marginRight: 8 }]}
           accessibilityLabel={saved ? 'Remove from saved' : 'Save job'}>
           {isWishlisting ? (
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Icon name={saved ? 'heart' : 'heart-o'} size={20} color={saved ? colors.error : colors.textSecondary} />
+            <Icon name={saved ? 'heart' : 'heart-o'} size={20} color={saved ? colors.error : '#FFF'} />
           )}
         </Pressable>
         <Pressable
           onPress={openActions}
           hitSlop={12}
-          style={[styles.iconBtn, { marginRight: spacing.xs }]}
+          style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
           accessibilityLabel="More actions">
-          <Icon name="ellipsis-v" size={20} color={colors.textSecondary} />
+          <Icon name="ellipsis-v" size={20} color="#FFF" />
         </Pressable>
       </View>
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: spacing.lg + Math.max(insets.bottom, spacing.md) },
-        ]}
+        contentContainerStyle={{ paddingBottom: spacing.lg + Math.max(insets.bottom, spacing.md) }}
         showsVerticalScrollIndicator={false}>
-        {/* Already Applied Status Banner */}
-        {currentJob.is_applied && (
-          <Pressable
-            onPress={() => navigation.navigate('Applications', { screen: 'ApplicationsList' })}
-            style={{
-              backgroundColor: colors.successBackground,
-              borderWidth: 1,
-              borderColor: colors.success + '40',
-              padding: spacing.md,
-              borderRadius: radius.md,
-              marginBottom: spacing.md,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: spacing.sm,
-            }}
-          >
-            <Icon name="check-circle" size={24} color={colors.success} />
-            <View style={{ flex: 1 }}>
-              <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
-                {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
-              </Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
-              </Text>
-            </View>
-            <Icon name="chevron-right" size={14} color={colors.success} />
-          </Pressable>
-        )}
 
-        {/* Header Section with Logo, Title, and Tags */}
-        <View style={styles.headerHero}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
-            <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight }]}>
+        {/* Full-Bleed Cover Image */}
+        <View style={{ width: '100%', height: 200, backgroundColor: colors.primary }}>
+          {currentJob.company_cover_url ? (
+            <Pressable onPress={() => handleOpenPreview([currentJob.company_cover_url], 0)} style={{ flex: 1 }}>
+              <Image source={{ uri: currentJob.company_cover_url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+            </Pressable>
+          ) : (
+            <View style={{ flex: 1, backgroundColor: colors.primary, opacity: 0.8 }} />
+          )}
+        </View>
+
+        <View style={styles.scrollContent}>
+          {/* Already Applied Status Banner */}
+          {currentJob.is_applied && (
+            <Pressable
+              onPress={() => navigation.navigate('Applications', { screen: 'ApplicationsList' })}
+              style={{
+                backgroundColor: colors.successBackground,
+                borderWidth: 1,
+                borderColor: colors.success + '40',
+                padding: spacing.md,
+                borderRadius: radius.md,
+                marginBottom: spacing.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.sm,
+              }}
+            >
+              <Icon name="check-circle" size={24} color={colors.success} />
+              <View style={{ flex: 1 }}>
+                <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
+                  {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
+                </Text>
+                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+                  {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
+                </Text>
+              </View>
+              <Icon name="chevron-right" size={14} color={colors.success} />
+            </Pressable>
+          )}
+
+          {/* Overlapping Hero Section */}
+          <View style={styles.headerHero}>
+            <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight, marginTop: -40, borderColor: colors.surface }]}>
               {currentJob.employer?.company?.company_logo_url ? (
                 <Pressable
                   onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
@@ -533,44 +540,52 @@ const JobDetailScreen: React.FC = () => {
                   />
                 </Pressable>
               ) : (
-                <Icon name="briefcase" size={24} color={colors.primary} />
+                <Icon name="briefcase" size={32} color={colors.primary} />
               )}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[typography.h3, { color: colors.textPrimary }]} numberOfLines={2}>
+
+            <View style={{ marginTop: spacing.md }}>
+              <Text style={[typography.h2, { color: colors.textPrimary }]} numberOfLines={2}>
                 {currentJob.title}
               </Text>
-              <Text style={[typography.body, { color: colors.textSecondary }]}>
+              <Text style={[typography.body, { color: colors.primary, fontWeight: '600', marginTop: 4 }]}>
                 {companyName}
               </Text>
             </View>
-          </View>
 
-          {(currentJob.applied_tags?.length > 0 || currentJob.tags?.length > 0) && (
-            <TagCycling
-              tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags}
-              colors={colors}
-            />
-          )}
-        </View>
+            <View style={styles.metaRow}>
+              <View style={[styles.metaPill, { backgroundColor: colors.surfaceHighlight }]}>
+                <Icon name="map-marker" size={14} color={colors.primary} />
+                <Text style={[typography.small, { color: colors.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
+                  {locationLabel}
+                </Text>
+              </View>
+              <View style={[styles.metaPill, { backgroundColor: colors.successBackground }]}>
+                <Icon name="money" size={14} color={colors.success} />
+                <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
+              </View>
+              <View style={[styles.metaPill, { backgroundColor: colors.badgeBackground }]}>
+                <Icon name="briefcase" size={12} color={colors.badgeText} />
+                <Text style={[typography.small, { color: colors.badgeText }]}>{jobTypeLabel}</Text>
+              </View>
+            </View>
 
-        <View style={styles.metaRow}>
-          <View style={[styles.metaPill, { backgroundColor: colors.successBackground }]}>
-            <Icon name="money" size={14} color={colors.success} />
-            <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
+              <Icon name="clock-o" size={12} color={colors.textSecondary} style={{ marginRight: 6 }} />
+              <Text style={[typography.small, { color: colors.textSecondary }]}>
+                {t('jobDetail.posted', 'Posted')} {postedDate}
+              </Text>
+            </View>
+
+            {(currentJob.applied_tags?.length > 0 || currentJob.tags?.length > 0) && (
+              <View style={{ marginTop: spacing.md }}>
+                <TagCycling
+                  tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags}
+                  colors={colors}
+                />
+              </View>
+            )}
           </View>
-          <View style={[styles.metaPill, { backgroundColor: colors.surfaceHighlight }]}>
-            <Icon name="map-marker" size={14} color={colors.primary} />
-            <Text style={[typography.small, { color: colors.textPrimary, flexShrink: 1 }]} numberOfLines={2}>
-              {locationLabel}
-            </Text>
-          </View>
-        </View>
-        <View style={[styles.typePill, { backgroundColor: colors.badgeBackground, alignSelf: 'flex-start' }]}>
-          <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily }]}>
-            {jobTypeLabel} · {t('jobDetail.posted', 'Posted')} {postedDate}
-          </Text>
-        </View>
 
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
@@ -595,10 +610,22 @@ const JobDetailScreen: React.FC = () => {
           </Text>
         </View>
 
+        {currentJob.skills_required && currentJob.skills_required.length > 0 && (
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+            <SectionTitle title={t('jobDetail.skillsRequired', 'Skills Required')} colors={colors} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+              {currentJob.skills_required.map((skill: string, idx: number) => (
+                <View key={idx} style={{ backgroundColor: colors.surfaceHighlight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.md }}>
+                  <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {currentJob.employer?.company && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title={t('jobDetail.aboutCompany', 'About Company')} colors={colors} />
-
             <View style={styles.companyHeader}>
               <View>
                 {currentJob.employer.company.company_logo_url ? (
@@ -828,6 +855,7 @@ const JobDetailScreen: React.FC = () => {
             ))}
           </View>
         )}
+        </View>
       </ScrollView>
 
       <View
@@ -1037,24 +1065,21 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   headerHero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginBottom: spacing.md,
-    gap: 8,
   },
   heroLogoContainer: {
-    width: 56,
-    height: 56,
+    width: 72,
+    height: 72,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderWidth: 3,
   },
   heroLogo: {
-    width: 48,
-    height: 48,
+    width: 64,
+    height: 64,
     borderRadius: radius.sm,
   },
   cornerBadge: {

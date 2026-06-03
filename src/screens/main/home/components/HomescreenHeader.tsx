@@ -433,14 +433,20 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                   <View style={styles.locationTextStack}>
                     <View style={styles.cityRow}>
                       <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
-                        {selectedCity || 'Mumbai'}
+                        {selectedCity || t('home.allLocations', 'All Locations')}
                       </Text>
                       <Icon name="map-marker" size={12} color={colors.primary} style={{ marginLeft: 6 }} />
                       <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
                     </View>
-                    <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
-                      {selectedArea || 'Andheri East'}
-                    </Text>
+                    {!!selectedArea ? (
+                      <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                        {selectedArea}
+                      </Text>
+                    ) : (
+                      <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                        {selectedCity ? t('home.allAreas', 'All Areas') : t('home.anywhere', 'Anywhere')}
+                      </Text>
+                    )}
                   </View>
                 </Pressable>
               </View>

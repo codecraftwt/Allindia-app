@@ -125,6 +125,7 @@ const AllJobsScreen = () => {
   const { searchResults, filteredJobs, nearby, loading } = useSelector((state: RootState) => state.jobs);
   const [search, setSearch] = useState('');
   const [isFiltered, setIsFiltered] = useState(false);
+  const [isPending, setIsPending] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<any>(null);
@@ -154,6 +155,8 @@ const AllJobsScreen = () => {
       navigation.setParams({ filters: undefined, quickFilterId: undefined });
       return;
     }
+
+    setIsPending(true);
 
     // Use 0ms delay for initial load, 500ms for search/filter debounce
     const isInitial = !search;
@@ -193,9 +196,29 @@ const AllJobsScreen = () => {
         setIsFiltered(false);
         dispatch(fetchJobs(params));
       }
+      setTimeout(() => setIsPending(false), 100);
     }, isInitial ? 0 : 500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      setIsPending(false);
+    };
   }, [dispatch, search, activeTab, selectedQuickFilter, route.params, activeFilters]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      const state = navigation.getState();
+      // If routes length is 1, it means we are switching tabs or leaving the screen entirely,
+      // and not pushing JobDetail onto the stack (which would make routes.length > 1)
+      if (state && state.routes.length <= 1) {
+        setActiveFilters(null);
+        setIsFiltered(false);
+        setActiveTab('All');
+        setSelectedQuickFilter(null);
+        setSearch('');
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const jobsToShow = isFiltered ? filteredJobs : (activeTab === 'Nearest' ? nearby : searchResults);
 
@@ -402,7 +425,7 @@ const AllJobsScreen = () => {
         </ScrollView>
       </View>
 
-      {loading ? (
+      {loading || isPending ? (
         <JobSkeleton />
       ) : (
         <FlatList
@@ -417,6 +440,28 @@ const AllJobsScreen = () => {
               <Text style={[typography.h4, { color: colors.textSecondary, marginTop: 16 }]}>
                 {t('allJobs.noJobs', 'No jobs available yet')}
               </Text>
+              {isFiltered && (
+                <Pressable
+                  onPress={() => {
+                    setActiveFilters(null);
+                    setIsFiltered(false);
+                    setActiveTab('All');
+                    setSelectedQuickFilter(null);
+                    setSearch('');
+                  }}
+                  style={{
+                    marginTop: 24,
+                    paddingHorizontal: 24,
+                    paddingVertical: 12,
+                    backgroundColor: colors.primary,
+                    borderRadius: radius.md,
+                  }}
+                >
+                  <Text style={[typography.button, { color: '#fff' }]}>
+                    {t('allJobs.clearFilters', 'Clear Filters')}
+                  </Text>
+                </Pressable>
+              )}
             </View>
           )}
         />

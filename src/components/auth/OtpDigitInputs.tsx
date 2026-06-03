@@ -10,7 +10,7 @@ import type { ThemeColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-export const OTP_LENGTH = 6;
+export const OTP_LENGTH = 4;
 
 type Props = {
   value: string;
@@ -125,6 +125,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     gap: spacing.sm,
+    justifyContent: 'center',
   },
   cell: {
     flex: 1,

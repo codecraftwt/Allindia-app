@@ -69,6 +69,32 @@ export const registerCandidate = createAsyncThunk(
   }
 );
 
+export const verifyRegisterOtp = createAsyncThunk(
+  'auth/verifyRegisterOtp',
+  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/register/verify-otp', payload);
+      return response?.data;
+    } catch (error: any) {
+      console.log("OTP Verification Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'Verification failed');
+    }
+  }
+);
+
+export const resendRegisterOtp = createAsyncThunk(
+  'auth/resendRegisterOtp',
+  async (email: string, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/register/resend-otp', { email });
+      return response?.data;
+    } catch (error: any) {
+      console.log("Resend OTP Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'Failed to resend OTP');
+    }
+  }
+);
+
 export const logoutCandidate = createAsyncThunk(
   'auth/logoutCandidate',
   async (_, { getState, dispatch, rejectWithValue }) => {
@@ -162,12 +188,24 @@ const authSlice = createSlice({
       })
       .addCase(registerCandidate.fulfilled, (state, action) => {
         state.loading = false;
+        // Do NOT log the user in immediately. They must verify OTP.
+      })
+      .addCase(registerCandidate.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(verifyRegisterOtp.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(verifyRegisterOtp.fulfilled, (state, action) => {
+        state.loading = false;
         state.isLoggedIn = true;
         state.user = action.payload.data?.user;
         state.token = action.payload.data?.token;
         state.tokenType = action.payload.data?.token_type;
       })
-      .addCase(registerCandidate.rejected, (state, action) => {
+      .addCase(verifyRegisterOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
