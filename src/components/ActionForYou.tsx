@@ -69,7 +69,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
       const result = await Share.share({
         title: 'Join JobIndia & Earn Coins!',
         message:
-          'Hey! Use my referral code JOBIND500 to sign up on JobIndia and get 100 bonus coins to unlock premium jobs instantly! Download here: https://jobindia.app/invite',
+          'Hey! Use my referral code JOBIND500 to sign up on JobIndia and get 100 bonus coins to unlock premium jobs instantly! Download here: https://play.google.com/store/apps/details?id=com.jobsindia',
       });
       if (result.action === Share.sharedAction) {
         Alert.alert('Success', 'Thank you for sharing JobIndia with your friends!');

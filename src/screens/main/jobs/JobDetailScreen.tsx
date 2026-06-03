@@ -380,7 +380,7 @@ const JobDetailScreen: React.FC = () => {
   const handleShareApp = useCallback(async () => {
     try {
       await Share.share({
-        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://jobindia.app/refer',
+        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://play.google.com/store/apps/details?id=com.jobsindia',
         title: 'Refer JobIndia',
       });
     } catch (error: any) {
