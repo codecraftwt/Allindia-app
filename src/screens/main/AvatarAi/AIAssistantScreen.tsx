@@ -1254,20 +1254,20 @@ const AIAssistantScreen: React.FC = () => {
           linkedin: profile?.personal?.linkedin || '',
           github: profile?.personal?.github || '',
         },
-        experiences: profile?.experience?.map((exp: any) => ({
+        experiences: Array.isArray(profile?.experience) ? profile.experience.map((exp: any) => ({
           company: exp.company_name,
           designation: exp.job_title,
           startDate: exp.start_date,
           endDate: exp.end_date || 'Present',
           bullets: exp.description ? [exp.description] : []
-        })) || [],
-        education: profile?.education?.map((edu: any) => ({
+        })) : [],
+        education: Array.isArray(profile?.education) ? profile.education.map((edu: any) => ({
           school: edu.institute_name,
           degree: edu.highest_qualification,
           startDate: edu.passing_year,
           endDate: edu.passing_year
-        })) || [],
-        skills: profile?.skills || [],
+        })) : [],
+        skills: Array.isArray(profile?.skills) ? profile.skills : [],
         targetJob: profile?.preferences?.job_role || '',
       };
       

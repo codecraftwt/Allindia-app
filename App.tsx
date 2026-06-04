@@ -13,6 +13,8 @@ import { AnimatedBackground } from './src/components/AnimatedBackground';
 import notifee, { EventType } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 import { initNotifications } from './src/services/notificationService';
+import NetworkStatus from './src/components/NetworkStatus';
+import AppUpdateChecker from './src/components/AppUpdateChecker';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -165,6 +167,8 @@ function AppNavigation() {
         />
         <AuthNavigator />
       </NavigationContainer>
+      <NetworkStatus />
+      <AppUpdateChecker />
     </View>
   );
 }

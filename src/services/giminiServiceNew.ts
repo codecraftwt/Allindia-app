@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Please set your Gemini API keys securely
-export const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+export const GEMINI_API_KEY = '';
 
 const MODELS_TO_TRY = [
-  'gemini-2.5-flash', 
+  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-flash-latest',
   'gemini-pro-latest',
