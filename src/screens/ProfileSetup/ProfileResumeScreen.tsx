@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Pressable, TouchableOpacity, StyleSheet, Text, View, Alert } from 'react-native';
-import DocumentPicker, { isCancel, types } from '@react-native-documents/picker';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../components/auth';
@@ -22,18 +22,18 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
   const pickFile = useCallback(async () => {
     setPicking(true);
     try {
-      const res = await DocumentPicker.pickSingle({
-        type: [types.pdf, types.images],
-        copyTo: 'cachesDirectory',
+      const res = await pick({
+        type: [types.pdf, types.doc, types.docx],
       });
-      const uri = res.fileCopyUri ?? res.uri;
+      const file = res[0];
+      const uri = file.fileCopyUri ?? file.uri;
       updateDraft({
         resumeUri: uri,
-        resumeName: res.name ?? 'Resume',
+        resumeName: file.name ?? 'Resume',
         resumeSkipped: false,
       });
-    } catch (e) {
-      if (isCancel(e)) {
+    } catch (err) {
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
         return;
       }
       Alert.alert('Upload failed', 'Could not read the file. Try another file.');
@@ -97,7 +97,7 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
           {picking ? 'Opening files…' : 'Tap to upload resume'}
         </Text>
         <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center' }]}>
-          PDF, JPG, or PNG · max size depends on your device
+          PDF, DOC, DOCX up to 5MB
         </Text>
       </Pressable>
 

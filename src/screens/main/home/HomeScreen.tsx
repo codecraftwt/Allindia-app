@@ -91,61 +91,7 @@ function profileInitials(name: string): string {
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
 }
 
-const getCategoryColor = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('beauty')) return '#FDE2E4'; // Soft Pink
-  if (n.includes('construction')) return '#E2E2E2'; // Gray
-  if (n.includes('content') || n.includes('journalism')) return '#FFF1E6'; // Cream
-  if (n.includes('data science') || n.includes('analytics')) return '#E0FBFC'; // Light Blue
-  if (n.includes('delivery') || n.includes('driver')) return '#FFDDD2'; // Peach
-  if (n.includes('design') || n.includes('architecture')) return '#EAF4F4'; // Mint
-  if (n.includes('hardware') || n.includes('network')) return '#D8E2DC'; // Sage
-  if (n.includes('fashion') || n.includes('tailoring')) return '#FAD2E1'; // Rose
-  if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) return '#FFADAD'; // Soft Red
-  if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) return '#FFE5B4'; // Peach/Yellow
-  if (n.includes('house help') || n.includes('worker')) return '#ECE4DB'; // Sand
-  if (n.includes('human resources') || n.includes('hr')) return '#B9FBC0'; // Soft Green
-  if (n.includes('it services') || n.includes('development')) return '#A0C4FF'; // Blue
-  if (n.includes('labour') || n.includes('factory')) return '#D7E3FC'; // Sky
-  if (n.includes('legal')) return '#E2ECE9'; // Pale Green
-  if (n.includes('marketing')) return '#FDFFB6'; // Lemon
-  if (n.includes('media') || n.includes('entertainment')) return '#BDB2FF'; // Purple
-  if (n.includes('operations')) return '#D0F4DE'; // Mint Green
-  if (n.includes('purchase') || n.includes('supply chain')) return '#FFC6FF'; // Magenta/Pink
-  if (n.includes('sales')) return '#CAFFBF'; // Lime
-  if (n.includes('security')) return '#E5E5E5'; // Silver
-  if (n.includes('sport') || n.includes('fitness')) return '#FFD6A5'; // Orange
-  if (n.includes('technician') || n.includes('vehicle')) return '#CFBCFF'; // Violet
-  return '#F1F5F9';
-};
-
-const getCategoryIcon = (name: string) => {
-  const n = name.toLowerCase();
-  if (n.includes('beauty')) return 'magic';
-  if (n.includes('construction')) return 'building';
-  if (n.includes('content') || n.includes('journalism')) return 'pencil';
-  if (n.includes('data science') || n.includes('analytics')) return 'database';
-  if (n.includes('delivery') || n.includes('driver')) return 'truck';
-  if (n.includes('design') || n.includes('architecture')) return 'paint-brush';
-  if (n.includes('hardware') || n.includes('network')) return 'server';
-  if (n.includes('fashion') || n.includes('tailoring')) return 'scissors';
-  if (n.includes('healthcare') || n.includes('doctor') || n.includes('hospital')) return 'user-md';
-  if (n.includes('hospitality') || n.includes('restaurant') || n.includes('tourism')) return 'coffee';
-  if (n.includes('house help') || n.includes('worker')) return 'home';
-  if (n.includes('human resources') || n.includes('hr')) return 'users';
-  if (n.includes('it services') || n.includes('development')) return 'code';
-  if (n.includes('labour') || n.includes('factory')) return 'industry';
-  if (n.includes('legal')) return 'balance-scale';
-  if (n.includes('marketing')) return 'bullhorn';
-  if (n.includes('media') || n.includes('entertainment')) return 'film';
-  if (n.includes('operations')) return 'cogs';
-  if (n.includes('purchase') || n.includes('supply chain')) return 'shopping-cart';
-  if (n.includes('sales')) return 'line-chart';
-  if (n.includes('security')) return 'shield';
-  if (n.includes('sport') || n.includes('fitness')) return 'heartbeat';
-  if (n.includes('technician') || n.includes('vehicle')) return 'wrench';
-  return 'briefcase';
-}
+import { getCategoryColor, getCategoryIcon } from '../../../utils/categoryUtils';
 
 function getTagConfig(tag: string, colors: any) {
   const t = tag.toLowerCase();

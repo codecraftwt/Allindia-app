@@ -12,6 +12,9 @@ import {
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
+import { useDispatch } from 'react-redux';
+import { updatePersonalProfile, updatePreferencesProfile } from '../../redux/slice/profileSlice';
+import type { AppDispatch } from '../../redux/store';
 import { PrimaryButton } from '../../components/auth';
 import type { Gender } from '../../context/ProfileSetupContext';
 import { useProfileSetup } from '../../context/ProfileSetupContext';
@@ -66,7 +69,9 @@ function formatDobDisplay(iso: string) {
 const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
   const { draft, updateDraft } = useProfileSetup();
+  const dispatch = useDispatch<AppDispatch>();
   const [dobOpen, setDobOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pickerMode, setPickerMode] = useState<'calendar' | 'year' | 'month'>('calendar');
   const [currentDateStr, setCurrentDateStr] = useState(draft.dateOfBirth || new Date().toISOString().slice(0, 10));
 
@@ -90,6 +95,32 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
     draft.gender !== '' && 
     draft.dateOfBirth !== '' &&
     draft.preferredLanguage !== '';
+
+  const handleContinue = async () => {
+    setSaving(true);
+    try {
+      await dispatch(updatePersonalProfile({
+        name: draft.fullName,
+        gender: draft.gender,
+        date_of_birth: draft.dateOfBirth,
+      })).unwrap();
+
+      if (draft.preferredLanguage) {
+        await dispatch(updatePreferencesProfile({
+          preferred_language: draft.preferredLanguage,
+        })).unwrap();
+      }
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main' as any }],
+      });
+    } catch (e) {
+      console.error('Save failed', e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ProfileSetupLayout
@@ -173,7 +204,7 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         Preferred language
       </Text>
       <View style={[styles.miniSearch, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.sm }]}>
-        <Icon name="type" size={16} color={colors.primary} />
+        <Icon name="language" size={16} color={colors.primary} />
         <TextInput
           placeholder="Type your language..."
           placeholderTextColor={colors.textPlaceholder}
@@ -183,7 +214,7 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         />
         {draft.preferredLanguage ? (
           <TouchableOpacity onPress={() => updateDraft({ preferredLanguage: '' })}>
-            <Icon name="x-circle" size={16} color={colors.textPlaceholder} />
+            <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -307,8 +338,9 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       <PrimaryButton
         title="Continue"
-        onPress={() => navigation.navigate('ProfileLocation')}
-        disabled={!canContinue}
+        onPress={handleContinue}
+        disabled={!canContinue || saving}
+        loading={saving}
         colors={colors}
         iconRight={<Icon name="arrow-right" size={16} color={colors.onPrimary} />}
       />

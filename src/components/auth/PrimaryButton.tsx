@@ -70,6 +70,7 @@ export const PrimaryButton: React.FC<Props> = ({
               isPrimary
                 ? { color: colors.onPrimary }
                 : { color: inactive ? colors.textSecondary : colors.primary },
+              { flexShrink: 1, textAlign: 'center', flexWrap: 'wrap' }
             ]}>
             {title}
           </Text>

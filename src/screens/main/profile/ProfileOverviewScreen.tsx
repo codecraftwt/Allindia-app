@@ -432,9 +432,9 @@ const ProfileOverviewScreen: React.FC = () => {
 
           {completion && completion.percentage < 100 && (
             <View style={[styles.strengthContainer, { marginTop: 24, paddingHorizontal: 4 }]}>
-              <View style={styles.strengthHeader}>
-                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('profileOverview.profileStrength', 'Profile Strength')}</Text>
-                <Text style={[typography.small, { color: colors.primary }]}>{completion?.percentage || 0}%</Text>
+              <View style={[styles.strengthHeader, { alignItems: 'center' }]}>
+                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold', flex: 1, flexWrap: 'wrap', lineHeight: 20 }]} numberOfLines={2}>{t('profileOverview.profileStrength', 'Profile Strength')}</Text>
+                <Text style={[typography.small, { color: colors.primary, marginLeft: 8 }]}>{completion?.percentage || 0}%</Text>
               </View>
               <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
                 <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
@@ -479,7 +479,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#F59E0B15' }]}>
                 <Icon name="heart" size={18} color="#F59E0B" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>{t('profileOverview.saved', 'Saved')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10, flex: 1, flexWrap: 'wrap', lineHeight: 22 }]} numberOfLines={2}>{t('profileOverview.saved', 'Saved')}</Text>
             </Pressable>
 
             <Pressable
@@ -493,7 +493,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#3B82F615' }]}>
                 <Icon name="briefcase" size={18} color="#3B82F6" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10 }]}>{t('profileOverview.applied', 'Applied')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10, flex: 1, flexWrap: 'wrap', lineHeight: 22 }]} numberOfLines={2}>{t('profileOverview.applied', 'Applied')}</Text>
             </Pressable>
           </View>
         </View>
@@ -727,8 +727,8 @@ const styles = StyleSheet.create({
   dashboardIconBoxLarge: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   dashboardCardContent: { marginTop: 16 },
   cardTag: { position: 'absolute', top: 18, right: 18, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
-  dashboardStack: { flex: 1, gap: 14 },
-  dashboardCardSmall: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1.5, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
+  dashboardStack: { flex: 1, gap: 14, justifyContent: 'space-between' },
+  dashboardCardSmall: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1.5, minHeight: 73, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
   dashboardIconBoxSmall: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },

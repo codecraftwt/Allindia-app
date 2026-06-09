@@ -53,12 +53,12 @@ export const QUALIFICATIONS = [
 
 export const SALARY_OPTIONS = [
   { id: 'unspecified', label: 'Prefer not to say' },
-  { id: 'below2', label: 'Below ₹2 LPA' },
-  { id: '2to4', label: '₹2 – 4 LPA' },
-  { id: '4to6', label: '₹4 – 6 LPA' },
-  { id: '6to10', label: '₹6 – 10 LPA' },
-  { id: '10to15', label: '₹10 – 15 LPA' },
-  { id: '15plus', label: '₹15 LPA & above' },
+  { id: 'below15k', label: 'Below ₹15,000 / mo' },
+  { id: '15kto30k', label: '₹15k – 30k / mo' },
+  { id: '30kto50k', label: '₹30k – 50k / mo' },
+  { id: '50kto80k', label: '₹50k – 80k / mo' },
+  { id: '80kto1_2L', label: '₹80k – 1.2L / mo' },
+  { id: '1_2Lplus', label: '₹1.2L & above / mo' },
 ] as const;
 
 export const JOB_CATEGORIES = [

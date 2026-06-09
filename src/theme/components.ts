@@ -7,10 +7,10 @@ import { cardPadding, spacing } from './spacing';
  */
 export const components = {
   button: {
-    height: 48,
     minHeight: 48,
     borderRadius: radius.button,
     paddingHorizontal: spacing.md,
+    paddingVertical: 12,
   },
   buttonSecondary: {
     borderWidth: 1,
