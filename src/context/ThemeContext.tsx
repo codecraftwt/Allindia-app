@@ -21,6 +21,7 @@ type ThemeContextValue = {
   toggleTheme: () => void;
   setMode: (mode: ThemeMode) => void;
   isThemeLoading: boolean;
+  isDark: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -76,7 +77,7 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   }, []);
 
   const value = useMemo(
-    () => ({ mode, colors, toggleTheme, setMode, isThemeLoading }),
+    () => ({ mode, colors, toggleTheme, setMode, isThemeLoading, isDark: mode === 'dark' }),
     [mode, colors, toggleTheme, setMode, isThemeLoading],
   );
 

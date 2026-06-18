@@ -164,24 +164,40 @@ const TagCycling = ({ tags, colors, tagRotationStyle, isSmall = false }: { tags:
   const isApplied = typeof tag !== 'string';
   const tagName = isApplied ? tag.name : tag;
   const tagIcon = isApplied ? cleanIconName(tag.icon) : getTagConfig(tag, colors).icon;
-  const tagColor = isApplied ? (tag.icon_color || colors.primary) : getTagConfig(tag, colors).color;
+  let tagColor = isApplied ? (tag.icon_color || colors.primary) : getTagConfig(tag, colors).color;
+
+  let customBg = undefined;
+  let customText = undefined;
+  
+  if (tagName.toLowerCase().includes('spotlight')) {
+    customBg = '#D4AF37'; // Golden color
+    customText = '#FFFFFF';
+  } else if (tagName.toLowerCase().includes('boost')) {
+    customBg = '#1E3A8A'; // Dark blue
+    customText = '#FFFFFF';
+  }
+
+  const finalBgColor = customBg || (isSmall ? colors.surface : (isApplied ? colors.surface : tagColor + '15'));
+  const finalBorderColor = customBg ? 'transparent' : (isSmall ? tagColor + '60' : (isApplied ? tagColor + '80' : 'transparent'));
+  const finalBorderWidth = customBg ? 0 : (isSmall || isApplied ? 1 : 0);
+  const finalTextColor = customText || tagColor;
 
   return (
     <ReAnimated.View style={[
       isSmall ? styles.tagBadgeSm : styles.hotBadge,
       {
-        backgroundColor: isSmall ? colors.surface : (isApplied ? colors.surface : tagColor + '15'),
-        borderColor: isSmall ? tagColor + '60' : (isApplied ? tagColor + '80' : 'transparent'),
-        borderWidth: isSmall || isApplied ? 1 : 0,
+        backgroundColor: finalBgColor,
+        borderColor: finalBorderColor,
+        borderWidth: finalBorderWidth,
       },
       animatedStyle
     ]}>
       <ReAnimated.View style={tagRotationStyle}>
-        <Icon name={tagIcon} size={isSmall ? 13 : 16} color={tagColor} />
+        <Icon name={tagIcon} size={isSmall ? 13 : 16} color={finalTextColor} />
       </ReAnimated.View>
       <Text style={[
         isSmall ? styles.tagTextSm : typography.small,
-        { color: tagColor, fontSize: isSmall ? 11 : 10, fontWeight: 'bold', marginLeft: 4 }
+        { color: finalTextColor, fontSize: isSmall ? 11 : 10, fontWeight: 'bold', marginLeft: 4 }
       ]}>
         {tagName}
       </Text>
@@ -211,6 +227,33 @@ function JobTrendCard({
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
   const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
 
+  const firstTag = job.applied_tags?.[0] || job.tags?.[0];
+  const firstTagName = firstTag ? (typeof firstTag === 'string' ? firstTag : firstTag.name) : '';
+  const isSpotlight = firstTagName && firstTagName.toLowerCase().includes('spotlight');
+  const isBoost = firstTagName && firstTagName.toLowerCase().includes('boost');
+
+  let cardBgColor = colors.surface;
+  let cardBorderColor = colors.border;
+  let cardBorderWidth = hasAppliedTags ? 0 : StyleSheet.hairlineWidth;
+  let cardShadowColor = '#000';
+  let cardElevation = undefined;
+
+  if (isSpotlight) {
+    cardBgColor = isDark ? '#2D2714' : '#FEF3C7'; // Solid subtle dark gold
+    cardBorderColor = isDark ? '#F59E0B' : '#FCD34D';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#D4AF37';
+    cardElevation = isDark ? 0 : 6;
+  } else if (isBoost) {
+    cardBgColor = isDark ? '#141E30' : '#E0E7FF'; // Solid subtle dark blue
+    cardBorderColor = isDark ? '#3B82F6' : '#A5B4FC';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#1E3A8A';
+    cardElevation = isDark ? 0 : 6;
+  } else if (hasAppliedTags) {
+    cardBgColor = primaryTagColor + '15';
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -218,11 +261,14 @@ function JobTrendCard({
         styles.trendCard,
         {
           width: H_CARD_W,
-          backgroundColor: hasAppliedTags ? primaryTagColor + '15' : colors.surface,
-          borderWidth: hasAppliedTags ? 0 : StyleSheet.hairlineWidth,
-          borderColor: colors.border,
+          backgroundColor: cardBgColor,
+          borderWidth: cardBorderWidth,
+          borderColor: cardBorderColor,
+          shadowColor: cardShadowColor,
+          elevation: cardElevation,
           paddingBottom: 40,
         },
+        (isSpotlight || isBoost) && { shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
 
       {/* Top Section: Logo + Name */}
@@ -301,17 +347,46 @@ function JobListCard({
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
   const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
 
+  const firstTag = job.applied_tags?.[0] || job.tags?.[0];
+  const firstTagName = firstTag ? (typeof firstTag === 'string' ? firstTag : firstTag.name) : '';
+  const isSpotlight = firstTagName && firstTagName.toLowerCase().includes('spotlight');
+  const isBoost = firstTagName && firstTagName.toLowerCase().includes('boost');
+
+  let cardBgColor = colors.surface;
+  let cardBorderColor = colors.border;
+  let cardBorderWidth = hasAppliedTags ? 0 : StyleSheet.hairlineWidth;
+  let cardShadowColor = colors.shadow;
+  let cardElevation = undefined;
+
+  if (isSpotlight) {
+    cardBgColor = isDark ? '#2D2714' : '#FEF3C7'; // Solid subtle dark gold
+    cardBorderColor = isDark ? '#F59E0B' : '#FCD34D';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#D4AF37';
+    cardElevation = isDark ? 0 : 4;
+  } else if (isBoost) {
+    cardBgColor = isDark ? '#141E30' : '#E0E7FF'; // Solid subtle dark blue
+    cardBorderColor = isDark ? '#3B82F6' : '#A5B4FC';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#1E3A8A';
+    cardElevation = isDark ? 0 : 4;
+  } else if (hasAppliedTags) {
+    cardBgColor = primaryTagColor + '10';
+  }
+
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.listCard,
         {
-          backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
-          borderWidth: hasAppliedTags ? 0 : StyleSheet.hairlineWidth,
-          borderColor: colors.border,
-          shadowColor: colors.shadow,
+          backgroundColor: cardBgColor,
+          borderWidth: cardBorderWidth,
+          borderColor: cardBorderColor,
+          shadowColor: cardShadowColor,
+          elevation: cardElevation,
         },
+        (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
       <View style={styles.listCardTop}>
         <View style={styles.listIconWrap}>
@@ -424,6 +499,65 @@ const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
         {suggestions[index]}
       </Animated.Text>
     </View>
+  );
+};
+
+const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () => void }) => {
+  const { t } = useTranslation();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.02, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [pulseAnim]);
+
+  return (
+    <Animated.View style={{ transform: [{ scale: pulseAnim }], marginHorizontal: spacing.md, marginBottom: 20, marginTop: 5 }}>
+      <Pressable 
+        onPress={onPress} 
+        style={({ pressed }) => [
+          { 
+            backgroundColor: colors.surface, 
+            padding: 16, 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            borderRadius: 24, 
+            borderWidth: 1.5,
+            borderColor: '#EC489930',
+            elevation: 4, 
+            shadowColor: '#EC4899', 
+            shadowOffset: { width: 0, height: 6 }, 
+            shadowOpacity: 0.15, 
+            shadowRadius: 12,
+            overflow: 'hidden'
+          },
+          pressed && { opacity: 0.9 }
+        ]}
+      >
+         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#EC489908' }]} />
+         
+         <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#EC489915', alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: '#EC489930' }}>
+           <Icon name="play" size={24} color="#EC4899" style={{ marginLeft: 4 }} />
+         </View>
+
+         <View style={{ flex: 1 }}>
+           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+             <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Reels')}</Text>
+             <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+               <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
+             </View>
+           </View>
+           <Text style={[typography.small, { color: colors.textSecondary }]}>{t('home.reelsDesc', 'Swipe through short job videos')}</Text>
+         </View>
+
+         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EC4899', alignItems: 'center', justifyContent: 'center' }}>
+           <Icon name="arrow-right" size={14} color="#FFF" />
+         </View>
+      </Pressable>
+    </Animated.View>
   );
 };
 
@@ -567,6 +701,7 @@ const MemoizedHomeContent = React.memo(({
               </ScrollView>
             </>
           )}
+          <JobReelsBanner colors={colors} onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Home' } })} />
           {nearby && nearby.length > 0 && (
             <>
               <SectionHeader

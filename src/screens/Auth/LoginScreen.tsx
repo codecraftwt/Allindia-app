@@ -82,7 +82,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setShowLanguageModal(true)}
           style={[styles.languageBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
-          <Icon name="globe" size={14} color={colors.primary} style={{ marginRight: 6 }} />
+          <Icon name="language" size={14} color={colors.primary} style={{ marginRight: 6 }} />
           <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>
             {getLanguageLabel(i18n.language)}
           </Text>
@@ -183,7 +183,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       }
                     ]}
                   >
-                    <Icon name="globe" size={18} color={isSelected ? colors.primary : colors.textSecondary} style={{ marginRight: 12 }} />
+                    <Icon name="language" size={18} color={isSelected ? colors.primary : colors.textSecondary} style={{ marginRight: 12 }} />
                     <Text style={[typography.body, { color: isSelected ? colors.primary : colors.textPrimary, fontWeight: isSelected ? 'bold' : 'normal', flex: 1 }]}>
                       {lang.label}
                     </Text>

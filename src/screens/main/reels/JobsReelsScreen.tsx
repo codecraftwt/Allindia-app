@@ -29,7 +29,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
@@ -171,6 +171,8 @@ const ShimmerLoader: React.FC<{ style?: any }> = ({ style }) => {
 const JobsReelsScreen: React.FC = () => {
   const { colors, mode, isDark } = useTheme();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const fromScreen = route.params?.from || 'Profile';
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid');
   const [loading, setLoading] = useState(true);
@@ -207,14 +209,14 @@ const JobsReelsScreen: React.FC = () => {
         }
         const parentNav = navigation.getParent();
         if (parentNav) {
-          parentNav.navigate('Profile', { screen: 'ProfileOverview' });
+          parentNav.navigate(fromScreen);
           return true;
         }
         return false;
       };
       const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
       return () => backHandler.remove();
-    }, [viewMode, navigation])
+    }, [viewMode, navigation, fromScreen])
   );
 
   const handlePress = (id: string) => {
@@ -308,7 +310,7 @@ const JobsReelsScreen: React.FC = () => {
               onPress={() => {
                 const parentNav = navigation.getParent();
                 if (parentNav) {
-                  parentNav.navigate('Profile');
+                  parentNav.navigate(fromScreen);
                 }
               }}
               style={{

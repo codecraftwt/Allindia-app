@@ -114,6 +114,7 @@ const ProfileOverviewScreen: React.FC = () => {
   // Optimized Animation Values (Native Driver Compatible)
   const shimmerAnim = React.useRef(new Animated.Value(0)).current;
   const floatAnim = React.useRef(new Animated.Value(0)).current;
+  const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Shimmer Loop
@@ -131,11 +132,32 @@ const ProfileOverviewScreen: React.FC = () => {
     );
     floatLoop.start();
 
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    pulseLoop.start();
+
     return () => {
       shimmerLoop.stop();
       floatLoop.stop();
+      pulseLoop.stop();
     };
-  }, [shimmerAnim, floatAnim]);
+  }, [shimmerAnim, floatAnim, pulseAnim]);
+
+  const getNextActionText = () => {
+    if (!completion?.missing_sections || completion.missing_sections.length === 0) return t('profileOverview.allDone', 'Profile Complete!');
+    const firstMissing = completion.missing_sections[0];
+    switch (firstMissing) {
+      case 'education': return t('profileOverview.addEducation', 'Add Education to boost your profile!');
+      case 'experience': return t('profileOverview.addExperience', 'Add Experience to stand out!');
+      case 'skills': return t('profileOverview.addSkills', 'Add Skills to get better matches!');
+      case 'resume': return t('profileOverview.addResume', 'Upload your Resume to reach 100%!');
+      default: return t('profileOverview.completeProfile', 'Complete your profile to unlock more jobs!');
+    }
+  };
 
   React.useEffect(() => {
     if (isLoggedIn) {
@@ -431,69 +453,114 @@ const ProfileOverviewScreen: React.FC = () => {
           </Pressable>
 
           {completion && completion.percentage < 100 && (
-            <View style={[styles.strengthContainer, { marginTop: 24, paddingHorizontal: 4 }]}>
-              <View style={[styles.strengthHeader, { alignItems: 'center' }]}>
-                <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold', flex: 1, flexWrap: 'wrap', lineHeight: 20 }]} numberOfLines={2}>{t('profileOverview.profileStrength', 'Profile Strength')}</Text>
-                <Text style={[typography.small, { color: colors.primary, marginLeft: 8 }]}>{completion?.percentage || 0}%</Text>
+            <Pressable
+              onPress={() => navigation.navigate('ProfileDetails')}
+              style={({ pressed }) => [
+                {
+                  marginTop: 24,
+                  marginHorizontal: 4,
+                  padding: 16,
+                  backgroundColor: colors.surface,
+                  borderRadius: 20,
+                  borderWidth: 1.5,
+                  borderColor: colors.primary + '40',
+                  elevation: 6,
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 6 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  overflow: 'hidden'
+                },
+                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+              ]}
+            >
+              <Animated.View style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: colors.primary + '08', opacity: pulseAnim }
+              ]} />
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 16, marginBottom: 4 }]}>
+                    {t('profileOverview.boostProfile', 'Boost Your Profile')}
+                  </Text>
+                  <Text style={[typography.small, { color: colors.textSecondary, lineHeight: 18 }]}>
+                    {getNextActionText()}
+                  </Text>
+                </View>
+
+                <View style={{
+                  width: 54, height: 54, borderRadius: 27,
+                  backgroundColor: colors.surfaceHighlight,
+                  borderWidth: 3, borderColor: colors.primary + '80',
+                  alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: '900', fontSize: 16 }]}>
+                    {completion?.percentage || 0}%
+                  </Text>
+                </View>
               </View>
-              <View style={[styles.strengthBarBase, { backgroundColor: colors.surfaceHighlight }]}>
-                <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
+
+              <View style={[styles.strengthBarBase, { backgroundColor: colors.border, height: 8, borderRadius: 4, marginTop: 4 }]}>
+                <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%`, borderRadius: 4 }]} />
               </View>
-            </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 12 }}>
+                <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: 'bold' }]}>
+                  {t('profileOverview.completeNow', 'Complete Now')}
+                </Text>
+                <Icon name="chevron-right" size={16} color={colors.primary} style={{ marginLeft: 4 }} />
+              </View>
+            </Pressable>
           )}
         </View>
 
-        {/* Action Dashboard - Modern Dynamic Layout */}
-        <View style={styles.dashboardGrid}>
-          {/* Left Large Card: Reels */}
+        {/* Action Dashboard - Compact Layout */}
+        <View style={{ paddingHorizontal: spacing.md, gap: 12, marginBottom: 25, marginTop: 15 }}>
           <Pressable
-            onPress={() => navigation.getParent()?.navigate('JobReels')}
+            onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Profile' } })}
             style={({ pressed }) => [
-              styles.dashboardCardLarge,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-              pressed && { opacity: 0.9, scale: 0.98 }
+              styles.dashboardCardSmall,
+              { backgroundColor: mode === 'dark' ? '#EC489915' : '#FDF2F8', borderWidth: 0 },
+              pressed && { opacity: 0.9 }
             ]}
           >
-            <View style={[styles.dashboardIconBoxLarge, { backgroundColor: '#EC489915' }]}>
-              <Icon name="play-circle" size={28} color="#EC4899" />
+            <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
+              <Icon name="play-circle" size={18} color="#EC4899" />
             </View>
-            <View style={styles.dashboardCardContent}>
-              <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18 }]}>{t('profileOverview.reels', 'Reels')}</Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{t('profileOverview.watchReels', 'Watch short job videos')}</Text>
-            </View>
-            <View style={[styles.cardTag, { backgroundColor: '#EC489910' }]}>
-              <Text style={{ color: '#EC4899', fontSize: 10, fontWeight: 'bold' }}>{t('profileOverview.reelsTag', 'REELS')}</Text>
+            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
+            <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+              <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 }}>{t('profileOverview.reelsTag', 'NEW')}</Text>
             </View>
           </Pressable>
 
-          {/* Right Stack: Saved & Applied */}
-          <View style={styles.dashboardStack}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
             <Pressable
               onPress={() => navigation.navigate('Saved')}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
-                { backgroundColor: colors.surface, borderColor: colors.border },
+                { flex: 1, backgroundColor: mode === 'dark' ? '#F59E0B15' : '#FFFBEB', borderWidth: 0, paddingHorizontal: 14 },
                 pressed && { opacity: 0.9 }
               ]}
             >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#F59E0B15' }]}>
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#F59E0B25' : '#FEF3C7' }]}>
                 <Icon name="heart" size={18} color="#F59E0B" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10, flex: 1, flexWrap: 'wrap', lineHeight: 22 }]} numberOfLines={2}>{t('profileOverview.saved', 'Saved')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.saved', 'Saved')}</Text>
             </Pressable>
 
             <Pressable
               onPress={() => navigation.getParent()?.navigate('Applications')}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
-                { backgroundColor: colors.surface, borderColor: colors.border },
+                { flex: 1, backgroundColor: mode === 'dark' ? '#3B82F615' : '#EFF6FF', borderWidth: 0, paddingHorizontal: 14 },
                 pressed && { opacity: 0.9 }
               ]}
             >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: '#3B82F615' }]}>
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#3B82F625' : '#DBEAFE' }]}>
                 <Icon name="briefcase" size={18} color="#3B82F6" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 10, flex: 1, flexWrap: 'wrap', lineHeight: 22 }]} numberOfLines={2}>{t('profileOverview.applied', 'Applied')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.applied', 'Applied')}</Text>
             </Pressable>
           </View>
         </View>
@@ -525,7 +592,7 @@ const ProfileOverviewScreen: React.FC = () => {
 
             <Pressable onPress={() => setShowLanguageModal(true)} style={styles.settingsRow}>
               <View style={[styles.menuIconContainer, { backgroundColor: colors.primary + '15' }]}>
-                <Icon name="globe" size={18} color={colors.primary} />
+                <Icon name="language" size={18} color={colors.primary} />
               </View>
               <View style={styles.menuTextContainer}>
                 <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profile.language', 'Language')}</Text>
@@ -659,7 +726,7 @@ const ProfileOverviewScreen: React.FC = () => {
                   ]}
                 >
                   <View style={[styles.languageItemIcon, { width: 40 }]}>
-                    <Icon name="globe" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
+                    <Icon name="language" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
                   </View>
                   <View style={styles.languageItemText}>
                     <Text style={[typography.labelMedium, { color: i18n.language === lang.code ? colors.primary : colors.textPrimary, fontSize: 16 }]}>

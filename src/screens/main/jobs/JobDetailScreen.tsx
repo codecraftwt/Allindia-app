@@ -58,6 +58,16 @@ const formatJobType = (type: string) => {
     .join(' ');
 };
 
+const formatSnakeCase = (str: string) => {
+  if (!str) return '';
+  return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+};
+
+const formatSalaryBreakup = (type: string) => {
+  if (!type) return 'Fixed';
+  return formatSnakeCase(type).replace('Plus', '+');
+};
+
 const cleanIconName = (icon: string) => {
   if (!icon) return 'check-circle';
   return icon.replace(/fas fa-|fa-|fab fa-|far fa-/g, '').trim();
@@ -487,9 +497,9 @@ const JobDetailScreen: React.FC = () => {
 
         {/* Full-Bleed Cover Image */}
         <View style={{ width: '100%', height: 200, backgroundColor: colors.primary }}>
-          {currentJob.company_cover_url ? (
-            <Pressable onPress={() => handleOpenPreview([currentJob.company_cover_url], 0)} style={{ flex: 1 }}>
-              <Image source={{ uri: currentJob.company_cover_url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+          {currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url ? (
+            <Pressable onPress={() => handleOpenPreview([currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url], 0)} style={{ flex: 1 }}>
+              <Image source={{ uri: currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
             </Pressable>
           ) : (
             <View style={{ flex: 1, backgroundColor: colors.primary, opacity: 0.8 }} />
@@ -588,22 +598,65 @@ const JobDetailScreen: React.FC = () => {
             )}
           </View>
 
+        {/* 1. Key Highlights */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
           <View style={styles.infoGrid}>
-            <InfoRow label={t('jobDetail.gender', 'Gender')} value={currentJob.gender || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
-            <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
-            <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
             <InfoRow label={t('jobDetail.experience', 'Experience')} value={currentJob.experience_label || '-'} icon="briefcase" colors={colors} />
+            <InfoRow label={t('jobDetail.gender', 'Gender')} value={formatJobType(currentJob.gender) || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
+            <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
+            <InfoRow label={t('jobDetail.workLocation', 'Work Location')} value={formatJobType(currentJob.work_location_type) || 'Office'} icon="building" colors={colors} />
             {currentJob.working_hours && (
               <InfoRow label={t('jobDetail.workingHours', 'Working Hours')} value={currentJob.working_hours} icon="clock-o" colors={colors} />
             )}
-            {currentJob.application_deadline && (
-              <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+            {currentJob.working_days && currentJob.working_days.length > 0 && (
+              <InfoRow label={t('jobDetail.workingDays', 'Working Days')} value={currentJob.working_days.map(formatJobType).join(', ')} icon="calendar" colors={colors} />
             )}
+            {currentJob.shifts && currentJob.shifts.length > 0 && (
+              <InfoRow label={t('jobDetail.shifts', 'Shifts')} value={currentJob.shifts.map(formatJobType).join(', ')} icon="sun-o" colors={colors} />
+            )}
+            <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
           </View>
         </View>
 
+        {/* 2. Salary & Incentives */}
+        {(currentJob.salary_min || currentJob.incentive_amount || currentJob.bonus_amount) && (
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+            <SectionTitle title={t('jobDetail.salaryIncentives', 'Salary & Incentives')} colors={colors} />
+            <View style={styles.infoGrid}>
+              <InfoRow 
+                label={t('jobDetail.baseSalary', 'Base Salary')} 
+                value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`} 
+                icon="money" 
+                colors={colors} 
+              />
+              <InfoRow 
+                label={t('jobDetail.salaryType', 'Salary Type')} 
+                value={formatSalaryBreakup(currentJob.salary_breakup_type)} 
+                icon="pie-chart" 
+                colors={colors} 
+              />
+              {currentJob.incentive_amount > 0 && (
+                <InfoRow 
+                  label={t('jobDetail.incentives', 'Incentives')} 
+                  value={`₹${currentJob.incentive_amount.toLocaleString()}`} 
+                  icon="line-chart" 
+                  colors={colors} 
+                />
+              )}
+              {currentJob.bonus_amount > 0 && (
+                <InfoRow 
+                  label={t('jobDetail.bonus', 'Bonus')} 
+                  value={`₹${currentJob.bonus_amount.toLocaleString()} (${formatJobType(currentJob.bonus_type)})`} 
+                  icon="gift" 
+                  colors={colors} 
+                />
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* 3. Description */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title={t('jobDetail.description', 'Description')} colors={colors} />
           <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
@@ -611,13 +664,148 @@ const JobDetailScreen: React.FC = () => {
           </Text>
         </View>
 
-        {currentJob.skills_required && currentJob.skills_required.length > 0 && (
+        {/* 4. Requirements & Preferences */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+          <SectionTitle title={t('jobDetail.requirements', 'Requirements')} colors={colors} />
+          <View style={styles.infoGrid}>
+            {(currentJob.candidate_age_min || currentJob.candidate_age_max) && (
+              <InfoRow 
+                label={t('jobDetail.ageRequirement', 'Age')} 
+                value={`${currentJob.candidate_age_min || 18} - ${currentJob.candidate_age_max || 99} yrs`} 
+                icon="user" 
+                colors={colors} 
+              />
+            )}
+            {currentJob.application_deadline && (
+              <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+            )}
+          </View>
+          
+          {currentJob.preferred_languages && currentJob.preferred_languages.length > 0 && (
+            <View style={{ marginTop: spacing.sm }}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.languages', 'Languages')}</Text>
+              <View style={styles.tagsRow}>
+                {currentJob.preferred_languages.map((lang: string, idx: number) => (
+                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(lang)}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {currentJob.required_assets && currentJob.required_assets.length > 0 && (
+            <View style={{ marginTop: spacing.sm }}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.requiredAssets', 'Assets Required')}</Text>
+              <View style={styles.tagsRow}>
+                {currentJob.required_assets.map((asset: string, idx: number) => (
+                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(asset)}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {currentJob.required_certifications && currentJob.required_certifications.length > 0 && (
+            <View style={{ marginTop: spacing.sm }}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.certifications', 'Certifications')}</Text>
+              <View style={styles.tagsRow}>
+                {currentJob.required_certifications.map((cert: string, idx: number) => (
+                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Text style={[typography.small, { color: colors.textPrimary }]}>{cert}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {currentJob.skills_required && currentJob.skills_required.length > 0 && (
+            <View style={{ marginTop: spacing.sm }}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.skillsRequired', 'Skills')}</Text>
+              <View style={styles.tagsRow}>
+                {currentJob.skills_required.map((skill: string, idx: number) => (
+                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                    <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* 5. Interview & Contact Details */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+          <SectionTitle title={t('jobDetail.interviewDetails', 'Interview & Contact')} colors={colors} />
+          <View style={styles.infoGrid}>
+            <InfoRow 
+              label={t('jobDetail.interviewType', 'Interview Type')} 
+              value={formatJobType(currentJob.interview_type)} 
+              icon="handshake-o" 
+              colors={colors} 
+            />
+            {currentJob.allow_calls && (
+              <InfoRow 
+                label={t('jobDetail.callTimings', 'Call Timings')} 
+                value={`${currentJob.call_allowed_from || '10:00 AM'} to ${currentJob.call_allowed_to || '06:00 PM'}`} 
+                icon="phone" 
+                colors={colors} 
+              />
+            )}
+          </View>
+          
+          {(currentJob.interview_address || currentJob.interview_city_name) && (
+             <View style={{ marginTop: spacing.sm }}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
+                  <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
+                  <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>
+                    {[
+                      currentJob.interview_address,
+                      currentJob.interview_locality_name,
+                      currentJob.interview_city_name
+                    ].filter(Boolean).join(', ')}
+                  </Text>
+                </View>
+             </View>
+          )}
+        </View>
+
+        {/* 6. Deposits & Fees (Conditional) */}
+        {(currentJob.deposit_required || currentJob.joining_fee_required) && (
+          <View style={[styles.sectionCard, { backgroundColor: colors.error + '10', borderColor: colors.error + '40', marginTop: spacing.md }]}>
+            <SectionTitle title={t('jobDetail.depositsFees', 'Deposits & Fees')} colors={{...colors, textPrimary: colors.error}} />
+            <Text style={[typography.small, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
+              {t('jobDetail.feeWarning', 'Please verify details directly with the employer before making any payments.')}
+            </Text>
+            <View style={styles.infoGrid}>
+              {currentJob.deposit_required && (
+                <>
+                  <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value={`₹${currentJob.deposit_amount?.toLocaleString() || 0}`} icon="shield" colors={colors} />
+                  {currentJob.deposit_purpose && (
+                    <InfoRow label={t('jobDetail.purpose', 'Purpose')} value={currentJob.deposit_purpose} icon="info-circle" colors={colors} />
+                  )}
+                  {currentJob.deposit_taken_when && (
+                    <InfoRow label={t('jobDetail.takenWhen', 'Taken When')} value={currentJob.deposit_taken_when} icon="clock-o" colors={colors} />
+                  )}
+                </>
+              )}
+              {currentJob.joining_fee_required && (
+                <InfoRow label={t('jobDetail.joiningFee', 'Joining Fee')} value={t('jobDetail.yes', 'Yes')} icon="credit-card" colors={colors} />
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* 7. Perks & Benefits (Conditional) */}
+        {currentJob.perks_benefits && currentJob.perks_benefits.length > 0 && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.skillsRequired', 'Skills Required')} colors={colors} />
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-              {currentJob.skills_required.map((skill: string, idx: number) => (
-                <View key={idx} style={{ backgroundColor: colors.surfaceHighlight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.md }}>
-                  <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
+            <SectionTitle title={t('jobDetail.perksBenefits', 'Perks & Benefits')} colors={colors} />
+            <View style={styles.tagsRow}>
+              {currentJob.perks_benefits.map((perk: string, idx: number) => (
+                <View key={idx} style={[styles.badge, { backgroundColor: colors.successBackground }]}>
+                  <Icon name="check-circle" size={12} color={colors.success} style={{ marginRight: 6 }} />
+                  <Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>{formatJobType(perk)}</Text>
                 </View>
               ))}
             </View>

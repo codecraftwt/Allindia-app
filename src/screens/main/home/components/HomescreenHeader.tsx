@@ -9,7 +9,10 @@ import {
   TouchableOpacity,
   Share,
   StatusBar,
+  Modal,
+  ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -241,6 +244,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+    zIndex: 9999,
+  },
+  modalContainer: {
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    paddingBottom: spacing.xl,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  modalContent: {
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  langItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
 });
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
@@ -313,10 +346,22 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   onHeaderLayout,
   onPressNotifyHint,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
   const COLLAPSE_DISTANCE = 80;
+
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const changeLanguage = async (lng: string) => {
+    try {
+      await i18n.changeLanguage(lng);
+      await AsyncStorage.setItem('settings.lang', lng);
+    } catch (e) {
+      console.error('Failed to save language to storage:', e);
+    }
+    setShowLanguageModal(false);
+  };
 
   const handleReferApp = async () => {
     try {
@@ -490,7 +535,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
               </Pressable>
 
               <Pressable
-                onPress={() => navigation.navigate('Saved')}
+                onPress={() => setShowLanguageModal(true)}
                 hitSlop={8}
                 style={[
                   styles.notifyBtnCircle,
@@ -502,8 +547,8 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                   },
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel="Saved jobs">
-                <IonIcon name="heart" size={24} color="#EF4444" />
+                accessibilityLabel="Change language">
+                <Icon name="language" size={20} color={colors.primary} />
               </Pressable>
 
               <Pressable
@@ -595,6 +640,59 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
           </View>
         </View>
       </Animated.View>
+
+      <Modal
+        visible={showLanguageModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
+          <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[typography.h4, { color: colors.textPrimary, fontWeight: 'bold' }]}>
+                {t('profile.chooseLanguage', 'Choose your preferred language')}
+              </Text>
+              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
+                <Icon name="times" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
+              {[
+                { code: 'en', label: 'English' },
+                { code: 'hi', label: 'Hindi (हिंदी)' },
+                { code: 'mr', label: 'Marathi (मराठी)' },
+                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
+              ].map((lang) => {
+                const isSelected = i18n.language === lang.code;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    onPress={() => changeLanguage(lang.code)}
+                    style={[
+                      styles.langItem,
+                      {
+                        borderColor: isSelected ? colors.primary : colors.border,
+                        backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
+                      }
+                    ]}
+                  >
+                    <Icon name="language" size={18} color={isSelected ? colors.primary : colors.textSecondary} style={{ marginRight: 12 }} />
+                    <Text style={[typography.body, { color: isSelected ? colors.primary : colors.textPrimary, fontWeight: isSelected ? 'bold' : 'normal', flex: 1 }]}>
+                      {lang.label}
+                    </Text>
+                    {isSelected && (
+                      <Icon name="check-circle" size={18} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };

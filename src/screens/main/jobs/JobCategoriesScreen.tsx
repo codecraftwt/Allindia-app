@@ -33,7 +33,6 @@ const JobCategoriesScreen: React.FC = () => {
   const { categories, loading } = useSelector((state: RootState) => state.meta);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -72,12 +71,7 @@ const JobCategoriesScreen: React.FC = () => {
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
           Job Categories
         </Text>
-        <Pressable
-          onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-          style={styles.backBtn}
-        >
-          <Icon name={viewMode === 'list' ? 'th-large' : 'list'} size={18} color={colors.primary} />
-        </Pressable>
+        <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.searchWrapper}>
@@ -103,35 +97,9 @@ const JobCategoriesScreen: React.FC = () => {
       ) : (
         <FlatList
           data={filteredCategories}
-          key={viewMode}
-          numColumns={viewMode === 'grid' ? 2 : 1}
           keyExtractor={(cat) => cat.id.toString()}
           renderItem={({ item: cat }) => {
             const cardBg = getCategoryColor(cat.name, isDark);
-
-            if (viewMode === 'grid') {
-              return (
-                <Pressable
-                  onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
-                  style={[
-                    styles.gridCard,
-                    {
-                      backgroundColor: cardBg,
-                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
-                    }
-                  ]}>
-                  <View style={[styles.gridIconBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)' }]}>
-                    <Icon name={getCategoryIcon(cat.name)} size={24} color="#000000" />
-                  </View>
-                  <Text style={[typography.labelMedium, { color: '#000000', fontWeight: '700', textAlign: 'center', marginTop: 10 }]} numberOfLines={2}>
-                    {cat.name}
-                  </Text>
-                  <Text style={[typography.tiny, { color: 'rgba(0,0,0,0.6)', marginTop: 4 }]}>
-                    {cat.jobs_count || 0} Jobs
-                  </Text>
-                </Pressable>
-              );
-            }
 
             return (
               <Pressable
@@ -268,29 +236,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 60,
     width: '100%',
-  },
-  gridCard: {
-    flex: 1,
-    margin: spacing.xs,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 140,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-  },
-  gridIconBox: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
   },
   footer: {
     alignItems: 'center',

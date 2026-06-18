@@ -32,6 +32,3 @@ api.interceptors.response.use(
 
 export default api;
 
-
-//https://a1a6-103-226-142-125.ngrok-free.app//   //OpenAiKey:  AIzaSyAAeEVnh_bXohVJjNEHLxYVhWAIC0YDVxg
-//https://floralwhite-louse-700260.hostingersite.com   //   https://jobindia.ai/

@@ -5,7 +5,7 @@ export const fetchMetaCategories = createAsyncThunk(
   'meta/fetchCategories',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('api/meta/categories');
+      const response = await api.get('api/meta/job-categories');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch categories');
@@ -54,7 +54,12 @@ const metaSlice = createSlice({
       })
       .addCase(fetchMetaCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = action.payload.data.categories;
+        const rawCategories = action.payload.data?.job_categories || action.payload.data?.categories || [];
+        state.categories = rawCategories.map((item: any) => ({
+          ...item,
+          name: item.job_category || item.name || item.job_title,
+          jobs_count: item.application_count || item.jobs_count || 0
+        }));
       })
       .addCase(fetchMetaCategories.rejected, (state, action) => {
         state.loading = false;
