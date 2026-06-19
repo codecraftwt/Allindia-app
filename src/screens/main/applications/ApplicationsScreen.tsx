@@ -30,7 +30,8 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { fetchAppliedJobs, fetchApplicationCounts } from '../../../redux/slice/profileSlice';
+import { fetchAppliedJobs, fetchApplicationCounts, fetchWishlist } from '../../../redux/slice/profileSlice';
+import { toggleWishlist } from '../../../redux/slice/jobSlice';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography } from '../../../theme/typography';
 import { AuthHeadline } from '../../../components/auth';
@@ -237,6 +238,78 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
   );
 }
 
+const formatJobType = (type: string) => {
+  if (!type) return 'Full Time';
+  return type
+    .replace(/[_-]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+function SavedJobCard({
+  job,
+  colors,
+  onRemove,
+  onOpenDetail,
+}: {
+  job: any;
+  colors: ThemeColors;
+  onRemove: () => void;
+  onOpenDetail: () => void;
+}) {
+  const company = job.employer?.company || {};
+  const location = job.location?.label || 'Remote';
+
+  return (
+    <View
+      style={[
+        styles.wiCard,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+      ]}>
+      {/* Header Info */}
+      <View style={styles.wiCardHeader}>
+        <View style={[styles.wiLogoBox, { backgroundColor: colors.surfaceHighlight }]}>
+          {company.company_logo_url ? (
+            <Image source={{ uri: company.company_logo_url }} style={styles.wiLogo} />
+          ) : (
+            <Icon name="briefcase" size={24} color={colors.primary} />
+          )}
+        </View>
+        <Pressable onPress={onOpenDetail} style={styles.wiHeaderInfo}>
+          <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+            {job.title}
+          </Text>
+          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]} numberOfLines={1}>
+            {company.company_name || 'Anonymous Company'}
+          </Text>
+        </Pressable>
+        
+        <TouchableOpacity 
+          onPress={onRemove} 
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          style={{ backgroundColor: colors.error + '15', borderRadius: 8, padding: 8 }}
+          activeOpacity={0.6}
+        >
+          <Icon name="trash" size={16} color={colors.error} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Meta Info */}
+      <Pressable onPress={onOpenDetail} style={[styles.wiMetaSection, { marginBottom: 0 }]}>
+        <View style={styles.wiMetaItem}>
+          <Icon name="map-marker" size={14} color={colors.textSecondary} />
+          <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>{location}</Text>
+        </View>
+        <View style={[styles.wiMetaItem, { marginTop: 4 }]}>
+          <Icon name="briefcase" size={14} color={colors.textSecondary} />
+          <Text style={[styles.wiMetaText, { color: colors.primary }]}>{formatJobType(job.job_type)}</Text>
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+
 const ApplicationsSkeleton: React.FC = () => {
   const { colors } = useTheme();
   return (
@@ -267,12 +340,14 @@ const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
-  const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData } = useSelector((state: RootState) => state.profile);
+  const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData, wishlistJobs } = useSelector((state: RootState) => state.profile);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [isPending, setIsPending] = useState(true);
+  const [activeTab, setActiveTab] = useState<'applied' | 'saved'>('applied');
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; jobId: number | null }>({ visible: false, jobId: null });
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
   const openJobDetail = (job: any) => {
@@ -298,24 +373,44 @@ const ApplicationsScreen: React.FC = () => {
     return filtered;
   }, [appliedJobs, searchQuery, statusFilter]);
 
+  const filteredSavedJobs = React.useMemo(() => {
+    if (!searchQuery) return wishlistJobs;
+    return wishlistJobs.filter((job: any) => 
+      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.employer?.company?.company_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [wishlistJobs, searchQuery]);
+
   const onRefresh = React.useCallback(() => {
     setIsPending(true);
     dispatch(fetchAppliedJobs());
     dispatch(fetchApplicationCounts());
+    dispatch(fetchWishlist());
     setTimeout(() => setIsPending(false), 100);
   }, [dispatch]);
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Icon name={searchQuery ? "search-minus" : "file-text-o"} size={48} color={colors.border} />
-      <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-        {searchQuery ? t('applications.noMatching', "No matching applications") : t('applications.noApplications', "No applications yet")}
-      </Text>
-      <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-        {searchQuery ? t('applications.tryDifferentSearch', "Try a different search term") : t('applications.appliedJobsAppearHere', "Applied jobs will appear here")}
-      </Text>
-    </View>
-  );
+  const handleConfirmRemove = async () => {
+    if (confirmModal.jobId) {
+      await dispatch(toggleWishlist({ jobId: confirmModal.jobId, isWishlisted: true }));
+      dispatch(fetchWishlist());
+      setConfirmModal({ visible: false, jobId: null });
+    }
+  };
+
+  const renderEmpty = () => {
+    const isApplied = activeTab === 'applied';
+    return (
+      <View style={styles.emptyContainer}>
+        <Icon name={searchQuery ? "search-minus" : (isApplied ? "file-text-o" : "heart-o")} size={48} color={colors.border} />
+        <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
+          {searchQuery ? t('applications.noMatching', "No matching applications") : (isApplied ? t('applications.noApplications', "No applications yet") : "No saved jobs yet")}
+        </Text>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+          {searchQuery ? t('applications.tryDifferentSearch', "Try a different search term") : (isApplied ? t('applications.appliedJobsAppearHere', "Applied jobs will appear here") : "Jobs you wishlist will appear here")}
+        </Text>
+      </View>
+    );
+  };
 
   useFocusEffect(
     React.useCallback(() => {
@@ -334,36 +429,63 @@ const ApplicationsScreen: React.FC = () => {
           image={JobIndiaIcon}
         />
       ) : (
-        <FlatList
-          data={filteredAppliedJobs}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <AppliedJobCard
-              job={item}
-              colors={colors}
-              onPress={() => openJobDetail(item)}
-              profileData={profileData}
-            />
-          )}
-          ListHeaderComponent={
-            <>
-              <AuthHeadline
-                colors={colors}
-                title={t('applications.applicationsTitle', "Applications")}
-                style={{ marginBottom: 4 }}
-              />
-              <View style={{ height: spacing.xs }} />
+          <FlatList
+            data={activeTab === 'applied' ? filteredAppliedJobs : filteredSavedJobs}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              activeTab === 'applied' ? (
+                <AppliedJobCard
+                  job={item}
+                  colors={colors}
+                  onPress={() => openJobDetail(item)}
+                  profileData={profileData}
+                />
+              ) : (
+                <SavedJobCard
+                  job={item}
+                  colors={colors}
+                  onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
+                  onOpenDetail={() => openJobDetail(item)}
+                />
+              )
+            )}
+            ListHeaderComponent={
+              <>
+                <AuthHeadline
+                  colors={colors}
+                  title={t('applications.applicationsTitle', "Applications")}
+                  style={{ marginBottom: 4 }}
+                />
 
-              {/* Job Application Stats Dashboard - Horizontal Scroll */}
-              <ApplicationStatsDashboard
-                applicationCounts={applicationCounts}
-                countsLoading={countsLoading}
-              />
-              <View style={styles.sectionHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('applications.recentActivity', 'Recent Activity')}</Text>
-                  <Text style={{ color: colors.textPlaceholder, fontSize: 12 }}>{t('applications.applicationCount', '{{count}} Applications', { count: filteredAppliedJobs.length })}</Text>
+                {/* Tab Switcher */}
+                <View style={[styles.tabContainer, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <TouchableOpacity 
+                    style={[styles.tabBtn, activeTab === 'applied' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
+                    onPress={() => setActiveTab('applied')}
+                  >
+                    <Text style={[typography.labelMedium, { color: activeTab === 'applied' ? colors.primary : colors.textSecondary }]}>Applied Jobs</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.tabBtn, activeTab === 'saved' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
+                    onPress={() => setActiveTab('saved')}
+                  >
+                    <Text style={[typography.labelMedium, { color: activeTab === 'saved' ? colors.primary : colors.textSecondary }]}>Saved Jobs</Text>
+                  </TouchableOpacity>
                 </View>
+
+                <View style={{ height: spacing.xs }} />
+
+                {activeTab === 'applied' && (
+                  <>
+                    <ApplicationStatsDashboard
+                      applicationCounts={applicationCounts}
+                      countsLoading={countsLoading}
+                    />
+                    <View style={styles.sectionHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('applications.recentActivity', 'Recent Activity')}</Text>
+                        <Text style={{ color: colors.textPlaceholder, fontSize: 12 }}>{t('applications.applicationCount', '{{count}} Applications', { count: filteredAppliedJobs.length })}</Text>
+                      </View>
 
                 <TouchableOpacity
                   onPress={() => setShowFilterMenu(true)}
@@ -413,6 +535,8 @@ const ApplicationsScreen: React.FC = () => {
                   </Pressable>
                 </Modal>
               </View>
+                  </>
+                )}
 
               {/* Search Bar */}
               <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -431,7 +555,7 @@ const ApplicationsScreen: React.FC = () => {
                 )}
               </View>
 
-              {(loading || isPending) && filteredAppliedJobs.length === 0 && (
+              {(loading || isPending) && (activeTab === 'applied' ? filteredAppliedJobs.length === 0 : filteredSavedJobs.length === 0) && (
                 <ApplicationsSkeleton />
               )}
             </>
@@ -441,13 +565,50 @@ const ApplicationsScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={loading && filteredAppliedJobs.length > 0}
+              refreshing={loading && (activeTab === 'applied' ? filteredAppliedJobs.length > 0 : filteredSavedJobs.length > 0)}
               onRefresh={onRefresh}
               colors={[colors.primary]}
             />
           }
         />
       )}
+      
+      {/* Confirmation Modal */}
+      <Modal
+        visible={confirmModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmModal({ visible: false, jobId: null })}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+            <View style={[styles.modalIcon, { backgroundColor: colors.error + '20' }]}>
+              <Icon name="trash" size={24} color={colors.error} />
+            </View>
+            <Text style={[typography.labelLarge, { color: colors.textPrimary, marginBottom: 8 }]}>
+              Remove Saved Job?
+            </Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }]}>
+              Are you sure you want to remove this job from your bookmarks?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                onPress={() => setConfirmModal({ visible: false, jobId: null })}
+                style={[styles.modalBtn, { backgroundColor: colors.surfaceHighlight }]}
+              >
+                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleConfirmRemove}
+                style={[styles.modalBtn, { backgroundColor: colors.error }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -455,6 +616,19 @@ const ApplicationsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: spacing.sm,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
   },
   scroll: {
     paddingHorizontal: spacing.lg,
@@ -602,6 +776,40 @@ const styles = StyleSheet.create({
   menuOverlay: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    padding: spacing.xl,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyContainer: {
     alignItems: 'center',

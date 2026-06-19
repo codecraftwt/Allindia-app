@@ -3,6 +3,8 @@ import {
   Animated,
   Easing,
   Image,
+  ImageBackground,
+  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -18,6 +20,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
 const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-02.png');
+const BG_IMAGE = require('../../assets/job_doodle_bg.png');
 const SPLASH_DELAY_MS = 4000;
 const PROGRESS_BAR_W = 200;
 
@@ -126,42 +129,12 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={styles.root}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <View
-            style={[
-              styles.orb,
-              styles.orbPrimary,
-              { backgroundColor: `${colors.primary}14` },
-            ]}
-          />
-          <View
-            style={[
-              styles.orb,
-              styles.orbSecondary,
-              { backgroundColor: `${colors.primaryLight}10` },
-            ]}
-          />
-          <View
-            style={[
-              styles.orb,
-              styles.orbAccent,
-              { backgroundColor: `${colors.primary}0A` },
-            ]}
-          />
-          <View
-            style={[
-              styles.horizon,
-              {
-                borderTopColor: `${colors.primary}12`,
-                backgroundColor: `${colors.surfaceHighlight}40`,
-              },
-            ]}
-          />
-        </View>
+    <View style={{ flex: 1, backgroundColor: '#E0F2FE' }}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      <ImageBackground source={BG_IMAGE} style={{ flex: 1 }} resizeMode="cover" imageStyle={{ opacity: 0.6 }}>
+        <SafeAreaView style={[styles.safe, styles.root]} edges={['top', 'left', 'right', 'bottom']}>
 
-        <View style={styles.center}>
+          <View style={styles.center}>
           <Animated.View
             style={[
               styles.logoStack,
@@ -175,40 +148,15 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
           <Animated.Text
             style={[
-              typography.small,
-              styles.eyebrow,
-              {
-                opacity: eyebrowOpacity,
-                color: colors.primary,
-              },
-            ]}>
-
-          </Animated.Text>
-
-          <Animated.Text
-            style={[
-              typography.appTitle,
-              styles.title,
-              {
-                opacity: titleOpacity,
-                color: colors.textPrimary,
-                transform: [{ translateY: titleY }],
-              },
-            ]}>
-            Find work that fits
-          </Animated.Text>
-
-          <Animated.Text
-            style={[
               typography.body,
               styles.tagline,
               {
                 opacity: tagOpacity,
-                color: colors.textSecondary,
+                color: '#334155',
                 transform: [{ translateY: tagY }],
               },
             ]}>
-            Verified listings, quick apply, and updates{'\n'}built for job seekers across India.
+            Initialize your career 2.0
           </Animated.Text>
         </View>
 
@@ -230,12 +178,13 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
               ]}
             />
           </View>
-          <Text style={[typography.small, styles.footerHint, { color: colors.textPlaceholder }]}>
+          <Text style={[typography.small, styles.footerHint, { color: '#64748B' }]}>
             Preparing your experience
           </Text>
         </View>
-      </View>
-    </SafeAreaView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 };
 
@@ -298,28 +247,13 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
   },
-  eyebrow: {
-    letterSpacing: 4,
-    fontSize: 10,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-    fontWeight: '700',
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: 26,
-    letterSpacing: -0.5,
-    lineHeight: 32,
-    fontWeight: '900',
-    marginBottom: spacing.md,
-  },
   tagline: {
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 300,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
-    opacity: 0.7,
+    opacity: 1,
   },
   footer: {
     position: 'absolute',

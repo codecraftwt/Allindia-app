@@ -45,6 +45,7 @@ export type ProfileStackParamList = {
   ProfileExperience: undefined;
   ProfileJobPreferences: undefined;
   ProfileResume: undefined;
+  ProfileSettings: undefined;
   ProfileAccountSetting: undefined;
   HelpAndSupport: undefined;
   PrivacyPolicy: undefined;

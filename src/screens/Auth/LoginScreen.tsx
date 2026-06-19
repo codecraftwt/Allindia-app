@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
@@ -49,7 +49,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const handleSkip = () => {
+    setIsSkipping(true);
+    setTimeout(() => {
+      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+    }, 50);
+  };
 
   const changeLanguage = async (lng: string) => {
     try {
@@ -106,14 +114,17 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.ctaBlock}>
+          {/* Main Login Button */}
           <PrimaryButton
-            title={t('auth.loginWithEmail')}
+            title={t('auth.loginWithEmail', 'Login with Email')}
             onPress={() => navigation.navigate('EmailLogin')}
             colors={colors}
             iconLeft={<Icon name="envelope" size={18} color={colors.onPrimary} />}
           />
+
+          {/* Create New Account */}
           <PrimaryButton
-            title={t('auth.createNewAccount')}
+            title={t('auth.createNewAccount', 'Create New Account')}
             onPress={() => navigation.navigate('SignIn')}
             colors={colors}
             variant="secondary"
@@ -122,18 +133,47 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.dividerRow}>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>{t('auth.orDivider')}</Text>
+            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>
+              {t('auth.orContinueWith', 'Or continue with')}
+            </Text>
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
           </View>
 
+          {/* Social Icons Row */}
+          <View style={styles.socialIconsRow}>
+            {/* Google */}
+            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]} onPress={() => {}}>
+              <Icon name="google" size={26} color="#DB4437" />
+            </TouchableOpacity>
+
+            {/* WhatsApp */}
+            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#25D366', borderColor: '#25D366' }]} onPress={() => {}}>
+              <Icon name="whatsapp" size={28} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            {/* Mobile OTP */}
+            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#F59E0B', borderColor: '#F59E0B' }]} onPress={() => {}}>
+              <Icon name="mobile-phone" size={34} color="#FFFFFF" style={{ marginTop: -2 }} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Skip & Explore Jobs First */}
           <Pressable
-            onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Main' }] })}
+            onPress={handleSkip}
+            disabled={isSkipping}
             style={({ pressed }) => [
               styles.guestBtn,
-              { borderColor: colors.border },
-              pressed && { backgroundColor: colors.surfaceHighlight }
+              { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, marginTop: spacing.sm },
+              pressed && { opacity: 0.8 }
             ]}>
-            <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>{t('auth.browseAsGuest')}</Text>
+            {isSkipping ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                <Icon name="hand-o-right" size={18} color={colors.primary} style={{ marginRight: 8 }} />
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('auth.skipExplore', 'Skip & Explore Jobs First')}</Text>
+              </>
+            )}
           </Pressable>
 
           <View style={styles.trustRow}>
@@ -264,9 +304,27 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: radius.md,
     borderWidth: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderStyle: 'dashed',
+  },
+  socialIconsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    marginVertical: spacing.sm,
+  },
+  socialIconBtn: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   trustRow: {
     flexDirection: 'row',

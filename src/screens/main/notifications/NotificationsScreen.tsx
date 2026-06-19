@@ -91,6 +91,32 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     if (!item.is_read) {
       dispatch(markNotificationAsRead(item.id));
     }
+
+    let notifData = item.data;
+    if (typeof notifData === 'string') {
+      try { notifData = JSON.parse(notifData); } catch(e) {}
+    }
+
+    const titleStr = (item.title || '').toLowerCase();
+    const typeStr = (item.type || '').toLowerCase();
+
+    // Try extracting job ID from various possible Laravel notification payload structures
+    let jobId = notifData?.job_id || 
+                notifData?.jobId || 
+                notifData?.job?.id || 
+                notifData?.application?.job_id ||
+                notifData?.application?.job?.id;
+    
+    if (!jobId && notifData?.id && (typeStr.includes('job') || titleStr.includes('job'))) {
+      jobId = notifData.id; // fallback if id represents job_id
+    }
+
+    if (jobId) {
+      // @ts-ignore
+      navigation.navigate('JobDetail', { jobId });
+    } else {
+      alert(`Backend Data is missing job ID! Payload: ${JSON.stringify(notifData)}`);
+    }
   };
 
   const handleMarkAllRead = () => {

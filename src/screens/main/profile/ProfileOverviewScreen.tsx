@@ -24,6 +24,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
@@ -64,48 +65,12 @@ const ProfileOverviewScreen: React.FC = () => {
   const profile = profileData;
   const { t, i18n } = useTranslation();
 
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
   const [imageError, setImageError] = useState(false);
-
-  // Language Modal State
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const languageSlideAnim = React.useRef(new Animated.Value(350)).current;
-
-  React.useEffect(() => {
-    if (showLanguageModal) {
-      languageSlideAnim.setValue(350);
-      Animated.spring(languageSlideAnim, {
-        toValue: 0,
-        tension: 65,
-        friction: 10,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [showLanguageModal]);
-
-  const changeLanguage = async (lng: string) => {
-    try {
-      await i18n.changeLanguage(lng);
-      await AsyncStorage.setItem('settings.lang', lng);
-    } catch (e) {
-      console.error('Failed to save language to storage:', e);
-    }
-    setShowLanguageModal(false);
-  };
-
-  const getLanguageLabel = (lngCode: string) => {
-    switch (lngCode) {
-      case 'hi': return t('profileAccountSetting.hindi', 'Hindi');
-      case 'mr': return t('profileAccountSetting.marathi', 'Marathi');
-      case 'kn': return t('profileAccountSetting.kannada', 'Kannada');
-      case 'en': default: return t('profileAccountSetting.english', 'English');
-    }
-  };
 
   useEffect(() => {
     setImageError(false);
@@ -167,13 +132,6 @@ const ProfileOverviewScreen: React.FC = () => {
   }, [dispatch, isLoggedIn]);
 
   const { resetDraft } = useProfileSetup();
-
-  const confirmLogout = () => {
-    dispatch(logoutCandidate());
-    resetDraft();
-    setShowLogoutModal(false);
-    logoutToLogin(navigation);
-  };
 
   const processImage = async (type: 'camera' | 'gallery') => {
     setShowImagePicker(false);
@@ -270,6 +228,34 @@ const ProfileOverviewScreen: React.FC = () => {
       <Text style={[typography.labelMedium, { color: colors.textSecondary, letterSpacing: 1 }]}>{title.toUpperCase()}</Text>
       <View style={[styles.headerLine, { backgroundColor: colors.border }]} />
     </View>
+  );
+
+  const SectionItem = ({ title, subtitle, icon, onPress, isMissing, color }: any) => (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.sectionCard,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        pressed && { opacity: 0.7, backgroundColor: colors.surfaceHighlight }
+      ]}
+    >
+      <View style={[styles.sectionIconBox, { backgroundColor: (color || colors.primary) + '10' }]}>
+        <MaterialIcon name={icon} size={24} color={color || colors.primary} />
+      </View>
+      <View style={styles.sectionText}>
+        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>{title}</Text>
+        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 2 }]}>
+          {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
+        </Text>
+      </View>
+      {isMissing ? (
+        <View style={[styles.statusBadge, { backgroundColor: colors.error + '15' }]}>
+          <Text style={[typography.tiny, { color: colors.error, fontWeight: 'bold' }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
+        </View>
+      ) : (
+        <Icon name="chevron-right" size={20} color={colors.textPlaceholder} />
+      )}
+    </Pressable>
   );
 
   const ProfileTile = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
@@ -396,250 +382,188 @@ const ProfileOverviewScreen: React.FC = () => {
     }
 
     return (
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => navigation.navigate('ProfileDetails')}
-            style={({ pressed }) => [
-              styles.headerTop,
-              { padding: 16, backgroundColor: colors.surface, borderRadius: 28, borderWidth: 1.5, borderColor: colors.border, elevation: 4, shadowColor: colors.shadow, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 16 },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-            ]}
-          >
-            <View style={styles.avatarWrapper}>
-              <View style={[styles.avatarCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                {profilePic && !imageError ? (
-                  <Image
-                    source={{ uri: profilePic }}
-                    style={styles.avatarImage}
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '10' }]}>
-                    {displayName && displayName !== 'User' ? (
-                      <Text style={[typography.appTitle, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
-                        {profileInitials(displayName)}
-                      </Text>
-                    ) : (
-                      <Icon name="user" size={36} color={colors.primary} />
-                    )}
-                  </View>
-                )}
-                {isUploading && (
-                  <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
-                    <ActivityIndicator color="#FFF" size="small" />
-                  </View>
-                )}
-              </View>
-              <Pressable onPress={() => setShowImagePicker(true)} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
-                <Icon name="camera" size={12} color="#FFF" />
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
+          <View style={{ paddingTop: insets.top + 12 }}>
+            <View style={styles.topNav}>
+              <View style={styles.iconBtn} />
+              <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold' }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
+              <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={styles.iconBtn}>
+                <Icon name="settings" size={24} color="#FFFFFF" />
               </Pressable>
             </View>
-            <View style={styles.headerInfo}>
-              <View style={styles.nameRow}>
-                <Text style={[typography.appTitle, { color: colors.textPrimary, fontSize: 22 }]} numberOfLines={1}>{displayName}</Text>
-                <Icon name="check-circle" size={14} color={colors.success} style={{ marginLeft: 4 }} />
+
+            <View style={styles.profileSummary}>
+              <View style={styles.avatarContainer}>
+                <Pressable
+                  onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
+                  style={[styles.avatarCircle, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }]}
+                >
+                  {profilePic && !imageError ? (
+                    <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
+                  ) : (
+                    <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
+                      {displayName && displayName !== 'User' ? (
+                        <Text style={[typography.h3, { color: colors.primary, fontSize: 32, fontWeight: 'bold' }]}>
+                          {profileInitials(displayName)}
+                        </Text>
+                      ) : (
+                        <Icon name="user" size={36} color={colors.primary} />
+                      )}
+                    </View>
+                  )}
+                  {isUploading && (
+                    <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+                      <ActivityIndicator color="#FFF" size="small" />
+                    </View>
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowImagePicker(true)}
+                  style={styles.cameraIconBtn}
+                >
+                  <Icon name="camera" size={14} color={colors.primary} />
+                </Pressable>
               </View>
-              <Text style={[typography.body, { color: colors.textSecondary }]} numberOfLines={1}>{displayEmail}</Text>
-              <View style={[styles.editBadge, { backgroundColor: colors.primary + '10' }]}>
-                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>{t('profileOverview.viewProfileDetails', 'View Profile Details')}</Text>
+
+              <View style={styles.summaryText}>
+                <View style={styles.nameVerifiedRow}>
+                  <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 20 }]} numberOfLines={1}>{displayName}</Text>
+                  <MaterialIcon name="check-decagram" size={20} color="#60A5FA" style={{ marginLeft: 6 }} />
+                  <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={{ marginLeft: 12, backgroundColor: 'rgba(255,255,255,0.25)', width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="edit-3" size={16} color="#FFFFFF" />
+                  </Pressable>
+                </View>
+                <Text style={[typography.body, { color: 'rgba(255,255,255,0.8)', marginTop: 2 }]} numberOfLines={1}>{displayEmail}</Text>
+                <View style={styles.phoneRow}>
+                  <Icon name="phone" size={12} color="rgba(255,255,255,0.6)" />
+                  <Text style={[typography.small, { color: 'rgba(255,255,255,0.8)', marginLeft: 6 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
+                </View>
               </View>
             </View>
-            <Icon name="chevron-right" size={24} color={colors.textPlaceholder} />
-          </Pressable>
+          </View>
+        </View>
 
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scroll, { paddingBottom: 160 }]}
+          keyboardShouldPersistTaps="handled"
+        >
           {completion && completion.percentage < 100 && (
-            <Pressable
-              onPress={() => navigation.navigate('ProfileDetails')}
-              style={({ pressed }) => [
-                {
-                  marginTop: 24,
-                  marginHorizontal: 4,
-                  padding: 16,
-                  backgroundColor: colors.surface,
-                  borderRadius: 20,
-                  borderWidth: 1.5,
-                  borderColor: colors.primary + '40',
-                  elevation: 6,
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 6 },
-                  shadowOpacity: 0.15,
-                  shadowRadius: 12,
-                  overflow: 'hidden'
-                },
-                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+            <View
+              style={[
+                styles.strengthCard,
+                { backgroundColor: colors.surface, borderColor: colors.border }
               ]}
             >
-              <Animated.View style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.primary + '08', opacity: pulseAnim }
-              ]} />
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <View style={{ flex: 1, paddingRight: 12 }}>
-                  <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 16, marginBottom: 4 }]}>
-                    {t('profileOverview.boostProfile', 'Boost Your Profile')}
-                  </Text>
-                  <Text style={[typography.small, { color: colors.textSecondary, lineHeight: 18 }]}>
-                    {getNextActionText()}
-                  </Text>
+              <View style={styles.strengthHeader}>
+                <View>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.boostProfile', 'Boost Your Profile')}</Text>
+                  <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>{t('profileOverview.completeToUnlock', 'Complete your profile to unlock more jobs!')}</Text>
                 </View>
-
-                <View style={{
-                  width: 54, height: 54, borderRadius: 27,
-                  backgroundColor: colors.surfaceHighlight,
-                  borderWidth: 3, borderColor: colors.primary + '80',
-                  alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: '900', fontSize: 16 }]}>
-                    {completion?.percentage || 0}%
-                  </Text>
+                <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '05' }}>
+                  <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: 'bold' }]}>{completion.percentage}%</Text>
                 </View>
               </View>
 
               <View style={[styles.strengthBarBase, { backgroundColor: colors.border, height: 8, borderRadius: 4, marginTop: 4 }]}>
                 <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%`, borderRadius: 4 }]} />
               </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginTop: 12 }}>
-                <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: 'bold' }]}>
-                  {t('profileOverview.completeNow', 'Complete Now')}
-                </Text>
-                <Icon name="chevron-right" size={16} color={colors.primary} style={{ marginLeft: 4 }} />
-              </View>
-            </Pressable>
+            </View>
           )}
-        </View>
 
-        {/* Action Dashboard - Compact Layout */}
-        <View style={{ paddingHorizontal: spacing.md, gap: 12, marginBottom: 25, marginTop: 15 }}>
-          <Pressable
-            onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Profile' } })}
-            style={({ pressed }) => [
-              styles.dashboardCardSmall,
-              { backgroundColor: mode === 'dark' ? '#EC489915' : '#FDF2F8', borderWidth: 0 },
-              pressed && { opacity: 0.9 }
-            ]}
-          >
-            <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
-              <Icon name="play-circle" size={18} color="#EC4899" />
-            </View>
-            <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
-            <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
-              <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 }}>{t('profileOverview.reelsTag', 'NEW')}</Text>
-            </View>
-          </Pressable>
-
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          {/* Action Dashboard - Compact Layout */}
+          <View style={{ paddingHorizontal: spacing.md, gap: 12, marginBottom: 25, marginTop: 15 }}>
             <Pressable
-              onPress={() => navigation.navigate('Saved')}
+              onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Profile' } })}
               style={({ pressed }) => [
                 styles.dashboardCardSmall,
-                { flex: 1, backgroundColor: mode === 'dark' ? '#F59E0B15' : '#FFFBEB', borderWidth: 0, paddingHorizontal: 14 },
+                { backgroundColor: mode === 'dark' ? '#EC489915' : '#FDF2F8', borderWidth: 0 },
                 pressed && { opacity: 0.9 }
               ]}
             >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#F59E0B25' : '#FEF3C7' }]}>
-                <Icon name="heart" size={18} color="#F59E0B" />
+              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
+                <Icon name="play-circle" size={18} color="#EC4899" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.saved', 'Saved')}</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => navigation.getParent()?.navigate('Applications')}
-              style={({ pressed }) => [
-                styles.dashboardCardSmall,
-                { flex: 1, backgroundColor: mode === 'dark' ? '#3B82F615' : '#EFF6FF', borderWidth: 0, paddingHorizontal: 14 },
-                pressed && { opacity: 0.9 }
-              ]}
-            >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#3B82F625' : '#DBEAFE' }]}>
-                <Icon name="briefcase" size={18} color="#3B82F6" />
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
+              <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
+                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 }}>{t('profileOverview.reelsTag', 'NEW')}</Text>
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.applied', 'Applied')}</Text>
-            </Pressable>
-          </View>
-        </View>
-        {/* Referral Section */}
-        <View style={styles.menuContainer}>
-          {/* <SectionHeader title="Earn Rewards" /> */}
-          {/* <Pressable
-            style={[styles.wideItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={[styles.menuIconContainer, { backgroundColor: '#8B5CF615' }]}>
-              <Icon name="gift" size={18} color="#8B5CF6" />
-            </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>Refer and Earn</Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>Invite your friends and earn rewards</Text>
-            </View>
-            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-          </Pressable> */}
-
-          <SectionHeader title={t('profileOverview.settings', 'Settings')} />
-          <View style={[styles.settingsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.settingsRow}>
-              <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
-                <Icon name={mode === 'dark' ? 'moon' : 'sun'} size={18} color="#64748B" />
-              </View>
-              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.darkMode', 'Dark Mode')}</Text></View>
-              <Switch value={mode === 'dark'} onValueChange={v => setMode(v ? 'dark' : 'light')} trackColor={{ false: colors.border, true: colors.primaryLight }} thumbColor="#FFF" />
-            </View>
-
-            <Pressable onPress={() => setShowLanguageModal(true)} style={styles.settingsRow}>
-              <View style={[styles.menuIconContainer, { backgroundColor: colors.primary + '15' }]}>
-                <Icon name="language" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.menuTextContainer}>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profile.language', 'Language')}</Text>
-                <Text style={[typography.small, { color: colors.textSecondary }]}>{getLanguageLabel(i18n.language)}</Text>
-              </View>
-              <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-            </Pressable>
-
-            <Pressable onPress={() => navigation.navigate('ProfileAccountSetting')} style={styles.settingsRow}>
-              <View style={[styles.menuIconContainer, { backgroundColor: '#64748B15' }]}>
-                <Icon name="settings" size={18} color="#64748B" />
-              </View>
-              <View style={styles.menuTextContainer}><Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.accountSettings', 'Account Settings')}</Text></View>
-              <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
             </Pressable>
           </View>
 
-          <SectionHeader title={t('profileOverview.support', 'Support')} />
-          <Pressable
-            onPress={() => navigation.navigate('HelpAndSupport')}
-            style={({ pressed }) => [
-              styles.wideItem,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-            ]}
-          >
-            <View style={[styles.menuIconContainer, { backgroundColor: '#10B98115' }]}>
-              <Icon name="help-circle" size={18} color="#10B981" />
+          <View style={{ paddingHorizontal: spacing.md }}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}</Text>
             </View>
-            <View style={styles.menuTextContainer}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.helpSupport', 'Help & Support')}</Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]}>{t('profileOverview.contactUs', 'Contact us for any queries or issues')}</Text>
-            </View>
-            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
-          </Pressable>
 
-          <Pressable onPress={() => setShowLogoutModal(true)} style={({ pressed }) => [styles.logoutBtn, { borderColor: colors.error + '40', backgroundColor: colors.error + '05' }, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}>
-            <Icon name="log-out" size={18} color={colors.error} />
-            <Text style={[typography.labelMedium, { color: colors.error, marginLeft: 12 }]}>{t('profileOverview.signOut', 'Sign Out from App')}</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+            <SectionItem
+              title={t('profileDetails.workExperience', 'Work Experience')}
+              subtitle={profile?.experience?.length ? `${profile.experience.length} ${t('profileDetails.experienceAdded', 'Experience added')}` : t('profileDetails.addPastJobs', 'Add your past jobs')}
+              icon="briefcase-variant-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileExperience')}
+              isMissing={isSectionMissing('experience')}
+            />
+
+            <SectionItem
+              title={t('profileDetails.education', 'Education')}
+              subtitle={profile?.education?.length ? `${profile.education.length} ${t('profileDetails.educationAdded', 'Education added')}` : t('profileDetails.addEducation', 'Add your degree/college')}
+              icon="school-outline"
+              color="#10B981"
+              onPress={() => navigation.navigate('ProfileEducation')}
+              isMissing={isSectionMissing('education')}
+            />
+
+            <SectionItem
+              title={t('profileDetails.jobPreferences', 'Job Preferences')}
+              subtitle={t('profileDetails.preferredRoles', 'Preferred roles & locations')}
+              icon="bullseye-arrow"
+              color="#F59E0B"
+              onPress={() => navigation.navigate('ProfileJobPreferences')}
+              isMissing={isSectionMissing('preferences')}
+            />
+
+            <SectionItem
+              title={t('profileDetails.resumeCv', 'Resume / CV')}
+              subtitle={t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
+              icon="file-document-outline"
+              color="#8B5CF6"
+              onPress={() => navigation.navigate('ProfileResume')}
+              isMissing={isSectionMissing('resume')}
+            />
+
+            <View style={[styles.sectionTitleRow, { marginTop: 24 }]}>
+              <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.personalDetails', 'PERSONAL DETAILS')}</Text>
+            </View>
+
+            <SectionItem
+              title={t('profileDetails.personalInfo', 'Personal Info')}
+              subtitle={t('profileDetails.nameDobGender', 'Name, DOB, Gender, Language')}
+              icon="account-outline"
+              color="#EC4899"
+              onPress={() => navigation.navigate('ProfilePersonalInfo')}
+              isMissing={isSectionMissing('personal')}
+            />
+
+            {/* Pro Tip */}
+            <View style={[styles.proTip, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30' }]}>
+              <MaterialIcon name="lightbulb-on-outline" size={24} color={colors.primary} />
+              <View style={styles.proTipText}>
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
+                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+                  {t('profileDetails.proTipDesc', 'Profiles with photos and resumes get 5x more attention from employers.')}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
     );
   };
 
   return (
-    <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+    <View style={[styles.safe, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={mode === 'dark' ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
 
       {renderContent()}
@@ -684,63 +608,14 @@ const ProfileOverviewScreen: React.FC = () => {
         </View>
       </Modal>
 
-      <LogoutModal visible={showLogoutModal} onClose={() => setShowLogoutModal(false)} onConfirm={confirmLogout} colors={colors} loading={authLoading} />
-
-      <Modal
-        visible={showLanguageModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalOverlay}
-        >
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
-          <Animated.View style={[styles.modalContainer, { backgroundColor: colors.surface, paddingBottom: Math.max(insets.bottom, 24), transform: [{ translateY: languageSlideAnim }] }]}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={[typography.h3, { color: colors.textPrimary }]}>{t('profile.chooseLanguage', 'Choose your preferred language')}</Text>
-              </View>
-              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
-                <Icon name="x" size={20} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={[styles.modalContent, { gap: 16 }]} keyboardShouldPersistTaps="handled">
-              {[
-                { code: 'en', label: 'English' },
-                { code: 'hi', label: 'Hindi (हिंदी)' },
-                { code: 'mr', label: 'Marathi (मराठी)' },
-                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
-              ].map((lang) => (
-                <Pressable
-                  key={lang.code}
-                  onPress={() => changeLanguage(lang.code)}
-                  style={[
-                    styles.languageItem,
-                    {
-                      borderColor: i18n.language === lang.code ? colors.primary : colors.border,
-                      backgroundColor: i18n.language === lang.code ? colors.surfaceHighlight : colors.surface,
-                    }
-                  ]}
-                >
-                  <View style={[styles.languageItemIcon, { width: 40 }]}>
-                    <Icon name="language" size={20} color={i18n.language === lang.code ? colors.primary : colors.textSecondary} />
-                  </View>
-                  <View style={styles.languageItemText}>
-                    <Text style={[typography.labelMedium, { color: i18n.language === lang.code ? colors.primary : colors.textPrimary, fontSize: 16 }]}>
-                      {lang.label}
-                    </Text>
-                  </View>
-                  {i18n.language === lang.code && (
-                    <Icon name="check-circle" size={20} color={colors.primary} style={{ marginRight: 12 }} />
-                  )}
-                </Pressable>
-              ))}
-            </ScrollView>
-          </Animated.View>
-        </KeyboardAvoidingView>
+      <Modal visible={showImageViewer} transparent animationType="slide" onRequestClose={() => setShowImageViewer(false)}>
+        <View style={styles.viewerBackground}>
+          <Pressable style={styles.viewerClose} onPress={() => setShowImageViewer(false)}>
+            <Icon name="x" size={24} color="#FFF" />
+          </Pressable>
+          {profilePic && <Image source={{ uri: profilePic }} style={styles.fullImage} resizeMode="contain" />}
+          <View style={styles.viewerFooter}><Text style={[typography.labelMedium, { color: '#FFF' }]}>{displayName}</Text></View>
+        </View>
       </Modal>
 
       <ConfirmationModal
@@ -761,17 +636,84 @@ const ProfileOverviewScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingBottom: 160 },
-  header: { padding: spacing.md, paddingBottom: spacing.xs },
-  headerTop: { flexDirection: 'row', alignItems: 'center' },
-  avatarWrapper: { position: 'relative' },
-  avatarCircle: { width: 74, height: 74, borderRadius: 37, borderWidth: 1, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  cameraBadge: { position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#FFF' },
-  headerInfo: { marginLeft: spacing.md, flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 1 },
-  editBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  strengthContainer: { marginTop: 16 },
+  scroll: { paddingTop: 16 },
+  headerContainer: {
+    paddingBottom: 28,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  topNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    height: 50,
+  },
+  iconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 12,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatarCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 3,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  cameraIconBtn: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  summaryText: {
+    marginLeft: 20,
+    flex: 1,
+  },
+  nameVerifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  strengthCard: { padding: 16, borderRadius: 24, borderWidth: 1, marginHorizontal: spacing.md, marginBottom: 20 },
   strengthHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   strengthBarBase: { height: 5, borderRadius: 2.5, overflow: 'hidden' },
   strengthBarFill: { height: '100%', borderRadius: 2.5 },
@@ -795,9 +737,20 @@ const styles = StyleSheet.create({
   dashboardCardContent: { marginTop: 16 },
   cardTag: { position: 'absolute', top: 18, right: 18, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
   dashboardStack: { flex: 1, gap: 14, justifyContent: 'space-between' },
-  dashboardCardSmall: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1.5, minHeight: 73, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
+  topNavBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, zIndex: 10 },
+  settingsBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  dashboardCardSmall: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, minHeight: 64, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
   dashboardIconBoxSmall: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
+  sectionTitleRow: { marginBottom: 12, paddingHorizontal: 4 },
+  sectionCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1, marginBottom: 12 },
+  groupedCard: { borderRadius: 24, borderWidth: 1, overflow: 'hidden', marginBottom: 20 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  sectionIconBox: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  sectionText: { flex: 1, marginLeft: 16 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  proTip: { flexDirection: 'row', padding: 16, borderRadius: 24, borderWidth: 1, marginTop: 10, marginBottom: 20, alignItems: 'center' },
+  proTipText: { flex: 1, marginLeft: 16 },
   neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },

@@ -20,11 +20,11 @@ const GuestView: React.FC<GuestViewProps> = ({ title, subtitle, icon, image }) =
   const navigation = useNavigation();
 
   const goToRegister = () => {
-    navigation.navigate('SignIn' as never);
+    navigation.navigate('Login' as never);
   };
 
   const goToLogin = () => {
-    navigation.navigate('EmailLogin' as never);
+    navigation.navigate('Login' as never);
   };
 
   return (

@@ -7,6 +7,7 @@ import ProfileEducationEditScreen from '../screens/main/profile/ProfileEducation
 import ProfileExperienceEditScreen from '../screens/main/profile/ProfileExperienceEditScreen';
 import ProfileJobPreferencesEditScreen from '../screens/main/profile/ProfileJobPreferencesEditScreen';
 import ProfileResumeEditScreen from '../screens/main/profile/ProfileResumeEditScreen';
+import ProfileSettingsScreen from '../screens/main/profile/ProfileSettingsScreen';
 import ProfileAccountSetting from '../screens/main/profile/ProfileAccountSetting';
 import ProfileDetailsScreen from '../screens/main/profile/ProfileDetailsScreen';
 import HelpAndSupportScreen from '../screens/main/profile/HelpAndSupportScreen';
@@ -34,6 +35,7 @@ const ProfileStackNavigator: React.FC = () => {
       <Stack.Screen name="ProfileExperience" component={ProfileExperienceEditScreen} />
       <Stack.Screen name="ProfileJobPreferences" component={ProfileJobPreferencesEditScreen} />
       <Stack.Screen name="ProfileResume" component={ProfileResumeEditScreen} />
+      <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
       <Stack.Screen name="ProfileAccountSetting" component={ProfileAccountSetting} />
       <Stack.Screen name="HelpAndSupport" component={HelpAndSupportScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

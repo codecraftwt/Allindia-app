@@ -15,6 +15,7 @@ import {
   StatusBar,
   TouchableOpacity,
   TextInput,
+  FlatList,
 } from 'react-native';
 import {
   useNavigation,
@@ -40,6 +41,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist, reportJob } from '../../../redux/slice/jobSlice';
 import { fetchWishlist } from '../../../redux/slice/profileSlice';
+import api from '../../../api/axiosInstance';
 
 const REPORT_REASONS = [
   'Fake Job / Scam',
@@ -197,6 +199,53 @@ const isQuestionRequired = (q: any): boolean => {
   return val === true || val === 1 || val === '1' || val === 'true' || val === 'yes';
 };
 
+function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
+  const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
+  const locationLabel = job.location?.label || 'Remote';
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: 260,
+        backgroundColor: colors.surface,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: radius.md,
+        padding: spacing.md,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 3,
+      }}
+    >
+      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
+        <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
+          {job.employer?.company?.company_logo_url ? (
+             <Image source={{ uri: job.employer.company.company_logo_url }} style={{ width: 32, height: 32, borderRadius: radius.sm }} />
+          ) : (
+             <Icon name="briefcase" size={16} color={colors.primary} />
+          )}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>{job.title}</Text>
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>{companyName}</Text>
+        </View>
+      </View>
+      
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: 8 }}>
+          <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
+          <Text style={[typography.tiny, { color: colors.textSecondary }]} numberOfLines={1}>{locationLabel}</Text>
+        </View>
+        <Text style={[typography.tiny, { color: colors.success, fontWeight: 'bold' }]}>
+          {job.salary_min ? `₹${job.salary_min.toLocaleString()}` : 'Negotiable'}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const JobDetailScreen: React.FC = () => {
   const { colors, mode } = useTheme();
   const isDark = mode === 'dark';
@@ -206,7 +255,7 @@ const JobDetailScreen: React.FC = () => {
   const jobId = route.params?.jobId ?? '';
   const dispatch = useDispatch<AppDispatch>();
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
-  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
+  const { isLoggedIn, token } = useSelector((state: RootState) => state.auth);
   const { wishlistJobs } = useSelector((state: RootState) => state.profile);
   const { t } = useTranslation();
 
@@ -238,6 +287,21 @@ const JobDetailScreen: React.FC = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [justApplied, setJustApplied] = useState(false);
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [isCompanyDetailsOpen, setIsCompanyDetailsOpen] = useState(false);
+  const [similarJobs, setSimilarJobs] = useState<any[]>([]);
+
+  useEffect(() => {
+    const catId = currentJob?.category_id || currentJob?.job_category_id || currentJob?.category?.id;
+    if (catId) {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      api.get('api/candidate/jobs', { params: { category_id: catId, per_page: 5 }, headers })
+        .then((res: any) => {
+          const fetchedJobs = res.data?.data?.jobs || [];
+          setSimilarJobs(fetchedJobs.filter((j: any) => j.id !== currentJob.id));
+        })
+        .catch((err) => console.log('Similar jobs fetch error:', err));
+    }
+  }, [currentJob?.category_id, currentJob?.job_category_id, currentJob?.category?.id, currentJob?.id, token]);
 
   // Toast State
   const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
@@ -814,8 +878,18 @@ const JobDetailScreen: React.FC = () => {
 
         {currentJob.employer?.company && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.aboutCompany', 'About Company')} colors={colors} />
-            <View style={styles.companyHeader}>
+            <TouchableOpacity 
+              onPress={() => setIsCompanyDetailsOpen(!isCompanyDetailsOpen)}
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: isCompanyDetailsOpen ? spacing.sm : 0 }}
+              activeOpacity={0.7}
+            >
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('jobDetail.aboutCompany', 'About Company')}</Text>
+              <Icon name={isCompanyDetailsOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textSecondary} />
+            </TouchableOpacity>
+
+            {isCompanyDetailsOpen && (
+              <>
+                <View style={styles.companyHeader}>
               <View>
                 {currentJob.employer.company.company_logo_url ? (
                   <Pressable
@@ -954,6 +1028,8 @@ const JobDetailScreen: React.FC = () => {
                 </Pressable>
               )}
             </View>
+              </>
+            )}
           </View>
         )}
 
@@ -973,9 +1049,6 @@ const JobDetailScreen: React.FC = () => {
               </View>
               <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 6 }]}>
                 {t('jobDetail.knowSomeone', 'Know someone who fits this?')}
-              </Text>
-              <Text style={[typography.small, { color: 'rgba(255, 255, 255, 0.85)', marginTop: 4, lineHeight: 18 }]}>
-                {t('jobDetail.helpFriends', 'Help friends get hired by sharing this job opening or refer them to JobIndia app.')}
               </Text>
             </View>
           </View>
@@ -1042,6 +1115,30 @@ const JobDetailScreen: React.FC = () => {
                 </View>
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Similar Jobs List */}
+        {similarJobs.length > 0 && (
+          <View style={{ marginTop: spacing.xl, marginHorizontal: -spacing.lg }}>
+            <View style={{ paddingHorizontal: spacing.lg }}>
+              <SectionTitle title={t('jobDetail.similarJobs', 'Similar Jobs')} colors={colors} />
+            </View>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={similarJobs}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <SimilarJobCard 
+                  job={item} 
+                  colors={colors} 
+                  onPress={() => navigation.push('JobDetail', { jobId: item.slug || item.id })} 
+                />
+              )}
+              ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
+              contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}
+            />
           </View>
         )}
         </View>
@@ -1128,14 +1225,14 @@ const JobDetailScreen: React.FC = () => {
                 title="Register Now"
                 onPress={() => {
                   setShowAuthModal(false);
-                  navigation.navigate('SignIn');
+                  navigation.navigate('Login');
                 }}
                 colors={colors}
               />
               <Pressable
                 onPress={() => {
                   setShowAuthModal(false);
-                  navigation.navigate('EmailLogin');
+                  navigation.navigate('Login');
                 }}
                 style={{ alignItems: 'center', paddingVertical: 12 }}
               >
@@ -1667,10 +1764,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   referCard: {
-    padding: spacing.lg,
+    padding: spacing.md,
     borderRadius: radius.card,
     marginTop: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#000',
