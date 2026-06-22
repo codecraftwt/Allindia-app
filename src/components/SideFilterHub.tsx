@@ -438,13 +438,13 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     }
     const filters: any = {};
     if (selectedFilters.categories && selectedFilters.categories.length > 0) {
-      filters.category_id = selectedFilters.categories.map((c: any) => c.id).join(',');
+      filters.category_id = selectedFilters.categories[0].id;
     }
     if (selectedFilters.subCategories && selectedFilters.subCategories.length > 0) {
-      filters.subcategory_id = selectedFilters.subCategories.map((c: any) => c.id).join(',');
+      filters.subcategory_id = selectedFilters.subCategories[0].id;
     }
     if (selectedFilters.cities && selectedFilters.cities.length > 0) {
-      filters.city_id = selectedFilters.cities.map((c: any) => c.id).join(',');
+      filters.city_id = selectedFilters.cities[0].id;
     }
     if (selectedFilters.jobType.length > 0) {
       filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace(/[-\s]/g, '_')).join(',');

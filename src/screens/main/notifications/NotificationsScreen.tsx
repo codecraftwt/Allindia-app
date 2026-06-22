@@ -105,7 +105,8 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
                 notifData?.jobId || 
                 notifData?.job?.id || 
                 notifData?.application?.job_id ||
-                notifData?.application?.job?.id;
+                notifData?.application?.job?.id ||
+                notifData?.meta?.job_id;
     
     if (!jobId && notifData?.id && (typeStr.includes('job') || titleStr.includes('job'))) {
       jobId = notifData.id; // fallback if id represents job_id

@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  titleBox: { flex: 1 },
+  titleBox: { flex: 1, paddingRight: 56 },
   cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',

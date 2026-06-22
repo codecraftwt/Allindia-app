@@ -113,7 +113,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       const items = groups[cityName];
       const areas = items.filter((i: any) => i.area !== null);
       const hasAreas = areas.length > 0;
-      
+
       if (hasAreas) {
         return {
           id: `city-group-${cityName}`,
@@ -383,7 +383,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     if (!browsingCategory) return;
     const subcats = browsingCategory.subcategories || [];
     const currentSubcats = selectedFilters.subCategories || [];
-    
+
     if (isAllSubcategoriesSelected) {
       // Deselect all subcategories of this browsingCategory
       const updatedSubcats = currentSubcats.filter((s: any) => !subcats.some((sub: any) => sub.id == s.id));
@@ -403,13 +403,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       const otherSubcats = currentSubcats.filter((s: any) => !subcats.some((sub: any) => sub.id == s.id));
       const subcatsWithParent = subcats.map((sub: any) => ({ ...sub, parent_id: browsingCategory.id }));
       const updatedSubcats = [...otherSubcats, ...subcatsWithParent];
-      
+
       // Ensure parent category is selected
       const catCurrent = selectedFilters.categories || [];
       const updatedCats = catCurrent.some((c: any) => c.id == browsingCategory.id)
         ? catCurrent
         : [...catCurrent, browsingCategory];
-        
+
       setSelectedFilters({
         ...selectedFilters,
         categories: updatedCats,
@@ -428,7 +428,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     if (!browsingCity) return;
     const areas = browsingCity.areas || [];
     const currentCities = selectedFilters.cities || [];
-    
+
     if (isAllAreasSelected) {
       const updatedCities = currentCities.filter((c: any) => !areas.some((a: any) => a.id == c.id));
       setSelectedFilters({
@@ -452,13 +452,13 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
     }
     const filters: any = {};
     if (selectedFilters.categories && selectedFilters.categories.length > 0) {
-      filters.category_id = selectedFilters.categories.map((c: any) => c.id).join(',');
+      filters.category_id = selectedFilters.categories[0].id;
     }
     if (selectedFilters.subCategories && selectedFilters.subCategories.length > 0) {
-      filters.subcategory_id = selectedFilters.subCategories.map((c: any) => c.id).join(',');
+      filters.subcategory_id = selectedFilters.subCategories[0].id;
     }
     if (selectedFilters.cities && selectedFilters.cities.length > 0) {
-      filters.city_id = selectedFilters.cities.map((c: any) => c.id).join(',');
+      filters.city_id = selectedFilters.cities[0].id;
     }
     if (selectedFilters.jobType.length > 0) {
       filters.job_type = selectedFilters.jobType.map((t: string) => t.toLowerCase().replace(/[-\s]/g, '_')).join(',');
@@ -790,7 +790,7 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
 
                   return (
                     <View
-                       key={typeof option === 'string' ? option : option.id}
+                      key={typeof option === 'string' ? option : option.id}
                       style={styles.optionItem}>
 
                       <TouchableOpacity
@@ -819,10 +819,10 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
                         <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1 }]}>{labelText}</Text>
                         {((selectedCategory === 'category' && !browsingCategory && option.subcategories?.length > 0) ||
                           (selectedCategory === 'city' && !browsingCity && option.hasAreas)) && (
-                          <View style={styles.arrowTouch}>
-                            <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
-                          </View>
-                        )}
+                            <View style={styles.arrowTouch}>
+                              <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
+                            </View>
+                          )}
                       </TouchableOpacity>
                     </View>
                   );

@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleBox: { flex: 1 },
+  titleBox: { flex: 1, paddingRight: 56 },
   cardMeta: {
     flexDirection: 'row',
     gap: 16,
