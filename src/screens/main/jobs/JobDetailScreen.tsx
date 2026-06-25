@@ -353,8 +353,8 @@ const JobDetailScreen: React.FC = () => {
     if (!phone) {
       return '';
     }
-    const raw = phone.replace(/\s/g, '');
-    return raw.startsWith('+') ? `tel:${raw}` : `tel:+${raw.replace(/^\+/, '')}`;
+    const raw = phone.replace(/[^\d+]/g, '');
+    return `tel:${raw}`;
   }, [currentJob]);
 
   const handleToggleWishlist = useCallback(async () => {

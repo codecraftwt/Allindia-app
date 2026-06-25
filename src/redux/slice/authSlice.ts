@@ -136,6 +136,19 @@ export const forgotPasswordCandidate = createAsyncThunk(
   }
 );
 
+export const verifyForgotPasswordOtp = createAsyncThunk(
+  'auth/verifyForgotPasswordOtp',
+  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/api/candidate/forgot-password/verify-otp', payload);
+      return response?.data;
+    } catch (error: any) {
+      console.log("Verify Forgot Password OTP Error:", error?.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.message || 'OTP Verification failed');
+    }
+  }
+);
+
 export const resetPasswordCandidate = createAsyncThunk(
   'auth/resetPasswordCandidate',
   async (payload: any, { rejectWithValue }) => {

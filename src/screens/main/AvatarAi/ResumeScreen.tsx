@@ -26,7 +26,7 @@ import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
-import { CommingSoonAi } from './components/CommingSoonAi';
+
 import { AiResumeAnalyzer } from './components/AiResumeAnalyzer';
 
 
@@ -209,7 +209,7 @@ const ResumeScreen: React.FC = () => {
 
         {/* Title Header */}
         <View style={{ alignItems: 'center', width: '100%' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 65, marginBottom: 18, justifyContent: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 18, justifyContent: 'center' }}>
             <Image
               source={require('../../../assets/Job india Icon & logo file/Icon Job india.jpg')}
               style={{ width: 32, height: 32, borderRadius: 8, marginRight: 10 }}
@@ -430,7 +430,7 @@ const ResumeScreen: React.FC = () => {
         </View>
 
         <AiResumeAnalyzer profile={profile} />
-        <CommingSoonAi />
+
       </ScrollView>
 
       {/* PDF Preview Modal */}

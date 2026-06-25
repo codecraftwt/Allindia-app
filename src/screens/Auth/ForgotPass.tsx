@@ -29,7 +29,7 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 import { useDispatch } from 'react-redux';
-import { forgotPasswordCandidate, resetPasswordCandidate } from '../../redux/slice/authSlice';
+import { forgotPasswordCandidate, resetPasswordCandidate, verifyForgotPasswordOtp, loginCandidate } from '../../redux/slice/authSlice';
 
 type Props = StackScreenProps<AuthStackParamList, 'ForgotPass'>;
 
@@ -124,12 +124,26 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleStep2Verify = () => {
+  const handleStep2Verify = async () => {
     if (verificationCode.trim().length < 4) {
       showStatus('error', 'OTP Required', 'Please enter the 4-digit OTP from your email');
       return;
     }
-    setStep(3);
+    
+    setLoading(true);
+    try {
+      await dispatch(verifyForgotPasswordOtp({
+        email: email.trim(),
+        otp: verificationCode.trim(),
+      })).unwrap();
+      
+      setLoading(false);
+      setStep(3);
+    } catch (error: any) {
+      setLoading(false);
+      const errorMessage = error || 'Invalid OTP. Please try again.';
+      showStatus('error', 'Verification Failed', errorMessage);
+    }
   };
 
   const handleStep3Reset = async () => {
@@ -156,18 +170,38 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
       };
 
       const response = await dispatch(resetPasswordCandidate(payload)).unwrap();
+      
+      const loginResult = await dispatch(loginCandidate({
+        email: email.trim(),
+        password: newPassword,
+      }));
+      
       setLoading(false);
       
-      showStatus(
-        'success',
-        'Password Reset!',
-        response?.message || 'Your password has been successfully reset. You can now login with your new password.'
-      );
-      
-      setTimeout(() => {
-        setStatusModal(prev => ({ ...prev, visible: false }));
-        navigation.navigate('EmailLogin');
-      }, 2500);
+      if (loginCandidate.fulfilled.match(loginResult)) {
+        showStatus(
+          'success',
+          'Password Reset!',
+          response?.message || 'Your password has been successfully reset. Logging you in...'
+        );
+        
+        setTimeout(() => {
+          setStatusModal(prev => ({ ...prev, visible: false }));
+          // @ts-ignore
+          navigation.replace('Main');
+        }, 1500);
+      } else {
+        showStatus(
+          'success',
+          'Password Reset!',
+          'Password reset successfully. Please login with your new password.'
+        );
+        
+        setTimeout(() => {
+          setStatusModal(prev => ({ ...prev, visible: false }));
+          navigation.navigate('EmailLogin');
+        }, 2000);
+      }
     } catch (error: any) {
       setLoading(false);
       const errorMessage = error || 'Failed to reset password. Please try again.';

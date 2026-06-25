@@ -23,7 +23,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import DocumentPicker from '@react-native-documents/picker';
+import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
@@ -1158,9 +1158,10 @@ const AIAssistantScreen: React.FC = () => {
 
   const handleUploadPDF = async () => {
     try {
-      const result = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.pdf],
+      const results = await pick({
+        type: [types.pdf],
       });
+      const result = results[0];
 
       if (result && result.uri) {
         setIsUploading(true);
@@ -1181,9 +1182,12 @@ const AIAssistantScreen: React.FC = () => {
         processParsedPDFData(parsedData);
       }
     } catch (err: any) {
+      console.error('Upload Error Details:', err);
       setIsUploading(false);
-      if (!DocumentPicker.isCancel(err)) {
-        Alert.alert('Upload Error', 'Failed to pick or parse the PDF. ' + err.message);
+      if (isErrorWithCode(err) && err.code === errorCodes.OPERATION_CANCELED) {
+        console.log('User cancelled document picker');
+      } else {
+        Alert.alert('Upload Error', 'Failed to pick or parse the PDF. ' + (err.message || JSON.stringify(err)));
         setCurrentScreen('UPLOAD');
       }
     }

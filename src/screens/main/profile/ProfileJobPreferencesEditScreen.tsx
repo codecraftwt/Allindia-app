@@ -79,7 +79,7 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
   const rotation = useSharedValue(0);
 
   const hasSelection = useMemo(() =>
-    category.subcategories.some((sub: any) => selectedIds.map(Number).includes(Number(sub.id))),
+    category.subcategories?.some((sub: any) => selectedIds.map(Number).includes(Number(sub.id))) ?? false,
     [category.subcategories, selectedIds]
   );
 
@@ -124,7 +124,7 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
           <Icon name="chevron-down" size={18} color={hasSelection ? colors.primary : colors.textPlaceholder} />
         </Animated.View>
       </Pressable>
-      {isExpanded && (
+      {isExpanded && category.subcategories && (
         <View style={styles.subCatGrid}>
           {category.subcategories.map((sub: any) => {
             const active = selectedIds.map(Number).includes(Number(sub.id));
@@ -532,14 +532,14 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   // Filter and Sort Categories (selected first)
   const filteredCategories = useMemo(() => {
     const filtered = categories.filter((cat: any) =>
-      cat.name.toLowerCase().includes(catSearch.toLowerCase()) ||
-      cat.subcategories.some((sub: any) => sub.name.toLowerCase().includes(catSearch.toLowerCase()))
+      cat.name?.toLowerCase().includes(catSearch.toLowerCase()) ||
+      cat.subcategories?.some((sub: any) => sub.name?.toLowerCase().includes(catSearch.toLowerCase()))
     );
 
     // Sort so categories with selected subcategories come first
     return [...filtered].sort((a, b) => {
-      const aHas = a.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
-      const bHas = b.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      const aHas = a.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      const bHas = b.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
       if (aHas && !bHas) return -1;
       if (!aHas && bHas) return 1;
       return 0;
@@ -550,7 +550,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const selectedSubcategories = useMemo(() => {
     const list: { id: number; name: string }[] = [];
     categories.forEach((cat: any) => {
-      cat.subcategories.forEach((sub: any) => {
+      cat.subcategories?.forEach((sub: any) => {
         if (jobCategoryIds.map(Number).includes(Number(sub.id))) {
           list.push({ id: Number(sub.id), name: sub.name });
         }
@@ -576,7 +576,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     const validCityIds = cities.map(c => Number(c.id));
     
     const parentCategory = categories.find((cat: any) =>
-      cat.subcategories.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)))
+      cat.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)))
     );
     const parentCategoryId = parentCategory ? Number(parentCategory.id) : null;
 
