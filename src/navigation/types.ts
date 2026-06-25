@@ -77,6 +77,7 @@ export type AuthStackParamList = {
   ProfileExperience: undefined;
   ProfileJobPreferences: undefined;
   ProfileResume: undefined;
+  Onboarding: undefined;
   Main: undefined;
 };
 

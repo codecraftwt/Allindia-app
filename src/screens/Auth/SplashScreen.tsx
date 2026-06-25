@@ -10,13 +10,14 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackScreenProps } from '@react-navigation/stack';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
-const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-02.png');
+const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-01.png');
 const SPLASH_DELAY_MS = 4000;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -75,18 +76,33 @@ const LANGUAGE_WORDS = [
   { text: 'Job', x: 0.90, y: 0.33, size: 16, opacity: 0.15 },
   // y ~0.37 — near logo
   { text: 'ਰੋਜ਼ਗਾਰ', x: 0.0, y: 0.37, size: 16, opacity: 0.14 },
+  { text: 'Job', x: 0.25, y: 0.38, size: 20, opacity: 0.06 },
+  { text: 'काम', x: 0.48, y: 0.37, size: 22, opacity: 0.05 },
+  { text: 'ಕೆಲಸ', x: 0.66, y: 0.38, size: 18, opacity: 0.07 },
   { text: 'નોકરી', x: 0.82, y: 0.37, size: 16, opacity: 0.15 },
   // y ~0.41
   { text: 'Job', x: 0.0, y: 0.41, size: 18, opacity: 0.14 },
+  { text: 'नौकरी', x: 0.22, y: 0.42, size: 18, opacity: 0.05 },
+  { text: 'रोजगार', x: 0.45, y: 0.41, size: 16, opacity: 0.08 },
+  { text: 'Job', x: 0.68, y: 0.42, size: 20, opacity: 0.06 },
   { text: 'काम', x: 0.88, y: 0.41, size: 18, opacity: 0.15 },
   // y ~0.45
   { text: 'नोकरी', x: 0.0, y: 0.45, size: 16, opacity: 0.14 },
+  { text: 'भर्ती', x: 0.28, y: 0.46, size: 22, opacity: 0.07 },
+  { text: 'Job', x: 0.50, y: 0.45, size: 24, opacity: 0.05 },
+  { text: 'ಉದ್ಯೋಗ', x: 0.70, y: 0.46, size: 16, opacity: 0.06 },
   { text: 'ಕೆಲಸ', x: 0.86, y: 0.45, size: 16, opacity: 0.14 },
   // y ~0.49
   { text: 'ਕੰਮ', x: 0.0, y: 0.49, size: 18, opacity: 0.14 },
+  { text: 'काम', x: 0.20, y: 0.50, size: 20, opacity: 0.05 },
+  { text: 'Job', x: 0.42, y: 0.49, size: 18, opacity: 0.07 },
+  { text: 'નોકરી', x: 0.64, y: 0.50, size: 18, opacity: 0.06 },
   { text: 'Job', x: 0.90, y: 0.49, size: 16, opacity: 0.13 },
   // y ~0.53
   { text: 'રોજી', x: 0.0, y: 0.53, size: 16, opacity: 0.13 },
+  { text: 'नौकरी', x: 0.26, y: 0.54, size: 18, opacity: 0.08 },
+  { text: 'Job', x: 0.48, y: 0.53, size: 22, opacity: 0.05 },
+  { text: 'रोजगार', x: 0.66, y: 0.54, size: 16, opacity: 0.07 },
   { text: 'नौकरी', x: 0.84, y: 0.53, size: 16, opacity: 0.14 },
   // y ~0.58
   { text: 'ਰੋਜ਼ਗਾਰ', x: 0.02, y: 0.58, size: 20, opacity: 0.24 },
@@ -246,14 +262,28 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const hasSeen = await AsyncStorage.getItem('hasSeenOnboarding');
+        if (hasSeen === 'true') {
+          navigation.replace('Main');
+        } else {
+          navigation.replace('Onboarding');
+        }
+      } catch (e) {
+        navigation.replace('Main');
+      }
+    };
+
     const t = setTimeout(() => {
-      navigation.replace('Main');
+      checkOnboarding();
     }, SPLASH_DELAY_MS);
+    
     return () => clearTimeout(t);
   }, [navigation]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.primary }]}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
 
       {/* Word Cloud Background */}
@@ -306,6 +336,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
             style={[
               styles.taglineContainer,
               {
+                backgroundColor: colors.primaryDark, // Using theme color dynamically
                 opacity: taglineOpacity,
                 transform: [{ translateY: taglineY }],
               },
@@ -335,7 +366,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a3a6b',
+    // Background color is now set dynamically in the component
   },
   safe: {
     flex: 1,
@@ -355,15 +386,9 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
+    // Removed white background and shadow for the white icon
     paddingHorizontal: 20,
     paddingVertical: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 15,
   },
   logo: {
     width: 260,
@@ -371,7 +396,7 @@ const styles = StyleSheet.create({
   },
   taglineContainer: {
     marginTop: 16,
-    backgroundColor: '#2d4a7c',
+    // Background color is now set dynamically in the component
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,
