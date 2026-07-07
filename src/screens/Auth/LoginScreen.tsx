@@ -109,69 +109,68 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.content}>
           <Text style={[typography.appTitle, styles.headline, { color: colors.textPrimary }]}>
-            {t('auth.landingTitle')}
+            {t('auth.landingTitle', 'Find your dream job in India')}
+          </Text>
+          <Text style={[typography.body, styles.lead, { color: colors.textSecondary }]}>
+            {t('auth.landingSubtitle', 'Join thousands of professionals finding their next career move with JobIndia AI.')}
           </Text>
         </View>
 
         <View style={styles.ctaBlock}>
-          {/* Main Login Button */}
-          <PrimaryButton
-            title={t('auth.loginWithEmail', 'Login with Email')}
-            onPress={() => navigation.navigate('EmailLogin')}
-            colors={colors}
-            iconLeft={<Icon name="envelope" size={18} color={colors.onPrimary} />}
-          />
-
-          {/* Create New Account */}
-          <PrimaryButton
-            title={t('auth.createNewAccount', 'Create New Account')}
+          {/* Register Card (Primary Action) */}
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: colors.primary, borderColor: colors.primary, shadowColor: colors.primary, shadowOpacity: 0.3 }]} 
+            activeOpacity={0.85}
             onPress={() => navigation.navigate('SignIn')}
-            colors={colors}
-            variant="secondary"
-            iconLeft={<Icon name="user-plus" size={18} color={colors.primary} />}
-          />
+          >
+            <View style={styles.cardContent}>
+              <View style={[styles.iconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Icon name="user-plus" size={20} color="#FFF" />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={[typography.h4, { color: '#FFF', fontWeight: 'bold' }]}>{t('auth.register', 'Create Account')}</Text>
+                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)' }]}>via WhatsApp or Email</Text>
+              </View>
+            </View>
+            <View style={[styles.arrowCircle, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+              <Icon name="arrow-right" size={14} color="#FFF" />
+            </View>
+          </TouchableOpacity>
 
-          <View style={styles.dividerRow}>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <Text style={[typography.small, { color: colors.textPlaceholder, marginHorizontal: spacing.md }]}>
-              {t('auth.orContinueWith', 'Or continue with')}
-            </Text>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          </View>
-
-          {/* Social Icons Row */}
-          <View style={styles.socialIconsRow}>
-            {/* Google */}
-            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }]} onPress={() => {}}>
-              <Icon name="google" size={26} color="#DB4437" />
-            </TouchableOpacity>
-
-            {/* WhatsApp */}
-            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#25D366', borderColor: '#25D366' }]} onPress={() => {}}>
-              <Icon name="whatsapp" size={28} color="#FFFFFF" />
-            </TouchableOpacity>
-            
-            {/* Mobile OTP */}
-            <TouchableOpacity style={[styles.socialIconBtn, { backgroundColor: '#F59E0B', borderColor: '#F59E0B' }]} onPress={() => {}}>
-              <Icon name="mobile-phone" size={34} color="#FFFFFF" style={{ marginTop: -2 }} />
-            </TouchableOpacity>
-          </View>
+          {/* Login Card (Secondary Action) */}
+          <TouchableOpacity 
+            style={[styles.actionCard, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: '#000', shadowOpacity: 0.04 }]} 
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('EmailLogin')}
+          >
+            <View style={styles.cardContent}>
+              <View style={[styles.iconBox, { backgroundColor: colors.surfaceHighlight }]}>
+                <Icon name="sign-in" size={22} color={colors.primary} />
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={[typography.h4, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('auth.login', 'Login')}</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>via WhatsApp or Email</Text>
+              </View>
+            </View>
+            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+          </TouchableOpacity>
 
           {/* Skip & Explore Jobs First */}
           <Pressable
             onPress={handleSkip}
             disabled={isSkipping}
             style={({ pressed }) => [
-              styles.guestBtn,
-              { backgroundColor: colors.surfaceHighlight, borderColor: colors.border, marginTop: spacing.sm },
-              pressed && { opacity: 0.8 }
+              styles.skipBtn,
+              pressed && { opacity: 0.6 }
             ]}>
             {isSkipping ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={colors.textSecondary} size="small" />
             ) : (
               <>
-                <Icon name="hand-o-right" size={18} color={colors.primary} style={{ marginRight: 8 }} />
-                <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('auth.skipExplore', 'Skip & Explore Jobs First')}</Text>
+                <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>
+                  {t('auth.skipExplore', 'Skip & Explore Jobs First')}
+                </Text>
+                <Icon name="long-arrow-right" size={14} color={colors.textSecondary} style={{ marginLeft: 8 }} />
               </>
             )}
           </Pressable>
@@ -288,51 +287,57 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   ctaBlock: {
+    gap: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  actionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
   },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.sm,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    opacity: 0.5,
-  },
-  guestBtn: {
-    height: 56,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  socialIconsRow: {
-    flexDirection: 'row',
+  textContainer: {
     justifyContent: 'center',
-    gap: spacing.lg,
-    marginVertical: spacing.sm,
   },
-  socialIconBtn: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 1,
+  arrowCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
+  skipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.sm,
+  },
+
   trustRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     justifyContent: 'center',
-    marginTop: spacing.sm,
-    opacity: 0.7,
+    marginTop: spacing.xl,
+    opacity: 0.6,
   },
   languageHeader: {
     position: 'absolute',

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -8,7 +8,12 @@ import {
   StyleSheet,
   Text,
   View,
+  Platform,
+  Linking,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
+import VersionCheck from 'react-native-version-check';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StackScreenProps } from '@react-navigation/stack';
@@ -18,6 +23,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 
 const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-01.png');
+const IC_LAUNCHER = require('../../assets/ic_launcher.png');
 const SPLASH_DELAY_MS = 4000;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -261,7 +267,30 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
 
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
   useEffect(() => {
+    const checkVersionAndOnboarding = async () => {
+      try {
+        if (Platform.OS === 'android') {
+          const response = await fetch('https://jobindia.ai/api/meta/mobile-version');
+          const result = await response.json();
+          if (result?.success && result?.data?.versionName) {
+            const apiVersion = result.data.versionName;
+            const currentVersion = VersionCheck.getCurrentVersion();
+            if (apiVersion !== currentVersion) {
+              setShowUpdateModal(true);
+              return; // Do not proceed to onboarding if update required
+            }
+          }
+        }
+      } catch (e) {
+        console.log('Failed to check version', e);
+      }
+
+      checkOnboarding();
+    };
+
     const checkOnboarding = async () => {
       try {
         const hasSeen = await AsyncStorage.getItem('hasSeenOnboarding');
@@ -276,7 +305,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     const t = setTimeout(() => {
-      checkOnboarding();
+      checkVersionAndOnboarding();
     }, SPLASH_DELAY_MS);
     
     return () => clearTimeout(t);
@@ -359,6 +388,30 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.footerHint}>Preparing your experience</Text>
         </View>
       </SafeAreaView>
+
+      <Modal visible={showUpdateModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.updateModal, { backgroundColor: colors.surface }]}>
+            <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}15` }]}>
+              <Image source={IC_LAUNCHER} style={{ width: 36, height: 36 }} resizeMode="contain" />
+            </View>
+            <Text style={[styles.updateTitle, { color: colors.textPrimary }]}>Update Required</Text>
+            <Text style={[styles.updateDesc, { color: colors.textSecondary }]}>
+              A new version of JobIndia is available. Please update the app to continue using our services.
+            </Text>
+            <TouchableOpacity 
+              style={[styles.updateBtn, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                Linking.openURL('market://details?id=com.jobsindia').catch(() => {
+                  Linking.openURL('https://play.google.com/store/apps/details?id=com.jobsindia');
+                });
+              }}
+            >
+              <Text style={styles.updateBtnText}>Update Now</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -434,6 +487,56 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontWeight: '700',
     color: 'rgba(255,255,255,0.5)',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  updateModal: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  updateTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  updateDesc: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  updateBtn: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  updateBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

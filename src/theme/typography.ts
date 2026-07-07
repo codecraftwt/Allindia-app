@@ -46,6 +46,10 @@ export const typography = {
     fontFamily: fontFamilies.semiBold,
     fontSize: 14,
   },
+  h2: {
+    fontFamily: fontFamilies.bold,
+    fontSize: 24,
+  },
   /** Heading 4 */
   h4: {
     fontFamily: fontFamilies.bold,

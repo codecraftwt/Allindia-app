@@ -60,6 +60,7 @@ import AppRate from '../../../components/AppRate';
 import ActionForYou from '../../../components/ActionForYou';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { QuickFilterCards } from './components/QuickFilterCards';
+import { HomeApplicationStatus } from './components/HomeApplicationStatus';
 import HomescreenHeader from './components/HomescreenHeader';
 import HomeCategoriesSection from './components/HomeCategoriesSection';
 import type { HomeJob } from './components/homeMockData';
@@ -291,6 +292,12 @@ function JobTrendCard({
             {companyName}
           </Text>
         </View>
+        {job.openings ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceHighlight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8, alignSelf: 'flex-start' }}>
+            <Icon name="users" size={10} color={colors.primary} style={{ marginRight: 4 }} />
+            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>{job.openings}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.cardMetaRow}>
@@ -409,10 +416,16 @@ function JobListCard({
             {companyName}
           </Text>
         </View>
-        <View style={{ position: 'absolute', top: 0, right: 0 }}>
-          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
+        <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
+          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold', marginBottom: 4 }]}>
             {postedLabel}
           </Text>
+          {job.openings ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceHighlight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+              <Icon name="users" size={10} color={colors.primary} style={{ marginRight: 4 }} />
+              <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>{job.openings}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
 
@@ -615,6 +628,32 @@ const MemoizedHomeContent = React.memo(({
   homeMedia
 }: any) => {
   const { t } = useTranslation();
+  const [showAppStatus, setShowAppStatus] = useState(false);
+  const currentStatusId = 'mock_status_1'; // Assuming this would be dynamic in future
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const hiddenId = await AsyncStorage.getItem('hiddenAppStatusId');
+        if (hiddenId !== currentStatusId) {
+          setShowAppStatus(true);
+        }
+      } catch (e) {
+        setShowAppStatus(true);
+      }
+    };
+    checkStatus();
+  }, []);
+
+  const handleHideAppStatus = async () => {
+    setShowAppStatus(false);
+    try {
+      await AsyncStorage.setItem('hiddenAppStatusId', currentStatusId);
+    } catch (e) {
+      console.log('Error hiding status', e);
+    }
+  };
+
   return (
     <Animated.ScrollView
       onScroll={handleScroll}
@@ -639,6 +678,9 @@ const MemoizedHomeContent = React.memo(({
       ) : (
         <>
           <HeroBanner media={homeMedia} colors={colors} onPress={goSearch} />
+          {showAppStatus && (
+            <HomeApplicationStatus colors={colors} onHide={handleHideAppStatus} />
+          )}
           <QuickFilterCards colors={colors} />
           <HomeCategoriesSection
             categories={categories}

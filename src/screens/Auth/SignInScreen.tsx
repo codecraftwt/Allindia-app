@@ -42,6 +42,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
     phone: '',
     password: '',
     password_confirmation: '',
+    verification_channel: 'email',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -70,10 +71,15 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const onRegister = async () => {
-    const { name, email, password, password_confirmation } = formData;
+    const { name, email, password, password_confirmation, phone, verification_channel } = formData;
 
     if (!name || !email || !password || !password_confirmation) {
       showStatus('error', t('auth.requiredFields'), t('auth.fillRequiredFields'));
+      return;
+    }
+
+    if (verification_channel === 'whatsapp' && !phone) {
+      showStatus('error', t('auth.requiredFields'), t('auth.phoneRequiredForWhatsapp', 'Phone number is required for WhatsApp verification'));
       return;
     }
 
@@ -87,7 +93,11 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
     if (registerCandidate.fulfilled.match(resultAction)) {
       const payloadData = resultAction.payload?.data;
       if (payloadData?.verification_required) {
-        navigation.navigate('OtpVerification', { email: formData.email });
+        navigation.navigate('OtpVerification', { 
+          email: formData.email,
+          verification_channel: formData.verification_channel,
+          phone: formData.phone
+        });
       } else {
         showStatus('success', t('auth.success'), t('auth.accountCreated'));
         setTimeout(() => {
@@ -222,6 +232,63 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
 
+            <View style={styles.channelContainer}>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.sm }]}>
+                {t('auth.sendVerificationCodeTo', 'Send verification code via:')}
+              </Text>
+              <View style={styles.channelRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.channelBtn,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                    formData.verification_channel === 'email' && { 
+                      borderColor: colors.primary, 
+                      borderWidth: 2
+                    }
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => handleInputChange('verification_channel', 'email')}
+                >
+                  <View style={[styles.channelIconContainer, { backgroundColor: formData.verification_channel === 'email' ? colors.primary : `${colors.primary}1A` }]}>
+                    <Icon name="envelope" size={14} color={formData.verification_channel === 'email' ? '#FFFFFF' : colors.primary} />
+                  </View>
+                  <Text style={[typography.labelMedium, { color: formData.verification_channel === 'email' ? colors.primary : colors.textSecondary, marginLeft: spacing.sm }]}>
+                    Email
+                  </Text>
+                  {formData.verification_channel === 'email' && (
+                    <View style={styles.channelCheckmark}>
+                      <Icon name="check-circle" size={16} color={colors.primary} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.channelBtn,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                    formData.verification_channel === 'whatsapp' && { 
+                      borderColor: '#25D366', 
+                      borderWidth: 2
+                    }
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => handleInputChange('verification_channel', 'whatsapp')}
+                >
+                  <View style={[styles.channelIconContainer, { backgroundColor: formData.verification_channel === 'whatsapp' ? '#25D366' : '#25D3661A' }]}>
+                    <Icon name="whatsapp" size={18} color={formData.verification_channel === 'whatsapp' ? '#FFFFFF' : '#25D366'} />
+                  </View>
+                  <Text style={[typography.labelMedium, { color: formData.verification_channel === 'whatsapp' ? '#25D366' : colors.textSecondary, marginLeft: spacing.sm }]}>
+                    WhatsApp
+                  </Text>
+                  {formData.verification_channel === 'whatsapp' && (
+                    <View style={styles.channelCheckmark}>
+                      <Icon name="check-circle" size={16} color="#25D366" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <PrimaryButton
               title={loading ? t('auth.creatingAccount') : t('auth.registerBtn')}
               onPress={onRegister}
@@ -329,6 +396,51 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: typography.body.fontFamily,
+  },
+  channelContainer: {
+    marginBottom: spacing.xl,
+  },
+  channelRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  channelBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  channelIconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  channelCheckmark: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   footer: {
     flexDirection: 'row',

@@ -246,6 +246,22 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
   );
 }
 
+const GuestLockedContent = ({ children, colors }: { children: React.ReactNode, colors: ThemeColors }) => {
+  return (
+    <View style={{ position: 'relative', marginTop: 8, overflow: 'hidden', minHeight: 80 }}>
+      <View style={{ opacity: 0.15 }} pointerEvents="none">
+        {children}
+      </View>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.1, shadowRadius: 3, alignItems: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: colors.border }}>
+          <Icon name="lock" size={16} color={colors.textSecondary} />
+          <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Login to view</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const JobDetailScreen: React.FC = () => {
   const { colors, mode } = useTheme();
   const isDark = mode === 'dark';
@@ -353,7 +369,10 @@ const JobDetailScreen: React.FC = () => {
     if (!phone) {
       return '';
     }
-    const raw = phone.replace(/[^\d+]/g, '');
+    let raw = phone.replace(/[^\d+]/g, '');
+    if (raw.length === 10 && !raw.startsWith('+')) {
+      raw = '+91' + raw;
+    }
     return `tel:${raw}`;
   }, [currentJob]);
 
@@ -666,7 +685,7 @@ const JobDetailScreen: React.FC = () => {
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
           <View style={styles.infoGrid}>
-            <InfoRow label={t('jobDetail.experience', 'Experience')} value={currentJob.experience_label || '-'} icon="briefcase" colors={colors} />
+            <InfoRow label={t('jobDetail.experience', 'Experience')} value={!currentJob.experience_label || currentJob.experience_label === '-' ? t('jobDetail.fresher', 'Fresher') : currentJob.experience_label} icon="briefcase" colors={colors} />
             <InfoRow label={t('jobDetail.gender', 'Gender')} value={formatJobType(currentJob.gender) || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
             <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
             <InfoRow label={t('jobDetail.workLocation', 'Work Location')} value={formatJobType(currentJob.work_location_type) || 'Office'} icon="building" colors={colors} />
@@ -687,6 +706,14 @@ const JobDetailScreen: React.FC = () => {
         {(currentJob.salary_min || currentJob.incentive_amount || currentJob.bonus_amount) && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title={t('jobDetail.salaryIncentives', 'Salary & Incentives')} colors={colors} />
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.infoGrid}>
+                  <InfoRow label={t('jobDetail.baseSalary', 'Base Salary')} value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`} icon="money" colors={colors} />
+                  <InfoRow label={t('jobDetail.salaryType', 'Salary Type')} value={formatSalaryBreakup(currentJob.salary_breakup_type)} icon="pie-chart" colors={colors} />
+                </View>
+              </GuestLockedContent>
+            ) : (
             <View style={styles.infoGrid}>
               <InfoRow 
                 label={t('jobDetail.baseSalary', 'Base Salary')} 
@@ -717,121 +744,150 @@ const JobDetailScreen: React.FC = () => {
                 />
               )}
             </View>
+            )}
           </View>
         )}
 
         {/* 3. Description */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title={t('jobDetail.description', 'Description')} colors={colors} />
+          {!isLoggedIn ? (
+            <GuestLockedContent colors={colors}>
+              <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]} numberOfLines={3}>
+                {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
+              </Text>
+            </GuestLockedContent>
+          ) : (
           <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
             {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
           </Text>
+          )}
         </View>
 
         {/* 4. Requirements & Preferences */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title={t('jobDetail.requirements', 'Requirements')} colors={colors} />
-          <View style={styles.infoGrid}>
-            {(currentJob.candidate_age_min || currentJob.candidate_age_max) && (
-              <InfoRow 
-                label={t('jobDetail.ageRequirement', 'Age')} 
-                value={`${currentJob.candidate_age_min || 18} - ${currentJob.candidate_age_max || 99} yrs`} 
-                icon="user" 
-                colors={colors} 
-              />
+          {!isLoggedIn ? (
+            <GuestLockedContent colors={colors}>
+              <View style={styles.infoGrid}>
+                <InfoRow label={t('jobDetail.ageRequirement', 'Age')} value="18 - 99 yrs" icon="user" colors={colors} />
+              </View>
+            </GuestLockedContent>
+          ) : (
+          <View>
+            <View style={styles.infoGrid}>
+              {(currentJob.candidate_age_min || currentJob.candidate_age_max) && (
+                <InfoRow 
+                  label={t('jobDetail.ageRequirement', 'Age')} 
+                  value={`${currentJob.candidate_age_min || 18} - ${currentJob.candidate_age_max || 99} yrs`} 
+                  icon="user" 
+                  colors={colors} 
+                />
+              )}
+              {currentJob.application_deadline && (
+                <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+              )}
+            </View>
+            
+            {currentJob.preferred_languages && currentJob.preferred_languages.length > 0 && (
+              <View style={{ marginTop: spacing.sm }}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.languages', 'Languages')}</Text>
+                <View style={styles.tagsRow}>
+                  {currentJob.preferred_languages.map((lang: string, idx: number) => (
+                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                      <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(lang)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
             )}
-            {currentJob.application_deadline && (
-              <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+
+            {currentJob.required_assets && currentJob.required_assets.length > 0 && (
+              <View style={{ marginTop: spacing.sm }}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.requiredAssets', 'Assets Required')}</Text>
+                <View style={styles.tagsRow}>
+                  {currentJob.required_assets.map((asset: string, idx: number) => (
+                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                      <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(asset)}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {currentJob.required_certifications && currentJob.required_certifications.length > 0 && (
+              <View style={{ marginTop: spacing.sm }}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.certifications', 'Certifications')}</Text>
+                <View style={styles.tagsRow}>
+                  {currentJob.required_certifications.map((cert: string, idx: number) => (
+                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                      <Text style={[typography.small, { color: colors.textPrimary }]}>{cert}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {currentJob.skills_required && currentJob.skills_required.length > 0 && (
+              <View style={{ marginTop: spacing.sm }}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.skillsRequired', 'Skills')}</Text>
+                <View style={styles.tagsRow}>
+                  {currentJob.skills_required.map((skill: string, idx: number) => (
+                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                      <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
             )}
           </View>
-          
-          {currentJob.preferred_languages && currentJob.preferred_languages.length > 0 && (
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.languages', 'Languages')}</Text>
-              <View style={styles.tagsRow}>
-                {currentJob.preferred_languages.map((lang: string, idx: number) => (
-                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(lang)}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {currentJob.required_assets && currentJob.required_assets.length > 0 && (
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.requiredAssets', 'Assets Required')}</Text>
-              <View style={styles.tagsRow}>
-                {currentJob.required_assets.map((asset: string, idx: number) => (
-                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(asset)}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {currentJob.required_certifications && currentJob.required_certifications.length > 0 && (
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.certifications', 'Certifications')}</Text>
-              <View style={styles.tagsRow}>
-                {currentJob.required_certifications.map((cert: string, idx: number) => (
-                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Text style={[typography.small, { color: colors.textPrimary }]}>{cert}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {currentJob.skills_required && currentJob.skills_required.length > 0 && (
-            <View style={{ marginTop: spacing.sm }}>
-              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.skillsRequired', 'Skills')}</Text>
-              <View style={styles.tagsRow}>
-                {currentJob.skills_required.map((skill: string, idx: number) => (
-                  <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                    <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
           )}
         </View>
 
         {/* 5. Interview & Contact Details */}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
           <SectionTitle title={t('jobDetail.interviewDetails', 'Interview & Contact')} colors={colors} />
-          <View style={styles.infoGrid}>
-            <InfoRow 
-              label={t('jobDetail.interviewType', 'Interview Type')} 
-              value={formatJobType(currentJob.interview_type)} 
-              icon="handshake-o" 
-              colors={colors} 
-            />
-            {currentJob.allow_calls && (
+          {!isLoggedIn ? (
+            <GuestLockedContent colors={colors}>
+              <View style={styles.infoGrid}>
+                <InfoRow label={t('jobDetail.interviewType', 'Interview Type')} value="In-person" icon="handshake-o" colors={colors} />
+              </View>
+            </GuestLockedContent>
+          ) : (
+          <View>
+            <View style={styles.infoGrid}>
               <InfoRow 
-                label={t('jobDetail.callTimings', 'Call Timings')} 
-                value={`${currentJob.call_allowed_from || '10:00 AM'} to ${currentJob.call_allowed_to || '06:00 PM'}`} 
-                icon="phone" 
+                label={t('jobDetail.interviewType', 'Interview Type')} 
+                value={formatJobType(currentJob.interview_type)} 
+                icon="handshake-o" 
                 colors={colors} 
               />
+              {currentJob.allow_calls && (
+                <InfoRow 
+                  label={t('jobDetail.callTimings', 'Call Timings')} 
+                  value={`${currentJob.call_allowed_from || '10:00 AM'} to ${currentJob.call_allowed_to || '06:00 PM'}`} 
+                  icon="phone" 
+                  colors={colors} 
+                />
+              )}
+            </View>
+            
+            {(currentJob.interview_address || currentJob.interview_city_name) && (
+               <View style={{ marginTop: spacing.sm }}>
+                  <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
+                    <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
+                    <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>
+                      {[
+                        currentJob.interview_address,
+                        currentJob.interview_locality_name,
+                        currentJob.interview_city_name
+                      ].filter(Boolean).join(', ')}
+                    </Text>
+                  </View>
+               </View>
             )}
           </View>
-          
-          {(currentJob.interview_address || currentJob.interview_city_name) && (
-             <View style={{ marginTop: spacing.sm }}>
-                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
-                  <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-                  <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>
-                    {[
-                      currentJob.interview_address,
-                      currentJob.interview_locality_name,
-                      currentJob.interview_city_name
-                    ].filter(Boolean).join(', ')}
-                  </Text>
-                </View>
-             </View>
           )}
         </View>
 
@@ -839,25 +895,35 @@ const JobDetailScreen: React.FC = () => {
         {(currentJob.deposit_required || currentJob.joining_fee_required) && (
           <View style={[styles.sectionCard, { backgroundColor: colors.error + '10', borderColor: colors.error + '40', marginTop: spacing.md }]}>
             <SectionTitle title={t('jobDetail.depositsFees', 'Deposits & Fees')} colors={{...colors, textPrimary: colors.error}} />
-            <Text style={[typography.small, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
-              {t('jobDetail.feeWarning', 'Please verify details directly with the employer before making any payments.')}
-            </Text>
-            <View style={styles.infoGrid}>
-              {currentJob.deposit_required && (
-                <>
-                  <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value={`₹${currentJob.deposit_amount?.toLocaleString() || 0}`} icon="shield" colors={colors} />
-                  {currentJob.deposit_purpose && (
-                    <InfoRow label={t('jobDetail.purpose', 'Purpose')} value={currentJob.deposit_purpose} icon="info-circle" colors={colors} />
-                  )}
-                  {currentJob.deposit_taken_when && (
-                    <InfoRow label={t('jobDetail.takenWhen', 'Taken When')} value={currentJob.deposit_taken_when} icon="clock-o" colors={colors} />
-                  )}
-                </>
-              )}
-              {currentJob.joining_fee_required && (
-                <InfoRow label={t('jobDetail.joiningFee', 'Joining Fee')} value={t('jobDetail.yes', 'Yes')} icon="credit-card" colors={colors} />
-              )}
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.infoGrid}>
+                  <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value="₹---" icon="shield" colors={colors} />
+                </View>
+              </GuestLockedContent>
+            ) : (
+            <View>
+              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
+                {t('jobDetail.feeWarning', 'Please verify details directly with the employer before making any payments.')}
+              </Text>
+              <View style={styles.infoGrid}>
+                {currentJob.deposit_required && (
+                  <>
+                    <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value={`₹${currentJob.deposit_amount?.toLocaleString() || 0}`} icon="shield" colors={colors} />
+                    {currentJob.deposit_purpose && (
+                      <InfoRow label={t('jobDetail.purpose', 'Purpose')} value={currentJob.deposit_purpose} icon="info-circle" colors={colors} />
+                    )}
+                    {currentJob.deposit_taken_when && (
+                      <InfoRow label={t('jobDetail.takenWhen', 'Taken When')} value={currentJob.deposit_taken_when} icon="clock-o" colors={colors} />
+                    )}
+                  </>
+                )}
+                {currentJob.joining_fee_required && (
+                  <InfoRow label={t('jobDetail.joiningFee', 'Joining Fee')} value={t('jobDetail.yes', 'Yes')} icon="credit-card" colors={colors} />
+                )}
+              </View>
             </View>
+            )}
           </View>
         )}
 
@@ -865,6 +931,13 @@ const JobDetailScreen: React.FC = () => {
         {currentJob.perks_benefits && currentJob.perks_benefits.length > 0 && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title={t('jobDetail.perksBenefits', 'Perks & Benefits')} colors={colors} />
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.tagsRow}>
+                  <View style={[styles.badge, { backgroundColor: colors.successBackground }]}><Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>--</Text></View>
+                </View>
+              </GuestLockedContent>
+            ) : (
             <View style={styles.tagsRow}>
               {currentJob.perks_benefits.map((perk: string, idx: number) => (
                 <View key={idx} style={[styles.badge, { backgroundColor: colors.successBackground }]}>
@@ -873,6 +946,7 @@ const JobDetailScreen: React.FC = () => {
                 </View>
               ))}
             </View>
+            )}
           </View>
         )}
 
@@ -888,7 +962,15 @@ const JobDetailScreen: React.FC = () => {
             </TouchableOpacity>
 
             {isCompanyDetailsOpen && (
-              <>
+              !isLoggedIn ? (
+                <GuestLockedContent colors={colors}>
+                  <View style={styles.companyHeader}>
+                    <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]} />
+                    <View style={{ flex: 1, height: 20, backgroundColor: colors.surfaceHighlight, borderRadius: 4 }} />
+                  </View>
+                </GuestLockedContent>
+              ) : (
+              <View>
                 <View style={styles.companyHeader}>
               <View>
                 {currentJob.employer.company.company_logo_url ? (
@@ -1028,7 +1110,8 @@ const JobDetailScreen: React.FC = () => {
                 </Pressable>
               )}
             </View>
-              </>
+              </View>
+              )
             )}
           </View>
         )}
@@ -1080,41 +1163,51 @@ const JobDetailScreen: React.FC = () => {
         {currentJob.questions && currentJob.questions.length > 0 && (
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
             <SectionTitle title={t('jobDetail.screeningQuestions', 'Screening Questions')} colors={colors} />
-            {currentJob.questions.map((q: any) => (
-              <View key={q.id} style={styles.questionBlock}>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
-                  {q.question} {isQuestionRequired(q) ? <Text style={{ color: colors.error }}>*</Text> : ''}
-                </Text>
-                <View style={styles.optionsWrap}>
-                  {q.options?.map((opt: any) => {
-                    const isSelected = answers[q.id.toString()] === opt.id;
-                    return (
-                      <Pressable
-                        key={opt.id}
-                        onPress={() => handleSelectOption(q.id, opt.id)}
-                        style={[
-                          styles.optionChip,
-                          {
-                            backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
-                            borderColor: isSelected ? colors.primary : colors.border,
-                          },
-                        ]}>
-                        <Text
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.questionBlock}>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>---</Text>
+                </View>
+              </GuestLockedContent>
+            ) : (
+            <View>
+              {currentJob.questions.map((q: any) => (
+                <View key={q.id} style={styles.questionBlock}>
+                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
+                    {q.question} {isQuestionRequired(q) ? <Text style={{ color: colors.error }}>*</Text> : ''}
+                  </Text>
+                  <View style={styles.optionsWrap}>
+                    {q.options?.map((opt: any) => {
+                      const isSelected = answers[q.id.toString()] === opt.id;
+                      return (
+                        <Pressable
+                          key={opt.id}
+                          onPress={() => handleSelectOption(q.id, opt.id)}
                           style={[
-                            typography.small,
+                            styles.optionChip,
                             {
-                              color: isSelected ? colors.primary : colors.textSecondary,
-                              fontFamily: isSelected ? typography.labelMedium.fontFamily : undefined,
+                              backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
+                              borderColor: isSelected ? colors.primary : colors.border,
                             },
                           ]}>
-                          {opt.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                          <Text
+                            style={[
+                              typography.small,
+                              {
+                                color: isSelected ? colors.primary : colors.textSecondary,
+                                fontFamily: isSelected ? typography.labelMedium.fontFamily : undefined,
+                              },
+                            ]}>
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
-            ))}
+              ))}
+            </View>
+            )}
           </View>
         )}
 
@@ -1158,7 +1251,7 @@ const JobDetailScreen: React.FC = () => {
             title={isApplying ? t('jobDetail.processing', "Processing...") : (currentJob.is_applied ? t('jobDetail.alreadyApplied', "Already Applied") : t('jobDetail.applyNow', "Apply now"))}
             onPress={applyNow}
             colors={colors}
-            disabled={isApplying || currentJob.is_applied}
+            disabled={isApplying || currentJob.is_applied || !isLoggedIn}
           />
           {currentJob.allow_calls !== false && (
             <View style={styles.footerRow}>
@@ -1168,6 +1261,7 @@ const JobDetailScreen: React.FC = () => {
                 colors={colors}
                 variant="secondary"
                 style={styles.callBtn}
+                disabled={!isLoggedIn}
               />
             </View>
           )}

@@ -39,11 +39,17 @@ function maskEmail(email: string) {
   return `${local[0]}***${local[local.length - 1]}@${domain}`;
 }
 
+function maskPhone(phone?: string) {
+  if (!phone || phone.length < 4) return phone || '';
+  return `******${phone.slice(-4)}`;
+}
+
 const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { resetDraft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
-  const { email } = route.params;
+  const { email, verification_channel, phone } = route.params;
+  const isWhatsApp = verification_channel === 'whatsapp';
   const [otp, setOtp] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
   const [verifying, setVerifying] = useState(false);
@@ -122,7 +128,9 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
             <AuthHeadline
               colors={colors}
               title="Enter OTP"
-              subtitle="Use the 4-digit code sent to your email. It expires in a few minutes — request a new one if needed."
+              subtitle={isWhatsApp 
+                ? "Use the 4-digit code sent to your WhatsApp. It expires in a few minutes — request a new one if needed." 
+                : "Use the 4-digit code sent to your email. It expires in a few minutes — request a new one if needed."}
               centerDecor
               decor={
                 <View
@@ -130,11 +138,11 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
                     styles.heroCircle,
                     {
                       backgroundColor: colors.surface,
-                      borderColor: `${colors.primary}33`,
+                      borderColor: isWhatsApp ? '#25D36633' : `${colors.primary}33`,
                       shadowColor: colors.shadow,
                     },
                   ]}>
-                  <Icon name="envelope" size={32} color={colors.primary} />
+                  <Icon name={isWhatsApp ? 'whatsapp' : 'envelope'} size={32} color={isWhatsApp ? '#25D366' : colors.primary} />
                 </View>
               }
             />
@@ -143,14 +151,14 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
               style={[
                 styles.phoneChip,
                 {
-                  backgroundColor: colors.surfaceHighlight,
-                  borderColor: colors.border,
+                  backgroundColor: isWhatsApp ? '#25D36615' : colors.surfaceHighlight,
+                  borderColor: isWhatsApp ? '#25D36630' : colors.border,
                   shadowColor: colors.shadow,
                 },
               ]}>
-              <Icon name="envelope-o" size={16} color={colors.primary} />
-              <Text style={[typography.labelMedium, styles.phoneText, { color: colors.textPrimary }]}>
-                {maskEmail(email)}
+              <Icon name={isWhatsApp ? 'whatsapp' : 'envelope-o'} size={16} color={isWhatsApp ? '#25D366' : colors.primary} />
+              <Text style={[typography.labelMedium, styles.phoneText, { color: isWhatsApp ? '#25D366' : colors.textPrimary }]}>
+                {isWhatsApp ? maskPhone(phone) : maskEmail(email)}
               </Text>
             </View>
 
