@@ -346,7 +346,7 @@ const ApplicationsScreen: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [isPending, setIsPending] = useState(true);
-  const [activeTab, setActiveTab] = useState<'applied' | 'saved'>('applied');
+  const [activeTab, setActiveTab] = useState<'applied' | 'saved' | 'invites'>('applied');
   const [confirmModal, setConfirmModal] = useState<{ visible: boolean; jobId: number | null }>({ visible: false, jobId: null });
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
@@ -399,14 +399,15 @@ const ApplicationsScreen: React.FC = () => {
 
   const renderEmpty = () => {
     const isApplied = activeTab === 'applied';
+    const isInvites = activeTab === 'invites';
     return (
       <View style={styles.emptyContainer}>
-        <Icon name={searchQuery ? "search-minus" : (isApplied ? "file-text-o" : "heart-o")} size={48} color={colors.border} />
+        <Icon name={searchQuery ? "search-minus" : (isApplied ? "file-text-o" : isInvites ? "envelope-open-o" : "heart-o")} size={48} color={colors.border} />
         <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-          {searchQuery ? t('applications.noMatching', "No matching applications") : (isApplied ? t('applications.noApplications', "No applications yet") : "No saved jobs yet")}
+          {searchQuery ? t('applications.noMatching', "No matching applications") : (isApplied ? t('applications.noApplications', "No applications yet") : isInvites ? "No HR invites yet" : "No saved jobs yet")}
         </Text>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-          {searchQuery ? t('applications.tryDifferentSearch', "Try a different search term") : (isApplied ? t('applications.appliedJobsAppearHere', "Applied jobs will appear here") : "Jobs you wishlist will appear here")}
+        <Text style={[typography.small, { color: colors.textPlaceholder, textAlign: 'center', marginTop: 8 }]}>
+          {searchQuery ? t('applications.tryDifferentSearch', "Try a different search term") : (isApplied ? t('applications.appliedJobsAppearHere', "Applied jobs will appear here") : isInvites ? "When an HR invites you to apply, it will appear here." : "Jobs you wishlist will appear here")}
         </Text>
       </View>
     );
@@ -430,7 +431,7 @@ const ApplicationsScreen: React.FC = () => {
         />
       ) : (
           <FlatList
-            data={activeTab === 'applied' ? filteredAppliedJobs : filteredSavedJobs}
+            data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : []}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               activeTab === 'applied' ? (
@@ -440,14 +441,14 @@ const ApplicationsScreen: React.FC = () => {
                   onPress={() => openJobDetail(item)}
                   profileData={profileData}
                 />
-              ) : (
+              ) : activeTab === 'saved' ? (
                 <SavedJobCard
                   job={item}
                   colors={colors}
                   onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
                   onOpenDetail={() => openJobDetail(item)}
                 />
-              )
+              ) : null
             )}
             ListHeaderComponent={
               <>
@@ -470,6 +471,12 @@ const ApplicationsScreen: React.FC = () => {
                     onPress={() => setActiveTab('saved')}
                   >
                     <Text style={[typography.labelMedium, { color: activeTab === 'saved' ? colors.primary : colors.textSecondary }]}>Saved Jobs</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.tabBtn, activeTab === 'invites' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
+                    onPress={() => setActiveTab('invites')}
+                  >
+                    <Text style={[typography.labelMedium, { color: activeTab === 'invites' ? colors.primary : colors.textSecondary }]}>HR Invites</Text>
                   </TouchableOpacity>
                 </View>
 

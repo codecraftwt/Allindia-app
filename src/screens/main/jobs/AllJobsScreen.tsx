@@ -129,6 +129,9 @@ const AllJobsScreen = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -153,15 +156,19 @@ const AllJobsScreen = () => {
       }
       // Clear params after applying so it doesn't re-apply on every render
       navigation.setParams({ filters: undefined, quickFilterId: undefined });
+      setPage(1);
       return;
     }
 
-    setIsPending(true);
+    setIsPending(page === 1);
 
     // Use 0ms delay for initial load, 500ms for search/filter debounce
     const isInitial = !search;
-    const timer = setTimeout(() => {
-      const params: any = { per_page: 20 };
+    const timer = setTimeout(async () => {
+      if (page > 1) {
+        setLoadingMore(true);
+      }
+      const params: any = { per_page: 20, page };
       if (activeTab === 'Nearest') params.section = 'nearby';
 
       // Format quick filter for API
@@ -181,10 +188,12 @@ const AllJobsScreen = () => {
       const hasQuickFilter = selectedQuickFilter !== null;
       const hasActiveFilters = activeFilters !== null && Object.keys(activeFilters).length > 0;
       const hasSearch = search.trim().length > 0;
+      
+      let actionResult;
 
       if (hasSearch || hasQuickFilter || hasActiveFilters) {
         setIsFiltered(true);
-        dispatch(
+        actionResult = await dispatch(
           filterJobs({
             ...params,
             ...activeFilters,
@@ -194,15 +203,26 @@ const AllJobsScreen = () => {
         );
       } else {
         setIsFiltered(false);
-        dispatch(fetchJobs(params));
+        actionResult = await dispatch(fetchJobs(params));
       }
+      
+      const resPayload: any = actionResult?.payload;
+      const jobsReturned = resPayload?.data?.jobs || resPayload?.jobs || [];
+      if (jobsReturned.length < 20) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+
+      setLoadingMore(false);
       setTimeout(() => setIsPending(false), 100);
     }, isInitial ? 0 : 500);
     return () => {
       clearTimeout(timer);
       setIsPending(false);
+      setLoadingMore(false);
     };
-  }, [dispatch, search, activeTab, selectedQuickFilter, route.params, activeFilters]);
+  }, [dispatch, search, activeTab, selectedQuickFilter, route.params, activeFilters, page]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('blur', () => {
@@ -215,12 +235,24 @@ const AllJobsScreen = () => {
         setActiveTab('All');
         setSelectedQuickFilter(null);
         setSearch('');
+        setPage(1);
       }
     });
     return unsubscribe;
   }, [navigation]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, activeTab, selectedQuickFilter, activeFilters]);
+
   const jobsToShow = isFiltered ? filteredJobs : (activeTab === 'Nearest' ? nearby : searchResults);
+
+  const loadMoreJobs = () => {
+    if (!loading && !loadingMore && hasMore && jobsToShow.length > 0) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   const renderJobItem = ({ item }: { item: any }) => {
     const companyName = item.employer?.company?.company_name || item.company_name || item.company || t('allJobs.hiringCompany', 'Hiring Company');
@@ -348,7 +380,7 @@ const AllJobsScreen = () => {
       {(activeTab === 'All' || activeTab === 'Nearest' || activeTab === 'Other Cities') && (
         <View style={styles.actionRow}>
           <Pressable
-            onPress={() => { setActiveTab('Nearest'); setSelectedQuickFilter(null); setIsFiltered(false); }}
+            onPress={() => { setActiveTab('Nearest'); setSelectedQuickFilter(null); setIsFiltered(false); setPage(1); }}
             style={[
               styles.bigActionCard,
               {
@@ -367,7 +399,7 @@ const AllJobsScreen = () => {
           </Pressable>
 
           <Pressable
-            onPress={() => { setActiveTab('Other Cities'); setSelectedQuickFilter(null); setIsFiltered(false); }}
+            onPress={() => { setActiveTab('Other Cities'); setSelectedQuickFilter(null); setIsFiltered(false); setPage(1); }}
             style={[
               styles.bigActionCard,
               {
@@ -425,15 +457,22 @@ const AllJobsScreen = () => {
         </ScrollView>
       </View>
 
-      {loading || isPending ? (
+      {isPending && page === 1 ? (
         <JobSkeleton />
       ) : (
         <FlatList
           data={jobsToShow}
           renderItem={renderJobItem}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item, index) => item.id.toString() + index.toString()}
           contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
+          onEndReached={loadMoreJobs}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={() => loadingMore ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : null}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
               <Icon name="briefcase" size={60} color={colors.border} />
@@ -448,6 +487,7 @@ const AllJobsScreen = () => {
                     setActiveTab('All');
                     setSelectedQuickFilter(null);
                     setSearch('');
+                    setPage(1);
                   }}
                   style={{
                     marginTop: 24,

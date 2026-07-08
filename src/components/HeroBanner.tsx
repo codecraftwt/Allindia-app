@@ -166,7 +166,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
             styles.slide,
             {
               width: CAROUSEL_WIDTH,
-              height: 120,
+              height: 160,
               padding: 0,
               backgroundColor: colors.surfaceHighlight,
               borderRadius: radius.md,
@@ -185,7 +185,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
             <Image
               source={{ uri: item.media_url }}
               style={{ width: '100%', height: '100%', borderRadius: radius.md }}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           )}
         </Pressable>

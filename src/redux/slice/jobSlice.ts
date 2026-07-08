@@ -54,6 +54,8 @@ export const filterJobs = createAsyncThunk(
     salary_max?: number;
     freshness?: string;
     location?: string;
+    page?: number;
+    per_page?: number;
   }, { getState, rejectWithValue }) => {
     try {
       const state = getState() as any;
@@ -216,21 +218,22 @@ const jobSlice = createSlice({
       })
       .addCase(fetchJobs.fulfilled, (state, action) => {
         state.loading = false;
-        const { section, sort } = action.meta.arg;
-        const jobs = action.payload.data.jobs;
+        const { section, sort, page } = action.meta.arg;
+        const jobs = action.payload.data?.jobs || action.payload.jobs || [];
+        const isAppend = page && page > 1;
 
         if (section === 'recommended' || sort === 'recommended') {
-          state.recommended = jobs;
+          state.recommended = isAppend ? [...state.recommended, ...jobs] : jobs;
         } else if (section === 'latest' || sort === 'latest') {
-          state.latest = jobs;
+          state.latest = isAppend ? [...state.latest, ...jobs] : jobs;
         } else if (section === 'trending' || sort === 'trending') {
-          state.trending = jobs;
+          state.trending = isAppend ? [...state.trending, ...jobs] : jobs;
         } else if (section === 'nearby') {
-          state.nearby = jobs;
+          state.nearby = isAppend ? [...state.nearby, ...jobs] : jobs;
         } else {
-          state.searchResults = jobs;
+          state.searchResults = isAppend ? [...state.searchResults, ...jobs] : jobs;
         }
-        state.meta = action.payload.meta;
+        state.meta = action.payload.meta || action.payload.data?.meta;
       })
       .addCase(fetchJobs.rejected, (state, action) => {
         state.loading = false;
@@ -255,8 +258,11 @@ const jobSlice = createSlice({
       })
       .addCase(filterJobs.fulfilled, (state, action) => {
         state.loading = false;
-        state.filteredJobs = action.payload.data.jobs || [];
-        state.meta = action.payload.meta;
+        const { page } = action.meta.arg;
+        const jobs = action.payload.data?.jobs || action.payload.jobs || [];
+        const isAppend = page && page > 1;
+        state.filteredJobs = isAppend ? [...state.filteredJobs, ...jobs] : jobs;
+        state.meta = action.payload.meta || action.payload.data?.meta;
       })
       .addCase(filterJobs.rejected, (state, action) => {
         state.loading = false;

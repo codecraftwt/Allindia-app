@@ -370,8 +370,10 @@ const JobDetailScreen: React.FC = () => {
       return '';
     }
     let raw = phone.replace(/[^\d+]/g, '');
-    if (raw.length === 10 && !raw.startsWith('+')) {
-      raw = '+91' + raw;
+    if (raw.startsWith('+91')) {
+      raw = raw.replace('+91', '');
+    } else if (raw.startsWith('91') && raw.length === 12) {
+      raw = raw.substring(2);
     }
     return `tel:${raw}`;
   }, [currentJob]);
