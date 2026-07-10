@@ -36,7 +36,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
-import { fetchProfile } from '../../../redux/slice/profileSlice';
+import { fetchProfile, fetchHRInvites } from '../../../redux/slice/profileSlice';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 import { fetchNotifications } from '../../../redux/slice/notificationSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -61,6 +61,7 @@ import ActionForYou from '../../../components/ActionForYou';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { QuickFilterCards } from './components/QuickFilterCards';
 import { HomeApplicationStatus } from './components/HomeApplicationStatus';
+import { HomeHRInviteStatus } from './components/HomeHRInviteStatus';
 import HomescreenHeader from './components/HomescreenHeader';
 import HomeCategoriesSection from './components/HomeCategoriesSection';
 import type { HomeJob } from './components/homeMockData';
@@ -625,25 +626,34 @@ const MemoizedHomeContent = React.memo(({
   goSearch,
   tagRotationStyle,
   navigation,
-  homeMedia
+  homeMedia,
+  hrInvites
 }: any) => {
   const { t } = useTranslation();
   const [showAppStatus, setShowAppStatus] = useState(false);
   const currentStatusId = 'mock_status_1'; // Assuming this would be dynamic in future
 
+  const [hiddenInviteId, setHiddenInviteId] = useState<number | null>(null);
+  const latestInvite = hrInvites && hrInvites.length > 0 ? hrInvites[0] : null;
+
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const hiddenId = await AsyncStorage.getItem('hiddenAppStatusId');
-        if (hiddenId !== currentStatusId) {
+        const hiddenStatusId = await AsyncStorage.getItem('hiddenAppStatusId');
+        if (hiddenStatusId !== currentStatusId) {
           setShowAppStatus(true);
+        }
+        
+        const storedHiddenInviteId = await AsyncStorage.getItem('hiddenHRInviteId');
+        if (storedHiddenInviteId) {
+          setHiddenInviteId(Number(storedHiddenInviteId));
         }
       } catch (e) {
         setShowAppStatus(true);
       }
     };
     checkStatus();
-  }, []);
+  }, [currentStatusId]);
 
   const handleHideAppStatus = async () => {
     setShowAppStatus(false);
@@ -651,6 +661,15 @@ const MemoizedHomeContent = React.memo(({
       await AsyncStorage.setItem('hiddenAppStatusId', currentStatusId);
     } catch (e) {
       console.log('Error hiding status', e);
+    }
+  };
+
+  const handleHideInvite = async (inviteId: number) => {
+    setHiddenInviteId(inviteId);
+    try {
+      await AsyncStorage.setItem('hiddenHRInviteId', inviteId.toString());
+    } catch (e) {
+      console.log('Error hiding invite', e);
     }
   };
 
@@ -678,6 +697,13 @@ const MemoizedHomeContent = React.memo(({
       ) : (
         <>
           <HeroBanner media={homeMedia} colors={colors} onPress={goSearch} />
+          {latestInvite && hiddenInviteId !== latestInvite.id && (
+            <HomeHRInviteStatus 
+              colors={colors} 
+              invite={latestInvite} 
+              onHide={() => handleHideInvite(latestInvite.id)} 
+            />
+          )}
           {showAppStatus && (
             <HomeApplicationStatus colors={colors} onHide={handleHideAppStatus} />
           )}
@@ -817,7 +843,7 @@ const HomeScreen: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { trending, nearby, recommended, latest, homeLoading } = useSelector((state: RootState) => state.jobs);
-  const { data: profileData } = useSelector((state: RootState) => state.profile);
+  const { data: profileData, hrInvites } = useSelector((state: RootState) => state.profile);
   const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
   const { unreadCount } = useSelector((state: RootState) => state.notifications);
@@ -1031,6 +1057,7 @@ const HomeScreen: React.FC = () => {
     if (!profileData) {
       dispatch(fetchProfile());
     }
+    dispatch(fetchHRInvites());
   }, [dispatch, profileData]);
 
   const displayName = useMemo(() => {
@@ -1075,6 +1102,7 @@ const HomeScreen: React.FC = () => {
     dispatch(fetchHomeFeed());
     dispatch(fetchProfile());
     dispatch(fetchNotifications());
+    dispatch(fetchHRInvites());
   }, [dispatch]);
 
   return (
@@ -1127,6 +1155,7 @@ const HomeScreen: React.FC = () => {
         tagRotationStyle={tagRotationStyle}
         navigation={navigation}
         homeMedia={homeMedia}
+        hrInvites={hrInvites}
       />
 
       {user && (

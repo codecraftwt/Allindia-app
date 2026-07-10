@@ -209,6 +209,9 @@ const jobSlice = createSlice({
   reducers: {
     clearCurrentJob: (state) => {
       state.currentJob = null;
+    },
+    setCurrentJob: (state, action) => {
+      state.currentJob = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -343,5 +346,5 @@ const jobSlice = createSlice({
   },
 });
 
-export const { clearCurrentJob } = jobSlice.actions;
+export const { clearCurrentJob, setCurrentJob } = jobSlice.actions;
 export default jobSlice.reducer;

@@ -83,9 +83,16 @@ android {
         applicationId "com.jobsindia"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 14
-        versionName "1.13"
+        versionCode 15
+        versionName "1.14"
     }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -125,9 +132,9 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-    implementation "com.facebook.fresco:animated-gif:3.1.3"
-    implementation "com.facebook.fresco:animated-webp:3.1.3"
-    implementation "com.facebook.fresco:webpsupport:3.1.3"
+    implementation "com.facebook.fresco:animated-gif:3.4.0"
+    implementation "com.facebook.fresco:animated-webp:3.4.0"
+    implementation "com.facebook.fresco:webpsupport:3.4.0"
 }
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

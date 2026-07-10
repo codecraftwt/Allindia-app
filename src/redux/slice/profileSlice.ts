@@ -144,6 +144,24 @@ export const fetchAppliedJobs = createAsyncThunk(
   }
 );
 
+export const fetchHRInvites = createAsyncThunk(
+  'profile/fetchHRInvites',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/invitations', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch HR invites');
+    }
+  }
+);
+
 export const fetchWishlist = createAsyncThunk(
   'profile/fetchWishlist',
   async (_, { getState, rejectWithValue }) => {
@@ -378,6 +396,7 @@ const profileSlice = createSlice({
     completion: null as any,
     appliedJobs: [] as any[],
     wishlistJobs: [] as any[],
+    hrInvites: [] as any[],
     applicationCounts: null as any,
     loading: false,
     countsLoading: false,
@@ -390,6 +409,7 @@ const profileSlice = createSlice({
       state.applicationCounts = null;
       state.appliedJobs = [];
       state.wishlistJobs = [];
+      state.hrInvites = [];
       state.error = null;
     }
   },
@@ -473,6 +493,18 @@ const profileSlice = createSlice({
         state.wishlistJobs = action.payload.data.jobs;
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchHRInvites.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchHRInvites.fulfilled, (state, action) => {
+        state.loading = false;
+        state.hrInvites = action.payload.data?.invitations || [];
+      })
+      .addCase(fetchHRInvites.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

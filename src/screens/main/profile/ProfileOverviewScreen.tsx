@@ -384,12 +384,11 @@ const ProfileOverviewScreen: React.FC = () => {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
-          <View style={{ paddingTop: insets.top + 12 }}>
-            <View style={styles.topNav}>
-              <View style={styles.iconBtn} />
-              <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold' }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
-              <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={styles.iconBtn}>
-                <Icon name="settings" size={24} color="#FFFFFF" />
+          <View style={{ paddingTop: insets.top + 8 }}>
+            <View style={[styles.topNav, { paddingHorizontal: 20, justifyContent: 'space-between', height: 44 }]}>
+              <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold', fontSize: 20 }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
+              <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={{ width: 44, height: 44, alignItems: 'flex-end', justifyContent: 'center' }}>
+                <Icon name="settings" size={22} color="#FFFFFF" />
               </Pressable>
             </View>
 
@@ -397,18 +396,18 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={styles.avatarContainer}>
                 <Pressable
                   onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
-                  style={[styles.avatarCircle, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF' }]}
+                  style={[styles.avatarCircle, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF', width: 72, height: 72, borderRadius: 36, borderWidth: 3 }]}
                 >
                   {profilePic && !imageError ? (
                     <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
                   ) : (
                     <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
                       {displayName && displayName !== 'User' ? (
-                        <Text style={[typography.h3, { color: colors.primary, fontSize: 32, fontWeight: 'bold' }]}>
+                        <Text style={[typography.h3, { color: colors.primary, fontSize: 28, fontWeight: 'bold' }]}>
                           {profileInitials(displayName)}
                         </Text>
                       ) : (
-                        <Icon name="user" size={36} color={colors.primary} />
+                        <Icon name="user" size={32} color={colors.primary} />
                       )}
                     </View>
                   )}
@@ -420,24 +419,24 @@ const ProfileOverviewScreen: React.FC = () => {
                 </Pressable>
                 <Pressable
                   onPress={() => setShowImagePicker(true)}
-                  style={styles.cameraIconBtn}
+                  style={[styles.cameraIconBtn, { width: 24, height: 24, borderRadius: 12, bottom: 0, right: 0 }]}
                 >
-                  <Icon name="camera" size={14} color={colors.primary} />
+                  <Icon name="camera" size={12} color={colors.primary} />
                 </Pressable>
               </View>
 
               <View style={styles.summaryText}>
-                <View style={styles.nameVerifiedRow}>
-                  <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 20 }]} numberOfLines={1}>{displayName}</Text>
-                  <MaterialIcon name="check-decagram" size={20} color="#60A5FA" style={{ marginLeft: 6 }} />
-                  <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={{ marginLeft: 12, backgroundColor: 'rgba(255,255,255,0.25)', width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="edit-3" size={16} color="#FFFFFF" />
+                <View style={[styles.nameVerifiedRow, { gap: 6 }]}>
+                  <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 18, fontWeight: '700' }]} numberOfLines={1}>{displayName}</Text>
+                  <MaterialIcon name="check-decagram" size={18} color="#60A5FA" />
+                  <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="edit-2" size={16} color="rgba(255,255,255,0.7)" />
                   </Pressable>
                 </View>
-                <Text style={[typography.body, { color: 'rgba(255,255,255,0.8)', marginTop: 2 }]} numberOfLines={1}>{displayEmail}</Text>
+                <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 2, fontSize: 13 }]} numberOfLines={1}>{displayEmail}</Text>
                 <View style={styles.phoneRow}>
-                  <Icon name="phone" size={12} color="rgba(255,255,255,0.6)" />
-                  <Text style={[typography.small, { color: 'rgba(255,255,255,0.8)', marginLeft: 6 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
+                  <Icon name="phone" size={12} color="rgba(255,255,255,0.7)" />
+                  <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 6, fontSize: 12 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
                 </View>
               </View>
             </View>
@@ -638,13 +637,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { paddingTop: 16 },
   headerContainer: {
-    paddingBottom: 28,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
   },
   topNav: {
@@ -664,17 +663,17 @@ const styles = StyleSheet.create({
   profileSummary: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    marginTop: 12,
+    paddingHorizontal: 20,
+    marginTop: 16,
   },
   avatarContainer: {
     position: 'relative',
   },
   avatarCircle: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 3,
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    borderWidth: 4,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -686,11 +685,11 @@ const styles = StyleSheet.create({
   },
   cameraIconBtn: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    bottom: 2,
+    right: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -698,11 +697,12 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
   summaryText: {
-    marginLeft: 20,
+    marginLeft: 16,
     flex: 1,
+    justifyContent: 'center',
   },
   nameVerifiedRow: {
     flexDirection: 'row',

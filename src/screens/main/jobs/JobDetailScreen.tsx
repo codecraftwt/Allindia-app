@@ -39,7 +39,7 @@ import JobActionModal from '../../../components/JobActionModal';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
-import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist, reportJob } from '../../../redux/slice/jobSlice';
+import { fetchJobDetail, clearCurrentJob, applyJob, toggleWishlist, reportJob, setCurrentJob } from '../../../redux/slice/jobSlice';
 import { fetchWishlist } from '../../../redux/slice/profileSlice';
 import api from '../../../api/axiosInstance';
 
@@ -122,7 +122,7 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
   );
 };
 
-export type JobDetailRouteParams = { jobId: string };
+export type JobDetailRouteParams = { jobId: string; initialJobData?: any; fromHrInvite?: boolean };
 
 type JobDetailRoute = RouteProp<{ JobDetail: JobDetailRouteParams }, 'JobDetail'>;
 
@@ -269,6 +269,7 @@ const JobDetailScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
   const route = useRoute<JobDetailRoute>();
   const jobId = route.params?.jobId ?? '';
+  const initialJobData = route.params?.initialJobData;
   const dispatch = useDispatch<AppDispatch>();
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
   const { isLoggedIn, token } = useSelector((state: RootState) => state.auth);
@@ -276,7 +277,9 @@ const JobDetailScreen: React.FC = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (jobId) {
+    if (initialJobData) {
+      dispatch(setCurrentJob(initialJobData));
+    } else if (jobId) {
       dispatch(fetchJobDetail(jobId));
     }
     if (isLoggedIn && wishlistJobs.length === 0) {
@@ -285,7 +288,7 @@ const JobDetailScreen: React.FC = () => {
     return () => {
       dispatch(clearCurrentJob());
     };
-  }, [dispatch, jobId, isLoggedIn]);
+  }, [dispatch, jobId, initialJobData, isLoggedIn]);
 
   useEffect(() => {
     if (currentJob) {
@@ -1214,7 +1217,7 @@ const JobDetailScreen: React.FC = () => {
         )}
 
         {/* Similar Jobs List */}
-        {similarJobs.length > 0 && (
+        {similarJobs.length > 0 && !route.params?.fromHrInvite && (
           <View style={{ marginTop: spacing.xl, marginHorizontal: -spacing.lg }}>
             <View style={{ paddingHorizontal: spacing.lg }}>
               <SectionTitle title={t('jobDetail.similarJobs', 'Similar Jobs')} colors={colors} />
@@ -1239,36 +1242,38 @@ const JobDetailScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.footer,
-          {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.border,
-            paddingBottom: 60,
-          },
-        ]}>
-        <View style={styles.footerContent}>
-          <PrimaryButton
-            title={isApplying ? t('jobDetail.processing', "Processing...") : (currentJob.is_applied ? t('jobDetail.alreadyApplied', "Already Applied") : t('jobDetail.applyNow', "Apply now"))}
-            onPress={applyNow}
-            colors={colors}
-            disabled={isApplying || currentJob.is_applied || !isLoggedIn}
-          />
-          {currentJob.allow_calls !== false && (
-            <View style={styles.footerRow}>
-              <PrimaryButton
-                title={t('jobDetail.callEmployer', "Call employer")}
-                onPress={callEmployer}
-                colors={colors}
-                variant="secondary"
-                style={styles.callBtn}
-                disabled={!isLoggedIn}
-              />
-            </View>
-          )}
+      {!route.params?.fromHrInvite && (
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
+              paddingBottom: 60,
+            },
+          ]}>
+          <View style={styles.footerContent}>
+            <PrimaryButton
+              title={isApplying ? t('jobDetail.processing', "Processing...") : (currentJob.is_applied ? t('jobDetail.alreadyApplied', "Already Applied") : t('jobDetail.applyNow', "Apply now"))}
+              onPress={applyNow}
+              colors={colors}
+              disabled={isApplying || currentJob.is_applied || !isLoggedIn}
+            />
+            {currentJob.allow_calls !== false && (
+              <View style={styles.footerRow}>
+                <PrimaryButton
+                  title={t('jobDetail.callEmployer', "Call employer")}
+                  onPress={callEmployer}
+                  colors={colors}
+                  variant="secondary"
+                  style={styles.callBtn}
+                  disabled={!isLoggedIn}
+                />
+              </View>
+            )}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Validation Modal */}
       <Modal

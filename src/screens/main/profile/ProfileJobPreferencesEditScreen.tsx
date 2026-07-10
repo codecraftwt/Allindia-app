@@ -79,9 +79,12 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
   const rotation = useSharedValue(0);
 
   const hasSelection = useMemo(() =>
-    category.subcategories?.some((sub: any) => selectedIds.map(Number).includes(Number(sub.id))) ?? false,
-    [category.subcategories, selectedIds]
+    selectedIds.map(Number).includes(Number(category.id)) ||
+    (category.subcategories?.some((sub: any) => selectedIds.map(Number).includes(Number(sub.id))) ?? false),
+    [category.id, category.subcategories, selectedIds]
   );
+
+  const hasSubcategories = category.subcategories && category.subcategories.length > 0;
 
   useEffect(() => {
     rotation.value = withTiming(isExpanded ? 180 : 0);
@@ -101,7 +104,13 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
       }
     ]}>
       <Pressable
-        onPress={() => onToggle(category.id.toString())}
+        onPress={() => {
+          if (!hasSubcategories) {
+            onSelectSub(category.id);
+          } else {
+            onToggle(category.id.toString());
+          }
+        }}
         style={[
           styles.accordionHeader,
           hasSelection && { backgroundColor: colors.primary + '08' }
@@ -120,9 +129,11 @@ const CategoryAccordion = React.memo(({ category, selectedIds, isExpanded, onTog
             <Text style={[typography.small, { color: colors.primary }]}>{t('profileJobPreferences.selectedSuffix', ' (Selected)')}</Text>
           )}
         </Text>
-        <Animated.View style={arrowStyle}>
-          <Icon name="chevron-down" size={18} color={hasSelection ? colors.primary : colors.textPlaceholder} />
-        </Animated.View>
+        {hasSubcategories && (
+          <Animated.View style={arrowStyle}>
+            <Icon name="chevron-down" size={18} color={hasSelection ? colors.primary : colors.textPlaceholder} />
+          </Animated.View>
+        )}
       </Pressable>
       {isExpanded && category.subcategories && (
         <View style={styles.subCatGrid}>
@@ -538,8 +549,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
 
     // Sort so categories with selected subcategories come first
     return [...filtered].sort((a, b) => {
-      const aHas = a.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
-      const bHas = b.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      const aHas = jobCategoryIds.map(Number).includes(Number(a.id)) || a.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
+      const bHas = jobCategoryIds.map(Number).includes(Number(b.id)) || b.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)));
       if (aHas && !bHas) return -1;
       if (!aHas && bHas) return 1;
       return 0;
@@ -576,6 +587,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     const validCityIds = cities.map(c => Number(c.id));
     
     const parentCategory = categories.find((cat: any) =>
+      jobCategoryIds.map(Number).includes(Number(cat.id)) ||
       cat.subcategories?.some((sub: any) => jobCategoryIds.map(Number).includes(Number(sub.id)))
     );
     const parentCategoryId = parentCategory ? Number(parentCategory.id) : null;

@@ -30,7 +30,7 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { fetchAppliedJobs, fetchApplicationCounts, fetchWishlist } from '../../../redux/slice/profileSlice';
+import { fetchAppliedJobs, fetchApplicationCounts, fetchWishlist, fetchHRInvites } from '../../../redux/slice/profileSlice';
 import { toggleWishlist } from '../../../redux/slice/jobSlice';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography } from '../../../theme/typography';
@@ -39,6 +39,7 @@ import GuestView from '../../../components/GuestView';
 import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 import ApplicationStatsDashboard from './components/ApplicationStatsDashboard';
 import JobActionModal from '../../../components/JobActionModal';
+import { BASE_URL } from '../../../api/axiosInstance';
 
 
 
@@ -310,6 +311,107 @@ function SavedJobCard({
   );
 }
 
+function HRInviteCard({ invite, colors, onPress }: { invite: any; colors: ThemeColors; onPress: () => void }) {
+  const companyObj = invite.company || invite.employer || {};
+  const employerObj = invite.employer || {};
+  const invitedAt = invite.invited_at
+    ? new Date(invite.invited_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '';
+
+  const cleanBaseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+  const rawLogo = companyObj.company_logo_url || employerObj.company_logo;
+  const logoUri = rawLogo
+    ? rawLogo.startsWith('http')
+      ? rawLogo
+      : `${cleanBaseUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`
+    : null;
+
+  const isJobApp = invite.type === 'job_application';
+  const jobDetails = invite.job_details;
+
+  const titleText = isJobApp && jobDetails?.title ? jobDetails.title : (companyObj.company_name || 'Anonymous Company');
+  const subtitleText = isJobApp && jobDetails?.title ? (companyObj.company_name || 'Anonymous Company') : 'HR Interview Invite';
+  const badgeText = isJobApp ? 'Application Invite' : 'Direct Invite';
+  const badgeColor = isJobApp ? '#10B981' : colors.primary;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.wiCard,
+        { 
+          backgroundColor: colors.surface, 
+          borderColor: badgeColor + '30',
+          borderWidth: 1.5,
+          shadowColor: badgeColor,
+          shadowOpacity: 0.08,
+          shadowRadius: 15,
+          elevation: 4,
+          overflow: 'hidden',
+        },
+      ]}>
+      {/* Top Banner / Badge */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        backgroundColor: badgeColor + '15',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderBottomLeftRadius: 12,
+        zIndex: 1,
+      }}>
+        <Text style={{ fontSize: 10, fontWeight: '700', color: badgeColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>{badgeText}</Text>
+      </View>
+
+      {/* Header Info */}
+      <View style={[styles.wiCardHeader, { marginTop: 4 }]}>
+        <View style={[styles.wiLogoBox, { backgroundColor: colors.surfaceHighlight, borderWidth: 1, borderColor: colors.border + '50' }]}>
+          {logoUri ? (
+            <Image source={{ uri: logoUri }} style={styles.wiLogo} />
+          ) : (
+            <Icon name="building" size={24} color={colors.primary} />
+          )}
+        </View>
+        <View style={styles.wiHeaderInfo}>
+          <Text style={[styles.wiJobTitle, { color: colors.textPrimary, fontSize: 18, marginBottom: 2, paddingRight: 60 }]} numberOfLines={1}>
+            {titleText}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Icon name={isJobApp ? "building" : "briefcase"} size={12} color={colors.primary} />
+            <Text style={[styles.wiCompanyName, { color: colors.primary, fontWeight: '600', marginTop: 0 }]} numberOfLines={1}>
+              {subtitleText}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Manager Info */}
+      <View style={[styles.wiManagerRow, { 
+        backgroundColor: colors.surfaceHighlight + '40', 
+        padding: 10, 
+        borderRadius: 8,
+        marginTop: 4,
+        marginBottom: 0
+      }]}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="user" size={16} color={colors.primary} />
+        </View>
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={[styles.wiManagerText, { color: colors.textPrimary, fontSize: 13, marginBottom: 2 }]}>
+            {employerObj.name || 'HR Manager'}
+          </Text>
+          {invitedAt && (
+            <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+              Invited you on {invitedAt}
+            </Text>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 const ApplicationsSkeleton: React.FC = () => {
   const { colors } = useTheme();
   return (
@@ -340,7 +442,7 @@ const ApplicationsScreen: React.FC = () => {
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
-  const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData, wishlistJobs } = useSelector((state: RootState) => state.profile);
+  const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData, wishlistJobs, hrInvites } = useSelector((state: RootState) => state.profile);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -348,10 +450,28 @@ const ApplicationsScreen: React.FC = () => {
   const [isPending, setIsPending] = useState(true);
   const [activeTab, setActiveTab] = useState<'applied' | 'saved' | 'invites'>('applied');
   const [confirmModal, setConfirmModal] = useState<{ visible: boolean; jobId: number | null }>({ visible: false, jobId: null });
+  const [companyModal, setCompanyModal] = useState<{ visible: boolean; company: any }>({ visible: false, company: null });
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
   const openJobDetail = (job: any) => {
     navigation.navigate('JobDetail', { jobId: job.slug || job.id });
+  };
+
+  const openInviteDetail = (invite: any) => {
+    // Check if job_details exists and actually has data (not just an empty object or array)
+    const hasJobDetails = invite.job_details && typeof invite.job_details === 'object' && Object.keys(invite.job_details).length > 0;
+    
+    if (hasJobDetails) {
+      navigation.navigate('JobDetail', { 
+        jobId: invite.job_details.slug || invite.job_details.id,
+        initialJobData: invite.job_details,
+        fromHrInvite: true
+      });
+    } else if (invite.company || invite.employer) {
+      setCompanyModal({ visible: true, company: invite.company || invite.employer });
+    } else {
+      Alert.alert('Notice', 'No details available for this invite.');
+    }
   };
 
   const filteredAppliedJobs = React.useMemo(() => {
@@ -381,11 +501,20 @@ const ApplicationsScreen: React.FC = () => {
     );
   }, [wishlistJobs, searchQuery]);
 
+  const filteredHRInvites = React.useMemo(() => {
+    if (!searchQuery) return hrInvites || [];
+    return (hrInvites || []).filter((invite: any) => 
+      invite.employer?.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invite.employer?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [hrInvites, searchQuery]);
+
   const onRefresh = React.useCallback(() => {
     setIsPending(true);
     dispatch(fetchAppliedJobs());
     dispatch(fetchApplicationCounts());
     dispatch(fetchWishlist());
+    dispatch(fetchHRInvites());
     setTimeout(() => setIsPending(false), 100);
   }, [dispatch]);
 
@@ -431,7 +560,7 @@ const ApplicationsScreen: React.FC = () => {
         />
       ) : (
           <FlatList
-            data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : []}
+            data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : filteredHRInvites}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               activeTab === 'applied' ? (
@@ -447,6 +576,12 @@ const ApplicationsScreen: React.FC = () => {
                   colors={colors}
                   onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
                   onOpenDetail={() => openJobDetail(item)}
+                />
+              ) : activeTab === 'invites' ? (
+                <HRInviteCard
+                  invite={item}
+                  colors={colors}
+                  onPress={() => openInviteDetail(item)}
                 />
               ) : null
             )}
@@ -562,7 +697,7 @@ const ApplicationsScreen: React.FC = () => {
                 )}
               </View>
 
-              {(loading || isPending) && (activeTab === 'applied' ? filteredAppliedJobs.length === 0 : filteredSavedJobs.length === 0) && (
+              {(loading || isPending) && (activeTab === 'applied' ? filteredAppliedJobs.length === 0 : activeTab === 'saved' ? filteredSavedJobs.length === 0 : filteredHRInvites.length === 0) && (
                 <ApplicationsSkeleton />
               )}
             </>
@@ -572,7 +707,7 @@ const ApplicationsScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={loading && (activeTab === 'applied' ? filteredAppliedJobs.length > 0 : filteredSavedJobs.length > 0)}
+              refreshing={loading && (activeTab === 'applied' ? filteredAppliedJobs.length > 0 : activeTab === 'saved' ? filteredSavedJobs.length > 0 : filteredHRInvites.length > 0)}
               onRefresh={onRefresh}
               colors={[colors.primary]}
             />
@@ -613,6 +748,161 @@ const ApplicationsScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      {/* Company Info Modal */}
+      <Modal
+        visible={companyModal.visible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setCompanyModal({ visible: false, company: null })}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          {/* Floating Back Button */}
+          <TouchableOpacity 
+            onPress={() => setCompanyModal({ visible: false, company: null })} 
+            style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Icon name="arrow-left" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          {companyModal.company && (
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: spacing.xxl * 2 }} bounces={false}>
+              
+              {/* Cover Image */}
+              <View style={{ height: 220, backgroundColor: colors.border }}>
+                {companyModal.company.company_cover_url ? (
+                  <Image source={{ uri: companyModal.company.company_cover_url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
+                ) : (
+                  <View style={{ width: '100%', height: '100%', backgroundColor: colors.primary + '20' }} />
+                )}
+              </View>
+
+              <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl }}>
+                {/* Logo and Quick Actions */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: -40, marginBottom: spacing.md }}>
+                  <View style={[styles.wiLogoBox, { width: 90, height: 90, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 3, borderColor: colors.surface, elevation: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 }]}>
+                    {companyModal.company.company_logo_url || companyModal.company.company_logo ? (
+                      <Image source={{ uri: companyModal.company.company_logo_url || `${BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL}${companyModal.company.company_logo}` }} style={styles.wiLogo} />
+                    ) : (
+                      <Icon name="building" size={40} color={colors.primary} />
+                    )}
+                  </View>
+                  {companyModal.company.website && (
+                    <TouchableOpacity 
+                      style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, elevation: 2, shadowColor: colors.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 }} 
+                      onPress={() => Linking.openURL(companyModal.company.website)}
+                    >
+                      <Text style={[typography.labelMedium, { color: '#FFFFFF', fontWeight: 'bold' }]}>Visit Website</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Company Header */}
+                <View style={{ marginBottom: spacing.lg }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <Text style={[typography.h2, { color: colors.textPrimary, fontWeight: '800' }]} numberOfLines={2}>
+                      {companyModal.company.company_name}
+                    </Text>
+                    {companyModal.company.verification_status === 'approved' && (
+                      <Icon name="check-circle" size={22} color="#10B981" />
+                    )}
+                  </View>
+                  {companyModal.company.industry_display_label && (
+                    <Text style={[typography.body, { color: colors.textSecondary, fontSize: 16, fontWeight: '500' }]}>
+                      {companyModal.company.industry_display_label}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Highlights Grid */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.xl }}>
+                  {companyModal.company.company_size && (
+                    <View style={{ flex: 1, minWidth: '45%', backgroundColor: colors.surfaceHighlight, padding: spacing.md, borderRadius: 16, borderWidth: 1, borderColor: colors.border + '30' }}>
+                      <Icon name="users" size={18} color={colors.primary} style={{ marginBottom: 10 }} />
+                      <Text style={[typography.labelSmall, { color: colors.textSecondary, marginBottom: 2 }]}>Company Size</Text>
+                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 15 }]}>{companyModal.company.company_size}</Text>
+                    </View>
+                  )}
+                  {companyModal.company.established_year && (
+                    <View style={{ flex: 1, minWidth: '45%', backgroundColor: colors.surfaceHighlight, padding: spacing.md, borderRadius: 16, borderWidth: 1, borderColor: colors.border + '30' }}>
+                      <Icon name="calendar" size={18} color={colors.primary} style={{ marginBottom: 10 }} />
+                      <Text style={[typography.labelSmall, { color: colors.textSecondary, marginBottom: 2 }]}>Founded In</Text>
+                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 15 }]}>{companyModal.company.established_year}</Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Description */}
+                {companyModal.company.description && (
+                  <View style={{ marginBottom: spacing.xl }}>
+                    <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: spacing.sm, fontWeight: '700' }]}>About Company</Text>
+                    <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 24 }]}>
+                      {companyModal.company.description}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Contact & Location Info */}
+                <View style={{ marginBottom: spacing.xl }}>
+                  <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: spacing.md, fontWeight: '700' }]}>Contact Info</Text>
+                  <View style={{ gap: spacing.lg, backgroundColor: colors.surface, padding: spacing.lg, borderRadius: 20, borderWidth: 1, borderColor: colors.border + '50', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 }}>
+                    {(companyModal.company.company_phone_display || companyModal.company.company_phone) && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon name="phone" size={18} color={colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontSize: 13, marginBottom: 2 }]}>Phone</Text>
+                          <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '600', fontSize: 16 }]}>{companyModal.company.company_phone_display || companyModal.company.company_phone}</Text>
+                        </View>
+                      </View>
+                    )}
+                    
+                    {companyModal.company.company_email && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon name="envelope" size={16} color={colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontSize: 13, marginBottom: 2 }]}>Email</Text>
+                          <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '600', fontSize: 16 }]}>{companyModal.company.company_email}</Text>
+                        </View>
+                      </View>
+                    )}
+                    
+                    {(companyModal.company.address || companyModal.company.city || companyModal.company.state) && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                        <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary + '15', alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon name="map-marker" size={18} color={colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[typography.labelMedium, { color: colors.textSecondary, fontSize: 13, marginBottom: 2 }]}>Location</Text>
+                          <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '500', fontSize: 15, lineHeight: 22 }]}>
+                            {[companyModal.company.address, companyModal.company.city, companyModal.company.state, companyModal.company.pincode].filter(Boolean).join(', ')}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                {/* Gallery */}
+                {companyModal.company.gallery_media && companyModal.company.gallery_media.length > 0 && (
+                  <View style={{ marginBottom: spacing.xl }}>
+                    <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: spacing.md, fontWeight: '700' }]}>Gallery</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.md }}>
+                      {companyModal.company.gallery_media.map((img: any, idx: number) => (
+                        <Image key={idx} source={{ uri: img.url }} style={{ width: 200, height: 140, borderRadius: 16, backgroundColor: colors.surfaceHighlight }} resizeMode="cover" />
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+              </View>
+            </ScrollView>
+          )}
         </View>
       </Modal>
 

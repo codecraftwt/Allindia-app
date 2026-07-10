@@ -1,4 +1,8 @@
-export type JobDetailParams = { jobId: string };
+export type JobDetailParams = { 
+  jobId: string;
+  initialJobData?: any;
+  fromHrInvite?: boolean;
+};
 
 export type HomeStackParamList = {
   HomeFeed: undefined;
