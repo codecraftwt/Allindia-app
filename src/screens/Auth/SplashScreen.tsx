@@ -307,7 +307,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
     const t = setTimeout(() => {
       checkVersionAndOnboarding();
     }, SPLASH_DELAY_MS);
-    
+
     return () => clearTimeout(t);
   }, [navigation]);
 
@@ -365,13 +365,19 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
             style={[
               styles.taglineContainer,
               {
-                backgroundColor: colors.primaryDark, // Using theme color dynamically
                 opacity: taglineOpacity,
                 transform: [{ translateY: taglineY }],
               },
             ]}
           >
-            <Text style={styles.taglineText}>FIND JOBS FASTER WITH AI</Text>
+            {/* Tricolor accent bar */}
+            <View style={styles.tricolorBar}>
+              <View style={[styles.tricolorSegment, { backgroundColor: '#FF9933' }]} />
+              <View style={[styles.tricolorSegment, { backgroundColor: '#FFFFFF' }]} />
+              <View style={[styles.tricolorSegment, { backgroundColor: '#138808' }]} />
+            </View>
+            <Text style={styles.taglineMain}>Made in India</Text>
+            <Text style={styles.taglineSub}>Made for India 🇮🇳</Text>
           </Animated.View>
         </View>
 
@@ -399,7 +405,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[styles.updateDesc, { color: colors.textSecondary }]}>
               A new version of JobIndia is available. Please update the app to continue using our services.
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.updateBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 Linking.openURL('market://details?id=com.jobsindia').catch(() => {
@@ -439,29 +445,46 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    // Removed white background and shadow for the white icon
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 6,
   },
   logo: {
     width: 260,
     height: 100,
   },
   taglineContainer: {
-    marginTop: 16,
-    // Background color is now set dynamically in the component
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    marginTop: 2,
+    paddingHorizontal: 28,
+    paddingVertical: 4,
+    alignItems: 'center',
   },
-  taglineText: {
-    color: '#ffffff',
-    fontSize: 13,
+  tricolorBar: {
+    flexDirection: 'row',
+    height: 3,
+    width: '60%',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  tricolorSegment: {
+    flex: 1,
+  },
+  taglineMain: {
+    color: '#FFFFFF',
+    fontSize: 16,
     fontWeight: '900',
-    letterSpacing: 2.5,
+    letterSpacing: 2,
     textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  taglineSub: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    marginTop: 4,
+    textTransform: 'uppercase',
   },
   footer: {
     position: 'absolute',

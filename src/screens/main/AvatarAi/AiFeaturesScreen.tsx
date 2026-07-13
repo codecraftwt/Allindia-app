@@ -1,12 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
-
-const { width } = Dimensions.get('window');
 
 const features = [
   {
@@ -17,19 +22,6 @@ const features = [
     icon: 'document-text',
     badgeText: 'AVAILABLE',
     badgeColor: '#10b981',
-    renderCustomUI: () => (
-      <View style={styles.resumeSnippet}>
-        <View style={styles.resumeHeader} />
-        <View style={styles.resumeLine} />
-        <View style={styles.resumeLineShort} />
-        <View style={[styles.resumeLine, { marginTop: 6 }]} />
-        <View style={styles.resumeLineShort} />
-        <View style={styles.badgeUi}>
-          <Icon name="checkmark-circle" size={10} color="#10b981" />
-          <Text style={styles.badgeUiText}>ATS Optimized</Text>
-        </View>
-      </View>
-    ),
   },
   {
     id: 2,
@@ -38,19 +30,7 @@ const features = [
     isLocked: true,
     icon: 'mic',
     badgeText: 'COMING SOON',
-    badgeColor: '#f59e0b',
-    renderCustomUI: () => (
-      <View style={styles.chatSnippet}>
-        <View style={styles.chatBubble}>
-          <Text style={styles.chatBubbleText}>"Can you describe a challenging bug?"</Text>
-        </View>
-        <View style={styles.waveformContainer}>
-          {[1, 2, 4, 2, 5, 3, 4, 2, 1].map((h, i) => (
-            <View key={i} style={[styles.waveBar, { height: h * 4.5 }]} />
-          ))}
-        </View>
-      </View>
-    ),
+    badgeColor: '#F59E0B',
   },
   {
     id: 3,
@@ -59,17 +39,7 @@ const features = [
     isLocked: true,
     icon: 'chatbubbles',
     badgeText: 'COMING SOON',
-    badgeColor: '#f59e0b',
-    renderCustomUI: () => (
-      <View style={styles.chatSnippet}>
-        <View style={[styles.chatBubble, { alignSelf: 'flex-end', backgroundColor: '#3b82f6', paddingVertical: 6, paddingHorizontal: 10 }]}>
-          <Text style={[styles.chatBubbleText, { color: '#ffffff' }]}>Negotiate salary?</Text>
-        </View>
-        <View style={[styles.chatBubble, { marginTop: 6, backgroundColor: '#1e293b', paddingVertical: 6, paddingHorizontal: 10 }]}>
-          <Text style={styles.chatBubbleText}>Based on market trends...</Text>
-        </View>
-      </View>
-    ),
+    badgeColor: '#F59E0B',
   },
   {
     id: 4,
@@ -78,23 +48,7 @@ const features = [
     isLocked: true,
     icon: 'analytics',
     badgeText: 'COMING SOON',
-    badgeColor: '#f59e0b',
-    renderCustomUI: () => (
-      <View style={styles.skillSnippet}>
-        <View style={styles.skillRow}>
-          <Text style={styles.skillLabel}>React Native</Text>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '80%', backgroundColor: '#10b981' }]} />
-          </View>
-        </View>
-        <View style={styles.skillRow}>
-          <Text style={styles.skillLabel}>System Design</Text>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '40%', backgroundColor: '#f59e0b' }]} />
-          </View>
-        </View>
-      </View>
-    ),
+    badgeColor: '#F59E0B',
   },
   {
     id: 5,
@@ -103,14 +57,7 @@ const features = [
     isLocked: true,
     icon: 'volume-high',
     badgeText: 'COMING SOON',
-    badgeColor: '#f59e0b',
-    renderCustomUI: () => (
-      <View style={styles.audioSnippet}>
-        <Icon name="notifications-outline" size={18} color="#94a3b8" />
-        <View style={styles.audioWaveLine} />
-        <View style={styles.audioDot} />
-      </View>
-    ),
+    badgeColor: '#F59E0B',
   },
 ];
 
@@ -129,53 +76,164 @@ const AiFeaturesScreen: React.FC = () => {
     }
   };
 
-  return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={{ padding: spacing.md, paddingTop: 10, paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <Text style={styles.titleText}>
-            Job India <Text style={{ color: '#f59e0b' }}>AI Suite</Text>
-          </Text>
-          <Text style={styles.subtitleText}>Unlock your career potential with advanced AI tools.</Text>
-        </View>
-
-        <View style={styles.listContainer}>
-          {features.map((item) => (
-            <Pressable key={item.id} onPress={() => handlePress(item)} style={styles.cardContainer}>
-              {/* Ribbon */}
-              <View style={[styles.ribbonContainer, { backgroundColor: item.badgeColor }]}>
-                <Text style={styles.ribbonText}>{item.badgeText}</Text>
+  const renderCustomUI = (item: typeof features[0]) => {
+    switch (item.id) {
+      case 1:
+        return (
+          <View style={[styles.resumeSnippet, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+            <View style={[styles.resumeHeader, { backgroundColor: colors.primaryLight, opacity: 0.35 }]} />
+            <View style={[styles.resumeLine, { backgroundColor: colors.muted }]} />
+            <View style={[styles.resumeLineShort, { backgroundColor: colors.muted }]} />
+            <View style={[styles.resumeLine, { marginTop: 6, backgroundColor: colors.muted }]} />
+            <View style={[styles.resumeLineShort, { backgroundColor: colors.muted }]} />
+            <View style={[styles.badgeUi, { backgroundColor: colors.successBackground }]}>
+              <Icon name="checkmark-circle" size={10} color={colors.success} />
+              <Text style={[styles.badgeUiText, { color: colors.success }]}>ATS Optimized</Text>
+            </View>
+          </View>
+        );
+      case 2:
+        return (
+          <View style={[styles.chatSnippet, { backgroundColor: colors.surfaceSecondary }]}>
+            <View style={[styles.chatBubble, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+              <Text style={[styles.chatBubbleText, { color: colors.textSecondary }]}>
+                "Can you describe a challenging bug?"
+              </Text>
+            </View>
+            <View style={styles.waveformContainer}>
+              {[1, 2, 4, 2, 5, 3, 4, 2, 1].map((h, i) => (
+                <View key={i} style={[styles.waveBar, { height: h * 4.5, backgroundColor: colors.warning }]} />
+              ))}
+            </View>
+          </View>
+        );
+      case 3:
+        return (
+          <View style={[styles.chatSnippet, { backgroundColor: colors.surfaceSecondary }]}>
+            <View style={[styles.chatBubble, { alignSelf: 'flex-end', backgroundColor: colors.primary, paddingVertical: 6, paddingHorizontal: 10 }]}>
+              <Text style={[styles.chatBubbleText, { color: colors.onPrimary }]}>Negotiate salary?</Text>
+            </View>
+            <View style={[styles.chatBubble, { marginTop: 6, backgroundColor: colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderWidth: 1, borderColor: colors.border }]}>
+              <Text style={[styles.chatBubbleText, { color: colors.textSecondary }]}>Based on market trends...</Text>
+            </View>
+          </View>
+        );
+      case 4:
+        return (
+          <View style={[styles.skillSnippet, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+            <View style={styles.skillRow}>
+              <Text style={[styles.skillLabel, { color: colors.textSecondary }]}>React Native</Text>
+              <View style={[styles.progressBarBg, { backgroundColor: colors.progressTrack }]}>
+                <View style={[styles.progressBarFill, { width: '80%', backgroundColor: colors.success }]} />
               </View>
+            </View>
+            <View style={styles.skillRow}>
+              <Text style={[styles.skillLabel, { color: colors.textSecondary }]}>System Design</Text>
+              <View style={[styles.progressBarBg, { backgroundColor: colors.progressTrack }]}>
+                <View style={[styles.progressBarFill, { width: '40%', backgroundColor: colors.warning }]} />
+              </View>
+            </View>
+          </View>
+        );
+      case 5:
+        return (
+          <View style={[styles.audioSnippet, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+            <Icon name="notifications-outline" size={18} color={colors.primary} />
+            <View style={[styles.audioWaveLine, { backgroundColor: colors.border }]} />
+            <View style={[styles.audioDot, { backgroundColor: colors.warning }]} />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
-              {/* Header */}
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.primaryDark }]} edges={['top', 'left', 'right']}>
+
+      {/* ── Blue Hero Header — fixed, does not scroll ── */}
+      <View style={[styles.heroSection, { backgroundColor: colors.primaryDark }]}>
+        <View style={[styles.decorCircle1, { backgroundColor: colors.primary, opacity: 0.25 }]} />
+        <View style={[styles.decorCircle2, { backgroundColor: colors.primaryLight, opacity: 0.15 }]} />
+        <View style={styles.heroTextBlock}>
+          <View style={[styles.heroBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+            <Icon name="sparkles" size={11} color="#FBBF24" />
+            <Text style={styles.heroBadgeText}>Powered by AI</Text>
+          </View>
+          <Text style={styles.heroTitle}>
+            Job India <Text style={{ color: '#FBBF24' }}>AI Suite</Text>
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Unlock your career potential with advanced AI tools.
+          </Text>
+        </View>
+      </View>
+
+      {/* ── Cards Section — only this scrolls ── */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={[styles.scrollArea, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View>
+          {features.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => handlePress(item)}
+              style={({ pressed }) => [
+                styles.cardContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  shadowColor: colors.primaryDark,
+                  opacity: pressed ? 0.93 : 1,
+                },
+              ]}
+            >
+              {/* Left accent bar */}
+              <View style={[styles.cardAccentBar, { backgroundColor: item.isLocked ? colors.muted : colors.primary }]} />
+
+              {/* Card Header */}
               <View style={styles.cardHeader}>
-                <View style={styles.iconWrapper}>
-                  <Icon name={item.icon} size={16} color="#ffffff" />
+                <View style={[styles.iconWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+                  <Icon name={item.icon} size={17} color={item.isLocked ? colors.textSecondary : colors.primary} />
                   {item.isLocked && (
-                    <View style={styles.lockDot}>
-                      <Icon name="lock-closed" size={7} color="#ffffff" />
+                    <View style={[styles.lockDot, { backgroundColor: colors.error, borderColor: colors.surface }]}>
+                      <Icon name="lock-closed" size={7} color="#fff" />
                     </View>
                   )}
                 </View>
                 <View style={styles.headerTextContainer}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+                  <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+                  <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+                </View>
+                {/* Pill Badge — always visible */}
+                <View style={[styles.pillBadge, { backgroundColor: item.badgeColor }]}>
+                  <Text style={styles.pillBadgeText}>{item.badgeText}</Text>
                 </View>
               </View>
 
-              {/* Custom UI Snippet (Short but Sweet) */}
-              <View style={styles.snippetContainer}>
-                {item.renderCustomUI()}
-              </View>
+              {/* Snippet */}
+              <View style={styles.snippetContainer}>{renderCustomUI(item)}</View>
 
-              {/* Bottom Action Area */}
-              <View style={styles.cardFooter}>
-                <View style={styles.footerButton}>
-                  <Icon name={item.isLocked ? "lock-closed" : "arrow-forward"} size={14} color={item.isLocked ? "#94a3b8" : "#f59e0b"} />
-                  <Text style={[styles.footerButtonText, { color: item.isLocked ? '#94a3b8' : '#f59e0b' }]}>
+              {/* Footer */}
+              <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
+                <View
+                  style={[
+                    styles.footerButton,
+                    {
+                      backgroundColor: item.isLocked ? colors.surfaceSecondary : colors.primary,
+                      borderWidth: item.isLocked ? 1 : 0,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Icon
+                    name={item.isLocked ? 'lock-closed' : 'arrow-forward'}
+                    size={13}
+                    color={item.isLocked ? colors.textSecondary : colors.onPrimary}
+                  />
+                  <Text style={[styles.footerButtonText, { color: item.isLocked ? colors.textSecondary : colors.onPrimary }]}>
                     {item.isLocked ? 'Locked' : 'Try Now'}
                   </Text>
                 </View>
@@ -189,191 +247,199 @@ const AiFeaturesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  safe: {
+  safe: { flex: 1 },
+
+  // ── Scroll area ──
+  scrollArea: {
     flex: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 0,
+  scrollContent: {
+    paddingHorizontal: spacing.md,
+    paddingTop: 20,
+    paddingBottom: 100,
   },
-  titleText: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#0f172a',
-    letterSpacing: -0.5,
-  },
-  subtitleText: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  listContainer: {
-    paddingHorizontal: 4,
-  },
-  cardContainer: {
-    backgroundColor: '#0f172a',
-    borderRadius: 16,
-    marginBottom: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#1e293b',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-    position: 'relative',
+  // ── Hero ──
+  heroSection: {
+    paddingHorizontal: spacing.md,
+    paddingTop: 18,
+    paddingBottom: 36,
     overflow: 'hidden',
+    position: 'relative',
   },
-  ribbonContainer: {
+  decorCircle1: {
     position: 'absolute',
-    top: 14,
-    right: -30,
-    transform: [{ rotate: '45deg' }],
-    paddingVertical: 3,
-    paddingHorizontal: 30,
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    top: -50,
+    right: -40,
   },
-  ribbonText: {
-    color: '#ffffff',
-    fontSize: 8,
+  decorCircle2: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    bottom: -20,
+    left: 20,
+  },
+  heroTextBlock: {
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 10,
+    gap: 5,
+  },
+  heroBadgeText: {
+    color: '#FBBF24',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  heroTitle: {
+    fontSize: 26,
     fontWeight: '900',
-    letterSpacing: 1,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  heroSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+
+  // ── Cards ──
+  cardContainer: {
+    borderRadius: 16,
+    marginBottom: 14,
+    paddingTop: 14,
+    paddingBottom: 0,
+    paddingLeft: 18,
+    paddingRight: 14,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 6,
+    position: 'relative',
+  },
+  cardAccentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  },
+  pillBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginLeft: 6,
+  },
+  pillBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
-    paddingRight: 40, // Space for ribbon
   },
   iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1e293b',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#334155',
   },
   lockDot: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#ef4444',
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    bottom: -3,
+    right: -3,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#0f172a',
   },
-  headerTextContainer: {
-    flex: 1,
-  },
+  headerTextContainer: { flex: 1 },
   cardTitle: {
-    color: '#ffffff',
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
   cardSubtitle: {
-    color: '#94a3b8',
     fontSize: 11,
     marginTop: 2,
+    fontWeight: '500',
   },
-  snippetContainer: {
-    marginVertical: 6,
-  },
+  snippetContainer: { marginBottom: 6 },
   cardFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#1e293b',
-    paddingTop: 10,
-    marginTop: 6,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   footerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e293b',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 7,
+    borderRadius: 20,
   },
   footerButtonText: {
     fontWeight: '700',
     marginLeft: 6,
     fontSize: 12,
   },
-  // -- Snippet Styles --
+
+  // Snippets
   resumeSnippet: {
-    backgroundColor: '#1e293b',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#334155',
     position: 'relative',
+    minHeight: 70,
   },
-  resumeHeader: {
-    width: '40%',
-    height: 6,
-    backgroundColor: '#334155',
-    borderRadius: 3,
-    marginBottom: 8,
-  },
-  resumeLine: {
-    width: '100%',
-    height: 4,
-    backgroundColor: '#334155',
-    borderRadius: 2,
-    marginBottom: 4,
-  },
-  resumeLineShort: {
-    width: '70%',
-    height: 4,
-    backgroundColor: '#334155',
-    borderRadius: 2,
-  },
+  resumeHeader: { width: '40%', height: 6, borderRadius: 3, marginBottom: 8 },
+  resumeLine: { width: '100%', height: 4, borderRadius: 2, marginBottom: 4 },
+  resumeLineShort: { width: '70%', height: 4, borderRadius: 2 },
   badgeUi: {
     position: 'absolute',
     bottom: 8,
     right: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#064e3b',
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
   },
-  badgeUiText: {
-    color: '#34d399',
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginLeft: 4,
-  },
-  chatSnippet: {
-    backgroundColor: '#0f172a',
-  },
+  badgeUiText: { fontSize: 8, fontWeight: 'bold', marginLeft: 4 },
+  chatSnippet: { borderRadius: 10, padding: 8 },
   chatBubble: {
-    backgroundColor: '#1e293b',
     padding: 8,
     borderRadius: 12,
     borderBottomLeftRadius: 4,
     maxWidth: '85%',
   },
-  chatBubbleText: {
-    color: '#cbd5e1',
-    fontSize: 11,
-    fontStyle: 'italic',
-  },
+  chatBubbleText: { fontSize: 11, fontStyle: 'italic' },
   waveformContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -381,58 +447,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 3,
   },
-  waveBar: {
-    width: 3,
-    backgroundColor: '#f59e0b',
-    borderRadius: 1.5,
-  },
-  skillSnippet: {
-    backgroundColor: '#1e293b',
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  skillRow: {
-    marginBottom: 6,
-  },
-  skillLabel: {
-    color: '#94a3b8',
-    fontSize: 10,
-    marginBottom: 2,
-    fontWeight: '600',
-  },
-  progressBarBg: {
-    height: 4,
-    backgroundColor: '#0f172a',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
+  waveBar: { width: 3, borderRadius: 1.5 },
+  skillSnippet: { borderRadius: 10, padding: 10, borderWidth: 1 },
+  skillRow: { marginBottom: 6 },
+  skillLabel: { fontSize: 10, marginBottom: 3, fontWeight: '600' },
+  progressBarBg: { height: 5, borderRadius: 3, overflow: 'hidden' },
+  progressBarFill: { height: '100%', borderRadius: 3 },
   audioSnippet: {
-    backgroundColor: '#1e293b',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#334155',
     flexDirection: 'row',
     alignItems: 'center',
   },
-  audioWaveLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#334155',
-    marginHorizontal: 10,
-  },
-  audioDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#f59e0b',
-  },
+  audioWaveLine: { flex: 1, height: 1, marginHorizontal: 10 },
+  audioDot: { width: 8, height: 8, borderRadius: 4 },
 });
 
 export default AiFeaturesScreen;
