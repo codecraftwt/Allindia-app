@@ -28,6 +28,8 @@ export const updatePersonalProfile = createAsyncThunk(
     date_of_birth?: string;
     address?: string;
     bio?: string;
+    current_city?: string;
+    city?: string;
   }, { getState, dispatch, rejectWithValue }) => {
     try {
       const state = getState() as any;
@@ -50,7 +52,9 @@ export const updatePreferencesProfile = createAsyncThunk(
   'profile/updatePreferencesProfile',
   async (preferencesData: {
     current_city_id?: number;
+    current_city?: string;
     preferred_city_ids?: number[];
+    preferred_cities?: string[];
     job_category_id?: number;
     expected_salary_min?: number;
     expected_salary_max?: number;

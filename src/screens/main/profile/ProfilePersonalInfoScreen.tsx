@@ -535,7 +535,17 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         date_of_birth: draft.dateOfBirth,
         address: address,
         bio: draft.bio,
+        current_city: draft.city,
+        city: draft.city,
       })).unwrap();
+
+      try {
+        await dispatch(updatePreferencesProfile({
+          current_city: draft.city,
+        })).unwrap();
+      } catch (e) {
+        console.log('Failed to save current_city to preferences', e);
+      }
       
       showToast('Profile updated successfully!', 'success');
       

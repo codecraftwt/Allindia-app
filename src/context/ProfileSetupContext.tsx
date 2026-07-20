@@ -5,8 +5,8 @@ export type Gender = 'male' | 'female' | 'other' | '';
 export type ProfileSetupDraft = {
   fullName: string;
   gender: Gender;
-  /** ISO YYYY-MM-DD */
   dateOfBirth: string;
+  currentCity: string;
   city: string;
   area: string;
   qualification: string;
@@ -25,6 +25,7 @@ const initialDraft: ProfileSetupDraft = {
   fullName: '',
   gender: '',
   dateOfBirth: '',
+  currentCity: '',
   city: '',
   area: '',
   qualification: '',

@@ -72,14 +72,27 @@ const ProfileOverviewScreen: React.FC = () => {
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
   const [imageError, setImageError] = useState(false);
 
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const translateYAnim = React.useRef(new Animated.Value(40)).current;
+
   useEffect(() => {
     setImageError(false);
   }, [profile?.personal?.profile_picture_url, user?.profile_picture_url]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true, easing: Easing.out(Easing.exp) }),
+      Animated.timing(translateYAnim, { toValue: 0, duration: 800, useNativeDriver: true, easing: Easing.out(Easing.exp) }),
+    ]).start();
+  }, [fadeAnim, translateYAnim]);
 
   // Optimized Animation Values (Native Driver Compatible)
   const shimmerAnim = React.useRef(new Animated.Value(0)).current;
   const floatAnim = React.useRef(new Animated.Value(0)).current;
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const rippleScale = React.useRef(new Animated.Value(1)).current;
+  const rippleOpacity = React.useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     // Shimmer Loop
@@ -105,12 +118,21 @@ const ProfileOverviewScreen: React.FC = () => {
     );
     pulseLoop.start();
 
+    const rippleLoop = Animated.loop(
+      Animated.parallel([
+        Animated.timing(rippleScale, { toValue: 1.6, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.timing(rippleOpacity, { toValue: 0, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    rippleLoop.start();
+
     return () => {
       shimmerLoop.stop();
       floatLoop.stop();
       pulseLoop.stop();
+      rippleLoop.stop();
     };
-  }, [shimmerAnim, floatAnim, pulseAnim]);
+  }, [shimmerAnim, floatAnim, pulseAnim, rippleScale, rippleOpacity]);
 
   const getNextActionText = () => {
     if (!completion?.missing_sections || completion.missing_sections.length === 0) return t('profileOverview.allDone', 'Profile Complete!');
@@ -223,145 +245,57 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
-  const SectionHeader = ({ title }: { title: string }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={[typography.labelMedium, { color: colors.textSecondary, letterSpacing: 1 }]}>{title.toUpperCase()}</Text>
-      <View style={[styles.headerLine, { backgroundColor: colors.border }]} />
-    </View>
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [0, -40],
+    extrapolate: 'clamp',
+  });
+
+  const GroupedSection = ({ title, children }: any) => (
+    <Animated.View style={[styles.groupContainer, { opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
+      {title && <Text style={[typography.labelMedium, styles.groupTitle, { color: colors.textSecondary }]}>{title}</Text>}
+      <View style={[styles.groupCard, { backgroundColor: colors.surface, borderColor: mode === 'dark' ? colors.border : 'rgba(0,0,0,0.04)' }]}>
+        {children}
+      </View>
+    </Animated.View>
   );
 
-  const SectionItem = ({ title, subtitle, icon, onPress, isMissing, color }: any) => (
+  const SettingsRow = ({ title, subtitle, icon, onPress, isMissing, color, isLast }: any) => (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
-        styles.sectionCard,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        pressed && { opacity: 0.7, backgroundColor: colors.surfaceHighlight }
+        styles.settingsRow,
+        pressed && { backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' },
+        !isLast && { borderBottomWidth: 1, borderBottomColor: mode === 'dark' ? colors.border : 'rgba(0,0,0,0.04)' }
       ]}
     >
-      <View style={[styles.sectionIconBox, { backgroundColor: (color || colors.primary) + '10' }]}>
-        <MaterialIcon name={icon} size={24} color={color || colors.primary} />
+      <View style={[styles.settingsIconBox, { backgroundColor: (color || colors.primary) + '15' }]}>
+        <MaterialIcon name={icon} size={22} color={color || colors.primary} />
       </View>
-      <View style={styles.sectionText}>
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16 }]}>{title}</Text>
-        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 2 }]}>
+      <View style={styles.settingsText}>
+        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '600' }]}>{title}</Text>
+        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 3 }]}>
           {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
         </Text>
       </View>
       {isMissing ? (
-        <View style={[styles.statusBadge, { backgroundColor: colors.error + '15' }]}>
-          <Text style={[typography.tiny, { color: colors.error, fontWeight: 'bold' }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: colors.error + '10' }]}>
+          <Text style={[typography.tiny, { color: colors.error, fontWeight: '700', letterSpacing: 0.5 }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
         </View>
       ) : (
-        <Icon name="chevron-right" size={20} color={colors.textPlaceholder} />
+        <Icon name="chevron-right" size={18} color={colors.textPlaceholder} />
       )}
     </Pressable>
   );
 
-  const ProfileTile = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
-    const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-150, 150] });
-
-    const handlePress = () => {
-      requestAnimationFrame(() => {
-        onPress();
-      });
-    };
-
-    return (
-      <Pressable
-        onPress={handlePress}
-        style={({ pressed }) => [
-          styles.tile,
-          { backgroundColor: colors.surface, borderColor: isMissing ? colors.error : colors.border },
-          pressed && { opacity: 0.8 }
-        ]}
-      >
-        {isMissing && (
-          <Animated.View style={[styles.shimmerBeam, { backgroundColor: colors.primary + '25', transform: [{ translateX: shimmerTranslate }, { skewX: '-20deg' }] }]} />
-        )}
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: 12 }]} numberOfLines={1}>{title}</Text>
-        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 4 }]} numberOfLines={1}>
-          {isMissing ? t('profileOverview.missing', 'Missing') : subtitle}
-        </Text>
-        {isMissing ? (
-          <View style={[styles.tileAddBadge, { backgroundColor: colors.error }]}><Icon name="plus" size={10} color="#FFF" /></View>
-        ) : (
-          <View style={[styles.tileDoneBadge, { backgroundColor: colors.success + '20' }]}><Icon name="check" size={10} color={colors.success} /></View>
-        )}
-      </Pressable>
-    );
-  };
-
-  const WideMenuItem = ({ title, subtitle, icon, onPress, isMissing, color }: any) => {
-    const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-width, width] });
-
-    const handlePress = () => {
-      requestAnimationFrame(() => {
-        onPress();
-      });
-    };
-
-    return (
-      <Pressable
-        onPress={handlePress}
-        style={({ pressed }) => [
-          styles.wideItem,
-          { backgroundColor: colors.surface, borderColor: isMissing ? colors.error : colors.border },
-          pressed && { opacity: 0.8 }
-        ]}
-      >
-        {isMissing && (
-          <Animated.View style={[styles.shimmerBeam, { backgroundColor: colors.primary + '25', transform: [{ translateX: shimmerTranslate }, { skewX: '-20deg' }] }]} />
-        )}
-        <View style={[styles.menuIconContainer, { backgroundColor: (isMissing ? colors.error : (color || colors.primary)) + '15' }]}>
-          <Icon name={icon} size={18} color={isMissing ? colors.error : (color || colors.primary)} />
-        </View>
-        <View style={styles.menuTextContainer}>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{title}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary }]} numberOfLines={1}>
-              {isMissing ? t('profileOverview.missingAddNow', 'Missing! Add now to boost profile ') : subtitle}
-            </Text>
-            {isMissing && <Image source={require('../../../assets/rocket-bg.png')} style={{ width: 14, height: 14, marginLeft: 4, resizeMode: 'contain' }} />}
-          </View>
-        </View>
-        <Icon name={isMissing ? "plus-circle" : "chevron-right"} size={16} color={isMissing ? colors.error : colors.textPlaceholder} />
-      </Pressable>
-    );
-  };
-
   const ProfileSkeleton = () => (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scroll}
-    >
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={[styles.avatarCircle, { width: 74, height: 74, borderRadius: 37, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', borderWidth: 0 }]}>
-            <Icon name="user" size={32} color={colors.border} />
-          </View>
-          <View style={styles.headerInfo}>
-            <SkeletonPulse style={{ height: 24, width: '60%', borderRadius: 4, marginBottom: 8 }} />
-            <SkeletonPulse style={{ height: 16, width: '40%', borderRadius: 4 }} />
-            <SkeletonPulse style={{ height: 28, width: 80, borderRadius: 14, marginTop: 12 }} />
-          </View>
-        </View>
-        <View style={styles.strengthContainer}>
-          <SkeletonPulse style={{ height: 40, width: '100%', borderRadius: 12 }} />
-        </View>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <View style={[styles.headerBackground, { height: 340 }]}>
+        <SkeletonPulse style={{ flex: 1, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }} />
       </View>
-      <View style={styles.menuContainer}>
-        <SkeletonPulse style={{ height: 15, width: 100, borderRadius: 4, marginBottom: 15, marginTop: 10 }} />
-        <View style={styles.tilesRow}>
-          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
-          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
-        </View>
-        <View style={styles.tilesRow}>
-          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
-          <SkeletonPulse style={{ flex: 1, height: 120, borderRadius: 20 }} />
-        </View>
-        <SkeletonPulse style={{ height: 15, width: 100, borderRadius: 4, marginBottom: 15, marginTop: 20 }} />
-        <SkeletonPulse style={{ height: 70, width: '100%', borderRadius: 20, marginBottom: 10 }} />
+      <View style={{ paddingHorizontal: spacing.md, marginTop: -20 }}>
+        <SkeletonPulse style={{ height: 100, borderRadius: 24, marginBottom: 20 }} />
+        <SkeletonPulse style={{ height: 300, borderRadius: 24 }} />
       </View>
     </ScrollView>
   );
@@ -383,180 +317,191 @@ const ProfileOverviewScreen: React.FC = () => {
 
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={[styles.headerContainer, { backgroundColor: colors.primary }]}>
-          <View style={{ paddingTop: insets.top + 8 }}>
-            <View style={[styles.topNav, { paddingHorizontal: 20, justifyContent: 'space-between', height: 44 }]}>
-              <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold', fontSize: 20 }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
-              <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={{ width: 44, height: 44, alignItems: 'flex-end', justifyContent: 'center' }}>
-                <Icon name="settings" size={22} color="#FFFFFF" />
-              </Pressable>
-            </View>
+        <View style={[styles.headerBackground, { backgroundColor: mode === 'dark' ? '#1E293B' : colors.primary }]}>
+          {/* Subtle gradient / decorative circles */}
+          <View style={[styles.decorativeCircle, { top: -50, left: -50, backgroundColor: '#FFFFFF', opacity: 0.05 }]} />
+          <View style={[styles.decorativeCircle, { top: 100, right: -80, width: 250, height: 250, backgroundColor: '#FFFFFF', opacity: 0.03 }]} />
+        </View>
 
-            <View style={styles.profileSummary}>
-              <View style={styles.avatarContainer}>
-                <Pressable
-                  onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
-                  style={[styles.avatarCircle, { backgroundColor: '#FFFFFF', borderColor: '#FFFFFF', width: 72, height: 72, borderRadius: 36, borderWidth: 3 }]}
-                >
-                  {profilePic && !imageError ? (
-                    <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
+        <View style={[styles.topNav, { paddingTop: insets.top + 8, paddingHorizontal: 20, justifyContent: 'space-between', zIndex: 10 }]}>
+          <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold', fontSize: 22, letterSpacing: 0.5 }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
+          <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={({ pressed }) => [styles.settingsBtn, pressed && { opacity: 0.7 }]}>
+            <Icon name="settings" size={24} color="#FFFFFF" />
+          </Pressable>
+        </View>
+
+        <View style={styles.profileSummaryCentered}>
+          <View style={styles.avatarContainer}>
+            <Pressable
+              onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
+              style={[styles.avatarCircleHuge, { backgroundColor: '#FFFFFF' }]}
+            >
+              {profilePic && !imageError ? (
+                <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
+              ) : (
+                <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
+                  {displayName && displayName !== 'User' ? (
+                    <Text style={[typography.h3, { color: colors.primary, fontSize: 36, fontWeight: 'bold' }]}>
+                      {profileInitials(displayName)}
+                    </Text>
                   ) : (
-                    <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
-                      {displayName && displayName !== 'User' ? (
-                        <Text style={[typography.h3, { color: colors.primary, fontSize: 28, fontWeight: 'bold' }]}>
-                          {profileInitials(displayName)}
-                        </Text>
-                      ) : (
-                        <Icon name="user" size={32} color={colors.primary} />
-                      )}
-                    </View>
+                    <Icon name="user" size={40} color={colors.primary} />
                   )}
-                  {isUploading && (
-                    <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
-                      <ActivityIndicator color="#FFF" size="small" />
-                    </View>
-                  )}
-                </Pressable>
-                <Pressable
-                  onPress={() => setShowImagePicker(true)}
-                  style={[styles.cameraIconBtn, { width: 24, height: 24, borderRadius: 12, bottom: 0, right: 0 }]}
-                >
-                  <Icon name="camera" size={12} color={colors.primary} />
-                </Pressable>
-              </View>
+                </View>
+              )}
+              {isUploading && (
+                <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+                  <ActivityIndicator color="#FFF" size="large" />
+                </View>
+              )}
+            </Pressable>
+            <Pressable
+              onPress={() => setShowImagePicker(true)}
+              style={styles.cameraIconBtnPremium}
+            >
+              <Icon name="camera" size={14} color={colors.primary} />
+            </Pressable>
+          </View>
 
-              <View style={styles.summaryText}>
-                <View style={[styles.nameVerifiedRow, { gap: 6 }]}>
-                  <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 18, fontWeight: '700' }]} numberOfLines={1}>{displayName}</Text>
-                  <MaterialIcon name="check-decagram" size={18} color="#60A5FA" />
-                  <Pressable onPress={() => navigation.navigate('ProfilePersonalInfo')} style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="edit-2" size={16} color="rgba(255,255,255,0.7)" />
-                  </Pressable>
-                </View>
-                <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 2, fontSize: 13 }]} numberOfLines={1}>{displayEmail}</Text>
-                <View style={styles.phoneRow}>
-                  <Icon name="phone" size={12} color="rgba(255,255,255,0.7)" />
-                  <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 6, fontSize: 12 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
-                </View>
-              </View>
+          <View style={styles.summaryTextCentered}>
+            <View style={[styles.nameVerifiedRow, { justifyContent: 'center', gap: 6 }]}>
+              <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 24, fontWeight: '700', letterSpacing: 0.3 }]} numberOfLines={1}>{displayName}</Text>
+              <MaterialIcon name="check-decagram" size={24} color="#60A5FA" />
+            </View>
+            <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 4, fontSize: 14 }]} numberOfLines={1}>{displayEmail}</Text>
+            <View style={[styles.phoneRow, { justifyContent: 'center' }]}>
+              <Icon name="phone" size={12} color="rgba(255,255,255,0.7)" />
+              <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 6, fontSize: 13 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
             </View>
           </View>
         </View>
 
-        <ScrollView
+        <View style={styles.contentBody}>
+          {completion && completion.percentage < 100 && (
+            <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
+              <View style={[styles.strengthCardPremium, { backgroundColor: mode === 'dark' ? '#1E293B' : '#FFFFFF', borderColor: mode === 'dark' ? colors.border : 'rgba(0,0,0,0.04)' }]}>
+                <View style={styles.strengthHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '700' }]}>{t('profileOverview.boostProfile', 'Boost Your Profile')}</Text>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{t('profileOverview.completeToUnlock', 'Complete your profile to unlock more jobs!')}</Text>
+                  </View>
+                  <View style={{ alignItems: 'center', justifyContent: 'center', width: 56, height: 56 }}>
+                    <Animated.View style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: colors.primary,
+                        borderRadius: 28,
+                        opacity: rippleOpacity,
+                        transform: [{ scale: rippleScale }],
+                      }
+                    ]} />
+                    <View style={[styles.percentageCircle, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
+                    <View style={[styles.percentageCircle, {
+                      position: 'absolute',
+                      borderColor: colors.primary,
+                      borderWidth: 4,
+                      borderTopColor: colors.primary,
+                      borderRightColor: ((completion?.percentage || 0) / 100) * 360 > 90 ? colors.primary : 'transparent',
+                      borderBottomColor: ((completion?.percentage || 0) / 100) * 360 > 180 ? colors.primary : 'transparent',
+                      borderLeftColor: ((completion?.percentage || 0) / 100) * 360 > 270 ? colors.primary : 'transparent',
+                      transform: [{ rotate: `${((completion?.percentage || 0) / 100) * 360}deg` }]
+                    }]} />
+                    <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: '900', fontSize: 14, position: 'absolute' }]}>{completion?.percentage || 0}%</Text>
+                  </View>
+                </View>
+                <View style={[styles.strengthBarBase, { backgroundColor: mode === 'dark' ? '#334155' : '#F1F5F9' }]}>
+                  <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
+                </View>
+              </View>
+            </Animated.View>
+          )}
+        </View>
+
+        <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scroll, { paddingBottom: 160 }]}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
           keyboardShouldPersistTaps="handled"
         >
-          {completion && completion.percentage < 100 && (
-            <View
-              style={[
-                styles.strengthCard,
-                { backgroundColor: colors.surface, borderColor: colors.border }
-              ]}
-            >
-              <View style={styles.strengthHeader}>
-                <View>
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileOverview.boostProfile', 'Boost Your Profile')}</Text>
-                  <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>{t('profileOverview.completeToUnlock', 'Complete your profile to unlock more jobs!')}</Text>
-                </View>
-                <View style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '05' }}>
-                  <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: 'bold' }]}>{completion.percentage}%</Text>
-                </View>
-              </View>
-
-              <View style={[styles.strengthBarBase, { backgroundColor: colors.border, height: 8, borderRadius: 4, marginTop: 4 }]}>
-                <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%`, borderRadius: 4 }]} />
-              </View>
-            </View>
-          )}
-
-          {/* Action Dashboard - Compact Layout */}
-          <View style={{ paddingHorizontal: spacing.md, gap: 12, marginBottom: 25, marginTop: 15 }}>
+          <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
             <Pressable
               onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Profile' } })}
               style={({ pressed }) => [
-                styles.dashboardCardSmall,
-                { backgroundColor: mode === 'dark' ? '#EC489915' : '#FDF2F8', borderWidth: 0 },
-                pressed && { opacity: 0.9 }
+                styles.reelsCardPremium,
+                { backgroundColor: mode === 'dark' ? '#EC489915' : '#FDF2F8' },
+                pressed && { transform: [{ scale: 0.98 }] }
               ]}
             >
-              <View style={[styles.dashboardIconBoxSmall, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
-                <Icon name="play-circle" size={18} color="#EC4899" />
+              <View style={[styles.reelsIconBox, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
+                <Icon name="play-circle" size={24} color="#EC4899" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 12, flex: 1, fontSize: 15, fontWeight: 'bold' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
-              <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}>
-                <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5 }}>{t('profileOverview.reelsTag', 'NEW')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16, flex: 1, fontSize: 16, fontWeight: '700' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
+              <View style={styles.newBadge}>
+                <Text style={styles.newBadgeText}>{t('profileOverview.reelsTag', 'NEW')}</Text>
               </View>
             </Pressable>
-          </View>
+          </Animated.View>
 
-          <View style={{ paddingHorizontal: spacing.md }}>
-            <View style={styles.sectionTitleRow}>
-              <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}</Text>
-            </View>
-
-            <SectionItem
-              title={t('profileDetails.workExperience', 'Work Experience')}
-              subtitle={profile?.experience?.length ? `${profile.experience.length} ${t('profileDetails.experienceAdded', 'Experience added')}` : t('profileDetails.addPastJobs', 'Add your past jobs')}
-              icon="briefcase-variant-outline"
-              color="#3B82F6"
-              onPress={() => navigation.navigate('ProfileExperience')}
-              isMissing={isSectionMissing('experience')}
-            />
-
-            <SectionItem
-              title={t('profileDetails.education', 'Education')}
-              subtitle={profile?.education?.length ? `${profile.education.length} ${t('profileDetails.educationAdded', 'Education added')}` : t('profileDetails.addEducation', 'Add your degree/college')}
-              icon="school-outline"
-              color="#10B981"
-              onPress={() => navigation.navigate('ProfileEducation')}
-              isMissing={isSectionMissing('education')}
-            />
-
-            <SectionItem
-              title={t('profileDetails.jobPreferences', 'Job Preferences')}
-              subtitle={t('profileDetails.preferredRoles', 'Preferred roles & locations')}
-              icon="bullseye-arrow"
-              color="#F59E0B"
-              onPress={() => navigation.navigate('ProfileJobPreferences')}
-              isMissing={isSectionMissing('preferences')}
-            />
-
-            <SectionItem
-              title={t('profileDetails.resumeCv', 'Resume / CV')}
-              subtitle={t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
-              icon="file-document-outline"
-              color="#8B5CF6"
-              onPress={() => navigation.navigate('ProfileResume')}
-              isMissing={isSectionMissing('resume')}
-            />
-
-            <View style={[styles.sectionTitleRow, { marginTop: 24 }]}>
-              <Text style={[typography.labelMedium, { color: colors.textSecondary, fontWeight: 'bold' }]}>{t('profileDetails.personalDetails', 'PERSONAL DETAILS')}</Text>
-            </View>
-
-            <SectionItem
+          <GroupedSection title={t('profileDetails.personalDetails', 'PERSONAL DETAILS')}>
+            <SettingsRow
               title={t('profileDetails.personalInfo', 'Personal Info')}
               subtitle={t('profileDetails.nameDobGender', 'Name, DOB, Gender, Language')}
               icon="account-outline"
               color="#EC4899"
               onPress={() => navigation.navigate('ProfilePersonalInfo')}
               isMissing={isSectionMissing('personal')}
+              isLast={true}
             />
+          </GroupedSection>
 
-            {/* Pro Tip */}
-            <View style={[styles.proTip, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30' }]}>
-              <MaterialIcon name="lightbulb-on-outline" size={24} color={colors.primary} />
-              <View style={styles.proTipText}>
-                <Text style={[typography.labelMedium, { color: colors.primary }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
-                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-                  {t('profileDetails.proTipDesc', 'Profiles with photos and resumes get 5x more attention from employers.')}
-                </Text>
-              </View>
+          <GroupedSection title={t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}>
+            <SettingsRow
+              title={t('profileDetails.workExperience', 'Work Experience')}
+              subtitle={profile?.experience?.length ? `${profile.experience.length} ${t('profileDetails.experienceAdded', 'Experience added')}` : t('profileDetails.addPastJobs', 'Add your past jobs')}
+              icon="briefcase-variant-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileExperience')}
+              isMissing={isSectionMissing('experience')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.education', 'Education')}
+              subtitle={profile?.education?.length ? `${profile.education.length} ${t('profileDetails.educationAdded', 'Education added')}` : t('profileDetails.addEducation', 'Add your degree/college')}
+              icon="school-outline"
+              color="#10B981"
+              onPress={() => navigation.navigate('ProfileEducation')}
+              isMissing={isSectionMissing('education')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.jobPreferences', 'Job Preferences')}
+              subtitle={t('profileDetails.preferredRoles', 'Preferred roles & locations')}
+              icon="bullseye-arrow"
+              color="#F59E0B"
+              onPress={() => navigation.navigate('ProfileJobPreferences')}
+              isMissing={isSectionMissing('preferences')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.resumeCv', 'Resume / CV')}
+              subtitle={t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
+              icon="file-document-outline"
+              color="#8B5CF6"
+              onPress={() => navigation.navigate('ProfileResume')}
+              isMissing={isSectionMissing('resume')}
+              isLast={true}
+            />
+          </GroupedSection>
+
+          <Animated.View style={[styles.proTipPremium, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '20', opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
+            <MaterialIcon name="lightbulb-on-outline" size={24} color={colors.primary} />
+            <View style={styles.proTipText}>
+              <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: '700' }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4, lineHeight: 20 }]}>
+                {t('profileDetails.proTipDesc', 'Profiles with photos and resumes get 5x more attention from employers.')}
+              </Text>
             </View>
-          </View>
-        </ScrollView>
+          </Animated.View>
+        </Animated.ScrollView>
       </View>
     );
   };
@@ -635,45 +580,56 @@ const ProfileOverviewScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  scroll: { paddingTop: 16 },
-  headerContainer: {
-    paddingBottom: 24,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+  scroll: { flexGrow: 1 },
+  headerBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 280,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    overflow: 'hidden',
+  },
+  decorativeCircle: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
   },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    height: 50,
+    height: 56,
   },
-  iconBtn: {
+  settingsBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  profileSummary: {
-    flexDirection: 'row',
+  profileSummaryCentered: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 16,
+    paddingTop: 4,
+    paddingBottom: 24,
   },
   avatarContainer: {
     position: 'relative',
+    marginBottom: 12,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
   },
-  avatarCircle: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
+  avatarCircleHuge: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     borderWidth: 4,
+    borderColor: '#FFFFFF',
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -683,10 +639,10 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  cameraIconBtn: {
+  cameraIconBtnPremium: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
+    bottom: 0,
+    right: 0,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -697,12 +653,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowRadius: 4,
   },
-  summaryText: {
-    marginLeft: 16,
-    flex: 1,
-    justifyContent: 'center',
+  summaryTextCentered: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   nameVerifiedRow: {
     flexDirection: 'row',
@@ -713,45 +668,125 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
-  strengthCard: { padding: 16, borderRadius: 24, borderWidth: 1, marginHorizontal: spacing.md, marginBottom: 20 },
-  strengthHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  strengthBarBase: { height: 5, borderRadius: 2.5, overflow: 'hidden' },
-  strengthBarFill: { height: '100%', borderRadius: 2.5 },
-  menuContainer: { paddingHorizontal: spacing.md },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, marginTop: 12 },
-  headerLine: { flex: 1, height: 1, marginLeft: 10, opacity: 0.3 },
-  tilesRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
-  tile: { flex: 1, padding: 12, borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
-  tileIconContainer: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  tileAddBadge: { position: 'absolute', top: 10, right: 10, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  tileDoneBadge: { position: 'absolute', top: 10, right: 10, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  wideItem: { flexDirection: 'row', alignItems: 'center', padding: 18, borderRadius: 24, borderWidth: 1.5, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, overflow: 'hidden' },
-  menuIconContainer: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  menuTextContainer: { flex: 1, marginLeft: 16 },
-  settingsCard: { borderRadius: 24, borderWidth: 1.5, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 8, marginBottom: 12 },
-  settingsRow: { flexDirection: 'row', alignItems: 'center', padding: 18, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
-  logoutBtn: { marginTop: 24, marginBottom: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 24, borderWidth: 1.5, borderStyle: 'dashed' },
-  dashboardGrid: { flexDirection: 'row', gap: 14, paddingHorizontal: spacing.md, marginBottom: 25, marginTop: 15 },
-  dashboardCardLarge: { flex: 1.2, padding: 20, borderRadius: 28, borderWidth: 1.5, minHeight: 160, justifyContent: 'space-between', elevation: 8, shadowColor: '#EC4899', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16 },
-  dashboardIconBoxLarge: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  dashboardCardContent: { marginTop: 16 },
-  cardTag: { position: 'absolute', top: 18, right: 18, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
-  dashboardStack: { flex: 1, gap: 14, justifyContent: 'space-between' },
-  topNavBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, zIndex: 10 },
-  settingsBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  dashboardCardSmall: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, minHeight: 64, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
-  dashboardIconBoxSmall: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  shimmerBeam: { position: 'absolute', top: 0, bottom: 0, width: 100, zIndex: 1 },
-  sectionTitleRow: { marginBottom: 12, paddingHorizontal: 4 },
-  sectionCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 24, borderWidth: 1, marginBottom: 12 },
-  groupedCard: { borderRadius: 24, borderWidth: 1, overflow: 'hidden', marginBottom: 20 },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', padding: 16 },
-  sectionIconBox: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  sectionText: { flex: 1, marginLeft: 16 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  proTip: { flexDirection: 'row', padding: 16, borderRadius: 24, borderWidth: 1, marginTop: 10, marginBottom: 20, alignItems: 'center' },
-  proTipText: { flex: 1, marginLeft: 16 },
-  neonDot: { width: 4, height: 4, borderRadius: 2, marginLeft: 6 },
+  contentBody: {
+    paddingHorizontal: 20,
+    marginTop: -16,
+  },
+  strengthCardPremium: {
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  percentageCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  strengthBarBase: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  strengthBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  reelsCardPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 24,
+    elevation: 1,
+  },
+  reelsIconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newBadge: {
+    backgroundColor: '#EC4899',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  newBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  groupContainer: {
+    marginBottom: 24,
+  },
+  groupTitle: {
+    marginLeft: 8,
+    marginBottom: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  groupCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    overflow: 'hidden',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  settingsIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsText: {
+    flex: 1,
+    marginLeft: 16,
+    marginRight: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  proTipPremium: {
+    flexDirection: 'row',
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 8,
+    marginBottom: 30,
+    alignItems: 'flex-start',
+  },
+  proTipText: {
+    flex: 1,
+    marginLeft: 16,
+  },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   pickerContainer: { borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },

@@ -8,13 +8,15 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  FlatList,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { StackScreenProps } from '@react-navigation/stack';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updatePersonalProfile, updatePreferencesProfile } from '../../redux/slice/profileSlice';
-import type { AppDispatch } from '../../redux/store';
+import { fetchMetaCities } from '../../redux/slice/metaSlice';
+import type { AppDispatch, RootState } from '../../redux/store';
 import { PrimaryButton } from '../../components/auth';
 import type { Gender } from '../../context/ProfileSetupContext';
 import { useProfileSetup } from '../../context/ProfileSetupContext';
@@ -75,6 +77,14 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
   const [pickerMode, setPickerMode] = useState<'calendar' | 'year' | 'month'>('calendar');
   const [currentDateStr, setCurrentDateStr] = useState(draft.dateOfBirth || new Date().toISOString().slice(0, 10));
 
+  const cities = useSelector((state: RootState) => state.meta.cities);
+  const [currentCityModalOpen, setCurrentCityModalOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+
+  React.useEffect(() => {
+    dispatch(fetchMetaCities());
+  }, [dispatch]);
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
   const months = [
@@ -94,7 +104,8 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
     draft.fullName.trim().length >= 2 && 
     draft.gender !== '' && 
     draft.dateOfBirth !== '' &&
-    draft.preferredLanguage !== '';
+    draft.preferredLanguage !== '' &&
+    draft.currentCity.trim() !== '';
 
   const handleContinue = async () => {
     setSaving(true);
@@ -103,11 +114,15 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         name: draft.fullName,
         gender: draft.gender,
         date_of_birth: draft.dateOfBirth,
+        current_city: draft.currentCity,
+        city: draft.currentCity,
+        address: draft.currentCity,
       })).unwrap();
 
-      if (draft.preferredLanguage) {
+      if (draft.preferredLanguage || draft.currentCity) {
         await dispatch(updatePreferencesProfile({
-          preferred_language: draft.preferredLanguage,
+          preferred_language: draft.preferredLanguage || undefined,
+          current_city: draft.currentCity || undefined,
         })).unwrap();
       }
 
@@ -117,7 +132,6 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
       });
     } catch (e) {
       console.error('Save failed', e);
-    } finally {
       setSaving(false);
     }
   };
@@ -245,6 +259,36 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         })}
       </View>
 
+      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.sm }]}>
+        Current city
+      </Text>
+      <Pressable
+        onPress={() => {
+          setCitySearch(draft.currentCity);
+          setCurrentCityModalOpen(true);
+        }}
+        style={[
+          styles.dobField,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}>
+        <Icon name="map-marker" size={18} color={colors.primary} />
+        <Text
+          style={[
+            typography.body,
+            {
+              color: draft.currentCity ? colors.textPrimary : colors.textPlaceholder,
+              flex: 1,
+              marginLeft: 8,
+            },
+          ]}>
+          {draft.currentCity || 'Select or type current city'}
+        </Text>
+        <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
+      </Pressable>
+
       <Modal visible={dobOpen} animationType="slide" transparent onRequestClose={() => setDobOpen(false)}>
         <View style={styles.modalOverlay}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setDobOpen(false)} />
@@ -332,6 +376,80 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </ScrollView>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* City Modal */}
+      <Modal
+        visible={currentCityModalOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setCurrentCityModalOpen(false);
+        }}>
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => {
+              setCurrentCityModalOpen(false);
+            }}
+          />
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface, flex: 1, marginTop: 'auto', maxHeight: '80%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
+                Select Current City
+              </Text>
+              <Pressable onPress={() => {
+                setCurrentCityModalOpen(false);
+              }} hitSlop={12}>
+                <Icon name="close" size={20} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+            <TextInput
+              value={citySearch}
+              onChangeText={setCitySearch}
+              placeholder="Search or type city manually..."
+              placeholderTextColor={colors.textPlaceholder}
+              style={[
+                styles.input,
+                {
+                  color: colors.textPrimary,
+                  backgroundColor: colors.surfaceHighlight,
+                  borderColor: colors.border,
+                  marginBottom: 16,
+                  marginHorizontal: spacing.lg,
+                },
+              ]}
+            />
+            {citySearch.trim().length > 0 && !(cities || []).some((c: any) => c.label.toLowerCase() === citySearch.trim().toLowerCase()) && (
+              <TouchableOpacity
+                style={{ paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingHorizontal: spacing.lg }}
+                onPress={() => {
+                  updateDraft({ currentCity: citySearch.trim() });
+                  setCurrentCityModalOpen(false);
+                }}
+              >
+                <Text style={[typography.body, { color: colors.primary }]}>Use "{citySearch}"</Text>
+              </TouchableOpacity>
+            )}
+            <FlatList
+              data={(cities || []).filter((c: any) => c.label.toLowerCase().includes(citySearch.toLowerCase()))}
+              keyExtractor={(item) => item.id.toString()}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingHorizontal: spacing.lg }}
+                  onPress={() => {
+                    updateDraft({ currentCity: item.label });
+                    setCurrentCityModalOpen(false);
+                  }}
+                >
+                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.label}</Text>
+                </TouchableOpacity>
+              )}
+            />
           </View>
         </View>
       </Modal>
