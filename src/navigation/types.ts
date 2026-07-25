@@ -43,7 +43,6 @@ export type JobReelsStackParamList = {
 
 export type ProfileStackParamList = {
   ProfileOverview: undefined;
-  ProfileDetails: undefined;
   ProfilePersonalInfo: undefined;
   ProfileEducation: undefined;
   ProfileExperience: undefined;

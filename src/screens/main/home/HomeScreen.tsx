@@ -293,12 +293,6 @@ function JobTrendCard({
             {companyName}
           </Text>
         </View>
-        {job.openings ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceHighlight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 8, alignSelf: 'flex-start' }}>
-            <Icon name="users" size={10} color={colors.primary} style={{ marginRight: 4 }} />
-            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>{job.openings}</Text>
-          </View>
-        ) : null}
       </View>
 
       <View style={styles.cardMetaRow}>
@@ -417,26 +411,18 @@ function JobListCard({
             {companyName}
           </Text>
         </View>
-        <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
-          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold', marginBottom: 4 }]}>
-            {postedLabel}
-          </Text>
-          {job.openings ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surfaceHighlight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-              <Icon name="users" size={10} color={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>{job.openings}</Text>
-            </View>
-          ) : null}
-        </View>
       </View>
 
-      <View style={styles.listMeta}>
-        <View style={styles.metaItem}>
+      <View style={[styles.listMeta, { justifyContent: 'space-between', flexWrap: 'nowrap' }]}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: 8 }]}>
           <Icon name="map-marker" size={13} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textSecondary }]} numberOfLines={1}>
+          <Text style={[typography.small, { color: colors.textSecondary, flexShrink: 1 }]} numberOfLines={1}>
             {locationLabel}
           </Text>
         </View>
+        <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
+          {postedLabel}
+        </Text>
       </View>
 
       <View style={styles.listFooter}>
@@ -682,7 +668,7 @@ const MemoizedHomeContent = React.memo(({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: 80, paddingTop: 130 + (insets.top || 40) },
+        { paddingBottom: 80, paddingTop: 152 + (insets.top || 40) },
       ]}
       refreshControl={
         <RefreshControl

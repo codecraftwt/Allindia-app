@@ -197,7 +197,7 @@ const ProfileStrengthAssistant = ({ profile, colors, navigation, scrollY, showFi
 
     tooltipAnim.value = withTiming(0, { duration: 300 });
     setTimeout(() => {
-      navigation.navigate('Profile', { screen: 'ProfileDetails' });
+      navigation.navigate('Profile', { screen: 'ProfileOverview' });
       setTimeout(() => {
         launchY.value = 0;
         launchScale.value = 1;

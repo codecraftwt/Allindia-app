@@ -473,7 +473,7 @@ const CategorySearchField = React.memo(({ value, onChange, colors }: any) => {
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
-type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferencesEdit'>;
+type Props = StackScreenProps<ProfileStackParamList, 'ProfileJobPreferences'>;
 
 export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();

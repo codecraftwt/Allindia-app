@@ -72,7 +72,7 @@ const QuickFilterCard = ({ title, icon, color, onPress, colors }: QuickFilterCar
             </View>
 
             <View style={[styles.iconCircle, { backgroundColor: color, shadowColor: color }]}>
-                <Icon name={icon} size={18} color="#fff" />
+                <Icon name={icon} size={14} color="#fff" />
             </View>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                 {title}
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 255, 255, 0.8)',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 100,
+        minHeight: 80,
         overflow: 'hidden',
     },
     glassShine: {
@@ -173,9 +173,9 @@ const styles = StyleSheet.create({
         top: -100,
     },
     iconCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.xs,

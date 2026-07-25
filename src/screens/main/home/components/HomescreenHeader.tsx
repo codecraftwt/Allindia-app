@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   fixedHeader: {
     paddingHorizontal: spacing.md,
     paddingTop: 0,
-    paddingBottom: spacing.xs,
+    paddingBottom: 10,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -388,26 +388,12 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
 
   return (
     <>
-      <Animated.View
-        style={[
-          styles.statusBarFill,
-          {
-            height: insets.top,
-            backgroundColor: colors.surface,
-            opacity: scrollY.interpolate({
-              inputRange: [0, 50],
-              outputRange: [0, 1],
-              extrapolate: 'clamp',
-            }),
-          },
-        ]}
-      />
       <View
         style={[
           styles.statusBarFill,
           {
             height: insets.top,
-            backgroundColor: colors.background,
+            backgroundColor: colors.primary,
             zIndex: 100,
           },
         ]}
@@ -415,7 +401,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
       <StatusBar
         translucent
         backgroundColor="transparent"
-        barStyle={isDark ? 'light-content' : 'dark-content'}
+        barStyle="light-content"
       />
       <Animated.View
         onLayout={(e) => {
@@ -426,37 +412,21 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
           styles.fixedHeader,
           {
             paddingTop: insets.top + 10,
-            backgroundColor: colors.surface,
+            backgroundColor: colors.primary,
             transform: [{ translateY: headerTranslateY }],
-            // Use opacity for background transition instead of color interpolation
-            // This is much more stable on Android
             shadowColor: colors.shadow,
             shadowOpacity: scrollY.interpolate({
               inputRange: [0, 50],
-              outputRange: [0, 0.1],
+              outputRange: [0, 0.2],
               extrapolate: 'clamp',
             }),
             elevation: scrollY.interpolate({
               inputRange: [0, 50],
-              outputRange: [0, 4],
+              outputRange: [0, 6],
               extrapolate: 'clamp',
             }),
           },
         ]}>
-        {/* Background layer for color transition */}
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: colors.background,
-              opacity: scrollY.interpolate({
-                inputRange: [0, 50],
-                outputRange: [1, 0],
-                extrapolate: 'clamp',
-              }),
-            },
-          ]}
-        />
         <View style={styles.headerBlock}>
           <Animated.View style={[styles.headerTopRow, { opacity: topRowOpacity }]}>
             <Pressable
@@ -477,18 +447,18 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                   </View>
                   <View style={styles.locationTextStack}>
                     <View style={styles.cityRow}>
-                      <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '900' }]}>
+                      <Text style={[typography.labelMedium, { color: colors.onPrimary, fontWeight: '900' }]}>
                         {selectedCity || t('home.allLocations', 'All Locations')}
                       </Text>
-                      <Icon name="map-marker" size={12} color={colors.primary} style={{ marginLeft: 6 }} />
-                      <Icon name="chevron-down" size={10} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                      <Icon name="map-marker" size={12} color={colors.onPrimary} style={{ marginLeft: 6 }} />
+                      <Icon name="chevron-down" size={10} color={'rgba(255,255,255,0.7)'} style={{ marginLeft: 4 }} />
                     </View>
                     {!!selectedArea ? (
-                      <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                      <Text style={[typography.tiny, { color: 'rgba(255,255,255,0.8)', marginTop: -2 }]} numberOfLines={1}>
                         {selectedArea}
                       </Text>
                     ) : (
-                      <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: -2 }]} numberOfLines={1}>
+                      <Text style={[typography.tiny, { color: 'rgba(255,255,255,0.8)', marginTop: -2 }]} numberOfLines={1}>
                         {selectedCity ? t('home.allAreas', 'All Areas') : t('home.anywhere', 'Anywhere')}
                       </Text>
                     )}

@@ -376,7 +376,6 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.tricolorSegment, { backgroundColor: '#FFFFFF' }]} />
               <View style={[styles.tricolorSegment, { backgroundColor: '#138808' }]} />
             </View>
-            <Text style={styles.taglineMain}>Made in India</Text>
             <Text style={styles.taglineSub}>Made for India 🇮🇳</Text>
           </Animated.View>
         </View>
@@ -468,14 +467,6 @@ const styles = StyleSheet.create({
   },
   tricolorSegment: {
     flex: 1,
-  },
-  taglineMain: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 2,
-    textAlign: 'center',
-    textTransform: 'uppercase',
   },
   taglineSub: {
     color: 'rgba(255,255,255,0.75)',

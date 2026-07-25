@@ -9,7 +9,6 @@ import ProfileJobPreferencesEditScreen from '../screens/main/profile/ProfileJobP
 import ProfileResumeEditScreen from '../screens/main/profile/ProfileResumeEditScreen';
 import ProfileSettingsScreen from '../screens/main/profile/ProfileSettingsScreen';
 import ProfileAccountSetting from '../screens/main/profile/ProfileAccountSetting';
-import ProfileDetailsScreen from '../screens/main/profile/ProfileDetailsScreen';
 import HelpAndSupportScreen from '../screens/main/profile/HelpAndSupportScreen';
 import PrivacyPolicyScreen from '../screens/main/profile/PrivacyPolicyScreen';
 import TermsAndConditionsScreen from '../screens/main/profile/TermsAndConditionsScreen';
@@ -29,7 +28,6 @@ const ProfileStackNavigator: React.FC = () => {
         cardStyle: { backgroundColor: 'transparent' },
       }}>
       <Stack.Screen name="ProfileOverview" component={ProfileOverviewScreen} />
-      <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
       <Stack.Screen name="ProfilePersonalInfo" component={ProfilePersonalInfoScreen} />
       <Stack.Screen name="ProfileEducation" component={ProfileEducationEditScreen} />
       <Stack.Screen name="ProfileExperience" component={ProfileExperienceEditScreen} />

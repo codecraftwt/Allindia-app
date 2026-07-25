@@ -136,8 +136,7 @@ const MainTabNavigator: React.FC = () => {
       'ProfileEducation',
       'ProfileExperience',
       'ProfileResume',
-      'ProfileAccountSetting',
-      'ProfileDetails'
+      'ProfileAccountSetting'
     ];
 
     if (hideOnScreens.includes(routeName) || isFullScreen) {

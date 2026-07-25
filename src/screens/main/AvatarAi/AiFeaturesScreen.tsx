@@ -6,8 +6,10 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Image,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../context/ThemeContext';
@@ -64,6 +66,7 @@ const features = [
 const AiFeaturesScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const handlePress = (item: typeof features[0]) => {
     if (item.isLocked) {
@@ -149,12 +152,19 @@ const AiFeaturesScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.primaryDark }]} edges={['top', 'left', 'right']}>
-
+    <View style={[styles.safe, { backgroundColor: colors.background }]}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       {/* ── Blue Hero Header — fixed, does not scroll ── */}
-      <View style={[styles.heroSection, { backgroundColor: colors.primaryDark }]}>
+      <View style={[styles.heroSection, { backgroundColor: colors.primaryDark, paddingTop: insets.top + 18 }]}>
         <View style={[styles.decorCircle1, { backgroundColor: colors.primary, opacity: 0.25 }]} />
         <View style={[styles.decorCircle2, { backgroundColor: colors.primaryLight, opacity: 0.15 }]} />
+        
+        <Image 
+          source={require('../../../assets/Jenix.png')}
+          style={styles.jenixImage}
+          resizeMode="contain"
+        />
+
         <View style={styles.heroTextBlock}>
           <View style={[styles.heroBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
             <Icon name="sparkles" size={11} color="#FBBF24" />
@@ -242,7 +252,7 @@ const AiFeaturesScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -285,9 +295,18 @@ const styles = StyleSheet.create({
     bottom: -20,
     left: 20,
   },
+  jenixImage: {
+    position: 'absolute',
+    right: -10,
+    bottom: -10,
+    width: 95,
+    height: 120,
+    zIndex: 2,
+  },
   heroTextBlock: {
     alignItems: 'center',
     zIndex: 1,
+    paddingRight: 20, // Add some padding so it shifts slightly left and avoids Jenix
   },
   heroBadge: {
     flexDirection: 'row',
