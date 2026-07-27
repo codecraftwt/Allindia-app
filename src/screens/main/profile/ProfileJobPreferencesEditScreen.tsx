@@ -44,8 +44,7 @@ import { typography } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const MAX_SALARY_LIMIT = 40;
-const SALARY_OPTIONS = Array.from({ length: MAX_SALARY_LIMIT + 1 }, (_, i) => i);
+const MAX_SALARY_LIMIT = 100000;
 
 const EXP_TYPES = [
   { id: 'experienced', label: 'Experienced' },
@@ -219,7 +218,6 @@ const SalarySelectionField = ({ label, value, onChange, colors }: any) => {
           style={[typography.body, { color: colors.textPrimary, padding: 0, height: 24 }]}
         />
       </View>
-      <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.lpa', 'LPA')}</Text>
     </View>
   );
 };
@@ -241,8 +239,13 @@ const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
   }, [min, max, layoutWidth]);
 
   const updateParent = (isMin: boolean) => {
-    const finalMin = Math.round((minX.value / layoutWidth) * MAX_SALARY_LIMIT);
-    const finalMax = Math.round((maxX.value / layoutWidth) * MAX_SALARY_LIMIT);
+    let finalMin = Math.round((minX.value / layoutWidth) * MAX_SALARY_LIMIT);
+    let finalMax = Math.round((maxX.value / layoutWidth) * MAX_SALARY_LIMIT);
+    
+    // Snap to nearest 1000
+    finalMin = Math.round(finalMin / 1000) * 1000;
+    finalMax = Math.round(finalMax / 1000) * 1000;
+    
     onChange(finalMin, finalMax);
   };
 
@@ -313,7 +316,7 @@ const InteractiveRangeSlider = ({ min, max, colors, onChange }: any) => {
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
         <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.salaryMinLimitLabel', '₹0')}</Text>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.salaryMaxLimitLabel', '₹40L+')}</Text>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('profileJobPreferences.salaryMaxLimitLabel', '₹1,00,000+')}</Text>
       </View>
     </View>
   );
@@ -528,8 +531,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         ? pref.job_category_ids.map(Number)
         : (pref.job_category_id ? [Number(pref.job_category_id)] : []);
       setJobCategoryIds(catIds);
-      setMinSalary(Math.round((pref.expected_salary_min || 200000) / 100000));
-      setMaxSalary(Math.round((pref.expected_salary_max || 500000) / 100000));
+      setMinSalary(Math.round(pref.expected_salary_min || 15000));
+      setMaxSalary(Math.round(pref.expected_salary_max || 30000));
       setWorkFromHome(!!pref.work_from_home);
       setPreferredLanguage(pref.preferred_language || null);
 
@@ -599,8 +602,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
         .filter(id => validCityIds.includes(id)),
       job_category_id: parentCategoryId,
       job_category_ids: jobCategoryIds.map(Number),
-      expected_salary_min: Number(minSalary) * 100000,
-      expected_salary_max: Number(maxSalary) * 100000,
+      expected_salary_min: Number(minSalary),
+      expected_salary_max: Number(maxSalary),
       work_from_home: workFromHome,
       preferred_language: finalLanguage ? finalLanguage.trim() : null,
     };
@@ -655,7 +658,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     }
 
     list.push(
-      { id: 'salary', type: 'section', title: t('profileJobPreferences.expectedSalary', 'Expected salary') },
+      { id: 'salary', type: 'section', title: t('profileJobPreferences.expectedMonthlySalary', 'Expected monthly salary') },
       { id: 'language', type: 'section', title: t('profileJobPreferences.preferredLanguage', 'Preferred language') },
       { id: 'wfh', type: 'section', title: t('profileJobPreferences.workFromHome', 'Work from home') }
     );

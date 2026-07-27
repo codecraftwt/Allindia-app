@@ -98,18 +98,29 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
   const tagIcon = isApplied ? cleanIconName(tag.icon) : getTagConfigLocal(tag).icon;
   const tagColor = isApplied ? (tag.icon_color || colors.primary) : getTagConfigLocal(tag).color;
 
+  let customBg = undefined;
+  let customText = undefined;
+
+  if (tagName.toLowerCase().includes('spotlight')) {
+    customBg = '#D4AF37'; // Golden color
+    customText = '#FFFFFF';
+  } else if (tagName.toLowerCase().includes('boost')) {
+    customBg = '#DC2626'; // Red color
+    customText = '#FFFFFF';
+  }
+
   return (
     <Animated.View style={[
       styles.cornerBadge,
       {
-        backgroundColor: colors.surface,
-        borderColor: tagColor + '60',
+        backgroundColor: customBg || colors.surface,
+        borderColor: customBg ? 'transparent' : (tagColor + '60'),
         opacity: fade,
         transform: [{ translateY }]
       }
     ]}>
-      <Icon name={tagIcon} size={12} color={tagColor} />
-      <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
+      <Icon name={tagIcon} size={12} color={customText || tagColor} />
+      <Text style={[styles.cornerBadgeText, { color: customText || tagColor }]}>
         {tagName}
       </Text>
     </Animated.View>
@@ -263,20 +274,64 @@ const AllJobsScreen = () => {
     const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
     const hasAppliedTags = item.applied_tags && item.applied_tags.length > 0;
 
+    const checkTag = (tagNameMatch: string) => {
+      const checkArray = (arr: any[]) => arr?.some((t: any) => {
+        const name = typeof t === 'string' ? t : t.name;
+        return name && name.toLowerCase().includes(tagNameMatch);
+      });
+      return checkArray(item.applied_tags) || checkArray(item.tags);
+    };
+    const isSpotlight = checkTag('spotlight');
+    const isBoost = checkTag('boost');
+
+    let cardBgColor = colors.surface;
+    let cardBorderColor = colors.border;
+    let cardBorderWidth = 1;
+    let cardShadowColor = colors.shadow;
+    let cardElevation = 2;
+
+    let locationTextColor = colors.textSecondary;
+    let locationIconColor = colors.textSecondary;
+
+    if (isSpotlight) {
+      cardBgColor = isDark ? '#2D2714' : '#FDE68A';
+      cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
+      cardBorderWidth = 1;
+      cardShadowColor = isDark ? 'transparent' : '#D4AF37';
+      cardElevation = isDark ? 0 : 4;
+    } else if (isBoost) {
+      cardBgColor = isDark ? '#3F1616' : '#FCA5A5';
+      cardBorderColor = isDark ? '#EF4444' : '#EF4444';
+      cardBorderWidth = 1;
+      cardShadowColor = isDark ? 'transparent' : '#DC2626';
+      cardElevation = isDark ? 0 : 4;
+    }
+
     return (
       <Pressable
         onPress={() => navigation.navigate('JobDetail', { jobId: item.slug || item.id })}
         style={[
           styles.jobCard,
           {
-            backgroundColor: hasAppliedTags ? primaryTagColor + '10' : colors.surface,
-            borderColor: colors.border,
-            borderWidth: hasAppliedTags ? 0 : 1,
-            shadowOpacity: hasAppliedTags ? 0 : 0.05,
-            elevation: hasAppliedTags ? 0 : 2,
+            backgroundColor: cardBgColor,
+            borderColor: cardBorderColor,
+            borderWidth: cardBorderWidth,
+            shadowColor: cardShadowColor,
+            shadowOpacity: (isSpotlight || isBoost) ? 0.2 : 0.05,
+            elevation: cardElevation,
           }
         ]}
       >
+        {(hasAppliedTags || (item.tags && item.tags.length > 0)) ? (
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 12 }}>
+            {hasAppliedTags ? (
+              <TagCycling tags={item.applied_tags} colors={colors} />
+            ) : item.tags && item.tags.length > 0 ? (
+              <TagCycling tags={item.tags} colors={colors} />
+            ) : null}
+          </View>
+        ) : null}
+
         <View style={styles.cardHeader}>
           <View style={[styles.iconBox, { backgroundColor: hasAppliedTags ? primaryTagColor + '20' : colors.surfaceHighlight }]}>
             {item.employer?.company?.company_logo_url ? (
@@ -296,17 +351,12 @@ const AllJobsScreen = () => {
               {companyName}
             </Text>
           </View>
-          <View style={{ position: 'absolute', top: 0, right: 0 }}>
-            <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
-              {t('allJobs.recently', 'Recently')}
-            </Text>
-          </View>
         </View>
 
         <View style={styles.cardMeta}>
           <View style={styles.metaItem}>
-            <Icon name="map-marker" size={14} color={colors.textSecondary} />
-            <Text style={[typography.small, { color: colors.textSecondary, marginLeft: 6 }]}>
+            <Icon name="map-marker" size={14} color={locationIconColor} />
+            <Text style={[typography.small, { color: locationTextColor, marginLeft: 6 }]}>
               {locationLabel}
             </Text>
           </View>
@@ -322,14 +372,6 @@ const AllJobsScreen = () => {
                 {jobType}
               </Text>
             </View>
-          </View>
-
-          <View style={{ alignItems: 'flex-end' }}>
-            {hasAppliedTags ? (
-              <TagCycling tags={item.applied_tags} colors={colors} />
-            ) : item.tags && item.tags.length > 0 ? (
-              <TagCycling tags={item.tags} colors={colors} />
-            ) : null}
           </View>
         </View>
       </Pressable>

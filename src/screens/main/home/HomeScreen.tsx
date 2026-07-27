@@ -170,12 +170,12 @@ const TagCycling = ({ tags, colors, tagRotationStyle, isSmall = false }: { tags:
 
   let customBg = undefined;
   let customText = undefined;
-  
+
   if (tagName.toLowerCase().includes('spotlight')) {
     customBg = '#D4AF37'; // Golden color
     customText = '#FFFFFF';
   } else if (tagName.toLowerCase().includes('boost')) {
-    customBg = '#1E3A8A'; // Dark blue
+    customBg = '#DC2626'; // Red color
     customText = '#FFFFFF';
   }
 
@@ -229,31 +229,47 @@ function JobTrendCard({
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
   const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
 
-  const firstTag = job.applied_tags?.[0] || job.tags?.[0];
-  const firstTagName = firstTag ? (typeof firstTag === 'string' ? firstTag : firstTag.name) : '';
-  const isSpotlight = firstTagName && firstTagName.toLowerCase().includes('spotlight');
-  const isBoost = firstTagName && firstTagName.toLowerCase().includes('boost');
+    const checkTag = (tagNameMatch: string) => {
+      const checkArray = (arr: any[]) => arr?.some((t: any) => {
+        const name = typeof t === 'string' ? t : t.name;
+        return name && name.toLowerCase().includes(tagNameMatch);
+      });
+      return checkArray(job.applied_tags) || checkArray(job.tags);
+    };
+    const isSpotlight = checkTag('spotlight');
+    const isBoost = checkTag('boost');
 
   let cardBgColor = colors.surface;
   let cardBorderColor = colors.border;
-  let cardBorderWidth = hasAppliedTags ? 0 : StyleSheet.hairlineWidth;
+  let cardBorderWidth = StyleSheet.hairlineWidth;
   let cardShadowColor = '#000';
   let cardElevation = undefined;
 
+  let companyTextColor = colors.textSecondary;
+  let locationTextColor = colors.textSecondary;
+  let locationIconColor = colors.textPlaceholder;
+  let salaryTextColor = colors.success;
+  let pillBgColor = colors.surfaceHighlight;
+  let pillTextColor = colors.primary;
+
   if (isSpotlight) {
-    cardBgColor = isDark ? '#2D2714' : '#FEF3C7'; // Solid subtle dark gold
-    cardBorderColor = isDark ? '#F59E0B' : '#FCD34D';
+    cardBgColor = isDark ? '#2D2714' : '#FDE68A'; // Slightly darker yellow
+    cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
     cardBorderWidth = 1;
     cardShadowColor = isDark ? 'transparent' : '#D4AF37';
     cardElevation = isDark ? 0 : 6;
+
+    pillBgColor = isDark ? '#451A03' : 'rgba(255,255,255,0.6)';
+    pillTextColor = isDark ? '#FDE68A' : colors.textPrimary;
   } else if (isBoost) {
-    cardBgColor = isDark ? '#141E30' : '#E0E7FF'; // Solid subtle dark blue
-    cardBorderColor = isDark ? '#3B82F6' : '#A5B4FC';
+    cardBgColor = isDark ? '#3F1616' : '#FCA5A5'; // Darker red background
+    cardBorderColor = isDark ? '#EF4444' : '#EF4444';
     cardBorderWidth = 1;
-    cardShadowColor = isDark ? 'transparent' : '#1E3A8A';
+    cardShadowColor = isDark ? 'transparent' : '#DC2626';
     cardElevation = isDark ? 0 : 6;
-  } else if (hasAppliedTags) {
-    cardBgColor = primaryTagColor + '15';
+
+    pillBgColor = isDark ? '#450A0A' : 'rgba(255,255,255,0.6)';
+    pillTextColor = isDark ? '#FECACA' : colors.textPrimary;
   }
 
   return (
@@ -273,7 +289,16 @@ function JobTrendCard({
         (isSpotlight || isBoost) && { shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
 
-      {/* Top Section: Logo + Name */}
+      {(hasAppliedTags || (job.tags && job.tags.length > 0)) ? (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 }}>
+          {hasAppliedTags ? (
+            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} />
+          ) : job.tags && job.tags.length > 0 ? (
+            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} />
+          ) : null}
+        </View>
+      ) : null}
+
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
         {job.employer?.company?.company_logo_url ? (
           <Image
@@ -289,38 +314,29 @@ function JobTrendCard({
           <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {job.title}
           </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+          <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
             {companyName}
           </Text>
         </View>
       </View>
 
       <View style={styles.cardMetaRow}>
-        <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-        <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
+        <Icon name="map-marker" size={12} color={locationIconColor} />
+        <Text style={[typography.small, { color: locationTextColor, flex: 1 }]} numberOfLines={1}>
           {locationLabel}
         </Text>
       </View>
 
       <View style={styles.cardFooter}>
-        <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
+        <Text style={[typography.labelMedium, { color: salaryTextColor }]}>{salaryLabel}</Text>
       </View>
 
-      {/* Bottom Section: Job Type (Left) + Tags (Right) */}
+      {/* Bottom Section: Job Type (Left) */}
       <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={[styles.typePill, { backgroundColor: colors.surfaceHighlight, marginTop: 0 }]}>
-          <Text style={[typography.small, { color: colors.primary, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+        <View style={[styles.typePill, { backgroundColor: pillBgColor, marginTop: 0 }]}>
+          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
             {jobType}
           </Text>
-        </View>
-
-        <View style={[styles.trendTagsRow, { marginBottom: 0 }]}>
-          {hasAppliedTags ? (
-            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} />
-          ) : job.tags && job.tags.length > 0 ? (
-            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} />
-          ) : null}
         </View>
       </View>
     </Pressable>
@@ -349,31 +365,47 @@ function JobListCard({
   const primaryTagColor = job.applied_tags?.[0]?.icon_color || colors.primary;
   const hasAppliedTags = job.applied_tags && job.applied_tags.length > 0;
 
-  const firstTag = job.applied_tags?.[0] || job.tags?.[0];
-  const firstTagName = firstTag ? (typeof firstTag === 'string' ? firstTag : firstTag.name) : '';
-  const isSpotlight = firstTagName && firstTagName.toLowerCase().includes('spotlight');
-  const isBoost = firstTagName && firstTagName.toLowerCase().includes('boost');
+    const checkTag = (tagNameMatch: string) => {
+      const checkArray = (arr: any[]) => arr?.some((t: any) => {
+        const name = typeof t === 'string' ? t : t.name;
+        return name && name.toLowerCase().includes(tagNameMatch);
+      });
+      return checkArray(job.applied_tags) || checkArray(job.tags);
+    };
+    const isSpotlight = checkTag('spotlight');
+    const isBoost = checkTag('boost');
 
   let cardBgColor = colors.surface;
   let cardBorderColor = colors.border;
-  let cardBorderWidth = hasAppliedTags ? 0 : StyleSheet.hairlineWidth;
+  let cardBorderWidth = StyleSheet.hairlineWidth;
   let cardShadowColor = colors.shadow;
   let cardElevation = undefined;
 
+  let companyTextColor = colors.textSecondary;
+  let locationTextColor = colors.textSecondary;
+  let locationIconColor = colors.textPlaceholder;
+  let salaryTextColor = colors.success;
+  let pillBgColor = colors.badgeBackground;
+  let pillTextColor = colors.badgeText;
+
   if (isSpotlight) {
-    cardBgColor = isDark ? '#2D2714' : '#FEF3C7'; // Solid subtle dark gold
-    cardBorderColor = isDark ? '#F59E0B' : '#FCD34D';
+    cardBgColor = isDark ? '#2D2714' : '#FDE68A'; // Slightly darker yellow
+    cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
     cardBorderWidth = 1;
     cardShadowColor = isDark ? 'transparent' : '#D4AF37';
     cardElevation = isDark ? 0 : 4;
+
+    pillBgColor = isDark ? '#451A03' : 'rgba(255,255,255,0.6)';
+    pillTextColor = isDark ? '#FDE68A' : colors.textPrimary;
   } else if (isBoost) {
-    cardBgColor = isDark ? '#141E30' : '#E0E7FF'; // Solid subtle dark blue
-    cardBorderColor = isDark ? '#3B82F6' : '#A5B4FC';
+    cardBgColor = isDark ? '#3F1616' : '#FCA5A5'; // Darker red background
+    cardBorderColor = isDark ? '#EF4444' : '#EF4444';
     cardBorderWidth = 1;
-    cardShadowColor = isDark ? 'transparent' : '#1E3A8A';
+    cardShadowColor = isDark ? 'transparent' : '#DC2626';
     cardElevation = isDark ? 0 : 4;
-  } else if (hasAppliedTags) {
-    cardBgColor = primaryTagColor + '10';
+
+    pillBgColor = isDark ? '#450A0A' : 'rgba(255,255,255,0.6)';
+    pillTextColor = isDark ? '#FECACA' : colors.textPrimary;
   }
 
   return (
@@ -390,7 +422,17 @@ function JobListCard({
         },
         (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
-      <View style={styles.listCardTop}>
+      {(hasAppliedTags || (job.tags && job.tags.length > 0)) ? (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 }}>
+          {hasAppliedTags ? (
+            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
+          ) : job.tags && job.tags.length > 0 ? (
+            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={[styles.listCardTop, { alignItems: 'center' }]}>
         <View style={styles.listIconWrap}>
           {job.employer?.company?.company_logo_url ? (
             <Image
@@ -403,11 +445,11 @@ function JobListCard({
             </View>
           )}
         </View>
-        <View style={styles.listCardText}>
+        <View style={[styles.listCardText, { flex: 1 }]}>
           <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {job.title}
           </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+          <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
             {companyName}
           </Text>
         </View>
@@ -415,32 +457,21 @@ function JobListCard({
 
       <View style={[styles.listMeta, { justifyContent: 'space-between', flexWrap: 'nowrap' }]}>
         <View style={[styles.metaItem, { flex: 1, marginRight: 8 }]}>
-          <Icon name="map-marker" size={13} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textSecondary, flexShrink: 1 }]} numberOfLines={1}>
+          <Icon name="map-marker" size={13} color={locationIconColor} />
+          <Text style={[typography.small, { color: locationTextColor, flexShrink: 1 }]} numberOfLines={1}>
             {locationLabel}
           </Text>
         </View>
-        <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
-          {postedLabel}
-        </Text>
       </View>
 
       <View style={styles.listFooter}>
         <View style={{ flex: 1 }}>
-          <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
-          <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground, alignSelf: 'flex-start', marginTop: 4 }]}>
-            <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+          <Text style={[typography.labelMedium, { color: salaryTextColor }]}>{salaryLabel}</Text>
+          <View style={[styles.typePillSm, { backgroundColor: pillBgColor, alignSelf: 'flex-start', marginTop: 4 }]}>
+            <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
               {jobType}
             </Text>
           </View>
-        </View>
-
-        <View style={{ alignItems: 'flex-end' }}>
-          {hasAppliedTags ? (
-            <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
-          ) : job.tags && job.tags.length > 0 ? (
-            <TagCycling tags={job.tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
-          ) : null}
         </View>
       </View>
     </Pressable>
@@ -516,46 +547,46 @@ const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () 
 
   return (
     <Animated.View style={{ transform: [{ scale: pulseAnim }], marginHorizontal: spacing.md, marginBottom: 20, marginTop: 5 }}>
-      <Pressable 
-        onPress={onPress} 
+      <Pressable
+        onPress={onPress}
         style={({ pressed }) => [
-          { 
-            backgroundColor: colors.surface, 
-            padding: 16, 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            borderRadius: 24, 
+          {
+            backgroundColor: colors.surface,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderRadius: 24,
             borderWidth: 1.5,
             borderColor: '#EC489930',
-            elevation: 4, 
-            shadowColor: '#EC4899', 
-            shadowOffset: { width: 0, height: 6 }, 
-            shadowOpacity: 0.15, 
+            elevation: 4,
+            shadowColor: '#EC4899',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.15,
             shadowRadius: 12,
             overflow: 'hidden'
           },
           pressed && { opacity: 0.9 }
         ]}
       >
-         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#EC489908' }]} />
-         
-         <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#EC489915', alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: '#EC489930' }}>
-           <Icon name="play" size={24} color="#EC4899" style={{ marginLeft: 4 }} />
-         </View>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#EC489908' }]} />
 
-         <View style={{ flex: 1 }}>
-           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-             <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Reels')}</Text>
-             <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-               <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
-             </View>
-           </View>
-           <Text style={[typography.small, { color: colors.textSecondary }]}>{t('home.reelsDesc', 'Swipe through short job videos')}</Text>
-         </View>
+        <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#EC489915', alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: '#EC489930' }}>
+          <Icon name="play" size={24} color="#EC4899" style={{ marginLeft: 4 }} />
+        </View>
 
-         <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EC4899', alignItems: 'center', justifyContent: 'center' }}>
-           <Icon name="arrow-right" size={14} color="#FFF" />
-         </View>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Reels')}</Text>
+            <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+              <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
+            </View>
+          </View>
+          <Text style={[typography.small, { color: colors.textSecondary }]}>{t('home.reelsDesc', 'Swipe through short job videos')}</Text>
+        </View>
+
+        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EC4899', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="arrow-right" size={14} color="#FFF" />
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -629,7 +660,7 @@ const MemoizedHomeContent = React.memo(({
         if (hiddenStatusId !== currentStatusId) {
           setShowAppStatus(true);
         }
-        
+
         const storedHiddenInviteId = await AsyncStorage.getItem('hiddenHRInviteId');
         if (storedHiddenInviteId) {
           setHiddenInviteId(Number(storedHiddenInviteId));
@@ -684,10 +715,10 @@ const MemoizedHomeContent = React.memo(({
         <>
           <HeroBanner media={homeMedia} colors={colors} onPress={goSearch} />
           {latestInvite && hiddenInviteId !== latestInvite.id && (
-            <HomeHRInviteStatus 
-              colors={colors} 
-              invite={latestInvite} 
-              onHide={() => handleHideInvite(latestInvite.id)} 
+            <HomeHRInviteStatus
+              colors={colors}
+              invite={latestInvite}
+              onHide={() => handleHideInvite(latestInvite.id)}
             />
           )}
           {showAppStatus && (
@@ -1574,7 +1605,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: radius.sm,
     gap: 4,
   },
   cardTitle: {
@@ -1704,7 +1735,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: radius.sm,
     gap: 3,
   },
   tagTextSm: {

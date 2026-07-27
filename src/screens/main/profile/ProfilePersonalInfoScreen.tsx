@@ -356,9 +356,9 @@ const CityPickerModal: React.FC<CityPickerModalProps> = React.memo(({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const source = cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES;
-    if (!q) return source;
-    return source.filter(c => c.toLowerCase().includes(q));
+    const source = Array.from(new Set(cities.length > 0 ? cities.map(c => c.city) : INDIAN_CITIES));
+    if (!q) return source as string[];
+    return (source as string[]).filter(c => c.toLowerCase().includes(q));
   }, [query, cities]);
 
   React.useEffect(() => {

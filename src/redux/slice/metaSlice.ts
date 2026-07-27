@@ -73,9 +73,9 @@ const metaSlice = createSlice({
         const rawCities = action.payload.data.cities || [];
         const seen = new Set();
         state.cities = rawCities.filter((city: any) => {
-          if (!city.label) return false;
-          if (seen.has(city.label.toLowerCase())) return false;
-          seen.add(city.label.toLowerCase());
+          if (!city.id) return true; // If no id, just keep it to be safe
+          if (seen.has(city.id)) return false;
+          seen.add(city.id);
           return true;
         });
       })
