@@ -25,7 +25,7 @@ import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import type { ProfileStackParamList } from '../../../navigation/types';
@@ -152,6 +152,12 @@ const ProfileOverviewScreen: React.FC = () => {
       dispatch(fetchProfileCompletion());
     }
   }, [dispatch, isLoggedIn]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      StatusBar.setBarStyle('light-content');
+    }, [])
+  );
 
   const { resetDraft } = useProfileSetup();
 

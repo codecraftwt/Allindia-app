@@ -401,7 +401,6 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
       <StatusBar
         translucent
         backgroundColor="transparent"
-        barStyle="light-content"
       />
       <Animated.View
         onLayout={(e) => {

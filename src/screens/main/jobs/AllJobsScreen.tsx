@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,22 +14,26 @@ import {
   Image,
   Share,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobs, filterJobs, searchJobs } from '../../../redux/slice/jobSlice';
+import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import JobActionModal from '../../../components/JobActionModal';
 import { AuthHeadline } from '../../../components/auth';
+import HomeCategoriesSection from '../home/components/HomeCategoriesSection';
+import { HOME_CATEGORIES } from '../home/components/homeMockData';
 
 const { width } = Dimensions.get('window');
 
@@ -134,6 +138,7 @@ const AllJobsScreen = () => {
   const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
   const { searchResults, filteredJobs, nearby, loading } = useSelector((state: RootState) => state.jobs);
+  const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const [search, setSearch] = useState('');
   const [isFiltered, setIsFiltered] = useState(false);
   const [isPending, setIsPending] = useState(true);
@@ -144,6 +149,18 @@ const AllJobsScreen = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      dispatch(fetchMetaCategories());
+    }
+  }, [dispatch, categories.length]);
+
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setBarStyle('dark-content');
+    }, [])
+  );
 
   useEffect(() => {
     // Handle incoming filters from navigation
@@ -500,10 +517,34 @@ const AllJobsScreen = () => {
       </View>
 
       {isPending && page === 1 ? (
-        <JobSkeleton />
+        <View style={{ flex: 1 }}>
+          <View style={{ marginBottom: spacing.sm }}>
+            <HomeCategoriesSection
+              categories={categories}
+              colors={colors}
+              navigation={navigation}
+              homeCategoriesMock={HOME_CATEGORIES}
+              isDark={isDark}
+              loading={metaLoading}
+            />
+          </View>
+          <JobSkeleton />
+        </View>
       ) : (
         <FlatList
           data={jobsToShow}
+          ListHeaderComponent={
+            <View style={{ marginBottom: spacing.md }}>
+              <HomeCategoriesSection
+                categories={categories}
+                colors={colors}
+                navigation={navigation}
+                homeCategoriesMock={HOME_CATEGORIES}
+                isDark={isDark}
+                loading={metaLoading}
+              />
+            </View>
+          }
           renderItem={renderJobItem}
           keyExtractor={(item, index) => item.id.toString() + index.toString()}
           contentContainerStyle={[styles.list, { paddingBottom: 100 }]}

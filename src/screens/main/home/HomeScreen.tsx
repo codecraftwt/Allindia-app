@@ -18,6 +18,7 @@ import {
   Alert,
   ToastAndroid,
   Keyboard,
+  StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -725,13 +726,13 @@ const MemoizedHomeContent = React.memo(({
             <HomeApplicationStatus colors={colors} onHide={handleHideAppStatus} />
           )}
           <QuickFilterCards colors={colors} />
-          <HomeCategoriesSection
+          {/* <HomeCategoriesSection
             categories={categories}
             colors={colors}
             navigation={navigation}
             homeCategoriesMock={HOME_CATEGORIES}
             isDark={isDark}
-          />
+          /> */}
           {latest && latest.length > 0 && (
             <>
               <SectionHeader
@@ -900,6 +901,7 @@ const HomeScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       dispatch(fetchNotifications());
+      StatusBar.setBarStyle('light-content');
     }, [dispatch])
   );
 

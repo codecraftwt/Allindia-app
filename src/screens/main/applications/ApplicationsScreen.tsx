@@ -15,6 +15,7 @@ import {
   Alert,
   Share,
   Modal,
+  StatusBar,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
@@ -545,6 +546,7 @@ const ApplicationsScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       onRefresh();
+      StatusBar.setBarStyle('dark-content');
     }, [onRefresh])
   );
 
@@ -559,48 +561,22 @@ const ApplicationsScreen: React.FC = () => {
           image={JobIndiaIcon}
         />
       ) : (
-          <FlatList
-            data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : filteredHRInvites}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              activeTab === 'applied' ? (
-                <AppliedJobCard
-                  job={item}
-                  colors={colors}
-                  onPress={() => openJobDetail(item)}
-                  profileData={profileData}
-                />
-              ) : activeTab === 'saved' ? (
-                <SavedJobCard
-                  job={item}
-                  colors={colors}
-                  onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
-                  onOpenDetail={() => openJobDetail(item)}
-                />
-              ) : activeTab === 'invites' ? (
-                <HRInviteCard
-                  invite={item}
-                  colors={colors}
-                  onPress={() => openInviteDetail(item)}
-                />
-              ) : null
-            )}
-            ListHeaderComponent={
-              <>
-                <AuthHeadline
-                  colors={colors}
-                  title={t('applications.applicationsTitle', "Applications")}
-                  style={{ marginBottom: 4 }}
-                />
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
+            <AuthHeadline
+              colors={colors}
+              title={t('applications.applicationsTitle', "Applications")}
+              style={{ marginBottom: 4 }}
+            />
 
-                {/* Tab Switcher */}
-                <View style={[styles.tabContainer, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                  <TouchableOpacity 
-                    style={[styles.tabBtn, activeTab === 'applied' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
-                    onPress={() => setActiveTab('applied')}
-                  >
-                    <Text style={[typography.labelMedium, { color: activeTab === 'applied' ? colors.primary : colors.textSecondary }]}>Applied Jobs</Text>
-                  </TouchableOpacity>
+            {/* Tab Switcher */}
+            <View style={[styles.tabContainer, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
+              <TouchableOpacity 
+                style={[styles.tabBtn, activeTab === 'applied' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
+                onPress={() => setActiveTab('applied')}
+              >
+                <Text style={[typography.labelMedium, { color: activeTab === 'applied' ? colors.primary : colors.textSecondary }]}>Applied Jobs</Text>
+              </TouchableOpacity>
                   <TouchableOpacity 
                     style={[styles.tabBtn, activeTab === 'saved' && { backgroundColor: colors.surface, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 }]} 
                     onPress={() => setActiveTab('saved')}
@@ -697,13 +673,39 @@ const ApplicationsScreen: React.FC = () => {
                 )}
               </View>
 
-              {(loading || isPending) && (activeTab === 'applied' ? filteredAppliedJobs.length === 0 : activeTab === 'saved' ? filteredSavedJobs.length === 0 : filteredHRInvites.length === 0) && (
+              {(loading || isPending) && (activeTab === 'applied' ? filteredAppliedJobs.length === 0 : activeTab === 'saved' ? filteredSavedJobs.length === 0 : filteredHRInvites.length === 0) ? (
                 <ApplicationsSkeleton />
-              )}
-            </>
-          }
-          ListEmptyComponent={!(loading || isPending) ? renderEmpty() : null}
-          contentContainerStyle={styles.scroll}
+              ) : null}
+            </View>
+
+              <FlatList
+                data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : filteredHRInvites}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  activeTab === 'applied' ? (
+                    <AppliedJobCard
+                      job={item}
+                      colors={colors}
+                      onPress={() => openJobDetail(item)}
+                      profileData={profileData}
+                    />
+                  ) : activeTab === 'saved' ? (
+                    <SavedJobCard
+                      job={item}
+                      colors={colors}
+                      onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
+                      onOpenDetail={() => openJobDetail(item)}
+                    />
+                  ) : activeTab === 'invites' ? (
+                    <HRInviteCard
+                      invite={item}
+                      colors={colors}
+                      onPress={() => openInviteDetail(item)}
+                    />
+                  ) : null
+                )}
+                ListEmptyComponent={!(loading || isPending) ? renderEmpty() : null}
+                contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -713,6 +715,7 @@ const ApplicationsScreen: React.FC = () => {
             />
           }
         />
+        </View>
       )}
       
       {/* Confirmation Modal */}

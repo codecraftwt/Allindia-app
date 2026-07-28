@@ -878,19 +878,34 @@ const JobDetailScreen: React.FC = () => {
             </View>
             
             {(currentJob.interview_address || currentJob.interview_city_name) && (
-               <View style={{ marginTop: spacing.sm }}>
+               <Pressable 
+                  style={{ marginTop: spacing.sm }}
+                  onPress={() => {
+                    const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
+                    if (mapLink) {
+                      Linking.openURL(mapLink).catch(() => {
+                        Alert.alert('Error', 'Could not open map link');
+                      });
+                    }
+                  }}
+               >
                   <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                     <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-                    <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>
-                      {[
-                        currentJob.interview_address,
-                        currentJob.interview_locality_name,
-                        currentJob.interview_city_name
-                      ].filter(Boolean).join(', ')}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[typography.body, { color: colors.textPrimary, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]}>
+                        {[
+                          currentJob.interview_address,
+                          currentJob.interview_locality_name,
+                          currentJob.interview_city_name
+                        ].filter(Boolean).join(', ')}
+                      </Text>
+                      {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
+                        <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
+                      )}
+                    </View>
                   </View>
-               </View>
+               </Pressable>
             )}
           </View>
           )}
@@ -1045,13 +1060,23 @@ const JobDetailScreen: React.FC = () => {
 
             {/* Address Section */}
             {(currentJob.employer.company.address || currentJob.employer.company.city) && (
-              <View style={styles.addressBox}>
+              <Pressable 
+                style={styles.addressBox}
+                onPress={() => {
+                  const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
+                  if (mapLink) {
+                    Linking.openURL(mapLink).catch(() => {
+                      Alert.alert('Error', 'Could not open map link');
+                    });
+                  }
+                }}
+              >
                 <View style={[styles.addressIcon, { backgroundColor: colors.surfaceHighlight }]}>
                   <Icon name="map-marker" size={16} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
-                  <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13 }]} numberOfLines={2}>
+                  <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]} numberOfLines={2}>
                     {[
                       currentJob.employer.company.address,
                       currentJob.employer.company.city,
@@ -1059,8 +1084,11 @@ const JobDetailScreen: React.FC = () => {
                       currentJob.employer.company.pincode
                     ].filter(Boolean).join(', ')}
                   </Text>
+                  {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
+                    <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
+                  )}
                 </View>
-              </View>
+              </Pressable>
             )}
 
             {/* Key Company Stats */}

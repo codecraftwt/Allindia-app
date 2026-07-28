@@ -5,6 +5,7 @@ import { typography } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import type { ThemeColors } from '../../../../theme/colors';
 import { useTranslation } from 'react-i18next';
+import SkeletonPulse from '../../../../components/SkeletonPulse';
 
 interface HomeCategoriesSectionProps {
   categories: any[];
@@ -12,6 +13,7 @@ interface HomeCategoriesSectionProps {
   navigation: any;
   homeCategoriesMock: any[];
   isDark?: boolean;
+  loading?: boolean;
 }
 
 import { getCategoryColor, getCategoryIcon } from '../../../../utils/categoryUtils';
@@ -49,16 +51,53 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
   navigation,
   homeCategoriesMock,
   isDark = false,
+  loading = false,
 }) => {
   const { t } = useTranslation();
   const displayData = (categories && categories.length > 0) ? categories : (homeCategoriesMock || []);
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { minHeight: 100 }]}>
+        <SectionHeader
+          title={t('home.categories', 'Categories')}
+          colors={colors}
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesScroll}
+          style={{ minHeight: 60 }}
+          decelerationRate="fast">
+          {[1, 2, 3, 4, 5].map(i => (
+            <SkeletonPulse
+              key={i}
+              style={[
+                styles.categoryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { minHeight: 100 }]}>
       <SectionHeader
         title={t('home.categories', 'Categories')}
         colors={colors}
-        onPress={() => navigation.navigate('JobCategories')}
+        onPress={() => {
+          if (navigation.getState()?.routeNames?.includes('JobCategories')) {
+            navigation.navigate('JobCategories');
+          } else {
+            navigation.navigate('Home', { screen: 'JobCategories', params: { from: 'AllJobs' } });
+          }
+        }}
       />
 
       <ScrollView
@@ -75,10 +114,20 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
             <Pressable
               key={cat.id || `cat-${idx}`}
               onPress={() => {
+                const hasRoute = (name: string) => navigation.getState()?.routeNames?.includes(name);
+                
                 if (cat.id) {
-                  navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: catName });
+                  if (hasRoute('IndustryCategory')) {
+                    navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: catName });
+                  } else {
+                    navigation.navigate('Home', { screen: 'IndustryCategory', params: { categoryId: cat.id, categoryName: catName } });
+                  }
                 } else {
-                  navigation.navigate('JobListing', { filters: { category_id: undefined }, categoryName: catName });
+                  if (hasRoute('JobListing')) {
+                    navigation.navigate('JobListing', { filters: { category_id: undefined }, categoryName: catName });
+                  } else {
+                    navigation.navigate('Home', { screen: 'JobListing', params: { filters: { category_id: undefined }, categoryName: catName } });
+                  }
                 }
               }}
               style={[

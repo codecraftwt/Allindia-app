@@ -19,7 +19,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { typography } from '../../../theme/typography';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
 import { getCategoryColor, getCategoryIcon } from '../../../utils/categoryUtils';
@@ -30,6 +30,7 @@ const JobCategoriesScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { categories, loading } = useSelector((state: RootState) => state.meta);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,11 +62,19 @@ const JobCategoriesScreen: React.FC = () => {
     </View>
   );
 
+  const handleBackPress = () => {
+    if (route.params?.from === 'AllJobs') {
+      navigation.navigate('AllJobs');
+    } else {
+      navigation.goBack();
+    }
+  };
+
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
+      <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <Pressable onPress={handleBackPress} style={styles.backBtn}>
           <Icon name="chevron-left" size={20} color={colors.textPrimary} />
         </Pressable>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
