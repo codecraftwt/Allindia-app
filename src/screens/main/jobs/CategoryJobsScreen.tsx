@@ -19,6 +19,7 @@ import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobs, fetchHomeFeed, fetchJobsByCategory, filterJobs } from '../../../redux/slice/jobSlice';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
@@ -111,7 +112,7 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
               <Icon name="briefcase" size={20} color={colors.primary} />
             )}
           </View>
-          <View style={styles.titleBox}>
+          <View style={[styles.titleBox, { paddingRight: 24 }]}>
             <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
               {job.title}
             </Text>
@@ -119,6 +120,11 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
               {companyName}
             </Text>
           </View>
+          {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+            <View style={{ position: 'absolute', right: 0, top: 0 }}>
+              <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+            </View>
+          )}
         </View>
 
         <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>

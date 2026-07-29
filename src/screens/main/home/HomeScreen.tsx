@@ -45,6 +45,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import { useTheme } from '../../../context/ThemeContext';
@@ -311,14 +312,19 @@ function JobTrendCard({
             <Icon name="briefcase" size={20} color={colors.primary} />
           </View>
         )}
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-            {job.title}
-          </Text>
-          <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
-            {companyName}
-          </Text>
-        </View>
+          <View style={{ flex: 1, paddingRight: 24 }}>
+            <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+              {job.title}
+            </Text>
+            <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
+              {companyName}
+            </Text>
+          </View>
+          {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+            <View style={{ position: 'absolute', right: 0, top: 0 }}>
+              <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+            </View>
+          )}
       </View>
 
       <View style={styles.cardMetaRow}>
@@ -446,7 +452,7 @@ function JobListCard({
             </View>
           )}
         </View>
-        <View style={[styles.listCardText, { flex: 1 }]}>
+        <View style={[styles.listCardText, { flex: 1, paddingRight: 24 }]}>
           <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {job.title}
           </Text>
@@ -454,6 +460,11 @@ function JobListCard({
             {companyName}
           </Text>
         </View>
+        {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 0, top: 0 }}>
+            <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+          </View>
+        )}
       </View>
 
       <View style={[styles.listMeta, { justifyContent: 'space-between', flexWrap: 'nowrap' }]}>

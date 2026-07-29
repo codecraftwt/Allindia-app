@@ -262,7 +262,9 @@ const JobsReelsScreen: React.FC = () => {
         <View style={[styles.bottomDetails, { bottom: 40 + insets.bottom }]}>
           <View style={styles.companyRow}>
             <Text style={styles.companyName}>{item.employer?.company?.company_name || 'JobIndia Partner'}</Text>
-            <Icon name="check-decagram" size={16} color="#3B82F6" style={{ marginLeft: 6 }} />
+            {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
+              <Icon name="check-decagram" size={16} color="#3B82F6" style={{ marginLeft: 6 }} />
+            )}
           </View>
           <Text style={styles.fullJobTitle}>{item.title && !item.title.includes('.jpg') ? item.title : (item.category?.name || 'Job Opportunity')}</Text>
           <Pressable style={[styles.mainApplyBtn, { backgroundColor: colors.primary }]}>
@@ -353,7 +355,14 @@ const JobsReelsScreen: React.FC = () => {
                       <Image source={{ uri: reel.media_url || reel.image }} style={styles.reelThumb} />
                       <View style={styles.reelOverlay}>
                         <Text style={styles.reelTitle} numberOfLines={1}>{reel.title && !reel.title.includes('.jpg') ? reel.title : (reel.category?.name || 'Job')}</Text>
-                        <Text style={styles.reelCompany}>{reel.employer?.company?.company_name || 'JobIndia'}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={[styles.reelCompany, { flexShrink: 1 }]} numberOfLines={1}>
+                            {reel.employer?.company?.company_name || 'JobIndia'}
+                          </Text>
+                          {(reel.employer?.company?.verification_status === 'approved' || reel.employer?.verification_status === 'approved') && (
+                            <Icon name="check-circle" size={12} color="#3B82F6" style={{ marginLeft: 4 }} />
+                          )}
+                        </View>
                       </View>
                       {loadingId === reel.id && (
                         <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>

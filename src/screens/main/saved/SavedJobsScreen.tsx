@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   TextInput,
   Modal,
-  Dimensions
+  Dimensions,
+  StatusBar
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -21,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
 import type { SavedStackParamList } from '../../../navigation/types';
 import type { ThemeColors } from '../../../theme/colors';
@@ -77,7 +79,7 @@ function SavedJobCard({
                 <Icon name="briefcase" size={20} color={colors.primary} />
               )}
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, paddingRight: 24 }}>
               <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>
                 {job.title}
               </Text>
@@ -85,6 +87,11 @@ function SavedJobCard({
                 {company.company_name || 'Anonymous Company'}
               </Text>
             </View>
+            {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+              <View style={{ position: 'absolute', right: 0, top: 0 }}>
+                <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+              </View>
+            )}
           </View>
         </Pressable>
         
@@ -177,6 +184,7 @@ const SavedJobsScreen: React.FC = () => {
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       {!isLoggedIn ? (
         <GuestView 
           title="Save Your Favorites"

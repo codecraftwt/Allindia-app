@@ -70,7 +70,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
           style={{ minHeight: 60 }}
           decelerationRate="fast">
           {[1, 2, 3, 4, 5].map(i => (
-            <SkeletonPulse
+            <View
               key={i}
               style={[
                 styles.categoryCard,
@@ -78,8 +78,11 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
                   backgroundColor: colors.surface,
                   borderColor: colors.border,
                 },
-              ]}
-            />
+              ]}>
+              <SkeletonPulse style={styles.categoryIconBox} />
+              <SkeletonPulse style={{ width: 60, height: 10, borderRadius: 5, marginBottom: 6 }} />
+              <SkeletonPulse style={{ width: 40, height: 10, borderRadius: 5 }} />
+            </View>
           ))}
         </ScrollView>
       </View>

@@ -10,6 +10,7 @@ import Animated, {
   interpolate
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
@@ -208,7 +209,7 @@ const LatestJobAssistant = ({ colors, showFilterGrid }: LatestJobAssistantProps)
                     <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 13 }]} numberOfLines={1}>
                       {job.title}
                     </Text>
-                    <View style={styles.jobMeta}>
+                    <View style={[styles.jobMeta, { paddingRight: 24 }]}>
                       <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]} numberOfLines={1}>
                         {companyName}
                       </Text>
@@ -216,6 +217,11 @@ const LatestJobAssistant = ({ colors, showFilterGrid }: LatestJobAssistantProps)
                         {salaryLabel}
                       </Text>
                     </View>
+                    {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+                      <View style={{ position: 'absolute', right: 4, top: 4 }}>
+                        <MaterialCommunityIcons name="check-decagram" size={14} color="#3B82F6" />
+                      </View>
+                    )}
                   </TouchableOpacity>
                 );
               })}

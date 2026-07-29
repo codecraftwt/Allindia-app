@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobs, filterJobs, searchJobs } from '../../../redux/slice/jobSlice';
@@ -364,10 +365,15 @@ const AllJobsScreen = () => {
             <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
               {item.title}
             </Text>
-            <Text style={[typography.small, { color: colors.textSecondary }]}>
+            <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
               {companyName}
             </Text>
           </View>
+          {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
+            <View style={{ position: 'absolute', right: 0, top: 0 }}>
+              <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+            </View>
+          )}
         </View>
 
         <View style={styles.cardMeta}>
@@ -418,6 +424,7 @@ const AllJobsScreen = () => {
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
       <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
         <AuthHeadline
           colors={colors}
@@ -518,14 +525,14 @@ const AllJobsScreen = () => {
 
       {isPending && page === 1 ? (
         <View style={{ flex: 1 }}>
-          <View style={{ marginBottom: spacing.sm }}>
+          <View style={{ marginBottom: spacing.sm, paddingHorizontal: spacing.lg }}>
             <HomeCategoriesSection
               categories={categories}
               colors={colors}
               navigation={navigation}
               homeCategoriesMock={HOME_CATEGORIES}
               isDark={isDark}
-              loading={metaLoading}
+              loading={true}
             />
           </View>
           <JobSkeleton />

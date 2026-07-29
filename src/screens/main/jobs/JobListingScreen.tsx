@@ -10,6 +10,7 @@ import {
   View,
   ActivityIndicator,
   Keyboard,
+  StatusBar,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
@@ -18,6 +19,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
 import type { SearchStackParamList } from '../../../navigation/types';
 import type { ThemeColors } from '../../../theme/colors';
@@ -111,7 +113,7 @@ function JobListCard({
         <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
           <Icon name="briefcase" size={18} color={colors.primary} />
         </View>
-        <View style={styles.listCardText}>
+        <View style={[styles.listCardText, { paddingRight: 24 }]}>
           <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {job.title}
           </Text>
@@ -119,6 +121,11 @@ function JobListCard({
             {companyName}
           </Text>
         </View>
+        {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 0, top: 0 }}>
+            <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+          </View>
+        )}
       </View>
       <View style={styles.listMeta}>
         <View style={styles.metaItem}>
@@ -235,6 +242,7 @@ const JobListingScreen: React.FC = () => {
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <StatusBar barStyle={colors.background === '#FFFFFF' ? 'dark-content' : 'light-content'} backgroundColor="transparent" translucent />
       <View style={styles.centerWrapper}>
         <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">

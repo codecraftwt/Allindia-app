@@ -27,6 +27,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PrimaryButton } from '../../../components/auth';
 import { useTheme } from '../../../context/ThemeContext';
 import type { ThemeColors } from '../../../theme/colors';
@@ -227,10 +228,17 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
              <Icon name="briefcase" size={16} color={colors.primary} />
           )}
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingRight: 24 }}>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>{job.title}</Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>{companyName}</Text>
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+            {companyName}
+          </Text>
         </View>
+        {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 12, top: 12 }}>
+            <MaterialCommunityIcons name="check-decagram" size={16} color="#3B82F6" />
+          </View>
+        )}
       </View>
       
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>

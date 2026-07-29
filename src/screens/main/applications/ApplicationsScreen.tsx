@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { ApplicationsStackParamList } from '../../../navigation/types';
@@ -150,10 +151,17 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
             <Icon name="building" size={24} color={colors.primary} />
           )}
         </View>
-        <View style={styles.wiHeaderInfo}>
+        <View style={[styles.wiHeaderInfo, { paddingRight: 32 }]}>
           <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>{job.title}</Text>
-          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>{company.company_name || t('applications.anonymousCompany', 'Anonymous Company')}</Text>
+          <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>
+            {company.company_name || t('applications.anonymousCompany', 'Anonymous Company')}
+          </Text>
         </View>
+        {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 32, top: 12 }}>
+            <MaterialCommunityIcons name="check-decagram" size={16} color="#3B82F6" />
+          </View>
+        )}
         <TouchableOpacity
           onPress={(event) => {
             const { pageY } = event.nativeEvent;
