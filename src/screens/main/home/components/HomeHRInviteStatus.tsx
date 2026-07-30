@@ -2,15 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 import type { ThemeColors } from '../../../../theme/colors';
 import { spacing } from '../../../../theme/spacing';
 import { useTranslation } from 'react-i18next';
-import { BASE_URL } from '../../../../api/axiosInstance';
+import api, { BASE_URL } from '../../../../api/axiosInstance';
 
 export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeColors; invite: any; onHide: () => void }) => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const [expanded, setExpanded] = useState(false);
+  const userToken = useSelector((state: any) => state.auth.token);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -43,7 +45,26 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
   const titleText = isJobApp && jobDetails?.title ? jobDetails.title : (companyObj.company_name || 'Anonymous Company');
   const subtitleText = isJobApp && jobDetails?.title ? (companyObj.company_name || 'Anonymous Company') : 'HR Interview Invite';
   
+  const markAsRead = async () => {
+    if (invite?.type && invite?.id) {
+      try {
+        await api.post(
+          `api/candidate/profile/invitations/${invite.type}/${invite.id}/read`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${userToken}` },
+          }
+        );
+      } catch (error) {
+        console.error('Failed to mark invite as read:', error);
+      }
+    }
+  };
+
   const openInviteDetail = () => {
+    onHide(); // Hide from UI immediately
+    markAsRead(); // Mark as read via API
+    
     const hasJobDetails = invite.job_details && typeof invite.job_details === 'object' && Object.keys(invite.job_details).length > 0;
     
     if (hasJobDetails) {
@@ -57,13 +78,18 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
     }
   };
 
+  const handleClose = () => {
+    onHide(); // Hide from UI immediately
+    markAsRead();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           {t('home.hrInviteTitle', 'New HR Invite')}
         </Text>
-        <TouchableOpacity onPress={onHide} style={styles.closeBtn}>
+        <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
           <Icon name="times" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
@@ -87,9 +113,18 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
             </Animated.View>
           </View>
           
-          <View style={styles.toggleBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (expanded) {
+                handleClose();
+              } else {
+                setExpanded(true);
+              }
+            }} 
+            style={styles.toggleBtn}
+          >
             <Icon name={expanded ? "times" : "chevron-down"} size={14} color={colors.textSecondary} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Expanded Details */}
