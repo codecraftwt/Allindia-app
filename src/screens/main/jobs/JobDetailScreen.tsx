@@ -463,7 +463,16 @@ const JobDetailScreen: React.FC = () => {
   const salaryLabel = currentJob?.salary_min && currentJob?.salary_max
     ? `₹${currentJob.salary_min.toLocaleString()} - ${currentJob.salary_max.toLocaleString()}`
     : 'Negotiable';
-  const postedDate = currentJob?.created_at ? new Date(currentJob.created_at).toLocaleDateString() : 'Recently';
+  const postedDate = useMemo(() => {
+    if (!currentJob?.created_at) return 'Recently';
+    const date = new Date(currentJob.created_at);
+    const diffTime = Math.abs(new Date().getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays <= 15) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  }, [currentJob?.created_at]);
   const jobTypeLabel = formatJobType(currentJob?.job_type_label || currentJob?.job_type || 'Full Time');
 
   const handleShare = useCallback(async () => {

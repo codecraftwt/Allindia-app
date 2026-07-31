@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Platform, Pressable, View, StyleSheet, Text, Animated } from 'react-native';
+import { Platform, Pressable, View, StyleSheet, Text, Animated, InteractionManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getFocusedRouteNameFromRoute, CommonActions } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -18,7 +18,7 @@ import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const CustomTabBarButton = ({ children, onPress, isReels }: any) => {
+const CustomTabBarButton = React.memo(({ children, onPress, isReels }: any) => {
   const { colors } = useTheme();
 
   if (isReels) {
@@ -43,9 +43,9 @@ const CustomTabBarButton = ({ children, onPress, isReels }: any) => {
       {children}
     </Pressable>
   );
-};
+});
 
-const TabIcon = ({ name, color, focused, label }: any) => {
+const TabIcon = React.memo(({ name, color, focused, label }: any) => {
   const iconName = focused ? name : `${name}-outline`;
   return (
     <View style={styles.iconWrapper}>
@@ -60,9 +60,9 @@ const TabIcon = ({ name, color, focused, label }: any) => {
       </Text>
     </View>
   );
-};
+});
 
-const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
+const AnimatedAIIcon = React.memo(({ focused }: { focused: boolean }) => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
 
@@ -72,6 +72,7 @@ const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
         toValue: 1,
         duration: 3000,
         useNativeDriver: true,
+        isInteraction: false,
       })
     ).start();
   }, []);
@@ -106,7 +107,7 @@ const AnimatedAIIcon = ({ focused }: { focused: boolean }) => {
       </Text>
     </View>
   );
-};
+});
 
 const MainTabNavigator: React.FC = () => {
   const { t } = useTranslation();
@@ -216,16 +217,22 @@ const MainTabNavigator: React.FC = () => {
                 route.name === 'Applications' ? 'ApplicationsList' : 
                 route.name === 'Profile' ? 'ProfileOverview' : undefined;
 
-              if (rootScreen) {
-                navigation.dispatch(
-                  CommonActions.navigate({
-                    name: route.name,
-                    params: { screen: rootScreen },
-                  })
-                );
-              } else {
-                navigation.navigate({ name: route.name });
-              }
+              requestAnimationFrame(() => {
+                InteractionManager.runAfterInteractions(() => {
+                  if (isFocused && rootScreen) {
+                    // If already on this tab, tap again to pop to root screen
+                    navigation.dispatch(
+                      CommonActions.navigate({
+                        name: route.name,
+                        params: { screen: rootScreen },
+                      })
+                    );
+                  } else {
+                    // Normal tab switch (instantly resumes tab's previous state)
+                    navigation.navigate(route.name);
+                  }
+                });
+              });
             }
           };
 

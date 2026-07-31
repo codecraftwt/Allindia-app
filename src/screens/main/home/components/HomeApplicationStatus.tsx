@@ -15,8 +15,8 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.3, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.3, duration: 600, useNativeDriver: true, isInteraction: false }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true, isInteraction: false }),
       ])
     ).start();
   }, [pulseAnim]);

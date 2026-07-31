@@ -16,6 +16,7 @@ import {
   Share,
   Modal,
   StatusBar,
+  InteractionManager,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated from 'react-native-reanimated';
@@ -45,7 +46,7 @@ import { BASE_URL } from '../../../api/axiosInstance';
 
 
 
-function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; colors: ThemeColors; onPress: () => void; profileData: any }) {
+const AppliedJobCard = React.memo(function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; colors: ThemeColors; onPress: () => void; profileData: any }) {
   const { t } = useTranslation();
   const [showMenu, setShowMenu] = React.useState(false);
   const [menuAnchor, setMenuAnchor] = React.useState({ top: 0, right: 0 });
@@ -246,8 +247,7 @@ function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; color
       </View>
     </Pressable>
   );
-}
-
+});
 const formatJobType = (type: string) => {
   if (!type) return 'Full Time';
   return type
@@ -257,7 +257,7 @@ const formatJobType = (type: string) => {
     .join(' ');
 };
 
-function SavedJobCard({
+const SavedJobCard = React.memo(function SavedJobCard({
   job,
   colors,
   onRemove,
@@ -318,9 +318,8 @@ function SavedJobCard({
       </Pressable>
     </View>
   );
-}
-
-function HRInviteCard({ invite, colors, onPress }: { invite: any; colors: ThemeColors; onPress: () => void }) {
+});
+const HRInviteCard = React.memo(function HRInviteCard({ invite, colors, onPress }: { invite: any; colors: ThemeColors; onPress: () => void }) {
   const companyObj = invite.company || invite.employer || {};
   const employerObj = invite.employer || {};
   const invitedAt = invite.invited_at
@@ -419,8 +418,7 @@ function HRInviteCard({ invite, colors, onPress }: { invite: any; colors: ThemeC
       </View>
     </Pressable>
   );
-}
-
+});
 const ApplicationsSkeleton: React.FC = () => {
   const { colors } = useTheme();
   return (
@@ -553,12 +551,45 @@ const ApplicationsScreen: React.FC = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      onRefresh();
+      InteractionManager.runAfterInteractions(() => {
+        onRefresh();
+      });
       StatusBar.setBarStyle('dark-content');
     }, [onRefresh])
   );
 
   const insets = useSafeAreaInsets();
+
+  const renderJobItem = React.useCallback(({ item }: { item: any }) => {
+    if (activeTab === 'applied') {
+      return (
+        <AppliedJobCard
+          job={item}
+          colors={colors}
+          onPress={() => openJobDetail(item)}
+          profileData={profileData}
+        />
+      );
+    } else if (activeTab === 'saved') {
+      return (
+        <SavedJobCard
+          job={item}
+          colors={colors}
+          onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
+          onOpenDetail={() => openJobDetail(item)}
+        />
+      );
+    } else if (activeTab === 'invites') {
+      return (
+        <HRInviteCard
+          invite={item}
+          colors={colors}
+          onPress={() => openInviteDetail(item)}
+        />
+      );
+    }
+    return null;
+  }, [activeTab, colors, profileData, openJobDetail, setConfirmModal, openInviteDetail]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -689,29 +720,11 @@ const ApplicationsScreen: React.FC = () => {
               <FlatList
                 data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : filteredHRInvites}
                 keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  activeTab === 'applied' ? (
-                    <AppliedJobCard
-                      job={item}
-                      colors={colors}
-                      onPress={() => openJobDetail(item)}
-                      profileData={profileData}
-                    />
-                  ) : activeTab === 'saved' ? (
-                    <SavedJobCard
-                      job={item}
-                      colors={colors}
-                      onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
-                      onOpenDetail={() => openJobDetail(item)}
-                    />
-                  ) : activeTab === 'invites' ? (
-                    <HRInviteCard
-                      invite={item}
-                      colors={colors}
-                      onPress={() => openInviteDetail(item)}
-                    />
-                  ) : null
-                )}
+                renderItem={renderJobItem}
+                initialNumToRender={8}
+                maxToRenderPerBatch={10}
+                windowSize={11}
+                removeClippedSubviews={true}
                 ListEmptyComponent={!(loading || isPending) ? renderEmpty() : null}
                 contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}

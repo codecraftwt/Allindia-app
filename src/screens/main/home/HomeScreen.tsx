@@ -19,6 +19,8 @@ import {
   ToastAndroid,
   Keyboard,
   StatusBar,
+  FlatList,
+  InteractionManager,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -209,7 +211,7 @@ const TagCycling = ({ tags, colors, tagRotationStyle, isSmall = false }: { tags:
   );
 };
 
-function JobTrendCard({
+const JobTrendCard = React.memo(function JobTrendCard({
   job,
   colors,
   onPress,
@@ -348,9 +350,9 @@ function JobTrendCard({
       </View>
     </Pressable>
   );
-}
+});
 
-function JobListCard({
+const JobListCard = React.memo(function JobListCard({
   job,
   colors,
   onPress,
@@ -488,7 +490,7 @@ function JobListCard({
       </View>
     </Pressable>
   );
-};
+});
 
 const SearchTicker: React.FC<{ colors: ThemeColors }> = ({ colors }) => {
   const { t } = useTranslation();
@@ -551,8 +553,8 @@ const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () 
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.02, duration: 1500, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1.02, duration: 1500, useNativeDriver: true, isInteraction: false }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true, isInteraction: false }),
       ])
     ).start();
   }, [pulseAnim]);
@@ -753,22 +755,26 @@ const MemoizedHomeContent = React.memo(({
                 colors={colors}
                 onPress={() => navigation.navigate('CategoryJobs', { section: 'latest' })}
               />
-              <ScrollView
+              <FlatList
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.trendingScroll}
-                decelerationRate="fast">
-                {latest.map((job: any) => (
+                decelerationRate="fast"
+                data={latest}
+                keyExtractor={item => item.id.toString()}
+                initialNumToRender={4}
+                maxToRenderPerBatch={4}
+                windowSize={5}
+                renderItem={({ item: job }) => (
                   <JobTrendCard
-                    key={job.id}
                     job={{ ...job, isLatest: true }}
                     colors={colors}
                     onPress={() => openJob(job)}
                     tagRotationStyle={tagRotationStyle}
                     isDark={isDark}
                   />
-                ))}
-              </ScrollView>
+                )}
+              />
             </>
           )}
           {trending && trending.length > 0 && (
@@ -780,22 +786,26 @@ const MemoizedHomeContent = React.memo(({
                 colors={colors}
                 onPress={() => navigation.navigate('CategoryJobs', { section: 'trending' })}
               />
-              <ScrollView
+              <FlatList
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.trendingScroll}
-                decelerationRate="fast">
-                {trending.map((job: any) => (
+                decelerationRate="fast"
+                data={trending}
+                keyExtractor={item => item.id.toString()}
+                initialNumToRender={4}
+                maxToRenderPerBatch={4}
+                windowSize={5}
+                renderItem={({ item: job }) => (
                   <JobTrendCard
-                    key={job.id}
                     job={job}
                     colors={colors}
                     onPress={() => openJob(job)}
                     tagRotationStyle={tagRotationStyle}
                     isDark={isDark}
                   />
-                ))}
-              </ScrollView>
+                )}
+              />
             </>
           )}
           <JobReelsBanner colors={colors} onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Home' } })} />
@@ -911,7 +921,9 @@ const HomeScreen: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      dispatch(fetchNotifications());
+      InteractionManager.runAfterInteractions(() => {
+        dispatch(fetchNotifications());
+      });
       StatusBar.setBarStyle('light-content');
     }, [dispatch])
   );
@@ -927,19 +939,21 @@ const HomeScreen: React.FC = () => {
   // Load recent searches from AsyncStorage on screen focus
   useFocusEffect(
     useCallback(() => {
-      const loadRecent = async () => {
-        try {
-          const stored = await AsyncStorage.getItem('recent_searches');
-          if (stored) {
-            setOverlayRecent(JSON.parse(stored));
-          } else {
-            setOverlayRecent(['Product Manager', 'Hyderabad IT jobs', 'Customer support']);
+      InteractionManager.runAfterInteractions(() => {
+        const loadRecent = async () => {
+          try {
+            const stored = await AsyncStorage.getItem('recent_searches');
+            if (stored) {
+              setOverlayRecent(JSON.parse(stored));
+            } else {
+              setOverlayRecent(['Product Manager', 'Hyderabad IT jobs', 'Customer support']);
+            }
+          } catch (e) {
+            console.warn('Failed to load recent searches:', e);
           }
-        } catch (e) {
-          console.warn('Failed to load recent searches:', e);
-        }
-      };
-      loadRecent();
+        };
+        loadRecent();
+      });
     }, [])
   );
 

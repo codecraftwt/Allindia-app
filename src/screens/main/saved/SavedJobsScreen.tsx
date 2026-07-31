@@ -46,7 +46,7 @@ const { width } = Dimensions.get('window');
 
 type SavedNav = StackNavigationProp<SavedStackParamList, 'SavedJobs'>;
 
-function SavedJobCard({
+const SavedJobCard = React.memo(function SavedJobCard({
   job,
   colors,
   onRemove,
@@ -118,7 +118,7 @@ function SavedJobCard({
       </Pressable>
     </View>
   );
-}
+});
 
 const SavedJobsSkeleton: React.FC = () => {
   const { colors } = useTheme();
@@ -182,6 +182,15 @@ const SavedJobsScreen: React.FC = () => {
     navigation.navigate('JobDetail', { jobId: jobId.toString() });
   };
 
+  const renderJobItem = React.useCallback(({ item }: { item: any }) => (
+    <SavedJobCard
+      job={item}
+      colors={colors}
+      onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
+      onOpenDetail={() => handleOpenDetail(item.id)}
+    />
+  ), [colors, handleOpenDetail]);
+
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
@@ -232,14 +241,11 @@ const SavedJobsScreen: React.FC = () => {
         data={loading && filteredJobs.length === 0 ? [] : filteredJobs}
         ListHeaderComponent={loading && filteredJobs.length === 0 ? <SavedJobsSkeleton /> : null}
         keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => (
-          <SavedJobCard
-            job={item}
-            colors={colors}
-            onRemove={() => setConfirmModal({ visible: true, jobId: item.id })}
-            onOpenDetail={() => handleOpenDetail(item.id)}
-          />
-        )}
+        renderItem={renderJobItem}
+        initialNumToRender={8}
+        maxToRenderPerBatch={10}
+        windowSize={11}
+        removeClippedSubviews={true}
         contentContainerStyle={[
           styles.listContent,
           !loading && filteredJobs.length === 0 && styles.listEmpty,
