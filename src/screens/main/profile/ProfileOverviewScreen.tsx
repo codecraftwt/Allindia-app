@@ -329,8 +329,7 @@ const ProfileOverviewScreen: React.FC = () => {
           <View style={[styles.decorativeCircle, { top: 100, right: -80, width: 250, height: 250, backgroundColor: '#FFFFFF', opacity: 0.03 }]} />
         </View>
 
-        <View style={[styles.topNav, { paddingTop: insets.top + 8, paddingHorizontal: 20, justifyContent: 'space-between', zIndex: 10 }]}>
-          <Text style={[typography.h4, { color: '#FFFFFF', fontWeight: 'bold', fontSize: 22, letterSpacing: 0.5 }]}>{t('profileDetails.myProfile', 'My Profile')}</Text>
+        <View style={[styles.topNav, { paddingTop: insets.top + 8, paddingHorizontal: 20, justifyContent: 'flex-end', zIndex: 10 }]}>
           <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={({ pressed }) => [styles.settingsBtn, pressed && { opacity: 0.7 }]}>
             <Icon name="settings" size={24} color="#FFFFFF" />
           </Pressable>

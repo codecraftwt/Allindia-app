@@ -142,9 +142,9 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
                 },
               ]}>
               <View style={[styles.categoryIconBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)' }]}>
-                <Icon name={catIcon} size={18} color="#000000" />
+                <Icon name={catIcon} size={14} color="#000000" />
               </View>
-              <Text style={[styles.categoryLabel, { color: "#000000" }]} numberOfLines={3}>
+              <Text style={[styles.categoryLabel, { color: "#000000" }]} numberOfLines={1}>
                 {catName}
               </Text>
             </Pressable>
@@ -178,25 +178,25 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     width: 105,
-    height: 100,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 10,
+    padding: 8,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   categoryIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   categoryLabel: {
     ...typography.tiny,

@@ -63,11 +63,7 @@ const JobCategoriesScreen: React.FC = () => {
   );
 
   const handleBackPress = () => {
-    if (route.params?.from === 'AllJobs') {
-      navigation.navigate('AllJobs');
-    } else {
-      navigation.goBack();
-    }
+    navigation.goBack();
   };
 
   return (

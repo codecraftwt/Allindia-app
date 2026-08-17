@@ -59,10 +59,8 @@ const LocationScreen = () => {
   const [tempCity, setTempCity] = useState(selectedCity || '');
 
   React.useEffect(() => {
-    if (cities.length === 0) {
-      dispatch(fetchMetaCities());
-    }
-  }, [dispatch, cities.length]);
+    dispatch(fetchMetaCities());
+  }, [dispatch]);
 
   const uniqueCities = React.useMemo(() => {
     if (cities.length === 0) {

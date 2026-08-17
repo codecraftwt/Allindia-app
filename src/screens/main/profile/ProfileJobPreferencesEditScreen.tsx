@@ -508,6 +508,18 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const [citySearch, setCitySearch] = useState('');
   const [prefCitySearch, setPrefCitySearch] = useState('');
 
+  const uniqueCities = useMemo(() => {
+    const seen = new Set<string>();
+    return cities.filter((c: any) => {
+      const label = c.label || c.city || '';
+      if (!label) return false;
+      const lower = label.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [cities]);
+
   const isInitialized = useRef(false);
 
   // Fetch meta data whenever screen comes into focus
@@ -907,7 +919,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={cities.filter((c: any) => c.label.toLowerCase().includes(citySearch.toLowerCase()))}
+              data={uniqueCities.filter((c: any) => c.label.toLowerCase().includes(citySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -962,7 +974,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={cities.filter((c: any) => c.label.toLowerCase().includes(prefCitySearch.toLowerCase()))}
+              data={uniqueCities.filter((c: any) => c.label.toLowerCase().includes(prefCitySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}

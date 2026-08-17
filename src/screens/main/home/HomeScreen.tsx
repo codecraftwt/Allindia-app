@@ -713,7 +713,7 @@ const MemoizedHomeContent = React.memo(({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         styles.scrollContent,
-        { paddingBottom: 80, paddingTop: 152 + (insets.top || 40) },
+        { paddingBottom: 80, paddingTop: 140 + (insets.top || 40) },
       ]}
       refreshControl={
         <RefreshControl

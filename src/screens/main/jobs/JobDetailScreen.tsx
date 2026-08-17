@@ -143,8 +143,10 @@ const formatDescription = (html: string) => {
   text = text.replace(/<\/p>/gi, '\n\n');
   text = text.replace(/<p>/gi, '');
   text = text.replace(/<br\s*\/?>/gi, '\n');
-  text = text.replace(/<\/li>/gi, '\n');
+  text = text.replace(/<\/li>/gi, '\n\n');
   text = text.replace(/<li>/gi, '• ');
+  text = text.replace(/<ul>|<ol>/gi, '\n');
+  text = text.replace(/<\/ul>|<\/ol>/gi, '\n');
   text = text.replace(/<\/?[^>]+(>|$)/g, ''); // Strip remaining tags
 
   // Decode common entities
@@ -155,17 +157,20 @@ const formatDescription = (html: string) => {
   text = text.replace(/&#39;/g, "'");
   text = text.replace(/&nbsp;/g, ' ');
 
+  // Clean up extra newlines (more than 2)
+  text = text.replace(/\n{3,}/g, '\n\n');
+
   return text.trim();
 };
-function InfoRow({ label, value, icon, colors }: { label: string; value: string; icon: string; colors: ThemeColors }) {
+function InfoRow({ label, value, icon, colors, style, textWrap }: { label: string; value: string; icon: string; colors: ThemeColors; style?: any; textWrap?: boolean }) {
   return (
-    <View style={styles.infoRow}>
+    <View style={[styles.infoRow, style]}>
       <View style={[styles.infoIcon, { backgroundColor: colors.surfaceHighlight }]}>
         <Icon name={icon} size={14} color={colors.primary} />
       </View>
-      <View>
-        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{label}</Text>
-        <Text style={[typography.body, { color: colors.textPrimary, marginTop: 1 }]}>{value}</Text>
+      <View style={textWrap ? { flex: 1 } : undefined}>
+        <Text style={[typography.small, { color: colors.textPlaceholder }]} numberOfLines={textWrap ? 1 : undefined}>{label}</Text>
+        <Text style={[typography.body, { color: colors.textPrimary, marginTop: 1 }]} numberOfLines={textWrap ? 2 : undefined}>{value}</Text>
       </View>
     </View>
   );
@@ -223,9 +228,9 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
         <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
           {job.employer?.company?.company_logo_url ? (
-             <Image source={{ uri: job.employer.company.company_logo_url }} style={{ width: 32, height: 32, borderRadius: radius.sm }} />
+            <Image source={{ uri: job.employer.company.company_logo_url }} style={{ width: 32, height: 32, borderRadius: radius.sm }} />
           ) : (
-             <Icon name="briefcase" size={16} color={colors.primary} />
+            <Icon name="briefcase" size={16} color={colors.primary} />
           )}
         </View>
         <View style={{ flex: 1, paddingRight: 24 }}>
@@ -240,7 +245,7 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
           </View>
         )}
       </View>
-      
+
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: 8 }}>
           <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
@@ -261,7 +266,7 @@ const GuestLockedContent = ({ children, colors }: { children: React.ReactNode, c
         {children}
       </View>
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.1, shadowRadius: 3, alignItems: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: colors.border }}>
+        <View style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, alignItems: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: colors.border }}>
           <Icon name="lock" size={16} color={colors.textSecondary} />
           <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Login to view</Text>
         </View>
@@ -479,23 +484,22 @@ const JobDetailScreen: React.FC = () => {
     if (!currentJob) return;
     try {
       const jobLink = `https://jobindia.app/job/${currentJob.id}`;
-      // Indeed-style clean format: Title - Location - Site
-      const shareMessage = `${currentJob.title} - ${locationLabel} - JobIndia.app\n${companyName}\n\nApply here: ${jobLink}`;
+      const shareMessage = `🚀 Exciting Job Opportunity!\n\n📌 Role: ${currentJob.title}\n📍 Location: ${locationLabel}\n💰 Salary: ${salaryLabel}\n\nDon't miss out on this great career move.\n\n👉 Apply here: ${jobLink}`;
 
       await Share.share({
         message: shareMessage,
         url: jobLink, // For iOS to show the link preview correctly
-        title: `${currentJob.title} at ${companyName}`,
+        title: currentJob.title,
       });
     } catch (error: any) {
       Alert.alert('Error', 'Could not open share menu');
     }
-  }, [currentJob, companyName, locationLabel]);
+  }, [currentJob, locationLabel, salaryLabel]);
 
   const handleShareApp = useCallback(async () => {
     try {
       await Share.share({
-        message: 'Hey! Join JobIndia and find your dream job quickly. Download now: https://play.google.com/store/apps/details?id=com.jobsindia',
+        message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share',
         title: 'Refer JobIndia',
       });
     } catch (error: any) {
@@ -703,587 +707,591 @@ const JobDetailScreen: React.FC = () => {
             )}
           </View>
 
-        {/* 1. Key Highlights */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
-          <View style={styles.infoGrid}>
-            <InfoRow label={t('jobDetail.experience', 'Experience')} value={!currentJob.experience_label || currentJob.experience_label === '-' ? t('jobDetail.fresher', 'Fresher') : currentJob.experience_label} icon="briefcase" colors={colors} />
-            <InfoRow label={t('jobDetail.gender', 'Gender')} value={formatJobType(currentJob.gender) || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
-            <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
-            <InfoRow label={t('jobDetail.workLocation', 'Work Location')} value={formatJobType(currentJob.work_location_type) || 'Office'} icon="building" colors={colors} />
-            {currentJob.working_hours && (
-              <InfoRow label={t('jobDetail.workingHours', 'Working Hours')} value={currentJob.working_hours} icon="clock-o" colors={colors} />
-            )}
-            {currentJob.working_days && currentJob.working_days.length > 0 && (
-              <InfoRow label={t('jobDetail.workingDays', 'Working Days')} value={currentJob.working_days.map(formatJobType).join(', ')} icon="calendar" colors={colors} />
-            )}
-            {currentJob.shifts && currentJob.shifts.length > 0 && (
-              <InfoRow label={t('jobDetail.shifts', 'Shifts')} value={currentJob.shifts.map(formatJobType).join(', ')} icon="sun-o" colors={colors} />
-            )}
-            <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
-          </View>
-        </View>
-
-        {/* 2. Salary & Incentives */}
-        {(currentJob.salary_min || currentJob.incentive_amount || currentJob.bonus_amount) && (
-          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.salaryIncentives', 'Salary & Incentives')} colors={colors} />
-            {!isLoggedIn ? (
-              <GuestLockedContent colors={colors}>
-                <View style={styles.infoGrid}>
-                  <InfoRow label={t('jobDetail.baseSalary', 'Base Salary')} value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`} icon="money" colors={colors} />
-                  <InfoRow label={t('jobDetail.salaryType', 'Salary Type')} value={formatSalaryBreakup(currentJob.salary_breakup_type)} icon="pie-chart" colors={colors} />
-                </View>
-              </GuestLockedContent>
-            ) : (
+          {/* 1. Key Highlights */}
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <SectionTitle title={t('jobDetail.keyHighlights', 'Key Highlights')} colors={colors} />
             <View style={styles.infoGrid}>
-              <InfoRow 
-                label={t('jobDetail.baseSalary', 'Base Salary')} 
-                value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`} 
-                icon="money" 
-                colors={colors} 
-              />
-              <InfoRow 
-                label={t('jobDetail.salaryType', 'Salary Type')} 
-                value={formatSalaryBreakup(currentJob.salary_breakup_type)} 
-                icon="pie-chart" 
-                colors={colors} 
-              />
-              {currentJob.incentive_amount > 0 && (
-                <InfoRow 
-                  label={t('jobDetail.incentives', 'Incentives')} 
-                  value={`₹${currentJob.incentive_amount.toLocaleString()}`} 
-                  icon="line-chart" 
-                  colors={colors} 
-                />
+              <InfoRow label={t('jobDetail.experience', 'Experience')} value={!currentJob.experience_label || currentJob.experience_label === '-' ? t('jobDetail.fresher', 'Fresher') : currentJob.experience_label} icon="briefcase" colors={colors} />
+              <InfoRow label={t('jobDetail.gender', 'Gender')} value={formatJobType(currentJob.gender) || t('jobDetail.any', 'Any')} icon="venus-mars" colors={colors} />
+              <InfoRow label={t('jobDetail.openings', 'Openings')} value={`${currentJob.openings || 0} ${t('jobDetail.positions', 'Positions')}`} icon="users" colors={colors} />
+              <InfoRow label={t('jobDetail.workLocation', 'Work Location')} value={formatJobType(currentJob.work_location_type) || 'Office'} icon="building" colors={colors} />
+              {currentJob.working_hours && (
+                <InfoRow label={t('jobDetail.workingHours', 'Working Hours')} value={currentJob.working_hours} icon="clock-o" colors={colors} />
               )}
-              {currentJob.bonus_amount > 0 && (
-                <InfoRow 
-                  label={t('jobDetail.bonus', 'Bonus')} 
-                  value={`₹${currentJob.bonus_amount.toLocaleString()} (${formatJobType(currentJob.bonus_type)})`} 
-                  icon="gift" 
-                  colors={colors} 
-                />
+              {currentJob.working_days && currentJob.working_days.length > 0 && (
+                <InfoRow label={t('jobDetail.workingDays', 'Working Days')} value={currentJob.working_days.map(formatJobType).join(', ')} icon="calendar" colors={colors} />
               )}
-            </View>
-            )}
-          </View>
-        )}
-
-        {/* 3. Description */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-          <SectionTitle title={t('jobDetail.description', 'Description')} colors={colors} />
-          {!isLoggedIn ? (
-            <GuestLockedContent colors={colors}>
-              <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]} numberOfLines={3}>
-                {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
-              </Text>
-            </GuestLockedContent>
-          ) : (
-          <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
-            {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
-          </Text>
-          )}
-        </View>
-
-        {/* 4. Requirements & Preferences */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-          <SectionTitle title={t('jobDetail.requirements', 'Requirements')} colors={colors} />
-          {!isLoggedIn ? (
-            <GuestLockedContent colors={colors}>
-              <View style={styles.infoGrid}>
-                <InfoRow label={t('jobDetail.ageRequirement', 'Age')} value="18 - 99 yrs" icon="user" colors={colors} />
-              </View>
-            </GuestLockedContent>
-          ) : (
-          <View>
-            <View style={styles.infoGrid}>
-              {(currentJob.candidate_age_min || currentJob.candidate_age_max) && (
-                <InfoRow 
-                  label={t('jobDetail.ageRequirement', 'Age')} 
-                  value={`${currentJob.candidate_age_min || 18} - ${currentJob.candidate_age_max || 99} yrs`} 
-                  icon="user" 
-                  colors={colors} 
-                />
+              {currentJob.shifts && currentJob.shifts.length > 0 && (
+                <InfoRow label={t('jobDetail.shifts', 'Shifts')} value={currentJob.shifts.map(formatJobType).join(', ')} icon="sun-o" colors={colors} />
               )}
-              {currentJob.application_deadline && (
-                <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
-              )}
+              <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
             </View>
-            
-            {currentJob.preferred_languages && currentJob.preferred_languages.length > 0 && (
-              <View style={{ marginTop: spacing.sm }}>
-                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.languages', 'Languages')}</Text>
-                <View style={styles.tagsRow}>
-                  {currentJob.preferred_languages.map((lang: string, idx: number) => (
-                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                      <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(lang)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {currentJob.required_assets && currentJob.required_assets.length > 0 && (
-              <View style={{ marginTop: spacing.sm }}>
-                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.requiredAssets', 'Assets Required')}</Text>
-                <View style={styles.tagsRow}>
-                  {currentJob.required_assets.map((asset: string, idx: number) => (
-                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                      <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(asset)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {currentJob.required_certifications && currentJob.required_certifications.length > 0 && (
-              <View style={{ marginTop: spacing.sm }}>
-                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.certifications', 'Certifications')}</Text>
-                <View style={styles.tagsRow}>
-                  {currentJob.required_certifications.map((cert: string, idx: number) => (
-                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                      <Text style={[typography.small, { color: colors.textPrimary }]}>{cert}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {currentJob.skills_required && currentJob.skills_required.length > 0 && (
-              <View style={{ marginTop: spacing.sm }}>
-                <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.skillsRequired', 'Skills')}</Text>
-                <View style={styles.tagsRow}>
-                  {currentJob.skills_required.map((skill: string, idx: number) => (
-                    <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
-                      <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
-          )}
-        </View>
 
-        {/* 5. Interview & Contact Details */}
-        <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-          <SectionTitle title={t('jobDetail.interviewDetails', 'Interview & Contact')} colors={colors} />
-          {!isLoggedIn ? (
-            <GuestLockedContent colors={colors}>
-              <View style={styles.infoGrid}>
-                <InfoRow label={t('jobDetail.interviewType', 'Interview Type')} value="In-person" icon="handshake-o" colors={colors} />
-              </View>
-            </GuestLockedContent>
-          ) : (
-          <View>
-            <View style={styles.infoGrid}>
-              <InfoRow 
-                label={t('jobDetail.interviewType', 'Interview Type')} 
-                value={formatJobType(currentJob.interview_type)} 
-                icon="handshake-o" 
-                colors={colors} 
-              />
-              {currentJob.allow_calls && (
-                <InfoRow 
-                  label={t('jobDetail.callTimings', 'Call Timings')} 
-                  value={`${currentJob.call_allowed_from || '10:00 AM'} to ${currentJob.call_allowed_to || '06:00 PM'}`} 
-                  icon="phone" 
-                  colors={colors} 
-                />
-              )}
-            </View>
-            
-            {(currentJob.interview_address || currentJob.interview_city_name) && (
-               <Pressable 
-                  style={{ marginTop: spacing.sm }}
-                  onPress={() => {
-                    const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
-                    if (mapLink) {
-                      Linking.openURL(mapLink).catch(() => {
-                        Alert.alert('Error', 'Could not open map link');
-                      });
-                    }
-                  }}
-               >
-                  <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
-                    <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[typography.body, { color: colors.textPrimary, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]}>
-                        {[
-                          currentJob.interview_address,
-                          currentJob.interview_locality_name,
-                          currentJob.interview_city_name
-                        ].filter(Boolean).join(', ')}
-                      </Text>
-                      {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
-                        <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
-                      )}
-                    </View>
-                  </View>
-               </Pressable>
-            )}
-          </View>
-          )}
-        </View>
-
-        {/* 6. Deposits & Fees (Conditional) */}
-        {(currentJob.deposit_required || currentJob.joining_fee_required) && (
-          <View style={[styles.sectionCard, { backgroundColor: colors.error + '10', borderColor: colors.error + '40', marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.depositsFees', 'Deposits & Fees')} colors={{...colors, textPrimary: colors.error}} />
-            {!isLoggedIn ? (
-              <GuestLockedContent colors={colors}>
-                <View style={styles.infoGrid}>
-                  <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value="₹---" icon="shield" colors={colors} />
-                </View>
-              </GuestLockedContent>
-            ) : (
-            <View>
-              <Text style={[typography.small, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
-                {t('jobDetail.feeWarning', 'Please verify details directly with the employer before making any payments.')}
-              </Text>
-              <View style={styles.infoGrid}>
-                {currentJob.deposit_required && (
-                  <>
-                    <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value={`₹${currentJob.deposit_amount?.toLocaleString() || 0}`} icon="shield" colors={colors} />
-                    {currentJob.deposit_purpose && (
-                      <InfoRow label={t('jobDetail.purpose', 'Purpose')} value={currentJob.deposit_purpose} icon="info-circle" colors={colors} />
-                    )}
-                    {currentJob.deposit_taken_when && (
-                      <InfoRow label={t('jobDetail.takenWhen', 'Taken When')} value={currentJob.deposit_taken_when} icon="clock-o" colors={colors} />
-                    )}
-                  </>
-                )}
-                {currentJob.joining_fee_required && (
-                  <InfoRow label={t('jobDetail.joiningFee', 'Joining Fee')} value={t('jobDetail.yes', 'Yes')} icon="credit-card" colors={colors} />
-                )}
-              </View>
-            </View>
-            )}
-          </View>
-        )}
-
-        {/* 7. Perks & Benefits (Conditional) */}
-        {currentJob.perks_benefits && currentJob.perks_benefits.length > 0 && (
-          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.perksBenefits', 'Perks & Benefits')} colors={colors} />
-            {!isLoggedIn ? (
-              <GuestLockedContent colors={colors}>
-                <View style={styles.tagsRow}>
-                  <View style={[styles.badge, { backgroundColor: colors.successBackground }]}><Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>--</Text></View>
-                </View>
-              </GuestLockedContent>
-            ) : (
-            <View style={styles.tagsRow}>
-              {currentJob.perks_benefits.map((perk: string, idx: number) => (
-                <View key={idx} style={[styles.badge, { backgroundColor: colors.successBackground }]}>
-                  <Icon name="check-circle" size={12} color={colors.success} style={{ marginRight: 6 }} />
-                  <Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>{formatJobType(perk)}</Text>
-                </View>
-              ))}
-            </View>
-            )}
-          </View>
-        )}
-
-        {currentJob.employer?.company && (
-          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <TouchableOpacity 
-              onPress={() => setIsCompanyDetailsOpen(!isCompanyDetailsOpen)}
-              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: isCompanyDetailsOpen ? spacing.sm : 0 }}
-              activeOpacity={0.7}
-            >
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('jobDetail.aboutCompany', 'About Company')}</Text>
-              <Icon name={isCompanyDetailsOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textSecondary} />
-            </TouchableOpacity>
-
-            {isCompanyDetailsOpen && (
-              !isLoggedIn ? (
+          {/* 2. Salary & Incentives */}
+          {(currentJob.salary_min || currentJob.incentive_amount || currentJob.bonus_amount) && (
+            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+              <SectionTitle title={t('jobDetail.salaryIncentives', 'Salary & Incentives')} colors={colors} />
+              {!isLoggedIn ? (
                 <GuestLockedContent colors={colors}>
-                  <View style={styles.companyHeader}>
-                    <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]} />
-                    <View style={{ flex: 1, height: 20, backgroundColor: colors.surfaceHighlight, borderRadius: 4 }} />
+                  <View style={styles.infoGrid}>
+                    <InfoRow label={t('jobDetail.baseSalary', 'Base Salary')} value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`} icon="money" colors={colors} />
+                    <InfoRow label={t('jobDetail.salaryType', 'Salary Type')} value={formatSalaryBreakup(currentJob.salary_breakup_type)} icon="pie-chart" colors={colors} />
                   </View>
                 </GuestLockedContent>
               ) : (
-              <View>
-                <View style={styles.companyHeader}>
-              <View>
-                {currentJob.employer.company.company_logo_url ? (
-                  <Pressable
-                    onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-                  >
-                    <Image
-                      source={{ uri: currentJob.employer.company.company_logo_url }}
-                      style={styles.companyLogo}
+                <View style={styles.infoGrid}>
+                  <InfoRow
+                    label={t('jobDetail.baseSalary', 'Base Salary')}
+                    value={`₹${currentJob.salary_min?.toLocaleString() || 0} - ₹${currentJob.salary_max?.toLocaleString() || 0} / ${formatJobType(currentJob.salary_unit)}`}
+                    icon="money"
+                    colors={colors}
+                  />
+                  <InfoRow
+                    label={t('jobDetail.salaryType', 'Salary Type')}
+                    value={formatSalaryBreakup(currentJob.salary_breakup_type)}
+                    icon="pie-chart"
+                    colors={colors}
+                  />
+                  {currentJob.incentive_amount > 0 && (
+                    <InfoRow
+                      label={t('jobDetail.incentives', 'Incentives')}
+                      value={`₹${currentJob.incentive_amount.toLocaleString()}`}
+                      icon="line-chart"
+                      colors={colors}
                     />
-                  </Pressable>
-                ) : (
-                  <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
-                    <Icon name="building" size={24} color={colors.primary} />
-                  </View>
-                )}
-                {currentJob.employer.company.verification_status === 'approved' && (
-                  <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
-                    <Icon name="check" size={8} color="#fff" />
-                  </View>
-                )}
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-                    {currentJob.employer.company.company_name}
-                  </Text>
-                </View>
-                <Text style={[typography.small, { color: colors.textSecondary }]}>
-                  {currentJob.employer.company.industry || 'General Industry'} · {currentJob.employer.company.company_size || 'Mid Scale'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Gallery Media */}
-            {currentJob.employer.company.gallery_media?.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.galleryScroll}
-                contentContainerStyle={{ gap: 10, paddingRight: 20 }}
-              >
-                {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
-                  <Pressable
-                    key={idx}
-                    onPress={() => {
-                      const urls = currentJob.employer.company.gallery_media.map((m: any) => m.url);
-                      handleOpenPreview(urls, idx);
-                    }}
-                    style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                  >
-                    <Image
-                      source={{ uri: media.url }}
-                      style={styles.galleryImage}
+                  )}
+                  {currentJob.bonus_amount > 0 && (
+                    <InfoRow
+                      label={t('jobDetail.bonus', 'Bonus')}
+                      value={`₹${currentJob.bonus_amount.toLocaleString()} (${formatJobType(currentJob.bonus_type)})`}
+                      icon="gift"
+                      colors={colors}
                     />
-                  </Pressable>
-                ))}
-              </ScrollView>
-            )}
-
-            {currentJob.employer.company.description && (
-              <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 20 }]}>
-                {currentJob.employer.company.description}
-              </Text>
-            )}
-
-            {/* Address Section */}
-            {(currentJob.employer.company.address || currentJob.employer.company.city) && (
-              <Pressable 
-                style={styles.addressBox}
-                onPress={() => {
-                  const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
-                  if (mapLink) {
-                    Linking.openURL(mapLink).catch(() => {
-                      Alert.alert('Error', 'Could not open map link');
-                    });
-                  }
-                }}
-              >
-                <View style={[styles.addressIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                  <Icon name="map-marker" size={16} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
-                  <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]} numberOfLines={2}>
-                    {[
-                      currentJob.employer.company.address,
-                      currentJob.employer.company.city,
-                      currentJob.employer.company.state,
-                      currentJob.employer.company.pincode
-                    ].filter(Boolean).join(', ')}
-                  </Text>
-                  {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
-                    <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
                   )}
                 </View>
-              </Pressable>
-            )}
-
-            {/* Key Company Stats */}
-            <View style={styles.companyStatsGrid}>
-              <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.employees', 'Employees')}</Text>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-                  {currentJob.employer.company.employee_count || '50+'}
-                </Text>
-              </View>
-              <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.type', 'Type')}</Text>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-                  {currentJob.employer.company.register_as_label || 'Company'}
-                </Text>
-              </View>
-              <View style={styles.companyStatItem}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.size', 'Size')}</Text>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-                  {currentJob.employer.company.company_size || 'Mid Scale'}
-                </Text>
-              </View>
-            </View>
-
-            {/* Hiring Manager Info */}
-            <View style={[styles.employerCard, { backgroundColor: colors.surfaceHighlight }]}>
-              <View style={styles.employerAvatar}>
-                <Icon name="user-circle" size={32} color={colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.hiringManager', 'Hiring Manager')}</Text>
-                <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{currentJob.employer.name}</Text>
-              </View>
-            </View>
-
-            <View style={styles.companyMeta}>
-              {currentJob.employer.company.established_year && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Icon name="calendar" size={12} color={colors.textPlaceholder} />
-                  <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-                    Est: {currentJob.employer.company.established_year}
-                  </Text>
-                </View>
-              )}
-              {currentJob.employer.company.website && (
-                <Pressable
-                  onPress={() => Linking.openURL(currentJob.employer.company.website)}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                >
-                  <Icon name="external-link" size={12} color={colors.primary} />
-                  <Text style={[typography.small, { color: colors.primary }]}>Visit Website</Text>
-                </Pressable>
               )}
             </View>
-              </View>
-              )
-            )}
-          </View>
-        )}
+          )}
 
-        {/* Share & Refer Poster Card */}
-        <View style={[styles.referCard, { backgroundColor: colors.primary }]}>
-          {/* Decorative Background Art */}
-          <View style={[styles.referBlob1, { backgroundColor: '#FFFFFF', opacity: 0.12 }]} />
-          <View style={[styles.referBlob2, { backgroundColor: '#FFFFFF', opacity: 0.08 }]} />
-
-          <View style={styles.referHeader}>
-            <View style={[styles.referIconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
-              <Icon name="gift" size={20} color="#FFFFFF" />
-            </View>
-            <View style={styles.referTextContainer}>
-              <View style={[styles.referBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
-                <Text style={styles.referBadgeText}>{t('jobDetail.referSpreadWord', 'REFER & SPREAD THE WORD')}</Text>
-              </View>
-              <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 6 }]}>
-                {t('jobDetail.knowSomeone', 'Know someone who fits this?')}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.referActions}>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={[styles.referBtnSecondary, { borderColor: 'rgba(255, 255, 255, 0.4)', backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
-              activeOpacity={0.8}
-            >
-              <Icon name="share-alt" size={14} color="#FFFFFF" />
-              <Text style={[typography.small, { color: '#FFFFFF', fontWeight: 'bold' }]}>
-                {t('jobDetail.shareJob', 'Share Job')}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleShareApp}
-              style={[styles.referBtnPrimary, { backgroundColor: '#FFFFFF' }]}
-              activeOpacity={0.8}
-            >
-              <Icon name="paper-plane" size={14} color={colors.primary} />
-              <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>
-                {t('jobDetail.shareApp', 'Share App')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {currentJob.questions && currentJob.questions.length > 0 && (
+          {/* 3. Description */}
           <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
-            <SectionTitle title={t('jobDetail.screeningQuestions', 'Screening Questions')} colors={colors} />
+            <SectionTitle title={t('jobDetail.description', 'Description')} colors={colors} />
             {!isLoggedIn ? (
               <GuestLockedContent colors={colors}>
-                <View style={styles.questionBlock}>
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>---</Text>
+                <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]} numberOfLines={3}>
+                  {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
+                </Text>
+              </GuestLockedContent>
+            ) : (
+              <Text style={[typography.body, { color: colors.textSecondary, lineHeight: 22 }]}>
+                {formatDescription(currentJob.description) || t('jobDetail.noDescription', 'No description provided.')}
+              </Text>
+            )}
+          </View>
+
+          {/* 4. Requirements & Preferences */}
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+            <SectionTitle title={t('jobDetail.requirements', 'Requirements')} colors={colors} />
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.infoGrid}>
+                  <InfoRow label={t('jobDetail.ageRequirement', 'Age')} value="18 - 99 yrs" icon="user" colors={colors} />
                 </View>
               </GuestLockedContent>
             ) : (
-            <View>
-              {currentJob.questions.map((q: any) => (
-                <View key={q.id} style={styles.questionBlock}>
-                  <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
-                    {q.question} {isQuestionRequired(q) ? <Text style={{ color: colors.error }}>*</Text> : ''}
-                  </Text>
-                  <View style={styles.optionsWrap}>
-                    {q.options?.map((opt: any) => {
-                      const isSelected = answers[q.id.toString()] === opt.id;
-                      return (
-                        <Pressable
-                          key={opt.id}
-                          onPress={() => handleSelectOption(q.id, opt.id)}
-                          style={[
-                            styles.optionChip,
-                            {
-                              backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
-                              borderColor: isSelected ? colors.primary : colors.border,
-                            },
-                          ]}>
-                          <Text
-                            style={[
-                              typography.small,
-                              {
-                                color: isSelected ? colors.primary : colors.textSecondary,
-                                fontFamily: isSelected ? typography.labelMedium.fontFamily : undefined,
-                              },
-                            ]}>
-                            {opt.label}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+              <View>
+                <View style={styles.infoGrid}>
+                  {(currentJob.candidate_age_min || currentJob.candidate_age_max) && (
+                    <InfoRow
+                      label={t('jobDetail.ageRequirement', 'Age')}
+                      value={`${currentJob.candidate_age_min || 18} - ${currentJob.candidate_age_max || 99} yrs`}
+                      icon="user"
+                      colors={colors}
+                    />
+                  )}
+                  {currentJob.application_deadline && (
+                    <InfoRow label={t('jobDetail.deadline', 'Deadline')} value={new Date(currentJob.application_deadline).toLocaleDateString()} icon="calendar-times-o" colors={colors} />
+                  )}
                 </View>
-              ))}
-            </View>
+
+                {currentJob.preferred_languages && currentJob.preferred_languages.length > 0 && (
+                  <View style={{ marginTop: spacing.sm }}>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.languages', 'Languages')}</Text>
+                    <View style={styles.tagsRow}>
+                      {currentJob.preferred_languages.map((lang: string, idx: number) => (
+                        <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                          <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(lang)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {currentJob.required_assets && currentJob.required_assets.length > 0 && (
+                  <View style={{ marginTop: spacing.sm }}>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.requiredAssets', 'Assets Required')}</Text>
+                    <View style={styles.tagsRow}>
+                      {currentJob.required_assets.map((asset: string, idx: number) => (
+                        <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                          <Text style={[typography.small, { color: colors.textPrimary }]}>{formatJobType(asset)}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {currentJob.required_certifications && currentJob.required_certifications.length > 0 && (
+                  <View style={{ marginTop: spacing.sm }}>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.certifications', 'Certifications')}</Text>
+                    <View style={styles.tagsRow}>
+                      {currentJob.required_certifications.map((cert: string, idx: number) => (
+                        <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                          <Text style={[typography.small, { color: colors.textPrimary }]}>{cert}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {currentJob.skills_required && currentJob.skills_required.length > 0 && (
+                  <View style={{ marginTop: spacing.sm }}>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.skillsRequired', 'Skills')}</Text>
+                    <View style={styles.tagsRow}>
+                      {currentJob.skills_required.map((skill: string, idx: number) => (
+                        <View key={idx} style={[styles.badge, { backgroundColor: colors.surfaceHighlight }]}>
+                          <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>{skill}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
             )}
           </View>
-        )}
 
-        {/* Similar Jobs List */}
-        {similarJobs.length > 0 && !route.params?.fromHrInvite && (
-          <View style={{ marginTop: spacing.xl, marginHorizontal: -spacing.lg }}>
-            <View style={{ paddingHorizontal: spacing.lg }}>
-              <SectionTitle title={t('jobDetail.similarJobs', 'Similar Jobs')} colors={colors} />
-            </View>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={similarJobs}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <SimilarJobCard 
-                  job={item} 
-                  colors={colors} 
-                  onPress={() => navigation.push('JobDetail', { jobId: item.slug || item.id })} 
-                />
-              )}
-              ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
-              contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}
-            />
+          {/* 5. Interview & Contact Details */}
+          <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+            <SectionTitle title={t('jobDetail.interviewDetails', 'Interview & Contact')} colors={colors} />
+            {!isLoggedIn ? (
+              <GuestLockedContent colors={colors}>
+                <View style={styles.infoGrid}>
+                  <InfoRow label={t('jobDetail.interviewType', 'Interview Type')} value="In-person" icon="handshake-o" colors={colors} />
+                </View>
+              </GuestLockedContent>
+            ) : (
+              <View>
+                <View style={styles.infoGrid}>
+                  <InfoRow
+                    label={t('jobDetail.interviewType', 'Interview Type')}
+                    value={formatJobType(currentJob.interview_type)}
+                    icon="handshake-o"
+                    colors={colors}
+                    style={{ flex: 1, minWidth: '45%' }}
+                    textWrap={true}
+                  />
+                  {currentJob.allow_calls && (
+                    <InfoRow
+                      label={t('jobDetail.callTimings', 'Call Timings')}
+                      value={`${currentJob.call_allowed_from || '10:00 AM'} to ${currentJob.call_allowed_to || '06:00 PM'}`}
+                      icon="phone"
+                      colors={colors}
+                      style={{ flex: 1, minWidth: '45%' }}
+                      textWrap={true}
+                    />
+                  )}
+                </View>
+
+                {(currentJob.interview_address || currentJob.interview_city_name) && (
+                  <Pressable
+                    style={{ marginTop: spacing.sm }}
+                    onPress={() => {
+                      const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
+                      if (mapLink) {
+                        Linking.openURL(mapLink).catch(() => {
+                          Alert.alert('Error', 'Could not open map link');
+                        });
+                      }
+                    }}
+                  >
+                    <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
+                      <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[typography.body, { color: colors.textPrimary, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]}>
+                          {[
+                            currentJob.interview_address,
+                            currentJob.interview_locality_name,
+                            currentJob.interview_city_name
+                          ].filter(Boolean).join(', ')}
+                        </Text>
+                        {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
+                          <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
+                        )}
+                      </View>
+                    </View>
+                  </Pressable>
+                )}
+              </View>
+            )}
           </View>
-        )}
+
+          {/* 6. Deposits & Fees (Conditional) */}
+          {(currentJob.deposit_required || currentJob.joining_fee_required) && (
+            <View style={[styles.sectionCard, { backgroundColor: colors.error + '10', borderColor: colors.error + '40', marginTop: spacing.md }]}>
+              <SectionTitle title={t('jobDetail.depositsFees', 'Deposits & Fees')} colors={{ ...colors, textPrimary: colors.error }} />
+              {!isLoggedIn ? (
+                <GuestLockedContent colors={colors}>
+                  <View style={styles.infoGrid}>
+                    <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value="₹---" icon="shield" colors={colors} />
+                  </View>
+                </GuestLockedContent>
+              ) : (
+                <View>
+                  <Text style={[typography.small, { color: colors.textSecondary, marginBottom: spacing.sm }]}>
+                    {t('jobDetail.feeWarning', 'Please verify details directly with the employer before making any payments.')}
+                  </Text>
+                  <View style={styles.infoGrid}>
+                    {currentJob.deposit_required && (
+                      <>
+                        <InfoRow label={t('jobDetail.depositAmount', 'Deposit')} value={`₹${currentJob.deposit_amount?.toLocaleString() || 0}`} icon="shield" colors={colors} />
+                        {currentJob.deposit_purpose && (
+                          <InfoRow label={t('jobDetail.purpose', 'Purpose')} value={currentJob.deposit_purpose} icon="info-circle" colors={colors} />
+                        )}
+                        {currentJob.deposit_taken_when && (
+                          <InfoRow label={t('jobDetail.takenWhen', 'Taken When')} value={currentJob.deposit_taken_when} icon="clock-o" colors={colors} />
+                        )}
+                      </>
+                    )}
+                    {currentJob.joining_fee_required && (
+                      <InfoRow label={t('jobDetail.joiningFee', 'Joining Fee')} value={t('jobDetail.yes', 'Yes')} icon="credit-card" colors={colors} />
+                    )}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* 7. Perks & Benefits (Conditional) */}
+          {currentJob.perks_benefits && currentJob.perks_benefits.length > 0 && (
+            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+              <SectionTitle title={t('jobDetail.perksBenefits', 'Perks & Benefits')} colors={colors} />
+              {!isLoggedIn ? (
+                <GuestLockedContent colors={colors}>
+                  <View style={styles.tagsRow}>
+                    <View style={[styles.badge, { backgroundColor: colors.successBackground }]}><Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>--</Text></View>
+                  </View>
+                </GuestLockedContent>
+              ) : (
+                <View style={styles.tagsRow}>
+                  {currentJob.perks_benefits.map((perk: string, idx: number) => (
+                    <View key={idx} style={[styles.badge, { backgroundColor: colors.successBackground }]}>
+                      <Icon name="check-circle" size={12} color={colors.success} style={{ marginRight: 6 }} />
+                      <Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>{formatJobType(perk)}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {currentJob.employer?.company && (
+            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+              <TouchableOpacity
+                onPress={() => setIsCompanyDetailsOpen(!isCompanyDetailsOpen)}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: isCompanyDetailsOpen ? spacing.sm : 0 }}
+                activeOpacity={0.7}
+              >
+                <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('jobDetail.aboutCompany', 'About Company')}</Text>
+                <Icon name={isCompanyDetailsOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              {isCompanyDetailsOpen && (
+                !isLoggedIn ? (
+                  <GuestLockedContent colors={colors}>
+                    <View style={styles.companyHeader}>
+                      <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]} />
+                      <View style={{ flex: 1, height: 20, backgroundColor: colors.surfaceHighlight, borderRadius: 4 }} />
+                    </View>
+                  </GuestLockedContent>
+                ) : (
+                  <View>
+                    <View style={styles.companyHeader}>
+                      <View>
+                        {currentJob.employer.company.company_logo_url ? (
+                          <Pressable
+                            onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+                          >
+                            <Image
+                              source={{ uri: currentJob.employer.company.company_logo_url }}
+                              style={styles.companyLogo}
+                            />
+                          </Pressable>
+                        ) : (
+                          <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
+                            <Icon name="building" size={24} color={colors.primary} />
+                          </View>
+                        )}
+                        {currentJob.employer.company.verification_status === 'approved' && (
+                          <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
+                            <Icon name="check" size={8} color="#fff" />
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                            {currentJob.employer.company.company_name}
+                          </Text>
+                        </View>
+                        <Text style={[typography.small, { color: colors.textSecondary }]}>
+                          {currentJob.employer.company.industry || 'General Industry'} · {currentJob.employer.company.company_size || 'Mid Scale'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Gallery Media */}
+                    {currentJob.employer.company.gallery_media?.length > 0 && (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.galleryScroll}
+                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                      >
+                        {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
+                          <Pressable
+                            key={idx}
+                            onPress={() => {
+                              const urls = currentJob.employer.company.gallery_media.map((m: any) => m.url);
+                              handleOpenPreview(urls, idx);
+                            }}
+                            style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                          >
+                            <Image
+                              source={{ uri: media.url }}
+                              style={styles.galleryImage}
+                            />
+                          </Pressable>
+                        ))}
+                      </ScrollView>
+                    )}
+
+                    {currentJob.employer.company.description && (
+                      <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md, lineHeight: 20 }]}>
+                        {currentJob.employer.company.description}
+                      </Text>
+                    )}
+
+                    {/* Address Section */}
+                    {(currentJob.employer.company.address || currentJob.employer.company.city) && (
+                      <Pressable
+                        style={styles.addressBox}
+                        onPress={() => {
+                          const mapLink = currentJob.google_map_link || currentJob.employer?.company?.google_map_link;
+                          if (mapLink) {
+                            Linking.openURL(mapLink).catch(() => {
+                              Alert.alert('Error', 'Could not open map link');
+                            });
+                          }
+                        }}
+                      >
+                        <View style={[styles.addressIcon, { backgroundColor: colors.surfaceHighlight }]}>
+                          <Icon name="map-marker" size={16} color={colors.primary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
+                          <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]} numberOfLines={2}>
+                            {[
+                              currentJob.employer.company.address,
+                              currentJob.employer.company.city,
+                              currentJob.employer.company.state,
+                              currentJob.employer.company.pincode
+                            ].filter(Boolean).join(', ')}
+                          </Text>
+                          {(currentJob.google_map_link || currentJob.employer?.company?.google_map_link) && (
+                            <Text style={[typography.tiny, { color: colors.primary, marginTop: 2 }]}>Tap to open in Maps</Text>
+                          )}
+                        </View>
+                      </Pressable>
+                    )}
+
+                    {/* Key Company Stats */}
+                    <View style={styles.companyStatsGrid}>
+                      <View style={styles.companyStatItem}>
+                        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.employees', 'Employees')}</Text>
+                        <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                          {currentJob.employer.company.employee_count || '50+'}
+                        </Text>
+                      </View>
+                      <View style={styles.companyStatItem}>
+                        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.type', 'Type')}</Text>
+                        <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                          {currentJob.employer.company.register_as_label || 'Company'}
+                        </Text>
+                      </View>
+                      <View style={styles.companyStatItem}>
+                        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.size', 'Size')}</Text>
+                        <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
+                          {currentJob.employer.company.company_size || 'Mid Scale'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Hiring Manager Info */}
+                    <View style={[styles.employerCard, { backgroundColor: colors.surfaceHighlight }]}>
+                      <View style={styles.employerAvatar}>
+                        <Icon name="user-circle" size={32} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.hiringManager', 'Hiring Manager')}</Text>
+                        <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{currentJob.employer.name}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.companyMeta}>
+                      {currentJob.employer.company.established_year && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Icon name="calendar" size={12} color={colors.textPlaceholder} />
+                          <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+                            Est: {currentJob.employer.company.established_year}
+                          </Text>
+                        </View>
+                      )}
+                      {currentJob.employer.company.website && (
+                        <Pressable
+                          onPress={() => Linking.openURL(currentJob.employer.company.website)}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                        >
+                          <Icon name="external-link" size={12} color={colors.primary} />
+                          <Text style={[typography.small, { color: colors.primary }]}>Visit Website</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  </View>
+                )
+              )}
+            </View>
+          )}
+
+          {/* Share & Refer Poster Card */}
+          <View style={[styles.referCard, { backgroundColor: colors.primary }]}>
+            {/* Decorative Background Art */}
+            <View style={[styles.referBlob1, { backgroundColor: '#FFFFFF', opacity: 0.12 }]} />
+            <View style={[styles.referBlob2, { backgroundColor: '#FFFFFF', opacity: 0.08 }]} />
+
+            <View style={styles.referHeader}>
+              <View style={[styles.referIconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+                <Icon name="gift" size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.referTextContainer}>
+                <View style={[styles.referBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
+                  <Text style={styles.referBadgeText}>{t('jobDetail.referSpreadWord', 'REFER & SPREAD THE WORD')}</Text>
+                </View>
+                <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 6 }]}>
+                  {t('jobDetail.knowSomeone', 'Know someone who fits this?')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.referActions}>
+              <TouchableOpacity
+                onPress={handleShare}
+                style={[styles.referBtnSecondary, { borderColor: 'rgba(255, 255, 255, 0.4)', backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
+                activeOpacity={0.8}
+              >
+                <Icon name="share-alt" size={14} color="#FFFFFF" />
+                <Text style={[typography.small, { color: '#FFFFFF', fontWeight: 'bold' }]}>
+                  {t('jobDetail.shareJob', 'Share Job')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleShareApp}
+                style={[styles.referBtnPrimary, { backgroundColor: '#FFFFFF' }]}
+                activeOpacity={0.8}
+              >
+                <Icon name="paper-plane" size={14} color={colors.primary} />
+                <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>
+                  {t('jobDetail.shareApp', 'Share App')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {currentJob.questions && currentJob.questions.length > 0 && (
+            <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: spacing.md }]}>
+              <SectionTitle title={t('jobDetail.screeningQuestions', 'Screening Questions')} colors={colors} />
+              {!isLoggedIn ? (
+                <GuestLockedContent colors={colors}>
+                  <View style={styles.questionBlock}>
+                    <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>---</Text>
+                  </View>
+                </GuestLockedContent>
+              ) : (
+                <View>
+                  {currentJob.questions.map((q: any) => (
+                    <View key={q.id} style={styles.questionBlock}>
+                      <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
+                        {q.question} {isQuestionRequired(q) ? <Text style={{ color: colors.error }}>*</Text> : ''}
+                      </Text>
+                      <View style={styles.optionsWrap}>
+                        {q.options?.map((opt: any) => {
+                          const isSelected = answers[q.id.toString()] === opt.id;
+                          return (
+                            <Pressable
+                              key={opt.id}
+                              onPress={() => handleSelectOption(q.id, opt.id)}
+                              style={[
+                                styles.optionChip,
+                                {
+                                  backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
+                                  borderColor: isSelected ? colors.primary : colors.border,
+                                },
+                              ]}>
+                              <Text
+                                style={[
+                                  typography.small,
+                                  {
+                                    color: isSelected ? colors.primary : colors.textSecondary,
+                                    fontFamily: isSelected ? typography.labelMedium.fontFamily : undefined,
+                                  },
+                                ]}>
+                                {opt.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Similar Jobs List */}
+          {similarJobs.length > 0 && !route.params?.fromHrInvite && (
+            <View style={{ marginTop: spacing.xl, marginHorizontal: -spacing.lg }}>
+              <View style={{ paddingHorizontal: spacing.lg }}>
+                <SectionTitle title={t('jobDetail.similarJobs', 'Similar Jobs')} colors={colors} />
+              </View>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={similarJobs}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <SimilarJobCard
+                    job={item}
+                    colors={colors}
+                    onPress={() => navigation.push('JobDetail', { jobId: item.slug || item.id })}
+                  />
+                )}
+                ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
+                contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -1409,9 +1417,9 @@ const JobDetailScreen: React.FC = () => {
         <View style={styles.previewOverlay}>
           <StatusBar barStyle="light-content" backgroundColor="rgba(0,0,0,0.95)" />
           <Pressable style={styles.previewBackdrop} onPress={() => setPreviewIndex(-1)} />
-          
-          <TouchableOpacity 
-            style={[styles.previewCloseBtn, { top: actualTop + 10 }]} 
+
+          <TouchableOpacity
+            style={[styles.previewCloseBtn, { top: actualTop + 10 }]}
             onPress={() => setPreviewIndex(-1)}
             activeOpacity={0.7}
           >

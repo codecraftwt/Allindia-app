@@ -1,30 +1,8 @@
 export const getCategoryColor = (name: string, isDark?: boolean) => {
-  if (!name) return isDark ? '#5C9CE6CC' : '#5C9CE6';
-  const n = name.trim().toLowerCase();
-  
-  // Calculate a robust string hash (djb2 algorithm)
-  let hash = 5381;
-  for (let i = 0; i < n.length; i++) {
-    hash = ((hash << 5) + hash) + n.charCodeAt(i); /* hash * 33 + c */
-  }
-  
-  hash = Math.abs(hash);
-
-  // Generate HSL values
-  // Hue: 0-360 degrees
-  const hue = hash % 360;
-  
-  // Saturation: 70% - 90% for vibrant but pastel look
-  const saturation = 70 + (hash % 21);
-  
-  // Lightness: 75% - 85% for readability with dark text
-  const lightness = 75 + (hash % 11);
-  
   if (isDark) {
-    return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.8)`;
+    return 'rgba(59, 130, 246, 0.2)';
   }
-  
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  return '#BFDBFE';
 };
 
 export const getCategoryIcon = (name: string) => {

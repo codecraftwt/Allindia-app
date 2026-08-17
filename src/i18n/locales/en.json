@@ -230,7 +230,7 @@
     "filterRejected": "Rejected",
     "searchPlaceholder": "Search applications...",
     "shareTitle": "Job Opening",
-    "shareMessage": "Check out this job: {{title}} at {{company}}\nApply here: {{link}}",
+    "shareMessage": "🚀 Exciting Job Opportunity!\n\n📌 Role: {{title}}\n📍 Location: {{location}}\n💰 Salary: {{salary}}\n\nDon't miss out on this great career move.\n\n👉 Apply here: {{link}}",
     "whatsappMessage": "Dear {{managerName}},\nI came across your job posting on *Job India*, Job Title - *{{jobTitle}}*.\nI tried to contact you over the phone but could not reach you. I am interested in the profile. Please find my details below;\n\n*Full Name*: {{userName}}\n*Experience*: {{userExp}}\n*Location*: {{userLoc}}\n*Mobile No*: {{userPhone}}\n*Qualification*: {{userQual}}\n*Resume Link*: {{userResume}}\n*Skills*: {{userSkills}}"
   },
   "navigation": {

@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.lg,
     borderWidth: 1.5,
-    minHeight: 46,
+    minHeight: 38,
     overflow: 'hidden',
     ...components.jobCard,
     shadowOpacity: 0.06,
@@ -192,15 +192,15 @@ const styles = StyleSheet.create({
   },
   tickerContainer: {
     flex: 1,
-    height: 30,
+    height: 24,
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 6,
   },
   searchFilterBtnPremium: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
@@ -366,7 +366,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   const handleReferApp = async () => {
     try {
       await Share.share({
-        message: "Job India App: Find the best jobs matching your profile! Get daily new jobs, personalized recommendations. Download the app now: https://play.google.com/store/apps/details?id=com.jobsindia",
+        message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share',
         title: "Job India App",
       });
     } catch (error: any) {

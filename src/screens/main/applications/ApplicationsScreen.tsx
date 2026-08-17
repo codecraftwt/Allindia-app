@@ -122,10 +122,15 @@ const AppliedJobCard = React.memo(function AppliedJobCard({ job, colors, onPress
 
   const handleShare = () => {
     setShowMenu(false);
-    const companyName = job.employer?.company?.company_name || t('applications.anonymousCompany', 'Hiring Company');
+    const locationLabel = job.location?.label || 'Remote';
     Share.share({
-      message: t('applications.shareMessage', 'Check out this job: {{title}} at {{company}}\nApply here: {{link}}', { title: job.title, company: companyName, link: `https://jobindia.app/job/${job.slug || job.id}` }),
-      title: t('applications.shareTitle', 'Job Opening'),
+      message: t('applications.shareMessage', "🚀 Exciting Job Opportunity!\n\n📌 Role: {{title}}\n📍 Location: {{location}}\n💰 Salary: {{salary}}\n\nDon't miss out on this great career move.\n\n👉 Apply here: {{link}}", { 
+        title: job.title, 
+        location: locationLabel,
+        salary: salaryLabel,
+        link: `https://jobindia.app/job/${job.slug || job.id}` 
+      }),
+      title: job.title,
     });
   };
 
