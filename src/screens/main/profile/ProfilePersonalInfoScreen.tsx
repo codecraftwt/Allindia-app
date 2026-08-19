@@ -461,10 +461,8 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   React.useEffect(() => {
-    if (cities.length === 0) {
-      dispatch(fetchMetaCities());
-    }
-  }, [dispatch, cities.length]);
+    dispatch(fetchMetaCities());
+  }, [dispatch]);
 
 
 

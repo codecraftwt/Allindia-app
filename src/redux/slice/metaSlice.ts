@@ -25,6 +25,18 @@ export const fetchMetaCities = createAsyncThunk(
   }
 );
 
+export const fetchMetaCertifications = createAsyncThunk(
+  'meta/fetchCertifications',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('api/meta/certifications');
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch certifications');
+    }
+  }
+);
+
 export const fetchMetaQualifications = createAsyncThunk(
   'meta/fetchQualifications',
   async (_, { rejectWithValue }) => {
@@ -43,6 +55,7 @@ const metaSlice = createSlice({
     categories: [] as any[],
     cities: [] as any[],
     qualifications: [] as any[],
+    certifications: [] as any[],
     loading: false,
     error: null as string | null,
   },
@@ -85,6 +98,9 @@ const metaSlice = createSlice({
       })
       .addCase(fetchMetaQualifications.fulfilled, (state, action) => {
         state.qualifications = action.payload.data.qualifications || [];
+      })
+      .addCase(fetchMetaCertifications.fulfilled, (state, action) => {
+        state.certifications = action.payload.data.certifications || [];
       });
   },
 });

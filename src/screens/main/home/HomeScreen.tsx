@@ -590,7 +590,7 @@ const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () 
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Reels')}</Text>
+            <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Bites')}</Text>
             <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
               <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
             </View>

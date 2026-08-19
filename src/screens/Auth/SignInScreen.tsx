@@ -73,13 +73,13 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
   const onRegister = async () => {
     const { name, email, password, password_confirmation, phone, verification_channel } = formData;
 
-    if (!name || !email || !password || !password_confirmation) {
+    if (!name || !phone || !password || !password_confirmation) {
       showStatus('error', t('auth.requiredFields'), t('auth.fillRequiredFields'));
       return;
     }
 
-    if (verification_channel === 'whatsapp' && !phone) {
-      showStatus('error', t('auth.requiredFields'), t('auth.phoneRequiredForWhatsapp', 'Phone number is required for WhatsApp verification'));
+    if (verification_channel === 'email' && !email) {
+      showStatus('error', t('auth.requiredFields'), t('auth.emailRequiredForEmail', 'Email is required for Email verification'));
       return;
     }
 
@@ -163,21 +163,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
                 />
               </View>
 
-              {/* Email */}
-              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <Icon name="at" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
-                <TextInput
-                  placeholder={t('auth.emailPlaceholder')}
-                  placeholderTextColor={colors.textPlaceholder}
-                  style={[styles.input, { color: colors.textPrimary }]}
-                  value={formData.email}
-                  onChangeText={(val) => handleInputChange('email', val)}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-              </View>
-
-              {/* Phone (Optional) */}
+              {/* Phone */}
               <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                 <Icon name="phone" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
                 <TextInput
@@ -188,6 +174,20 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
                   onChangeText={(val) => handleInputChange('phone', val)}
                   keyboardType="phone-pad"
                   maxLength={10}
+                />
+              </View>
+
+              {/* Email (Optional) */}
+              <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Icon name="at" size={18} color={colors.textPlaceholder} style={styles.inputIcon} />
+                <TextInput
+                  placeholder={t('auth.emailPlaceholderOptional') || 'Enter your email (Optional)'}
+                  placeholderTextColor={colors.textPlaceholder}
+                  style={[styles.input, { color: colors.textPrimary }]}
+                  value={formData.email}
+                  onChangeText={(val) => handleInputChange('email', val)}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
                 />
               </View>
 

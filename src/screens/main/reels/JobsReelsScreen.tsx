@@ -323,7 +323,7 @@ const JobsReelsScreen: React.FC = () => {
             </TouchableOpacity>
             <View>
               <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Discover</Text>
-              <Text style={[typography.h2, { color: colors.textPrimary }]}>Job Reels</Text>
+              <Text style={[typography.h2, { color: colors.textPrimary }]}>Job Bites</Text>
             </View>
           </View>
           <Pressable style={[styles.headerIcon, { backgroundColor: colors.surfaceHighlight }]}>

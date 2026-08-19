@@ -72,18 +72,29 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
   const tagIcon = isApplied ? cleanIconName(tag.icon) : 'tag';
   const tagColor = isApplied ? (tag.icon_color || colors.primary) : colors.primary;
 
+  let customBg = undefined;
+  let customText = undefined;
+
+  if (tagName.toLowerCase().includes('spotlight')) {
+    customBg = '#D4AF37'; // Golden color
+    customText = '#FFFFFF';
+  } else if (tagName.toLowerCase().includes('boost')) {
+    customBg = '#DC2626'; // Red color
+    customText = '#FFFFFF';
+  }
+
   return (
     <Animated.View style={[
       styles.cornerBadge,
       {
-        backgroundColor: colors.surface,
-        borderColor: tagColor + '60',
+        backgroundColor: customBg || colors.surface,
+        borderColor: customBg ? 'transparent' : (tagColor + '60'),
         opacity: fade,
         transform: [{ translateY }]
       }
     ]}>
-      <Icon name={tagIcon} size={12} color={tagColor} />
-      <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
+      <Icon name={tagIcon} size={12} color={customText || tagColor} />
+      <Text style={[styles.cornerBadgeText, { color: customText || tagColor }]}>
         {tagName}
       </Text>
     </Animated.View>
@@ -92,16 +103,47 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
 
 const { width } = Dimensions.get('window');
 
-function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
+function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColors; onPress: () => void; isDark?: boolean }) {
   const companyName = job.employer?.company?.company_name || job.company_name || job.company || 'Hiring Company';
   const locationLabel = job.location?.label || job.location_name || (typeof job.location === 'string' ? job.location : job.location?.city) || 'India';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const jobType = formatJobType(job.job_type_label || job.employmentType || job.job_type || 'Full Time');
 
+  const checkTag = (tagNameMatch: string) => {
+    const checkArray = (arr: any[]) => arr?.some((t: any) => {
+      const name = typeof t === 'string' ? t : t.name;
+      return name && name.toLowerCase().includes(tagNameMatch);
+    });
+    return checkArray(job.applied_tags) || checkArray(job.tags);
+  };
+  const isSpotlight = checkTag('spotlight');
+  const isBoost = checkTag('boost');
+
+  let cardBgColor = colors.surface;
+  let cardBorderColor = colors.border;
+  let cardShadowColor = colors.shadow;
+  let cardElevation = 2;
+
+  if (isSpotlight) {
+    cardBgColor = isDark ? '#2D2714' : '#FDE68A';
+    cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
+    cardShadowColor = isDark ? 'transparent' : '#D4AF37';
+    cardElevation = isDark ? 0 : 4;
+  } else if (isBoost) {
+    cardBgColor = isDark ? '#3F1616' : '#FCA5A5';
+    cardBorderColor = isDark ? '#EF4444' : '#EF4444';
+    cardShadowColor = isDark ? 'transparent' : '#DC2626';
+    cardElevation = isDark ? 0 : 4;
+  }
+
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.premiumCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      style={[
+        styles.premiumCard,
+        { backgroundColor: cardBgColor, borderColor: cardBorderColor, shadowColor: cardShadowColor, elevation: cardElevation },
+        (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
+      ]}
     >
       <View style={styles.cardHeader}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
@@ -127,11 +169,7 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
           )}
         </View>
 
-        <View style={{ position: 'absolute', top: 0, right: 0, alignItems: 'flex-end' }}>
-          <Text style={[typography.tiny, { color: colors.textPlaceholder, fontWeight: 'bold' }]}>
-            Recently
-          </Text>
-        </View>
+
       </View>
 
       <View style={styles.cardMeta}>
@@ -191,7 +229,7 @@ const CategoryJobsSkeleton: React.FC = () => {
 };
 
 const CategoryJobsScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const dispatch = useDispatch<AppDispatch>();
@@ -356,6 +394,7 @@ const CategoryJobsScreen: React.FC = () => {
             <JobCard
               job={item}
               colors={colors}
+              isDark={isDark}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}

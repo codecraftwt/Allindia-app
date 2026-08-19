@@ -81,6 +81,43 @@ export const updatePreferencesProfile = createAsyncThunk(
   }
 );
 
+export const fetchSkills = createAsyncThunk(
+  'profile/fetchSkills',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.get('api/candidate/profile/skills', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch skills');
+    }
+  }
+);
+
+export const updateSkills = createAsyncThunk(
+  'profile/updateSkills',
+  async (skillsData: { skills: string[] }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      const response = await api.put('api/candidate/profile/skills', skillsData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      dispatch(fetchProfile());
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update skills');
+    }
+  }
+);
+
 export const uploadResume = createAsyncThunk(
   'profile/uploadResume',
   async (file: { uri: string; name: string; type: string }, { getState, dispatch, rejectWithValue }) => {
@@ -425,8 +462,13 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload.data.profile; // Map to .profile for easier access
-        state.completion = action.payload.data.profile.completion;
+        const profileData = action.payload.data.profile;
+        if (profileData.skills && typeof profileData.skills === 'object' && !Array.isArray(profileData.skills)) {
+          profileData.skills_display = profileData.skills.skills_display;
+          profileData.skills = profileData.skills.skills || [];
+        }
+        state.data = profileData; // Map to .profile for easier access
+        state.completion = profileData.completion;
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
@@ -451,6 +493,32 @@ const profileSlice = createSlice({
         state.loading = false;
       })
       .addCase(updatePreferencesProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchSkills.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSkills.fulfilled, (state, action) => {
+        state.loading = false;
+        if (state.data) {
+          state.data.skills = action.payload.data.skills;
+          state.data.skills_display = action.payload.data.skills_display;
+        }
+      })
+      .addCase(fetchSkills.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateSkills.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateSkills.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateSkills.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

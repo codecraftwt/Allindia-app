@@ -511,7 +511,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const uniqueCities = useMemo(() => {
     const seen = new Set<string>();
     return cities.filter((c: any) => {
-      const label = c.label || c.city || '';
+      const label = c.area || c.label || c.city || '';
       if (!label) return false;
       const lower = label.toLowerCase();
       if (seen.has(lower)) return false;
@@ -585,7 +585,8 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
     return list;
   }, [categories, jobCategoryIds]);
 
-  const currentCityLabel = cities.find((c: any) => Number(c.id) === Number(currentCityId))?.label;
+  const currentCityData = cities.find((c: any) => Number(c.id) === Number(currentCityId));
+  const currentCityLabel = currentCityData?.area || currentCityData?.label;
 
   const handleSave = async () => {
     setSaving(true);
@@ -919,7 +920,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniqueCities.filter((c: any) => c.label.toLowerCase().includes(citySearch.toLowerCase()))}
+              data={uniqueCities.filter((c: any) => (c.area || c.label).toLowerCase().includes(citySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -936,7 +937,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                         Number(currentCityId) === Number(item.id) ? colors.surfaceHighlight : 'transparent',
                     },
                   ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.label}</Text>
+                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.area || item.label}</Text>
                 </Pressable>
               )}
             />
@@ -974,7 +975,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniqueCities.filter((c: any) => c.label.toLowerCase().includes(prefCitySearch.toLowerCase()))}
+              data={uniqueCities.filter((c: any) => (c.area || c.label).toLowerCase().includes(prefCitySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -997,7 +998,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                     ]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={[typography.body, { color: selected ? colors.primary : colors.textPrimary }]}>
-                        {item.label}
+                        {item.area || item.label}
                       </Text>
                       {selected && <Icon name="check" size={16} color={colors.primary} />}
                     </View>

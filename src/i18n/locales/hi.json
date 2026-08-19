@@ -151,6 +151,9 @@
     "education": "शिक्षा",
     "educationAdded": "शिक्षा जोड़ी गई",
     "addEducation": "अपनी डिग्री/कॉलेज जोड़ें",
+    "skills": "कौशल",
+    "skillsAdded": "कौशल जोड़ा गया",
+    "addSkills": "अपने प्रमुख कौशल जोड़ें",
     "jobPreferences": "नौकरी प्राथमिकताएं",
     "preferredRoles": "पसंदीदा भूमिकाएं और स्थान",
     "resumeCv": "रिज्यूमे / सीवी",
@@ -258,6 +261,19 @@
     "save": "सहेजें",
     "experienceUpdated": "अनुभव सफलतापूर्वक अपडेट किया गया!",
     "failedToUpdateExperience": "अनुभव अपडेट करने में विफल"
+  },
+  "profileSkills": {
+    "skills": "कौशल",
+    "skillsSubtitle": "अपनी विशेषज्ञता को उजागर करने के लिए कौशल जोड़ें।",
+    "addSkill": "कौशल जोड़ें",
+    "selectSkill": "पूर्व निर्धारित कौशल से चुनें",
+    "searchSkills": "कौशल खोजें...",
+    "skillPlaceholder": "उदा. प्रोजेक्ट मैनेजमेंट, रिएक्ट...",
+    "add": "जोड़ें",
+    "skillsUpdated": "कौशल सफलतापूर्वक अपडेट किए गए!",
+    "failedToUpdateSkills": "कौशल सहेजने में विफल",
+    "saving": "सहेजा जा रहा है...",
+    "save": "सहेजें"
   },
   "profileEducation": {
     "education": "शिक्षा",

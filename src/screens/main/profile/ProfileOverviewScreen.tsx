@@ -19,7 +19,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { logoutCandidate } from '../../../redux/slice/authSlice';
-import { fetchProfile, updateProfilePicture, deleteProfilePicture, fetchProfileCompletion } from '../../../redux/slice/profileSlice';
+import { fetchProfile, updateProfilePicture, deleteProfilePicture, fetchProfileCompletion, fetchSkills } from '../../../redux/slice/profileSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { Alert } from 'react-native';
@@ -150,6 +150,7 @@ const ProfileOverviewScreen: React.FC = () => {
     if (isLoggedIn) {
       dispatch(fetchProfile());
       dispatch(fetchProfileCompletion());
+      dispatch(fetchSkills());
     }
   }, [dispatch, isLoggedIn]);
 
@@ -388,7 +389,7 @@ const ProfileOverviewScreen: React.FC = () => {
                 <View style={styles.strengthHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '700' }]}>{t('profileOverview.boostProfile', 'Boost Your Profile')}</Text>
-                    <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{t('profileOverview.completeToUnlock', 'Complete your profile to unlock more jobs!')}</Text>
+                    <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{getNextActionText()}</Text>
                   </View>
                   <View style={{ alignItems: 'center', justifyContent: 'center', width: 56, height: 56 }}>
                     <Animated.View style={[
@@ -439,7 +440,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <View style={[styles.reelsIconBox, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
                 <Icon name="play-circle" size={24} color="#EC4899" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16, flex: 1, fontSize: 16, fontWeight: '700' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Reels')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16, flex: 1, fontSize: 16, fontWeight: '700' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Bites')}</Text>
               <View style={styles.newBadge}>
                 <Text style={styles.newBadgeText}>{t('profileOverview.reelsTag', 'NEW')}</Text>
               </View>
@@ -484,6 +485,15 @@ const ProfileOverviewScreen: React.FC = () => {
               color="#F59E0B"
               onPress={() => navigation.navigate('ProfileJobPreferences')}
               isMissing={isSectionMissing('preferences')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.skills', 'Skills')}
+              subtitle={profile?.skills?.length ? `${profile.skills.length} ${t('profileDetails.skillsAdded', 'Skills added')}` : t('profileDetails.addSkills', 'Add your key skills')}
+              icon="lightning-bolt-outline"
+              color="#06B6D4"
+              onPress={() => navigation.navigate('ProfileSkills')}
+              isMissing={isSectionMissing('skills')}
               isLast={false}
             />
             <SettingsRow
