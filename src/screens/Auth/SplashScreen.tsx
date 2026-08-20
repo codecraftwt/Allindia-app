@@ -27,6 +27,20 @@ const IC_LAUNCHER = require('../../assets/ic_launcher.png');
 const SPLASH_DELAY_MS = 4000;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
+const compareVersions = (v1: string, v2: string) => {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+  const maxLen = Math.max(parts1.length, parts2.length);
+  for (let i = 0; i < maxLen; i++) {
+    const num1 = parts1[i] || 0;
+    const num2 = parts2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  return 0;
+};
+
+
 // Word cloud: staggered positions for natural scattered look
 const LANGUAGE_WORDS = [
   // y ~0.01
@@ -278,7 +292,9 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
           if (result?.success && result?.data?.versionName) {
             const apiVersion = result.data.versionName;
             const currentVersion = VersionCheck.getCurrentVersion();
-            if (apiVersion !== currentVersion) {
+            
+            // Only prompt if API version is strictly greater than the current version
+            if (compareVersions(apiVersion, currentVersion) > 0) {
               setShowUpdateModal(true);
               return; // Do not proceed to onboarding if update required
             }
