@@ -46,7 +46,15 @@ const formatJobType = (type: string) => {
 
 const cleanIconName = (iconStr: string) => {
   if (!iconStr) return 'check-circle';
-  return iconStr.replace(/fa[srlb]? fa-/, '').trim();
+  let cleaned = iconStr.replace(/fa[srlb]? fa-/, '').replace(/^fa-/, '').trim();
+  
+  // Fallbacks for FontAwesome 4
+  if (cleaned === 'crown') return 'star';
+  if (cleaned === 'gem') return 'diamond';
+  if (cleaned === 'medal') return 'certificate';
+  if (cleaned === 'award') return 'trophy';
+  
+  return cleaned;
 };
 
 const getTagConfig = (tag: string, colors: any) => {
@@ -56,6 +64,7 @@ const getTagConfig = (tag: string, colors: any) => {
   if (t.includes('nearby') || t.includes('km')) return { icon: 'map-marker', color: colors.primary };
   if (t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10b981' };
   if (t.includes('new') || t.includes('recent')) return { icon: 'clock-o', color: colors.accent };
+  if (t.includes('premium')) return { icon: 'star', color: '#D4AF37' };
   return { icon: 'tag', color: colors.primary };
 };
 

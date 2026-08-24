@@ -401,18 +401,33 @@ const ProfileOverviewScreen: React.FC = () => {
                         transform: [{ scale: rippleScale }],
                       }
                     ]} />
-                    <View style={[styles.percentageCircle, { borderColor: colors.primary + '20', borderWidth: 4 }]} />
-                    <View style={[styles.percentageCircle, {
-                      position: 'absolute',
-                      borderColor: colors.primary,
-                      borderWidth: 4,
-                      borderTopColor: colors.primary,
-                      borderRightColor: ((completion?.percentage || 0) / 100) * 360 > 90 ? colors.primary : 'transparent',
-                      borderBottomColor: ((completion?.percentage || 0) / 100) * 360 > 180 ? colors.primary : 'transparent',
-                      borderLeftColor: ((completion?.percentage || 0) / 100) * 360 > 270 ? colors.primary : 'transparent',
-                      transform: [{ rotate: `${((completion?.percentage || 0) / 100) * 360}deg` }]
-                    }]} />
-                    <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: '900', fontSize: 14, position: 'absolute' }]}>{completion?.percentage || 0}%</Text>
+                    <View style={[styles.percentageCircle, { backgroundColor: colors.primary + '15' }]}>
+                      {/* Base faded ring */}
+                      <View style={[StyleSheet.absoluteFill, { borderRadius: 28, borderWidth: 4, borderColor: colors.primary + '20' }]} />
+                      
+                      {/* Right Half (0-50%) */}
+                      <View style={{ position: 'absolute', width: 28, height: 56, left: 28, overflow: 'hidden' }}>
+                        <View style={{
+                          width: 56, height: 56, borderRadius: 28, borderWidth: 4, borderColor: colors.primary,
+                          left: -28,
+                          borderBottomColor: 'transparent', borderLeftColor: 'transparent',
+                          transform: [{ rotate: `${Math.min((completion?.percentage || 0) / 100 * 360, 180) - 135}deg` }]
+                        }} />
+                      </View>
+
+                      {/* Left Half (50-100%) */}
+                      {(completion?.percentage || 0) > 50 && (
+                        <View style={{ position: 'absolute', width: 28, height: 56, left: 0, overflow: 'hidden' }}>
+                          <View style={{
+                            width: 56, height: 56, borderRadius: 28, borderWidth: 4, borderColor: colors.primary,
+                            left: 0,
+                            borderBottomColor: 'transparent', borderLeftColor: 'transparent',
+                            transform: [{ rotate: `${((completion?.percentage || 0) / 100 * 360) - 135}deg` }]
+                          }} />
+                        </View>
+                      )}
+                      <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: '900', fontSize: 14, position: 'absolute' }]}>{completion?.percentage || 0}%</Text>
+                    </View>
                   </View>
                 </View>
                 <View style={[styles.strengthBarBase, { backgroundColor: mode === 'dark' ? '#334155' : '#F1F5F9' }]}>

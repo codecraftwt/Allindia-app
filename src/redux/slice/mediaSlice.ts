@@ -5,7 +5,7 @@ interface MediaParams {
   limit?: number;
   media_type?: 'image' | 'video';
   category?: string;
-  media_section?: 'reel' | 'home page';
+  media_section?: 'reel' | 'home page' | 'slide';
 }
 
 export const fetchAdminMedia = createAsyncThunk(
@@ -41,7 +41,7 @@ const mediaSlice = createSlice({
 
         if (action.meta.arg.media_section === 'reel') {
           state.reels = action.payload.data.media;
-        } else if (action.meta.arg.media_section === 'home page') {
+        } else if (action.meta.arg.media_section === 'slide') {
           state.homeMedia = action.payload.data.media;
         }
       })

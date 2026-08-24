@@ -51,7 +51,17 @@
     "promoCvCta": "रेझ्युमे तयार करा",
     "promoVipTitle": "थेट HR संपर्क",
     "promoVipSub": "500+ सक्रिय रिक्रूटर्सचे थेट फोन नंबर मिळवण्यासाठी VIP सदस्य म्हणून श्रेणीसुधारित करा.",
-    "promoVipCta": "VIP प्रवेश मिळवा"
+    "promoVipCta": "VIP प्रवेश मिळवा",
+    "watchReels": "जॉब बाइट्स",
+    "reelsTag": "नवीन",
+    "reelsDesc": "लहान जॉब व्हिडिओ पाहण्यासाठी स्वाइप करा",
+    "applicationStatus": "अर्जाची स्थिती",
+    "hrInviteTitle": "HR आमंत्रण",
+    "allLocations": "सर्व ठिकाणे",
+    "allAreas": "सर्व क्षेत्रे",
+    "anywhere": "कुठेही",
+    "shareReferMessage": "🚀 तुम्ही नवीन नोकरी किंवा चांगल्या करिअरच्या संधी शोधत आहात का?\n\nआजच JobIndia मिळवा! हजारो सत्यापित नोकऱ्या, थेट HR संपर्क, आणि जलद अर्ज—सर्व काही एकाच अॅपमध्ये।\n\n👉 आता डाउनलोड करा: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share",
+    "shareReferTitle": "Job India अॅप"
   },
   "jobDetail": {
     "goBack": "मागे जा",
@@ -86,7 +96,35 @@
     "screeningQuestions": "स्क्रीनिंग प्रश्न",
     "processing": "प्रक्रिया सुरू आहे...",
     "applyNow": "आत्ता अर्ज करा",
-    "callEmployer": "नियोक्त्याला कॉल करा"
+    "callEmployer": "नियोक्त्याला कॉल करा",
+    "fresher": "फ्रेशर",
+    "workLocation": "कामाचे ठिकाण",
+    "workingDays": "कामाचे दिवस",
+    "shifts": "शिफ्ट्स",
+    "salaryIncentives": "पगार आणि प्रोत्साहन",
+    "baseSalary": "मूळ पगार",
+    "salaryType": "पगाराचा प्रकार",
+    "incentives": "प्रोत्साहन",
+    "bonus": "बोनस",
+    "requirements": "आवश्यकता",
+    "ageRequirement": "वयाची अट",
+    "languages": "भाषा",
+    "requiredAssets": "आवश्यक मालमत्ता",
+    "certifications": "प्रमाणपत्रे",
+    "skillsRequired": "आवश्यक कौशल्ये",
+    "interviewDetails": "मुलाखतीचे तपशील",
+    "interviewType": "मुलाखतीचा प्रकार",
+    "callTimings": "कॉलची वेळ",
+    "interviewLocation": "मुलाखतीचे ठिकाण",
+    "depositsFees": "ठेवी आणि शुल्क",
+    "depositAmount": "ठेवीची रक्कम",
+    "feeWarning": "शुल्क चेतावणी",
+    "purpose": "उद्देश",
+    "takenWhen": "कधी घेतले जाते",
+    "joiningFee": "सामील होण्याचे शुल्क",
+    "yes": "होय",
+    "perksBenefits": "सुविधा आणि फायदे",
+    "similarJobs": "समान नोकऱ्या"
   },
   "allJobs": {
     "hiringCompany": "हायरिंग कंपनी",
@@ -109,16 +147,17 @@
       "PartTime": "अर्धवेळ",
       "Contract": "कंत्राट"
     },
-    "noJobs": "अद्याप कोणतीही नोकरी उपलब्ध नाही"
+    "noJobs": "अद्याप कोणतीही नोकरी उपलब्ध नाही",
+    "clearFilters": "फिल्टर काढा"
   },
   "profileOverview": {
     "missing": "गहाळ",
     "missingAddNow": "गहाळ! प्रोफाइल वाढवण्यासाठी आता जोडा",
     "viewProfileDetails": "प्रोफाइल तपशील पहा",
     "profileStrength": "प्रोफाइल ताकद",
-    "reels": "रील्स",
+    "reels": "जॉब बाइट्स",
     "watchReels": "लहान नोकरी व्हिडिओ पहा",
-    "reelsTag": "रील्स",
+    "reelsTag": "नवीन",
     "saved": "जतन केले",
     "applied": "अर्ज केला",
     "support": "समर्थन",
@@ -136,7 +175,14 @@
     "removePhotoTitle": "फोटो काढा",
     "removePhotoMsg": "तुम्हाला खात्री आहे की तुम्ही तुमचे प्रोफाइल चित्र काढू इच्छिता? ही कृती पूर्ववत केली जाऊ शकत नाही.",
     "removeConfirm": "काढा",
-    "removeCancel": "फोटो ठेवा"
+    "removeCancel": "फोटो ठेवा",
+    "boostProfile": "तुमची प्रोफाइल वाढवा",
+    "allDone": "प्रोफाइल पूर्ण झाली!",
+    "addEducation": "तुमची प्रोफाइल वाढवण्यासाठी शिक्षण जोडा!",
+    "addExperience": "इतरांपेक्षा वेगळे दिसण्यासाठी अनुभव जोडा!",
+    "addSkills": "चांगले जुळवून घेण्यासाठी कौशल्ये जोडा!",
+    "addResume": "100% पर्यंत पोहोचण्यासाठी तुमचा रेझ्युमे अपलोड करा!",
+    "completeProfile": "अधिक नोकऱ्या अनलॉक करण्यासाठी तुमची प्रोफाइल पूर्ण करा!"
   },
   "profileDetails": {
     "myProfile": "माझे प्रोफाइल",
@@ -313,21 +359,14 @@
     "lpa": "LPA",
     "typeLanguage": "तुमची भाषा टाईप करा...",
     "add": "जोडा",
-    "languages": {
-      "english": "इंग्रजी",
-      "hindi": "हिंदी",
-      "marathi": "मराठी",
-      "gujarati": "गुजराती",
-      "tamil": "तमिळ",
-      "telugu": "तेलुगू",
-      "other": "इतर"
-    },
+    "languages": "भाषा",
     "remoteWfh": "रिमोट / घरून काम",
     "wfhSubtitle": "ऑफिसला जाण्याची आवश्यकता नसलेल्या नोकऱ्या दाखवा",
     "saving": "जतन करत आहे...",
     "savePreferences": "प्राधान्ये जतन करा",
     "saveSuccess": "नोकरीची प्राधान्ये जतन केली!",
-    "saveFailed": "जतन करण्यात अयशस्वी"
+    "saveFailed": "जतन करण्यात अयशस्वी",
+    "expectedMonthlySalary": "अपेक्षित मासिक पगार"
   },
   "profileResume": {
     "resume": "रेझ्युमे",
@@ -609,7 +648,9 @@
     "areasIn": "परिसर",
     "entireCity": "संपूर्ण शहर",
     "noCitiesFound": "कोणतेही शहर सापडले नाही",
-    "noAreasFound": "कोणताही परिसर सापडला नाही"
+    "noAreasFound": "कोणताही परिसर सापडला नाही",
+    "searchPlaceholder": "शहर किंवा क्षेत्र शोधा...",
+    "selectCity": "शहर निवडा"
   },
   "notificationsScreen": {
     "title": "सूचना",

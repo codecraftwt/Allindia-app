@@ -9,6 +9,10 @@ import App from './App';
 import { name as appName } from './app.json';
 import './src/i18n';
 
+if (__DEV__) {
+  global.XMLHttpRequest = global.originalXMLHttpRequest || global.XMLHttpRequest;
+}
+
 // Register background handler for Firebase Cloud Messaging
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   console.log('FCM Message received/handled in the background:', remoteMessage);

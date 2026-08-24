@@ -51,7 +51,17 @@
     "promoCvCta": "ರೆಸ್ಯೂಮ್ ರಚಿಸಿ",
     "promoVipTitle": "ನೇರ ಮಾನವ ಸಂಪನ್ಮೂಲ ಸಂಪರ್ಕಗಳು",
     "promoVipSub": "500+ ಸಕ್ರಿಯ ನೇಮಕಾತಿದಾರರ ನೇರ ಫೋನ್ ಸಂಖ್ಯೆಗಳನ್ನು ಪಡೆಯಲು ವಿಐಪಿ ಸದಸ್ಯರಾಗಿ ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡಿ.",
-    "promoVipCta": "ವಿಐಪಿ ಪ್ರವೇಶ ಪಡೆಯಿರಿ"
+    "promoVipCta": "ವಿಐಪಿ ಪ್ರವೇಶ ಪಡೆಯಿರಿ",
+    "watchReels": "ಜಾಬ್ ಬೈಟ್ಸ್",
+    "reelsTag": "ಹೊಸ",
+    "reelsDesc": "ಸಣ್ಣ ಉದ್ಯೋಗ ವೀಡಿಯೊಗಳನ್ನು ನೋಡಲು ಸ್ವೈಪ್ ಮಾಡಿ",
+    "applicationStatus": "ಅರ್ಜಿ ಸ್ಥಿತಿ",
+    "hrInviteTitle": "HR ಆಹ್ವಾನ",
+    "allLocations": "ಎಲ್ಲಾ ಸ್ಥಳಗಳು",
+    "allAreas": "ಎಲ್ಲಾ ಪ್ರದೇಶಗಳು",
+    "anywhere": "ಎಲ್ಲಿಯಾದರೂ",
+    "shareReferMessage": "🚀 ಹೊಸ ಉದ್ಯೋಗ ಅಥವಾ ಉತ್ತಮ ವೃತ್ತಿ ಅವಕಾಶಗಳನ್ನು ಹುಡುಕುತ್ತಿದ್ದೀರಾ?\n\nಇಂದು JobIndia ಪಡೆಯಿರಿ! ಸಾವಿರಾರು ಪರಿಶೀಲಿಸಿದ ಉದ್ಯೋಗಗಳು, ನೇರ HR ಸಂಪರ್ಕಗಳು ಮತ್ತು ತ್ವರಿತ ಅರ್ಜಿಗಳು—ಎಲ್ಲವೂ ಒಂದೇ ಅಪ್ಲಿಕೇಶನ್‌ನಲ್ಲಿ.\n\n👉 ಈಗಲೇ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share",
+    "shareReferTitle": "Job India ಅಪ್ಲಿಕೇಶನ್"
   },
   "jobDetail": {
     "goBack": "ಹಿಂದಕ್ಕೆ ಹೋಗಿ",
@@ -86,7 +96,35 @@
     "screeningQuestions": "ಸ್ಕ್ರೀನಿಂಗ್ ಪ್ರಶ್ನೆಗಳು",
     "processing": "ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
     "applyNow": "ಈಗಲೇ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ",
-    "callEmployer": "ಉದ್ಯೋಗದಾತರಿಗೆ ಕರೆ ಮಾಡಿ"
+    "callEmployer": "ಉದ್ಯೋಗದಾತರಿಗೆ ಕರೆ ಮಾಡಿ",
+    "fresher": "ಫ್ರೆಶರ್",
+    "workLocation": "ಕೆಲಸದ ಸ್ಥಳ",
+    "workingDays": "ಕೆಲಸದ ದಿನಗಳು",
+    "shifts": "ಶಿಫ್ಟ್‌ಗಳು",
+    "salaryIncentives": "ವೇತನ ಮತ್ತು ಪ್ರೋತ್ಸಾಹಕಗಳು",
+    "baseSalary": "ಮೂಲ ವೇತನ",
+    "salaryType": "ವೇತನ ಪ್ರಕಾರ",
+    "incentives": "ಪ್ರೋತ್ಸಾಹಕಗಳು",
+    "bonus": "ಬೋನಸ್",
+    "requirements": "ಅಗತ್ಯತೆಗಳು",
+    "ageRequirement": "ವಯಸ್ಸಿನ ಅಗತ್ಯತೆ",
+    "languages": "ಭಾಷೆಗಳು",
+    "requiredAssets": "ಅಗತ್ಯ ಸ್ವತ್ತುಗಳು",
+    "certifications": "ಪ್ರಮಾಣೀಕರಣಗಳು",
+    "skillsRequired": "ಅಗತ್ಯವಿರುವ ಕೌಶಲ್ಯಗಳು",
+    "interviewDetails": "ಸಂದರ್ಶನದ ವಿವರಗಳು",
+    "interviewType": "ಸಂದರ್ಶನ ಪ್ರಕಾರ",
+    "callTimings": "ಕರೆ ಸಮಯಗಳು",
+    "interviewLocation": "ಸಂದರ್ಶನದ ಸ್ಥಳ",
+    "depositsFees": "ಠೇವಣಿಗಳು ಮತ್ತು ಶುಲ್ಕಗಳು",
+    "depositAmount": "ಠೇವಣಿ ಮೊತ್ತ",
+    "feeWarning": "ಶುಲ್ಕ ಎಚ್ಚರಿಕೆ",
+    "purpose": "ಉದ್ದೇಶ",
+    "takenWhen": "ಯಾವಾಗ ತೆಗೆದುಕೊಳ್ಳಲಾಗಿದೆ",
+    "joiningFee": "ಸೇರುವ ಶುಲ್ಕ",
+    "yes": "ಹೌದು",
+    "perksBenefits": "ಸವಲತ್ತುಗಳು ಮತ್ತು ಪ್ರಯೋಜನಗಳು",
+    "similarJobs": "ಸಮಾನ ಉದ್ಯೋಗಗಳು"
   },
   "allJobs": {
     "hiringCompany": "ಹೈರಿಂಗ್ ಕಂಪನಿ",
@@ -109,16 +147,17 @@
       "PartTime": "ಅರೆಕಾಲಿಕ",
       "Contract": "ಗುತ್ತಿಗೆ"
     },
-    "noJobs": "ಇನ್ನೂ ಯಾವುದೇ ಉದ್ಯೋಗಗಳು ಲಭ್ಯವಿಲ್ಲ"
+    "noJobs": "ಇನ್ನೂ ಯಾವುದೇ ಉದ್ಯೋಗಗಳು ಲಭ್ಯವಿಲ್ಲ",
+    "clearFilters": "ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆಗೆದುಹಾಕಿ"
   },
   "profileOverview": {
     "missing": "ಕಾಣೆಯಾಗಿದೆ",
     "missingAddNow": "ಕಾಣೆಯಾಗಿದೆ! ಪ್ರೊಫೈಲ್ ಹೆಚ್ಚಿಸಲು ಈಗಲೇ ಸೇರಿಸಿ",
     "viewProfileDetails": "ಪ್ರೊಫೈಲ್ ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
     "profileStrength": "ಪ್ರೊಫೈಲ್ ಸಾಮರ್ಥ್ಯ",
-    "reels": "ರೀಲ್ಸ್",
+    "reels": "ಜಾಬ್ ಬೈಟ್ಸ್",
     "watchReels": "ಸಣ್ಣ ಉದ್ಯೋಗ ವೀಡಿಯೊಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
-    "reelsTag": "ರೀಲ್ಸ್",
+    "reelsTag": "ಹೊಸ",
     "saved": "ಉಳಿಸಲಾಗಿದೆ",
     "applied": "ಅನ್ವಯಿಸಲಾಗಿದೆ",
     "support": "ಬೆಂಬಲ",
@@ -136,7 +175,14 @@
     "removePhotoTitle": "ಫೋಟೋ ತೆಗೆದುಹಾಕಿ",
     "removePhotoMsg": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಚಿತ್ರವನ್ನು ತೆಗೆದುಹಾಕಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ? ಈ ಕ್ರಿಯೆಯನ್ನು ರದ್ದುಗೊಳಿಸಲಾಗುವುದಿಲ್ಲ.",
     "removeConfirm": "ತೆಗೆದುಹಾಕಿ",
-    "removeCancel": "ಫೋಟೋ ಇರಿಸಿ"
+    "removeCancel": "ಫೋಟೋ ಇರಿಸಿ",
+    "boostProfile": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಅನ್ನು ಹೆಚ್ಚಿಸಿ",
+    "allDone": "ಪ್ರೊಫೈಲ್ ಪೂರ್ಣಗೊಂಡಿದೆ!",
+    "addEducation": "ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಹೆಚ್ಚಿಸಲು ಶಿಕ್ಷಣವನ್ನು ಸೇರಿಸಿ!",
+    "addExperience": "ಎದ್ದು ಕಾಣಲು ಅನುಭವವನ್ನು ಸೇರಿಸಿ!",
+    "addSkills": "ಉತ್ತಮ ಹೊಂದಾಣಿಕೆಗಳನ್ನು ಪಡೆಯಲು ಕೌಶಲ್ಯಗಳನ್ನು ಸೇರಿಸಿ!",
+    "addResume": "100% ತಲುಪಲು ನಿಮ್ಮ ರೆಸ್ಯೂಮ್ ಅನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ!",
+    "completeProfile": "ಹೆಚ್ಚಿನ ಉದ್ಯೋಗಗಳನ್ನು ಅನ್ಲಾಕ್ ಮಾಡಲು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಅನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ!"
   },
   "profileDetails": {
     "myProfile": "ನನ್ನ ಪ್ರೊಫೈಲ್",
@@ -313,21 +359,14 @@
     "lpa": "LPA",
     "typeLanguage": "ನಿಮ್ಮ ಭಾಷೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ...",
     "add": "ಸೇರಿಸಿ",
-    "languages": {
-      "english": "ಇಂಗ್ಲಿಷ್",
-      "hindi": "ಹಿಂದಿ",
-      "marathi": "ಮರಾಠಿ",
-      "gujarati": "ಗುಜರಾತಿ",
-      "tamil": "ತಮಿಳು",
-      "telugu": "ತೆಲುಗು",
-      "other": "ಇತರ"
-    },
+    "languages": "ಭಾಷೆಗಳು",
     "remoteWfh": "ರಿಮೋಟ್ / ಮನೆಯಿಂದ ಕೆಲಸ",
     "wfhSubtitle": "ಕಚೇರಿ ಭೇಟಿ ಅಗತ್ಯವಿಲ್ಲದ ಉದ್ಯೋಗಗಳನ್ನು ತೋರಿಸಿ",
     "saving": "ಉಳಿಸಲಾಗುತ್ತಿದೆ...",
     "savePreferences": "ಆದ್ಯತೆಗಳನ್ನು ಉಳಿಸಿ",
     "saveSuccess": "ಉದ್ಯೋಗ ಆದ್ಯತೆಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!",
-    "saveFailed": "ಉಳಿಸಲು ವಿಫಲವಾಗಿದೆ"
+    "saveFailed": "ಉಳಿಸಲು ವಿಫಲವಾಗಿದೆ",
+    "expectedMonthlySalary": "ನಿರೀಕ್ಷಿತ ಮಾಸಿಕ ವೇತನ"
   },
   "profileResume": {
     "resume": "ರೆಸ್ಯೂಮ್",
@@ -609,7 +648,9 @@
     "areasIn": "ಪ್ರದೇಶಗಳು",
     "entireCity": "ಇడೀ ನಗರ",
     "noCitiesFound": "ಯಾವುದೇ ನಗರ ಸಿಗಲಿಲ್ಲ",
-    "noAreasFound": "ಯಾವುದೇ ಪ್ರದೇಶ ಸಿಗಲಿಲ್ಲ"
+    "noAreasFound": "ಯಾವುದೇ ಪ್ರದೇಶ ಸಿಗಲಿಲ್ಲ",
+    "searchPlaceholder": "ನಗರ ಅಥವಾ ಪ್ರದೇಶವನ್ನು ಹುಡುಕಿ...",
+    "selectCity": "ನಗರವನ್ನು ಆಯ್ಕೆಮಾಡಿ"
   },
   "notificationsScreen": {
     "title": "ಅಭಿಸೂಚನೆಗಳು",

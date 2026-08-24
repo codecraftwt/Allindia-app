@@ -51,7 +51,7 @@ const JobCategoriesScreen: React.FC = () => {
     <View style={styles.scrollContent}>
       {[1, 2, 3, 4, 5, 6].map(i => (
         <View key={i} style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <SkeletonPulse style={styles.iconBox} />
+          <SkeletonPulse style={[styles.iconBox, { backgroundColor: colors.primary }]} />
           <View style={styles.cardContent}>
             <SkeletonPulse style={{ height: 18, width: '60%', borderRadius: 4, marginBottom: 6 }} />
             <SkeletonPulse style={{ height: 12, width: '30%', borderRadius: 4 }} />
@@ -104,8 +104,6 @@ const JobCategoriesScreen: React.FC = () => {
           data={filteredCategories}
           keyExtractor={(cat) => cat.id.toString()}
           renderItem={({ item: cat }) => {
-            const cardBg = getCategoryColor(cat.name, isDark);
-
             return (
               <Pressable
                 onPress={() => navigation.navigate('IndustryCategory', { categoryId: cat.id, categoryName: cat.name })}
@@ -113,8 +111,8 @@ const JobCategoriesScreen: React.FC = () => {
                   styles.listCard,
                   { backgroundColor: colors.surface, borderColor: colors.border }
                 ]}>
-                <View style={[styles.iconBox, { backgroundColor: cardBg, borderRadius: 12 }]}>
-                  <Icon name={getCategoryIcon(cat.name)} size={22} color="#000000" />
+                <View style={[styles.iconBox, { backgroundColor: colors.primary, borderRadius: 12 }]}>
+                  <Icon name={getCategoryIcon(cat.name)} size={22} color="#FFFFFF" />
                 </View>
                 <View style={styles.cardContent}>
                   <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700' }]}>

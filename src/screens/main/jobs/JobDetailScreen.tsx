@@ -499,8 +499,8 @@ const JobDetailScreen: React.FC = () => {
   const handleShareApp = useCallback(async () => {
     try {
       await Share.share({
-        message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share',
-        title: 'Refer JobIndia',
+        message: t('home.shareReferMessage', '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share'),
+        title: t('home.shareReferTitle', 'Refer JobIndia'),
       });
     } catch (error: any) {
       Alert.alert('Error', 'Could not open share menu');

@@ -366,8 +366,8 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
   const handleReferApp = async () => {
     try {
       await Share.share({
-        message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share',
-        title: "Job India App",
+        message: t('home.shareReferMessage', '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share'),
+        title: t('home.shareReferTitle', "Job India App"),
       });
     } catch (error: any) {
       console.log('Error sharing:', error);

@@ -85,6 +85,18 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
     dispatch(fetchMetaCities());
   }, [dispatch]);
 
+  const uniqueCurrentCities = useMemo(() => {
+    const seen = new Set<string>();
+    return (cities || []).filter((c: any) => {
+      const label = c.area || c.city || c.label || '';
+      if (!label) return false;
+      const lower = label.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [cities]);
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
   const months = [
@@ -422,7 +434,7 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
                 },
               ]}
             />
-            {citySearch.trim().length > 0 && !(cities || []).some((c: any) => c.label.toLowerCase() === citySearch.trim().toLowerCase()) && (
+            {citySearch.trim().length > 0 && !uniqueCurrentCities.some((c: any) => (c.area || c.city || c.label || '').toLowerCase() === citySearch.trim().toLowerCase()) && (
               <TouchableOpacity
                 style={{ paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingHorizontal: spacing.lg }}
                 onPress={() => {
@@ -434,21 +446,24 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
               </TouchableOpacity>
             )}
             <FlatList
-              data={(cities || []).filter((c: any) => c.label.toLowerCase().includes(citySearch.toLowerCase()))}
+              data={uniqueCurrentCities.filter((c: any) => (c.area || c.city || c.label || '').toLowerCase().includes(citySearch.toLowerCase()))}
               keyExtractor={(item) => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={{ paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingHorizontal: spacing.lg }}
-                  onPress={() => {
-                    updateDraft({ currentCity: item.label });
-                    setCurrentCityModalOpen(false);
-                  }}
-                >
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.label}</Text>
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const displayLabel = item.area || item.city || item.label;
+                return (
+                  <TouchableOpacity
+                    style={{ paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, paddingHorizontal: spacing.lg }}
+                    onPress={() => {
+                      updateDraft({ currentCity: displayLabel });
+                      setCurrentCityModalOpen(false);
+                    }}
+                  >
+                    <Text style={[typography.body, { color: colors.textPrimary }]}>{displayLabel}</Text>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
         </View>

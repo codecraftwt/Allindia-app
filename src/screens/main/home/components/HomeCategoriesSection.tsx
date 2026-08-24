@@ -75,8 +75,8 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
               style={[
                 styles.categoryCard,
                 {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
                 },
               ]}>
               <SkeletonPulse style={styles.categoryIconBox} />
@@ -136,15 +136,15 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
               style={[
                 styles.categoryCard,
                 {
-                  backgroundColor: getCategoryColor(catName, isDark),
-                  borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
                   shadowColor: colors.shadow,
                 },
               ]}>
-              <View style={[styles.categoryIconBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.6)' }]}>
-                <Icon name={catIcon} size={14} color="#000000" />
+              <View style={[styles.categoryIconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Icon name={catIcon} size={14} color="#FFFFFF" />
               </View>
-              <Text style={[styles.categoryLabel, { color: "#000000" }]} numberOfLines={1}>
+              <Text style={[styles.categoryLabel, { color: "#FFFFFF" }]} numberOfLines={1}>
                 {catName}
               </Text>
             </Pressable>

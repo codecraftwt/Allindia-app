@@ -37,6 +37,7 @@ const ProfileSkillsEditScreen: React.FC<Props> = ({ navigation }) => {
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const scale = useSharedValue(1);
   const selectStyle = useAnimatedStyle(() => ({
@@ -79,6 +80,7 @@ const ProfileSkillsEditScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSave = async () => {
+    setSaving(true);
     try {
       await dispatch(updateSkills({ skills })).unwrap();
       showToast(t('profileSkills.skillsUpdated', 'Skills updated successfully!'), 'success');
@@ -87,6 +89,8 @@ const ProfileSkillsEditScreen: React.FC<Props> = ({ navigation }) => {
       }, 3000);
     } catch (err: any) {
       showToast(err?.message || t('profileSkills.failedToUpdateSkills', 'Failed to save skills'), 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -158,10 +162,11 @@ const ProfileSkillsEditScreen: React.FC<Props> = ({ navigation }) => {
 
       <Animated.View entering={FadeInDown.delay(300).duration(600).springify()} style={{ marginTop: spacing.xl }}>
         <PrimaryButton
-          title={profileLoading ? t('profileSkills.saving', 'Saving...') : t('profileSkills.save', 'Save')}
+          title={saving ? t('profileSkills.saving', 'Saving...') : t('profileSkills.save', 'Save')}
           onPress={handleSave}
           colors={colors}
-          disabled={profileLoading}
+          disabled={saving || profileLoading}
+          loading={saving}
         />
       </Animated.View>
 

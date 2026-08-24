@@ -508,10 +508,22 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   const [citySearch, setCitySearch] = useState('');
   const [prefCitySearch, setPrefCitySearch] = useState('');
 
-  const uniqueCities = useMemo(() => {
+  const uniqueCurrentCities = useMemo(() => {
     const seen = new Set<string>();
     return cities.filter((c: any) => {
-      const label = c.area || c.label || c.city || '';
+      const label = c.area || c.city || c.label || '';
+      if (!label) return false;
+      const lower = label.toLowerCase();
+      if (seen.has(lower)) return false;
+      seen.add(lower);
+      return true;
+    });
+  }, [cities]);
+
+  const uniquePreferredCities = useMemo(() => {
+    const seen = new Set<string>();
+    return cities.filter((c: any) => {
+      const label = c.city || c.area || c.label || '';
       if (!label) return false;
       const lower = label.toLowerCase();
       if (seen.has(lower)) return false;
@@ -541,7 +553,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       setPreferredCityIds((pref.preferred_city_ids || []).map(Number));
       const catIds = (pref.job_category_ids && pref.job_category_ids.length > 0)
         ? pref.job_category_ids.map(Number)
-        : (pref.job_category_id ? [Number(pref.job_category_id)] : []);
+        : (Array.isArray(pref.job_category_id) ? pref.job_category_id.map(Number) : (pref.job_category_id ? [Number(pref.job_category_id)] : []));
       setJobCategoryIds(catIds);
       setMinSalary(Math.round(pref.expected_salary_min || 15000));
       setMaxSalary(Math.round(pref.expected_salary_max || 30000));
@@ -586,7 +598,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
   }, [categories, jobCategoryIds]);
 
   const currentCityData = cities.find((c: any) => Number(c.id) === Number(currentCityId));
-  const currentCityLabel = currentCityData?.area || currentCityData?.label;
+  const currentCityLabel = currentCityData?.area || currentCityData?.city || currentCityData?.label;
 
   const handleSave = async () => {
     setSaving(true);
@@ -920,7 +932,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniqueCities.filter((c: any) => (c.area || c.label).toLowerCase().includes(citySearch.toLowerCase()))}
+              data={uniqueCurrentCities.filter((c: any) => (c.area || c.city || c.label || '').toLowerCase().includes(citySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -937,7 +949,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                         Number(currentCityId) === Number(item.id) ? colors.surfaceHighlight : 'transparent',
                     },
                   ]}>
-                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.area || item.label}</Text>
+                  <Text style={[typography.body, { color: colors.textPrimary }]}>{item.area || item.city || item.label}</Text>
                 </Pressable>
               )}
             />
@@ -975,7 +987,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniqueCities.filter((c: any) => (c.area || c.label).toLowerCase().includes(prefCitySearch.toLowerCase()))}
+              data={uniquePreferredCities.filter((c: any) => (c.city || c.area || c.label || '').toLowerCase().includes(prefCitySearch.toLowerCase()))}
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -998,7 +1010,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                     ]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={[typography.body, { color: selected ? colors.primary : colors.textPrimary }]}>
-                        {item.area || item.label}
+                        {item.city || item.area || item.label}
                       </Text>
                       {selected && <Icon name="check" size={16} color={colors.primary} />}
                     </View>

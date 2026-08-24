@@ -51,7 +51,17 @@
     "promoCvCta": "रिज्यूमे बनाएं",
     "promoVipTitle": "सीधे एचआर संपर्क",
     "promoVipSub": "500+ सक्रिय रिक्रूटर्स के सीधे फोन नंबर प्राप्त करने के लिए वीआईपी सदस्य में अपग्रेड करें।",
-    "promoVipCta": "वीआईपी एक्सेस प्राप्त करें"
+    "promoVipCta": "वीआईपी एक्सेस प्राप्त करें",
+    "watchReels": "जॉब बाइट्स",
+    "reelsTag": "नया",
+    "reelsDesc": "छोटे जॉब वीडियो देखने के लिए स्वाइप करें",
+    "applicationStatus": "आवेदन की स्थिति",
+    "hrInviteTitle": "HR आमंत्रण",
+    "allLocations": "सभी स्थान",
+    "allAreas": "सभी क्षेत्र",
+    "anywhere": "कहीं भी",
+    "shareReferMessage": "🚀 क्या आप नई नौकरी या बेहतर करियर के अवसर खोज रहे हैं?\n\nआज ही JobIndia डाउनलोड करें! हजारों सत्यापित नौकरियां, सीधे HR संपर्क, और त्वरित आवेदन—सब कुछ एक ऐप में।\n\n👉 अभी डाउनलोड करें: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share",
+    "shareReferTitle": "Job India ऐप"
   },
   "jobDetail": {
     "goBack": "वापस जाएं",
@@ -86,7 +96,35 @@
     "screeningQuestions": "स्क्रीनिंग प्रश्न",
     "processing": "प्रक्रिया हो रही है...",
     "applyNow": "अभी आवेदन करें",
-    "callEmployer": "नियोक्ता को कॉल करें"
+    "callEmployer": "नियोक्ता को कॉल करें",
+    "fresher": "फ्रेशर",
+    "workLocation": "काम का स्थान",
+    "workingDays": "काम के दिन",
+    "shifts": "शिफ्ट",
+    "salaryIncentives": "वेतन और प्रोत्साहन",
+    "baseSalary": "मूल वेतन",
+    "salaryType": "वेतन प्रकार",
+    "incentives": "प्रोत्साहन",
+    "bonus": "बोनस",
+    "requirements": "आवश्यकताएं",
+    "ageRequirement": "आयु आवश्यकता",
+    "languages": "भाषाएं",
+    "requiredAssets": "आवश्यक संपत्तियां",
+    "certifications": "प्रमाणपत्र",
+    "skillsRequired": "आवश्यक कौशल",
+    "interviewDetails": "साक्षात्कार विवरण",
+    "interviewType": "साक्षात्कार का प्रकार",
+    "callTimings": "कॉल का समय",
+    "interviewLocation": "साक्षात्कार का स्थान",
+    "depositsFees": "जमा और शुल्क",
+    "depositAmount": "जमा राशि",
+    "feeWarning": "शुल्क चेतावनी",
+    "purpose": "उद्देश्य",
+    "takenWhen": "कब लिया गया",
+    "joiningFee": "शामिल होने का शुल्क",
+    "yes": "हां",
+    "perksBenefits": "सुविधाएं और लाभ",
+    "similarJobs": "समान नौकरियां"
   },
   "allJobs": {
     "hiringCompany": "हायरिंग कंपनी",
@@ -109,16 +147,17 @@
       "PartTime": "अंशकालिक",
       "Contract": "अनुबंध"
     },
-    "noJobs": "अभी तक कोई नौकरियां उपलब्ध नहीं हैं"
+    "noJobs": "अभी तक कोई नौकरियां उपलब्ध नहीं हैं",
+    "clearFilters": "फ़िल्टर हटाएं"
   },
   "profileOverview": {
     "missing": "अनुपलब्ध",
     "missingAddNow": "अनुपलब्ध! प्रोफ़ाइल को बेहतर बनाने के लिए अभी जोड़ें",
     "viewProfileDetails": "प्रोफ़ाइल विवरण देखें",
     "profileStrength": "प्रोफ़ाइल की मजबूती",
-    "reels": "रील्स",
+    "reels": "जॉब बाइट्स",
     "watchReels": "छोटे नौकरी वीडियो देखें",
-    "reelsTag": "रील्स",
+    "reelsTag": "नया",
     "saved": "सहेजा गया",
     "applied": "आवेदन किया",
     "support": "सहयोग",
@@ -136,7 +175,14 @@
     "removePhotoTitle": "फोटो हटाएं",
     "removePhotoMsg": "क्या आप वाकई अपना प्रोफ़ाइल चित्र हटाना चाहते हैं? इसे पूर्ववत नहीं किया जा सकता।",
     "removeConfirm": "हटाएं",
-    "removeCancel": "फोटो रखें"
+    "removeCancel": "फोटो रखें",
+    "boostProfile": "अपनी प्रोफाइल को बेहतर बनाएं",
+    "allDone": "प्रोफाइल पूरी हो गई!",
+    "addEducation": "अपनी प्रोफाइल बेहतर बनाने के लिए शिक्षा जोड़ें!",
+    "addExperience": "सबसे अलग दिखने के लिए अनुभव जोड़ें!",
+    "addSkills": "बेहतर मैच पाने के लिए कौशल जोड़ें!",
+    "addResume": "100% तक पहुंचने के लिए अपना रिज्यूमे अपलोड करें!",
+    "completeProfile": "अधिक नौकरियों को अनलॉक करने के लिए अपनी प्रोफाइल पूरी करें!"
   },
   "profileDetails": {
     "myProfile": "मेरी प्रोफ़ाइल",
@@ -313,21 +359,14 @@
     "lpa": "LPA",
     "typeLanguage": "अपनी भाषा टाइप करें...",
     "add": "जोड़ें",
-    "languages": {
-      "english": "अंग्रेजी",
-      "hindi": "हिंदी",
-      "marathi": "मराठी",
-      "gujarati": "गुजराती",
-      "tamil": "तमिल",
-      "telugu": "तेलुगु",
-      "other": "अन्य"
-    },
+    "languages": "भाषाएं",
     "remoteWfh": "रिमोट / घर से काम",
     "wfhSubtitle": "ऐसी नौकरियां दिखाएं जिनमें कार्यालय जाने की आवश्यकता नहीं है",
     "saving": "सहेजा जा रहा है...",
     "savePreferences": "प्राथमिकताएं सहेजें",
     "saveSuccess": "नौकरी की प्राथमिकताएं सहेजी गईं!",
-    "saveFailed": "सहेजना विफल रहा"
+    "saveFailed": "सहेजना विफल रहा",
+    "expectedMonthlySalary": "अपेक्षित मासिक वेतन"
   },
   "profileResume": {
     "resume": "रिज्यूमे",
@@ -609,7 +648,9 @@
     "areasIn": "क्षेत्र",
     "entireCity": "पूरा शहर",
     "noCitiesFound": "कोई शहर नहीं मिला",
-    "noAreasFound": "कोई क्षेत्र नहीं मिला"
+    "noAreasFound": "कोई क्षेत्र नहीं मिला",
+    "searchPlaceholder": "शहर या क्षेत्र खोजें...",
+    "selectCity": "शहर चुनें"
   },
   "notificationsScreen": {
     "title": "सूचनाएं",

@@ -51,7 +51,17 @@
     "promoCvCta": "Build Resume",
     "promoVipTitle": "Direct HR Contacts",
     "promoVipSub": "Upgrade to VIP member to get direct phone numbers of 500+ active recruiters.",
-    "promoVipCta": "Get VIP Access"
+    "promoVipCta": "Get VIP Access",
+    "watchReels": "Job Bites",
+    "reelsTag": "NEW",
+    "reelsDesc": "Swipe through short job videos",
+    "applicationStatus": "Application Status",
+    "hrInviteTitle": "HR Invite",
+    "allLocations": "All Locations",
+    "allAreas": "All Areas",
+    "anywhere": "Anywhere",
+    "shareReferMessage": "🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia&pcampaignid=web_share",
+    "shareReferTitle": "Job India App"
   },
   "jobDetail": {
     "goBack": "Go back",
@@ -89,7 +99,35 @@
     "partTimeJob": "Part-Time Job",
     "salaryRange": "{{min}} - {{max}} / month",
     "jobDescription": "Job Description",
-    "callEmployer": "Call employer"
+    "callEmployer": "Call employer",
+    "fresher": "Fresher",
+    "workLocation": "Work Location",
+    "workingDays": "Working Days",
+    "shifts": "Shifts",
+    "salaryIncentives": "Salary & Incentives",
+    "baseSalary": "Base Salary",
+    "salaryType": "Salary Type",
+    "incentives": "Incentives",
+    "bonus": "Bonus",
+    "requirements": "Requirements",
+    "ageRequirement": "Age Requirement",
+    "languages": "Languages",
+    "requiredAssets": "Required Assets",
+    "certifications": "Certifications",
+    "skillsRequired": "Skills Required",
+    "interviewDetails": "Interview Details",
+    "interviewType": "Interview Type",
+    "callTimings": "Call Timings",
+    "interviewLocation": "Interview Location",
+    "depositsFees": "Deposits & Fees",
+    "depositAmount": "Deposit Amount",
+    "feeWarning": "Fee Warning",
+    "purpose": "Purpose",
+    "takenWhen": "Taken When",
+    "joiningFee": "Joining Fee",
+    "yes": "Yes",
+    "perksBenefits": "Perks & Benefits",
+    "similarJobs": "Similar Jobs"
   },
   "allJobs": {
     "hiringCompany": "Hiring Company",
@@ -112,7 +150,8 @@
       "PartTime": "Part Time",
       "Contract": "Contract"
     },
-    "noJobs": "No jobs available yet"
+    "noJobs": "No jobs available yet",
+    "clearFilters": "Clear Filters"
   },
   "profileOverview": {
     "missing": "Missing",
@@ -139,7 +178,14 @@
     "removePhotoTitle": "Remove Photo",
     "removePhotoMsg": "Are you sure you want to remove your profile picture? This action cannot be undone.",
     "removeConfirm": "Remove",
-    "removeCancel": "Keep Photo"
+    "removeCancel": "Keep Photo",
+    "boostProfile": "Boost Your Profile",
+    "allDone": "Profile Complete!",
+    "addEducation": "Add Education to boost your profile!",
+    "addExperience": "Add Experience to stand out!",
+    "addSkills": "Add Skills to get better matches!",
+    "addResume": "Upload your Resume to reach 100%!",
+    "completeProfile": "Complete your profile to unlock more jobs!"
   },
   "profileDetails": {
     "myProfile": "My Profile",
@@ -316,21 +362,14 @@
     "lpa": "LPA",
     "typeLanguage": "Type your language...",
     "add": "Add",
-    "languages": {
-      "english": "English",
-      "hindi": "Hindi",
-      "marathi": "Marathi",
-      "gujarati": "Gujarati",
-      "tamil": "Tamil",
-      "telugu": "Telugu",
-      "other": "Other"
-    },
+    "languages": "Languages",
     "remoteWfh": "Remote / Work From Home",
     "wfhSubtitle": "Show jobs that don't require office visit",
     "saving": "Saving...",
     "savePreferences": "Save Preferences",
     "saveSuccess": "Job preferences saved!",
-    "saveFailed": "Save failed"
+    "saveFailed": "Save failed",
+    "expectedMonthlySalary": "Expected Monthly Salary"
   },
   "profileResume": {
     "resume": "Resume",
@@ -612,7 +651,9 @@
     "areasIn": "AREAS IN",
     "entireCity": "Entire City",
     "noCitiesFound": "No cities found",
-    "noAreasFound": "No areas found"
+    "noAreasFound": "No areas found",
+    "searchPlaceholder": "Search city or area...",
+    "selectCity": "Select City"
   },
   "notificationsScreen": {
     "title": "Notifications",
