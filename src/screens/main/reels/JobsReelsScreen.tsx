@@ -49,7 +49,7 @@ const CATEGORIES = [
 const THREADS_DATA = [
   {
     id: 't1',
-    user: 'Rahul Sharma',
+    user: 'Priya Verma',
     handle: '@rahul_tech',
     avatar: 'https://i.pravatar.cc/150?u=rahul',
     content: 'Just had an amazing interview at Google! The process was tough but very rewarding. 🚀 #InterviewTips #GoogleJobs',
@@ -59,7 +59,7 @@ const THREADS_DATA = [
   },
   {
     id: 't2',
-    user: 'Priya Verma',
+    user: 'Rahul Sharma',
     handle: '@priya_ux',
     avatar: 'https://i.pravatar.cc/150?u=priya',
     content: 'UI/UX Designers! Portfolio is more important than your degree. Focus on case studies. 🎨✨',

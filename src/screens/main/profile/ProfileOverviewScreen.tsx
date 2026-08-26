@@ -20,6 +20,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { logoutCandidate } from '../../../redux/slice/authSlice';
 import { fetchProfile, updateProfilePicture, deleteProfilePicture, fetchProfileCompletion, fetchSkills } from '../../../redux/slice/profileSlice';
+import { fetchMetaCategories, fetchMetaCities, fetchMetaQualifications } from '../../../redux/slice/metaSlice';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { Alert } from 'react-native';
@@ -62,6 +63,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const { draft } = useProfileSetup();
   const { user, loading: authLoading, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { data: profileData, completion, loading: profileLoading } = useSelector((state: RootState) => state.profile);
+  const { categories, cities, qualifications } = useSelector((state: RootState) => state.meta);
   const profile = profileData;
   const { t, i18n } = useTranslation();
 
@@ -151,6 +153,9 @@ const ProfileOverviewScreen: React.FC = () => {
       dispatch(fetchProfile());
       dispatch(fetchProfileCompletion());
       dispatch(fetchSkills());
+      dispatch(fetchMetaCategories());
+      dispatch(fetchMetaCities());
+      dispatch(fetchMetaQualifications());
     }
   }, [dispatch, isLoggedIn]);
 
@@ -213,7 +218,17 @@ const ProfileOverviewScreen: React.FC = () => {
     return `${baseUrl}${normalizedPath}?t=${imageTimestamp}`;
   };
 
-  const displayName = profile?.personal?.name || user?.name || draft.fullName || 'User';
+  const formatName = (nameString: string | null | undefined) => {
+    if (!nameString) return 'User';
+    const parts = nameString.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+    if (parts.length >= 3) return `${parts[0]} ${parts[parts.length - 1]}`;
+    return nameString;
+  };
+
+  const rawName = profile?.personal?.name || user?.name || draft.fullName;
+  const displayName = formatName(rawName);
   const displayEmail = profile?.personal?.email || user?.email || '';
   const isValidPhotoUrl = (url: string | null | undefined): boolean => {
     if (!url) return false;
@@ -252,6 +267,80 @@ const ProfileOverviewScreen: React.FC = () => {
 
   const isSectionMissing = (key: string) => completion?.missing_sections?.includes(key);
 
+  const getSelectedCategory = () => {
+    if (!profile?.preferences) return 'Software Engineer';
+    const pref = profile.preferences;
+    const catIds = (pref.job_category_ids && pref.job_category_ids.length > 0)
+      ? pref.job_category_ids.map(Number)
+      : (Array.isArray(pref.job_category_id) ? pref.job_category_id.map(Number) : (pref.job_category_id ? [Number(pref.job_category_id)] : []));
+    
+    if (catIds.length === 0) return 'Selected Role';
+    let selectedName = '';
+    for (const cat of (categories || [])) {
+      if (catIds.includes(Number(cat.id))) {
+        selectedName = cat.name;
+        break;
+      }
+      if (cat.subcategories) {
+        const sub = cat.subcategories.find((s: any) => catIds.includes(Number(s.id)));
+        if (sub) {
+          selectedName = sub.name;
+          break;
+        }
+      }
+    }
+    return selectedName || 'Selected Role';
+  };
+
+  const getJobPrefBottomText = () => {
+    if (!profile?.preferences) return 'Pune • ₹6-8 LPA';
+    const pref = profile.preferences;
+    
+    const cityIds = pref.preferred_city_ids ? pref.preferred_city_ids.map(Number) : [];
+    let cityName = '';
+    if (cityIds.length > 0 && cities) {
+      const cityData = cities.find((c: any) => Number(c.id) === cityIds[0]);
+      cityName = cityData?.area || cityData?.city || cityData?.label || '';
+    }
+    if (!cityName && pref.preferred_cities && pref.preferred_cities.length > 0) {
+       cityName = pref.preferred_cities[0];
+    }
+    
+    let salaryText = '';
+    if (pref.expected_salary_min || pref.expected_salary_max) {
+      const min = (pref.expected_salary_min || 0) / 100000;
+      const max = (pref.expected_salary_max || 0) / 100000;
+      if (min > 0 || max > 0) {
+        salaryText = `₹${min.toFixed(1)}-${max.toFixed(1)} LPA`;
+      }
+    }
+
+    if (cityName && salaryText) return `${cityName} • ${salaryText}`;
+    if (cityName) return cityName;
+    if (salaryText) return salaryText;
+    
+    return 'Any Location';
+  };
+
+  const getExperienceSubtitle = () => {
+    const exp = profile?.experience;
+    if (!exp) return t('profileDetails.addPastJobs', 'Add your past jobs');
+    const type = exp.experience_type || 'Experienced';
+    if (type.toLowerCase() === 'fresher') return 'Fresher';
+    const years = exp.total_experience_years || 0;
+    return `${years} ${years === 1 ? 'Year' : 'Years'} Experience`;
+  };
+
+  const getEducationSubtitle = () => {
+    const edu = profile?.education;
+    if (!edu) return t('profileDetails.addEducation', 'Add your degree/college');
+    if (edu.qualification_id && qualifications) {
+      const qual = qualifications.find((q: any) => Number(q.id) === Number(edu.qualification_id));
+      if (qual) return qual.name || qual.label || 'Education added';
+    }
+    return edu.degree || 'Education added';
+  };
+
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [0, -40],
@@ -267,9 +356,10 @@ const ProfileOverviewScreen: React.FC = () => {
     </Animated.View>
   );
 
-  const SettingsRow = ({ title, subtitle, icon, onPress, isMissing, color, isLast }: any) => (
+  const SettingsRow = ({ title, subtitle, icon, onPress, isMissing, color, isLast, bottomText, bottomTextColor = '#10B981', tags, subtitleColor }: any) => (
     <Pressable
       onPress={onPress}
+      delayPressIn={0}
       style={({ pressed }) => [
         styles.settingsRow,
         pressed && { backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' },
@@ -281,9 +371,25 @@ const ProfileOverviewScreen: React.FC = () => {
       </View>
       <View style={styles.settingsText}>
         <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '600' }]}>{title}</Text>
-        <Text style={[typography.small, { color: isMissing ? colors.error : colors.textSecondary, marginTop: 3 }]}>
-          {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
-        </Text>
+        {(isMissing || subtitle) ? (
+          <Text style={[typography.small, { color: isMissing ? colors.error : (subtitleColor || colors.textSecondary), marginTop: 3 }]}>
+            {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
+          </Text>
+        ) : null}
+        {!isMissing && bottomText ? (
+          <Text style={[typography.small, { color: bottomTextColor, marginTop: 3, fontSize: 12, fontWeight: '500' }]}>
+            {bottomText}
+          </Text>
+        ) : null}
+        {!isMissing && tags && tags.length > 0 ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, gap: 6 }}>
+            {tags.map((tag: string, index: number) => (
+              <View key={index} style={{ backgroundColor: color + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                <Text style={{ color: color, fontSize: 11, fontWeight: '600' }}>{tag}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </View>
       {isMissing ? (
         <View style={[styles.statusBadge, { backgroundColor: colors.error + '10' }]}>
@@ -324,125 +430,151 @@ const ProfileOverviewScreen: React.FC = () => {
 
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={[styles.headerBackground, { backgroundColor: mode === 'dark' ? '#1E293B' : colors.primary }]}>
+        <View style={[styles.headerBackground, { backgroundColor: mode === 'dark' ? '#1E293B' : colors.primary, position: 'relative', height: 'auto', paddingBottom: 16 }]}>
           {/* Subtle gradient / decorative circles */}
           <View style={[styles.decorativeCircle, { top: -50, left: -50, backgroundColor: '#FFFFFF', opacity: 0.05 }]} />
           <View style={[styles.decorativeCircle, { top: 100, right: -80, width: 250, height: 250, backgroundColor: '#FFFFFF', opacity: 0.03 }]} />
-        </View>
 
-        <View style={[styles.topNav, { paddingTop: insets.top + 8, paddingHorizontal: 20, justifyContent: 'flex-end', zIndex: 10 }]}>
-          <Pressable onPress={() => navigation.navigate('ProfileSettings')} style={({ pressed }) => [styles.settingsBtn, pressed && { opacity: 0.7 }]}>
-            <Icon name="settings" size={24} color="#FFFFFF" />
-          </Pressable>
-        </View>
+          <View style={{ paddingTop: insets.top > 20 ? insets.top - 10 : insets.top, zIndex: 10 }} />
 
-        <View style={styles.profileSummaryCentered}>
-          <View style={styles.avatarContainer}>
-            <Pressable
-              onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
-              style={[styles.avatarCircleHuge, { backgroundColor: '#FFFFFF' }]}
-            >
-              {profilePic && !imageError ? (
-                <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
-              ) : (
-                <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
-                  {displayName && displayName !== 'User' ? (
-                    <Text style={[typography.h3, { color: colors.primary, fontSize: 36, fontWeight: 'bold' }]}>
-                      {profileInitials(displayName)}
-                    </Text>
-                  ) : (
-                    <Icon name="user" size={40} color={colors.primary} />
-                  )}
-                </View>
-              )}
-              {isUploading && (
-                <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
-                  <ActivityIndicator color="#FFF" size="large" />
-                </View>
-              )}
-            </Pressable>
-            <Pressable
-              onPress={() => setShowImagePicker(true)}
-              style={styles.cameraIconBtnPremium}
-            >
-              <Icon name="camera" size={14} color={colors.primary} />
-            </Pressable>
-          </View>
-
-          <View style={styles.summaryTextCentered}>
-            <View style={[styles.nameVerifiedRow, { justifyContent: 'center', gap: 6 }]}>
-              <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 24, fontWeight: '700', letterSpacing: 0.3 }]} numberOfLines={1}>{displayName}</Text>
-              <MaterialIcon name="check-decagram" size={24} color="#60A5FA" />
-            </View>
-            <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 4, fontSize: 14 }]} numberOfLines={1}>{displayEmail}</Text>
-            <View style={[styles.phoneRow, { justifyContent: 'center' }]}>
-              <Icon name="phone" size={12} color="rgba(255,255,255,0.7)" />
-              <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 6, fontSize: 13 }]}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.contentBody}>
-          {completion && completion.percentage < 100 && (
-            <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
-              <View style={[styles.strengthCardPremium, { backgroundColor: mode === 'dark' ? '#1E293B' : '#FFFFFF', borderColor: mode === 'dark' ? colors.border : 'rgba(0,0,0,0.04)' }]}>
-                <View style={styles.strengthHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '700' }]}>{t('profileOverview.boostProfile', 'Boost Your Profile')}</Text>
-                    <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]}>{getNextActionText()}</Text>
+          <View style={[styles.profileSummaryHorizontal, { paddingHorizontal: 16, alignItems: 'center', paddingBottom: 0, paddingTop: 4 }]}>
+            <View style={styles.avatarContainer}>
+              <Pressable
+                onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
+                style={[styles.avatarCircleHuge, { width: 68, height: 68, borderRadius: 34, borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.8)' }]}
+              >
+                {profilePic && !imageError ? (
+                  <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
+                ) : (
+                  <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
+                    {displayName && displayName !== 'User' ? (
+                      <Text style={[typography.h3, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+                        {profileInitials(displayName)}
+                      </Text>
+                    ) : (
+                      <Icon name="user" size={28} color={colors.primary} />
+                    )}
                   </View>
-                  <View style={{ alignItems: 'center', justifyContent: 'center', width: 56, height: 56 }}>
-                    <Animated.View style={[
-                      StyleSheet.absoluteFill,
-                      {
-                        backgroundColor: colors.primary,
-                        borderRadius: 28,
-                        opacity: rippleOpacity,
-                        transform: [{ scale: rippleScale }],
-                      }
-                    ]} />
-                    <View style={[styles.percentageCircle, { backgroundColor: colors.primary + '15' }]}>
-                      {/* Base faded ring */}
-                      <View style={[StyleSheet.absoluteFill, { borderRadius: 28, borderWidth: 4, borderColor: colors.primary + '20' }]} />
-                      
-                      {/* Right Half (0-50%) */}
-                      <View style={{ position: 'absolute', width: 28, height: 56, left: 28, overflow: 'hidden' }}>
-                        <View style={{
-                          width: 56, height: 56, borderRadius: 28, borderWidth: 4, borderColor: colors.primary,
-                          left: -28,
-                          borderBottomColor: 'transparent', borderLeftColor: 'transparent',
-                          transform: [{ rotate: `${Math.min((completion?.percentage || 0) / 100 * 360, 180) - 135}deg` }]
-                        }} />
-                      </View>
-
-                      {/* Left Half (50-100%) */}
-                      {(completion?.percentage || 0) > 50 && (
-                        <View style={{ position: 'absolute', width: 28, height: 56, left: 0, overflow: 'hidden' }}>
-                          <View style={{
-                            width: 56, height: 56, borderRadius: 28, borderWidth: 4, borderColor: colors.primary,
-                            left: 0,
-                            borderBottomColor: 'transparent', borderLeftColor: 'transparent',
-                            transform: [{ rotate: `${((completion?.percentage || 0) / 100 * 360) - 135}deg` }]
-                          }} />
-                        </View>
-                      )}
-                      <Text style={[typography.labelSmall, { color: colors.primary, fontWeight: '900', fontSize: 14, position: 'absolute' }]}>{completion?.percentage || 0}%</Text>
-                    </View>
+                )}
+                {isUploading && (
+                  <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+                    <ActivityIndicator color="#FFF" size="large" />
                   </View>
-                </View>
-                <View style={[styles.strengthBarBase, { backgroundColor: mode === 'dark' ? '#334155' : '#F1F5F9' }]}>
-                  <View style={[styles.strengthBarFill, { backgroundColor: colors.primary, width: `${completion?.percentage || 0}%` }]} />
-                </View>
+                )}
+              </Pressable>
+              <Pressable
+                onPress={() => setShowImagePicker(true)}
+                style={[styles.cameraIconBtnPremium, { width: 22, height: 22, borderRadius: 11, bottom: -2, right: -2, borderWidth: 1.5, borderColor: mode === 'dark' ? '#1E293B' : colors.primary }]}
+              >
+                <Icon name="camera" size={10} color={colors.primary} />
+              </Pressable>
+            </View>
+
+            <View style={[styles.summaryTextLeft, { marginLeft: 14, flex: 1 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 18, fontWeight: '700', letterSpacing: 0.3, flexShrink: 1 }]} numberOfLines={1}>{displayName}</Text>
+                <MaterialIcon name="check-decagram" size={18} color="#60A5FA" style={{ marginLeft: 6 }} />
               </View>
-            </Animated.View>
-          )}
+              <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 2, fontSize: 12 }]} numberOfLines={1}>{displayEmail}</Text>
+              <View style={[styles.phoneRow, { justifyContent: 'flex-start', marginTop: 3 }]}>
+                <Icon name="phone" size={11} color="rgba(255,255,255,0.7)" />
+                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 5, fontSize: 11 }]} numberOfLines={1}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
+              </View>
+            </View>
+
+            {completion && completion.percentage < 100 && (
+              <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }, { scale: pulseAnim }], width: 105, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 12, marginLeft: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '700', letterSpacing: 0.2 }}>Profile Score</Text>
+                  <Icon name="info" size={12} color="rgba(255,255,255,0.7)" />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 6 }}>
+                  <Text style={{ color: '#FFF', fontSize: 24, fontWeight: '800' }}>{completion?.percentage || 0}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '600', marginLeft: 2 }}>/100</Text>
+                </View>
+                <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: 9, marginTop: 2, fontWeight: '500' }} numberOfLines={1}>Almost there 🚀</Text>
+                <View style={{ height: 4, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
+                  <View style={{ width: `${completion?.percentage || 0}%`, height: '100%', backgroundColor: '#4ADE80', borderRadius: 2 }} />
+                </View>
+              </Animated.View>
+            )}
+          </View>
         </View>
 
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, paddingTop: 16 }}
           keyboardShouldPersistTaps="handled"
+          delayContentTouches={false}
         >
+
+
+          <GroupedSection title={t('profileDetails.personalDetails', 'PERSONAL DETAILS')}>
+            <SettingsRow
+              title={t('profileDetails.personalInfo', 'Personal Info')}
+              subtitle={t('profileDetails.nameDobGender', 'Name, DOB, Gender, Language')}
+              icon="account-outline"
+              color="#F97316"
+              onPress={() => navigation.navigate('ProfilePersonalInfo')}
+              isMissing={isSectionMissing('personal')}
+              isLast={true}
+            />
+          </GroupedSection>
+
+          <GroupedSection title={t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}>
+            <SettingsRow
+              title={t('profileDetails.workExperience', 'Work Experience')}
+              subtitle={!isSectionMissing('experience') ? getExperienceSubtitle() : t('profileDetails.addPastJobs', 'Add your past jobs')}
+              subtitleColor={!isSectionMissing('experience') ? '#10B981' : undefined}
+              icon="briefcase-variant-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileExperience')}
+              isMissing={isSectionMissing('experience')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.education', 'Education')}
+              subtitle={!isSectionMissing('education') ? getEducationSubtitle() : t('profileDetails.addEducation', 'Add your degree/college')}
+              subtitleColor={!isSectionMissing('education') ? '#10B981' : undefined}
+              icon="school-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileEducation')}
+              isMissing={isSectionMissing('education')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.jobPreferences', 'Job Preferences')}
+              subtitle={!isSectionMissing('preferences') ? getSelectedCategory() : t('profileDetails.preferredRoles', 'Preferred roles & locations')}
+              subtitleColor={!isSectionMissing('preferences') ? '#10B981' : undefined}
+              bottomText={!isSectionMissing('preferences') ? getJobPrefBottomText() : undefined}
+              icon="bullseye-arrow"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileJobPreferences')}
+              isMissing={isSectionMissing('preferences')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.skills', 'Skills')}
+              subtitle={profile?.skills?.length ? undefined : t('profileDetails.addSkills', 'Add your key skills')}
+              tags={profile?.skills?.length ? profile.skills.map((s:any) => typeof s === 'string' ? s : (s.name || s.title || 'Skill')).slice(0, 4) : undefined}
+              icon="lightning-bolt-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileSkills')}
+              isMissing={isSectionMissing('skills')}
+              isLast={false}
+            />
+            <SettingsRow
+              title={t('profileDetails.resumeCv', 'Resume / CV')}
+              subtitle={!isSectionMissing('resume') ? 'Resume_Pramod.pdf' : t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
+              bottomText={!isSectionMissing('resume') ? 'Updated today • 1.2 MB' : undefined}
+              icon="file-document-outline"
+              color="#3B82F6"
+              onPress={() => navigation.navigate('ProfileResume')}
+              isMissing={isSectionMissing('resume')}
+              isLast={true}
+            />
+          </GroupedSection>
+
           <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
             <Pressable
               onPress={() => navigation.getParent()?.navigate('JobReels', { screen: 'ReelsMain', params: { from: 'Profile' } })}
@@ -462,62 +594,14 @@ const ProfileOverviewScreen: React.FC = () => {
             </Pressable>
           </Animated.View>
 
-          <GroupedSection title={t('profileDetails.personalDetails', 'PERSONAL DETAILS')}>
+          <GroupedSection title={t('profileDetails.settingsTitle', 'SETTINGS')}>
             <SettingsRow
-              title={t('profileDetails.personalInfo', 'Personal Info')}
-              subtitle={t('profileDetails.nameDobGender', 'Name, DOB, Gender, Language')}
-              icon="account-outline"
-              color="#EC4899"
-              onPress={() => navigation.navigate('ProfilePersonalInfo')}
-              isMissing={isSectionMissing('personal')}
-              isLast={true}
-            />
-          </GroupedSection>
-
-          <GroupedSection title={t('profileDetails.professionalDetails', 'PROFESSIONAL DETAILS')}>
-            <SettingsRow
-              title={t('profileDetails.workExperience', 'Work Experience')}
-              subtitle={profile?.experience?.length ? `${profile.experience.length} ${t('profileDetails.experienceAdded', 'Experience added')}` : t('profileDetails.addPastJobs', 'Add your past jobs')}
-              icon="briefcase-variant-outline"
+              title={t('profileDetails.settings', 'Settings')}
+              subtitle={t('profileDetails.settingsDesc', 'App preferences and account settings')}
+              icon="cog-outline"
               color="#3B82F6"
-              onPress={() => navigation.navigate('ProfileExperience')}
-              isMissing={isSectionMissing('experience')}
-              isLast={false}
-            />
-            <SettingsRow
-              title={t('profileDetails.education', 'Education')}
-              subtitle={profile?.education?.length ? `${profile.education.length} ${t('profileDetails.educationAdded', 'Education added')}` : t('profileDetails.addEducation', 'Add your degree/college')}
-              icon="school-outline"
-              color="#10B981"
-              onPress={() => navigation.navigate('ProfileEducation')}
-              isMissing={isSectionMissing('education')}
-              isLast={false}
-            />
-            <SettingsRow
-              title={t('profileDetails.jobPreferences', 'Job Preferences')}
-              subtitle={t('profileDetails.preferredRoles', 'Preferred roles & locations')}
-              icon="bullseye-arrow"
-              color="#F59E0B"
-              onPress={() => navigation.navigate('ProfileJobPreferences')}
-              isMissing={isSectionMissing('preferences')}
-              isLast={false}
-            />
-            <SettingsRow
-              title={t('profileDetails.skills', 'Skills')}
-              subtitle={profile?.skills?.length ? `${profile.skills.length} ${t('profileDetails.skillsAdded', 'Skills added')}` : t('profileDetails.addSkills', 'Add your key skills')}
-              icon="lightning-bolt-outline"
-              color="#06B6D4"
-              onPress={() => navigation.navigate('ProfileSkills')}
-              isMissing={isSectionMissing('skills')}
-              isLast={false}
-            />
-            <SettingsRow
-              title={t('profileDetails.resumeCv', 'Resume / CV')}
-              subtitle={t('profileDetails.uploadResume', 'Upload your resume to get hired fast')}
-              icon="file-document-outline"
-              color="#8B5CF6"
-              onPress={() => navigation.navigate('ProfileResume')}
-              isMissing={isSectionMissing('resume')}
+              onPress={() => navigation.navigate('ProfileSettings')}
+              isMissing={false}
               isLast={true}
             />
           </GroupedSection>
@@ -640,14 +724,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  profileSummaryCentered: {
+  profileSummaryHorizontal: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
     paddingTop: 4,
     paddingBottom: 24,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 12,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
@@ -655,10 +740,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   avatarCircleHuge: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 4,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 3,
     borderColor: '#FFFFFF',
     overflow: 'hidden',
     alignItems: 'center',
@@ -671,11 +756,11 @@ const styles = StyleSheet.create({
   },
   cameraIconBtnPremium: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -685,13 +770,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
-  summaryTextCentered: {
-    alignItems: 'center',
-    paddingHorizontal: 20,
+  summaryTextLeft: {
+    flex: 1,
+    marginLeft: 20,
+    alignItems: 'flex-start',
   },
-  nameVerifiedRow: {
+  openToWorkPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignSelf: 'flex-start',
+  },
+  openToWorkDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  openToWorkText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginRight: 6,
   },
   phoneRow: {
     flexDirection: 'row',

@@ -49,6 +49,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { resetDraft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
   const { email, verification_channel, phone } = route.params;
+  const identifier = email || phone;
   const isWhatsApp = verification_channel === 'whatsapp';
   const [otp, setOtp] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
@@ -72,14 +73,14 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       return;
     }
     setErrorMsg('');
-    const result = await dispatch(resendRegisterOtp(email));
+    const result = await dispatch(resendRegisterOtp(identifier));
     if (resendRegisterOtp.fulfilled.match(result)) {
       setSecondsLeft(RESEND_SECONDS);
       setOtp('');
     } else {
       setErrorMsg((result.payload as string) || 'Failed to resend OTP');
     }
-  }, [canResend, dispatch, email]);
+  }, [canResend, dispatch, identifier]);
 
   const handleVerify = useCallback(async () => {
     if (!otpComplete) {
@@ -88,7 +89,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     setVerifying(true);
     setErrorMsg('');
     
-    const result = await dispatch(verifyRegisterOtp({ email, otp }));
+    const result = await dispatch(verifyRegisterOtp({ email: identifier, otp }));
     setVerifying(false);
     
     if (verifyRegisterOtp.fulfilled.match(result)) {
@@ -100,7 +101,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     } else {
       setErrorMsg((result.payload as string) || 'Invalid verification code');
     }
-  }, [dispatch, email, otp, otpComplete, resetDraft, navigation]);
+  }, [dispatch, identifier, otp, otpComplete, resetDraft, navigation]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
@@ -158,7 +159,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
               ]}>
               <Icon name={isWhatsApp ? 'whatsapp' : 'envelope-o'} size={16} color={isWhatsApp ? '#25D366' : colors.primary} />
               <Text style={[typography.labelMedium, styles.phoneText, { color: isWhatsApp ? '#25D366' : colors.textPrimary }]}>
-                {isWhatsApp ? maskPhone(phone) : maskEmail(email)}
+                {isWhatsApp ? maskPhone(phone) : (email ? maskEmail(email) : maskPhone(phone))}
               </Text>
             </View>
 

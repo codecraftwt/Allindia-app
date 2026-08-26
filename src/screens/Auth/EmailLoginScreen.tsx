@@ -37,7 +37,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { loading } = useSelector((state: RootState) => state.auth);
@@ -70,13 +70,13 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const onLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      showStatus('error', t('auth.requiredField'), t('auth.enterEmailPass'));
+    if (!identifier.trim() || !password.trim()) {
+      showStatus('error', t('auth.requiredField'), t('auth.enterEmailPass', 'Please enter your email/phone and password.'));
       return;
     }
 
     const resultAction = await dispatch(loginCandidate({ 
-      email: email.trim(), 
+      email: identifier.trim(), 
       password: password.trim() 
     }));
     console.log("resultAction ", resultAction)
@@ -121,17 +121,16 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
             <View style={styles.inputContainer}>
               <View style={[styles.inputGroup]}>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.emailLabel')}</Text>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.emailOrPhoneLabel', 'Email or Phone Number')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                  <Icon name="envelope-o" size={16} color={colors.primary} style={styles.inputIcon} />
+                  <Icon name="user-o" size={16} color={colors.primary} style={styles.inputIcon} />
                   <TextInput
-                    placeholder={t('auth.emailPlaceholder')}
+                    placeholder={t('auth.emailOrPhonePlaceholder', 'Enter your email or phone')}
                     placeholderTextColor={colors.textPlaceholder}
                     style={[styles.input, { color: colors.textPrimary }]}
-                    value={email}
-                    onChangeText={setEmail}
+                    value={identifier}
+                    onChangeText={setIdentifier}
                     autoCapitalize="none"
-                    keyboardType="email-address"
                   />
                 </View>
               </View>

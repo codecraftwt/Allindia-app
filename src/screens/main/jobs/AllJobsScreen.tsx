@@ -74,12 +74,16 @@ const cleanIconName = (icon: string) => {
 
 const getTagConfigLocal = (tag: string) => {
   const t = tag.toLowerCase();
-  if (t.includes('urgent') || t.includes('hot')) return { icon: 'bolt', color: '#F59E0B' };
-  if (t.includes('salary') || t.includes('high')) return { icon: 'money', color: '#16A34A' };
-  if (t.includes('nearby') || t.includes('km')) return { icon: 'map-marker', color: '#2563EB' };
-  if (t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10b981' };
-  if (t.includes('premium')) return { icon: 'star', color: '#D4AF37' };
-  return { icon: 'tag', color: '#2563EB' };
+  if (t.includes('bolt') || t.includes('urgent') || t.includes('hot')) return { icon: 'bolt', color: '#F59E0B' };
+  if (t.includes('fire') || t.includes('trending') || t.includes('spotlight')) return { icon: 'fire', color: '#EF4444' };
+  if (t.includes('star') || t.includes('premium')) return { icon: 'star', color: '#D4AF37' };
+  if (t.includes('crown') || t.includes('vip')) return { icon: 'star', color: '#D4AF37' }; // FontAwesome 4 fallback
+  if (t.includes('briefcase') || t.includes('job') || t.includes('work')) return { icon: 'briefcase', color: '#2563EB' };
+  if (t.includes('gem') || t.includes('valuable')) return { icon: 'diamond', color: '#8B5CF6' }; // FontAwesome 4 fallback
+  if (t.includes('rocket') || t.includes('boost')) return { icon: 'rocket', color: '#3B82F6' };
+  if (t.includes('check') || t.includes('verified') || t.includes('trust')) return { icon: 'check-circle', color: '#10B981' };
+  
+  return { icon: 'check-circle', color: '#2563EB' };
 };
 
 const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {

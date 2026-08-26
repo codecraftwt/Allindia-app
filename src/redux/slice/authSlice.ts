@@ -73,7 +73,10 @@ export const verifyRegisterOtp = createAsyncThunk(
   'auth/verifyRegisterOtp',
   async (payload: { email: string; otp: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register/verify-otp', payload);
+      const response = await api.post('/api/candidate/register/verify-otp', {
+        identifier: payload.email,
+        otp: payload.otp,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("OTP Verification Error:", error?.response?.data || error.message);
@@ -86,7 +89,7 @@ export const resendRegisterOtp = createAsyncThunk(
   'auth/resendRegisterOtp',
   async (email: string, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register/resend-otp', { email });
+      const response = await api.post('/api/candidate/register/resend-otp', { identifier: email });
       return response?.data;
     } catch (error: any) {
       console.log("Resend OTP Error:", error?.response?.data || error.message);
@@ -127,7 +130,7 @@ export const forgotPasswordCandidate = createAsyncThunk(
   'auth/forgotPasswordCandidate',
   async (email: string, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/forgot-password', { email });
+      const response = await api.post('/api/candidate/forgot-password', { identifier: email });
       return response?.data;
     } catch (error: any) {
       console.log("Forgot Password Error:", error?.response?.data || error.message);
@@ -140,7 +143,10 @@ export const verifyForgotPasswordOtp = createAsyncThunk(
   'auth/verifyForgotPasswordOtp',
   async (payload: { email: string; otp: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/forgot-password/verify-otp', payload);
+      const response = await api.post('/api/candidate/forgot-password/verify-otp', {
+        identifier: payload.email,
+        otp: payload.otp,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Verify Forgot Password OTP Error:", error?.response?.data || error.message);
@@ -153,7 +159,10 @@ export const resetPasswordCandidate = createAsyncThunk(
   'auth/resetPasswordCandidate',
   async (payload: any, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/reset-password', payload);
+      const response = await api.post('/api/candidate/reset-password', {
+        ...payload,
+        identifier: payload.email,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Reset Password Error:", error?.response?.data || error.message);

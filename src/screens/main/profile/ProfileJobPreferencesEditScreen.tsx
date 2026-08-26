@@ -863,11 +863,15 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               isExpanded={expandedCatId === item.data.id.toString()}
               onToggle={(id: string) => setExpandedCatId(prev => (prev === id ? null : id))}
               onSelectSub={(subId: number) => {
-                setJobCategoryIds(prev =>
-                  prev.map(Number).includes(Number(subId))
-                    ? prev.map(Number).filter(id => id !== Number(subId))
-                    : [...prev.map(Number), Number(subId)]
-                );
+                setJobCategoryIds(prev => {
+                  const isSelected = prev.map(Number).includes(Number(subId));
+                  if (isSelected) return prev.map(Number).filter(id => id !== Number(subId));
+                  if (prev.length >= 5) {
+                    showToast(t('profileJobPreferences.categoryLimit', 'You can select a maximum of 5 job categories.'), 'error');
+                    return prev;
+                  }
+                  return [...prev.map(Number), Number(subId)];
+                });
               }}
               colors={colors}
             />
@@ -890,7 +894,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       default:
         return null;
     }
-  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats, currentCityId, currentCityLabel, preferredCityIds, catSearch]);
+  }, [colors, jobCategoryIds, expandedCatId, minSalary, maxSalary, workFromHome, saving, handleSave, showAllCats, currentCityId, currentCityLabel, preferredCityIds, catSearch, showToast, t]);
 
   return (
     <ProfileEditLayout
@@ -932,7 +936,16 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniqueCurrentCities.filter((c: any) => (c.area || c.city || c.label || '').toLowerCase().includes(citySearch.toLowerCase()))}
+              data={uniqueCurrentCities
+                .filter((c: any) => (c.area || c.city || c.label || '').toLowerCase().includes(citySearch.toLowerCase()))
+                .sort((a: any, b: any) => {
+                  const aSelected = Number(currentCityId) === Number(a.id);
+                  const bSelected = Number(currentCityId) === Number(b.id);
+                  if (aSelected && !bSelected) return -1;
+                  if (!aSelected && bSelected) return 1;
+                  return 0;
+                })
+              }
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -987,7 +1000,16 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
               ]}
             />
             <FlatList
-              data={uniquePreferredCities.filter((c: any) => (c.city || c.area || c.label || '').toLowerCase().includes(prefCitySearch.toLowerCase()))}
+              data={uniquePreferredCities
+                .filter((c: any) => (c.city || c.area || c.label || '').toLowerCase().includes(prefCitySearch.toLowerCase()))
+                .sort((a: any, b: any) => {
+                  const aSelected = preferredCityIds.map(Number).includes(Number(a.id));
+                  const bSelected = preferredCityIds.map(Number).includes(Number(b.id));
+                  if (aSelected && !bSelected) return -1;
+                  if (!aSelected && bSelected) return 1;
+                  return 0;
+                })
+              }
               keyExtractor={item => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               style={styles.cityList}
@@ -996,6 +1018,10 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
                 return (
                   <Pressable
                     onPress={() => {
+                      if (!selected && preferredCityIds.length >= 5) {
+                        showToast(t('profileJobPreferences.cityLimit', 'You can select a maximum of 5 preferred locations.'), 'error');
+                        return;
+                      }
                       setPreferredCityIds(prev =>
                         selected
                           ? prev.map(Number).filter(id => id !== Number(item.id))
