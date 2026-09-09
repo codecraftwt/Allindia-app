@@ -2,12 +2,26 @@
  * @format
  */
 
-import { AppRegistry } from 'react-native';
+import { AppRegistry, Text, TextInput } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { EventType } from '@notifee/react-native';
+import { enableScreens } from 'react-native-screens';
 import App from './App';
 import { name as appName } from './app.json';
 import './src/i18n';
+
+enableScreens(true);
+
+// Ensure consistent text sizing on devices with varied OS font size accessibility settings
+if (Text.defaultProps == null) {
+  Text.defaultProps = {};
+}
+Text.defaultProps.maxFontSizeMultiplier = 1.15;
+
+if (TextInput.defaultProps == null) {
+  TextInput.defaultProps = {};
+}
+TextInput.defaultProps.maxFontSizeMultiplier = 1.15;
 
 if (__DEV__) {
   global.XMLHttpRequest = global.originalXMLHttpRequest || global.XMLHttpRequest;

@@ -167,6 +167,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
               title={loading ? t('auth.authenticating') : t('auth.signInBtn')}
               onPress={onLogin}
               disabled={loading}
+              loading={loading}
               colors={colors}
               style={styles.loginBtn}
               iconRight={!loading && <Icon name="arrow-right" size={16} color={colors.onPrimary} />}

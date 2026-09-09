@@ -133,11 +133,11 @@ const HelpAndSupportScreen: React.FC = () => {
 
   const handleContactPress = (type: 'email' | 'phone' | 'whatsapp') => {
     if (type === 'email') {
-      Linking.openURL('mailto:support@jobindia.in?subject=Job%20India%20Support%20Request');
+      Linking.openURL('mailto:support@jobindia.ai?subject=Job%20India%20Support%20Request');
     } else if (type === 'phone') {
-      Linking.openURL('tel:+9118001234567');
+      Linking.openURL('tel:+919503545035');
     } else if (type === 'whatsapp') {
-      Linking.openURL('https://wa.me/919876543210?text=Hello%20Job%20India%20Support%21');
+      Linking.openURL('https://wa.me/919503545035?text=Hello%20Job%20India%20Support%21');
     }
   };
 
@@ -178,8 +178,8 @@ const HelpAndSupportScreen: React.FC = () => {
       answer: t('helpAndSupportScreen.faq4A', '"Under Review" means the recruiter is actively viewing your resume. "Shortlisted" means you advanced to the next screening round, and a representative will contact you shortly. "Rejected" means the application is closed.'),
     },
     {
-      question: t('helpAndSupportScreen.faq5Q', 'Is my personal data protected on Job India?'),
-      answer: t('helpAndSupportScreen.faq5A', 'Yes, absolutely. We use industry-standard encryption protocols. Your personal contact details are kept secure and are only revealed to verified recruiters to protect you from fraudulent activities or spam.'),
+      question: t('helpAndSupportScreen.faq5Q', 'Is my personal data secure?'),
+      answer: t('helpAndSupportScreen.faq5A', 'Yes, all sensitive profile details and uploaded resumes are encrypted in transit and at rest. Your phone number is only revealed to employers when you explicitly apply for their job listing.'),
     },
   ];
 
@@ -204,13 +204,13 @@ const HelpAndSupportScreen: React.FC = () => {
           <ContactRow
             icon="mail"
             title={t('helpAndSupportScreen.emailSupport', 'Email Support')}
-            value="support@jobindia.in"
+            value="support@jobindia.ai"
             badge={t('helpAndSupportScreen.emailReplies', 'Replies in 4h')}
             color="#3B82F6"
             onPress={() => handleContactPress('email')}
             colors={colors}
           />
-          <ContactRow
+          {/* <ContactRow
             icon="phone"
             title={t('helpAndSupportScreen.tollFreeCall', 'Toll Free Call')}
             value="1800-123-4567"
@@ -218,11 +218,11 @@ const HelpAndSupportScreen: React.FC = () => {
             color="#10B981"
             onPress={() => handleContactPress('phone')}
             colors={colors}
-          />
+          /> */}
           <ContactRow
             icon="message-circle"
             title={t('helpAndSupportScreen.whatsappSupport', 'WhatsApp Support')}
-            value="+91 98765 43210"
+            value="+91 95035 45035"
             badge={t('helpAndSupportScreen.whatsappInstant', 'Instant Chat')}
             color="#8B5CF6"
             onPress={() => handleContactPress('whatsapp')}

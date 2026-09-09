@@ -479,6 +479,25 @@ const JobDetailScreen: React.FC = () => {
     return date.toLocaleDateString();
   }, [currentJob?.created_at]);
   const jobTypeLabel = formatJobType(currentJob?.job_type_label || currentJob?.job_type || 'Full Time');
+  const categoryLabel = useMemo(() => {
+    if (!currentJob) return 'General';
+    const jobCatObj = currentJob.job_category;
+    const catObj = currentJob.category;
+
+    if (typeof jobCatObj === 'object' && jobCatObj?.job_category) {
+      return jobCatObj.job_category;
+    }
+    if (typeof catObj === 'object' && catObj?.job_category) {
+      return catObj.job_category;
+    }
+    if (typeof jobCatObj === 'string' && jobCatObj) {
+      return jobCatObj;
+    }
+    if (typeof catObj === 'string' && catObj) {
+      return catObj;
+    }
+    return jobCatObj?.name || catObj?.name || t('jobDetail.general', 'General');
+  }, [currentJob, t]);
 
   const handleShare = useCallback(async () => {
     if (!currentJob) return;
@@ -724,7 +743,7 @@ const JobDetailScreen: React.FC = () => {
               {currentJob.shifts && currentJob.shifts.length > 0 && (
                 <InfoRow label={t('jobDetail.shifts', 'Shifts')} value={currentJob.shifts.map(formatJobType).join(', ')} icon="sun-o" colors={colors} />
               )}
-              <InfoRow label={t('jobDetail.category', 'Category')} value={currentJob.category?.name || t('jobDetail.general', 'General')} icon="th-large" colors={colors} />
+              <InfoRow label={t('jobDetail.category', 'Category')} value={categoryLabel} icon="th-large" colors={colors} />
             </View>
           </View>
 

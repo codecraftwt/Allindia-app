@@ -266,10 +266,7 @@ const JobsReelsScreen: React.FC = () => {
               <Icon name="check-decagram" size={16} color="#3B82F6" style={{ marginLeft: 6 }} />
             )}
           </View>
-          <Text style={styles.fullJobTitle}>{item.title && !item.title.includes('.jpg') ? item.title : (item.category?.name || 'Job Opportunity')}</Text>
-          <Pressable style={[styles.mainApplyBtn, { backgroundColor: colors.primary }]}>
-            <Text style={styles.applyBtnLabel}>Apply Now</Text>
-          </Pressable>
+
         </View>
       </View>
     </View>
@@ -348,7 +345,7 @@ const JobsReelsScreen: React.FC = () => {
 
               {/* Trending Section */}
               <View style={styles.section}>
-                <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Trending Reels</Text>
+                <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Trending Bites</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reelGrid}>
                   {reels.map((reel: any) => (
                     <Pressable key={reel.id} style={styles.reelCard} onPress={() => handlePress(reel.id)}>

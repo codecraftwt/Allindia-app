@@ -43,14 +43,14 @@
     "quickFilterAll": "All Jobs",
     "categories": "Categories",
     "actionsAndPromos": "Actions & Promos For You",
-    "promoReferTitle": "Refer & Earn Coins!",
-    "promoReferSub": "Invite friends & get 100 gold coins per referral. Use coins to unlock premium jobs!",
+    "promoReferTitle": "Refer Friends",
+    "promoReferSub": "Help friends find jobs & direct HR contacts.",
     "promoReferCta": "Invite Friends",
-    "promoCvTitle": "Free Professional CV",
-    "promoCvSub": "Create a premium, recruiter-approved AI resume in less than 2 minutes!",
+    "promoCvTitle": "Free AI Resume",
+    "promoCvSub": "Create a recruiter-ready AI resume in 2 minutes.",
     "promoCvCta": "Build Resume",
     "promoVipTitle": "Direct HR Contacts",
-    "promoVipSub": "Upgrade to VIP member to get direct phone numbers of 500+ active recruiters.",
+    "promoVipSub": "Get direct phone & WhatsApp of 500+ top recruiters.",
     "promoVipCta": "Get VIP Access",
     "watchReels": "Job Bites",
     "reelsTag": "NEW",
@@ -422,7 +422,7 @@
     "newPasswordConfirmMismatch": "New password and confirm password do not match.",
     "updating": "Updating...",
     "updatePassword": "Update Password",
-    "changePasswordSuccess": "Password changed successfully. Please log in again with your new password.",
+    "changePasswordSuccess": "Your password has been changed successfully.",
     "changePasswordFailed": "Failed to change password",
     "changeFailedTitle": "Change Failed",
     "successTitle": "Success",
@@ -520,7 +520,7 @@
     "securityText": "The security of Your Personal Data is important to Us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While We strive to use commercially acceptable means to protect Your Personal Data, We cannot guarantee its absolute security.",
     "section3Title": "3. Contact Us",
     "contactUsText": "If you have any questions about this Privacy Policy, You can contact us:",
-    "callUsBtnText": "Call Us: +91 99888 88888"
+    "callUsBtnText": "Call Us: +91 95035 45035"
   },
   "termsAndConditionsScreen": {
     "title": "Terms & Conditions",
@@ -568,7 +568,7 @@
     "disclaimerText": "The Service is provided to You \"AS IS\" and \"AS AVAILABLE\" and with all faults and defects without warranty of any kind. To the maximum extent permitted under applicable law, the Company, on its own behalf and on behalf of its Affiliates and its and their respective licensors and service providers, expressly disclaims all warranties, whether express, implied, statutory or otherwise.",
     "section7Title": "7. Contact Us",
     "contactText": "If you have any questions about these Terms and Conditions, You can contact us:",
-    "callUsBtnText": "Call Us: +91 99877 67899"
+    "callUsBtnText": "Call Us: +91 95035 45035"
   },
   "helpAndSupportScreen": {
     "title": "Help & Support",

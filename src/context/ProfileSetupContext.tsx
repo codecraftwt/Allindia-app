@@ -4,6 +4,7 @@ export type Gender = 'male' | 'female' | 'other' | '';
 
 export type ProfileSetupDraft = {
   fullName: string;
+  email: string;
   gender: Gender;
   dateOfBirth: string;
   currentCity: string;
@@ -23,6 +24,7 @@ export type ProfileSetupDraft = {
 
 const initialDraft: ProfileSetupDraft = {
   fullName: '',
+  email: '',
   gender: '',
   dateOfBirth: '',
   currentCity: '',

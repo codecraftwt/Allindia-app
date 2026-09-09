@@ -246,7 +246,6 @@ const AppliedJobCard = React.memo(function AppliedJobCard({ job, colors, onPress
           <TouchableOpacity style={[styles.wiBtn, styles.wiBtnCall, { backgroundColor: colors.primary }]} onPress={handleCall}>
             <Icon name="phone" size={18} color="#fff" />
             <Text style={styles.wiBtnTextCall}>{t('applications.callNowBtn', 'Call Now')}</Text>
-            <Icon name="arrow-right" size={14} color="#fff" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         )}
       </View>

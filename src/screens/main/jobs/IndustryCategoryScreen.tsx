@@ -6,15 +6,16 @@ import {
   FlatList,
   Pressable,
   Image,
-  ActivityIndicator,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchJobsByCategory, filterJobs } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
@@ -23,28 +24,48 @@ import type { ThemeColors } from '../../../theme/colors';
 import SideFilterHub from '../../../components/SideFilterHub';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
-
 // ─── Job Card ───────────────────────────────────────────────────────────────
 function JobCard({
   job,
   colors,
   onPress,
+  isDark,
 }: {
   job: any;
   colors: ThemeColors;
   onPress: () => void;
+  isDark: boolean;
 }) {
   const company = job.employer?.company || {};
-  const location = job.location?.label || 'Remote';
-  const salary = job.salary_label || 'Negotiable';
+  const companyName = company.company_name || job.company_name || 'Hiring Company';
+  const location = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'Remote';
+  const salary = job.salary_label || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const tags = job.tags || [];
+  const isVerified = job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved';
 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}>
+      style={({ pressed }) => [
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: isDark ? '#000000' : '#0F172A',
+        },
+        pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] },
+      ]}
+    >
       <View style={styles.cardTop}>
-        <View style={[styles.logoBox, { backgroundColor: colors.surfaceHighlight }]}>
+        <View
+          style={[
+            styles.logoBox,
+            {
+              backgroundColor: colors.surfaceHighlight,
+              borderColor: colors.border + '90',
+            },
+          ]}
+        >
           {company.company_logo_url ? (
             <Image source={{ uri: company.company_logo_url }} style={styles.logoImage} />
           ) : (
@@ -52,41 +73,65 @@ function JobCard({
           )}
         </View>
         <View style={styles.titleInfo}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text
+              style={[styles.jobTitleText, { color: colors.textPrimary }]}
+              numberOfLines={1}
+            >
+              {job.title}
+            </Text>
+            {isVerified && (
+              <MaterialCommunityIcons
+                name="check-decagram"
+                size={15}
+                color="#3B82F6"
+                style={{ marginLeft: 4, flexShrink: 0 }}
+              />
+            )}
+          </View>
           <Text
-            style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700', fontSize: 15 }]}
-            numberOfLines={1}>
-            {job.title}
-          </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-            {company.company_name || 'Hiring Company'}
+            style={[styles.companyText, { color: colors.textSecondary }]}
+            numberOfLines={1}
+          >
+            {companyName}
           </Text>
         </View>
-        <View style={[styles.arrowBox, { backgroundColor: colors.primary + '10' }]}>
-          <Icon name="chevron-right" size={12} color={colors.primary} />
+        <View style={[styles.arrowBox, { backgroundColor: colors.primary + '12' }]}>
+          <FeatherIcon name="chevron-right" size={16} color={colors.primary} />
         </View>
       </View>
+
+      <View style={[styles.cardDivider, { backgroundColor: colors.border + '60' }]} />
 
       <View style={styles.cardFooter}>
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
+            <FeatherIcon name="map-pin" size={12} color={colors.textPlaceholder} />
             <Text
-              style={[typography.tiny, { color: colors.textSecondary, flexShrink: 1 }]}
-              numberOfLines={1}>
+              style={[styles.metaText, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {location}
             </Text>
           </View>
-          <View style={styles.metaDivider} />
+          <View style={[styles.metaDivider, { backgroundColor: colors.border }]} />
           <View style={styles.metaItem}>
             <Icon name="money" size={12} color={colors.success} />
-            <Text style={[typography.tiny, { color: colors.textSecondary }]}>{salary}</Text>
+            <Text
+              style={[styles.metaText, { color: colors.textSecondary, fontWeight: '600' }]}
+              numberOfLines={1}
+            >
+              {salary}
+            </Text>
           </View>
         </View>
+
         {tags.length > 0 && (
-          <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
+          <View style={[styles.tagPill, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}>
             <Text
-              style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}
-              numberOfLines={1}>
+              style={[styles.tagPillText, { color: colors.primary }]}
+              numberOfLines={1}
+            >
               {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
             </Text>
           </View>
@@ -97,26 +142,42 @@ function JobCard({
 }
 
 const IndustryJobsSkeleton: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, mode } = useTheme();
+  const isDark = mode === 'dark';
   return (
     <View style={{ gap: spacing.md, paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <View key={i} style={[styles.card, { backgroundColor: colors.surface }]}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View
+          key={i}
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              shadowColor: isDark ? '#000000' : '#0F172A',
+            },
+          ]}
+        >
           <View style={styles.cardTop}>
-            <SkeletonPulse style={styles.logoBox} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ width: 44, height: 44, borderRadius: 12 }} />
+            <View style={{ flex: 1, gap: 8, marginLeft: 12 }}>
+              <SkeletonPulse style={{ height: 16, width: i % 2 === 0 ? '70%' : '82%', borderRadius: 6 }} />
+              <SkeletonPulse style={{ height: 12, width: '45%', borderRadius: 4 }} />
             </View>
-            <SkeletonPulse style={styles.arrowBox} />
+            <SkeletonPulse style={{ width: 28, height: 28, borderRadius: 14 }} />
           </View>
-          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 12 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+          <View style={[styles.cardDivider, { backgroundColor: colors.border + '50' }]} />
+          <View style={styles.cardFooter}>
+            <View style={styles.metaRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <SkeletonPulse style={{ height: 12, width: 85, borderRadius: 4 }} />
+              </View>
+              <View style={[styles.metaDivider, { backgroundColor: colors.border + '60' }]} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <SkeletonPulse style={{ height: 12, width: 75, borderRadius: 4 }} />
+              </View>
             </View>
-            <SkeletonPulse style={{ height: 18, width: 60, borderRadius: 6 }} />
+            <SkeletonPulse style={{ height: 22, width: 68, borderRadius: 6 }} />
           </View>
         </View>
       ))}
@@ -136,7 +197,9 @@ const IndustryCategoryScreen: React.FC = () => {
   const categoryId: number = route.params?.categoryId;
   const categoryName: string = route.params?.categoryName || 'Category';
 
-  const { jobsByCategory, filteredJobs, categoryLoading: loading } = useSelector((state: RootState) => state.jobs);
+  const { jobsByCategory, filteredJobs, categoryLoading: loading } = useSelector(
+    (state: RootState) => state.jobs
+  );
   const [isFiltered, setIsFiltered] = useState(false);
 
   useEffect(() => {
@@ -148,7 +211,6 @@ const IndustryCategoryScreen: React.FC = () => {
     );
   }, [dispatch, categoryId]);
 
-  // by-category API returns: [{ category: { id, name }, jobs_count, jobs: [...] }]
   const jobs = useMemo(() => {
     if (isFiltered) return filteredJobs;
     if (jobsByCategory.length > 0) {
@@ -159,21 +221,44 @@ const IndustryCategoryScreen: React.FC = () => {
 
   return (
     <View
-      style={[styles.safe, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
+      style={[
+        styles.safe,
+        { backgroundColor: isDark ? colors.background : colors.surfaceSecondary },
+      ]}
+    >
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        translucent
+        backgroundColor="transparent"
+      />
+
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 10 }]}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="chevron-left" size={20} color={colors.textPrimary} />
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: colors.surface,
+            borderBottomColor: colors.border,
+            paddingTop: insets.top + 8,
+          },
+        ]}
+      >
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={({ pressed }) => [
+            styles.backBtn,
+            { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <FeatherIcon name="arrow-left" size={20} color={colors.textPrimary} />
         </Pressable>
 
-
-
         <View style={styles.headerText}>
-          <Text style={[typography.appTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+          <Text style={[typography.h3, { color: colors.textPrimary, fontWeight: '700' }]} numberOfLines={1}>
             {categoryName}
           </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 1 }]}>
             {loading ? 'Finding jobs...' : `${jobs.length} jobs available`}
           </Text>
         </View>
@@ -185,34 +270,49 @@ const IndustryCategoryScreen: React.FC = () => {
       ) : (
         <FlatList
           data={jobs}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: insets.bottom + spacing.xl },
           ]}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           renderItem={({ item }) => (
             <JobCard
               job={item}
               colors={colors}
+              isDark={isDark}
               onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
             />
           )}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Icon name="briefcase" size={48} color={colors.border} />
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: colors.surfaceHighlight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: spacing.md,
+                }}
+              >
+                <FeatherIcon name="briefcase" size={28} color={colors.primary} />
+              </View>
               <Text
                 style={[
-                  typography.labelMedium,
-                  { color: colors.textPlaceholder, marginTop: spacing.md, textAlign: 'center' },
-                ]}>
+                  typography.labelLarge,
+                  { color: colors.textPrimary, fontWeight: '700', textAlign: 'center' },
+                ]}
+              >
                 No jobs found in {categoryName}
               </Text>
               <Text
                 style={[
                   typography.small,
-                  { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm },
-                ]}>
+                  { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.xs },
+                ]}
+              >
                 Check back later for new listings.
               </Text>
             </View>
@@ -220,6 +320,7 @@ const IndustryCategoryScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
+
       <SideFilterHub
         colors={colors}
         hiddenSections={['category']}
@@ -239,107 +340,123 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: 64, // Ensure header has a minimum height to prevent jumping
+    paddingBottom: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.xs,
-  },
-  headerLogoContainer: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  headerLogo: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
   headerText: {
     flex: 1,
-  },
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   listContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
   card: {
-    padding: spacing.md,
-    borderRadius: radius.md,
+    padding: 14,
+    borderRadius: radius.lg,
+    borderWidth: 1,
     elevation: 2,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
   },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
   },
   logoBox: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   logoImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'contain',
   },
-  titleInfo: { flex: 1 },
+  titleInfo: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  jobTitleText: {
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+    flexShrink: 1,
+  },
+  companyText: {
+    fontSize: 13,
+    marginTop: 2,
+  },
   arrowBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  cardDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 10,
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.05)',
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    flex: 1,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginRight: 10,
+  },
+  metaText: {
+    fontSize: 12,
   },
   metaDivider: {
     width: 1,
     height: 10,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    marginRight: 10,
   },
   tagPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+    borderWidth: 1,
+  },
+  tagPillText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 100,
+    marginTop: 80,
     paddingHorizontal: spacing.xl,
   },
 });

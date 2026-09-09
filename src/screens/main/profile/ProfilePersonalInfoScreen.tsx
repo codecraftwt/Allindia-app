@@ -493,6 +493,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
 
       updateDraft({
         fullName: p.name || '',
+        email: user?.email || '',
         gender: (p.gender as Gender) || '',
         dateOfBirth: p.date_of_birth || '',
         city: city,
@@ -506,7 +507,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   }, [profileData, updateDraft]);
 
   const fullName = draft.fullName || user?.name || '';
-  const email = user?.email || '';
+  const email = draft.email || user?.email || '';
 
   const canSave = !profileLoading;
 
@@ -528,6 +529,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await dispatch(updatePersonalProfile({
         name: nameToSave,
+        email: draft.email,
         phone: phoneNumber || undefined,
         gender: draft.gender as string,
         date_of_birth: draft.dateOfBirth,
@@ -594,15 +596,18 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
             {t('profileEdit.emailAddress', 'Email Address')}
           </Text>
-          <TextInput
+          <AnimatedInput
             value={email}
-            editable={false}
+            onChangeText={(t: string) => updateDraft({ email: t })}
+            placeholder={t('profileEdit.emailPlaceholder', 'Enter your email')}
+            placeholderTextColor={colors.textPlaceholder}
+            autoCapitalize="none"
+            keyboardType="email-address"
             style={[
               styles.input,
               {
-                color: colors.textSecondary,
-                backgroundColor: colors.surfaceHighlight,
-                borderColor: colors.border,
+                color: colors.textPrimary,
+                backgroundColor: colors.surface,
               },
             ]}
           />
@@ -756,7 +761,8 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         <PrimaryButton
           title={profileLoading ? t('profileEdit.saving', 'Saving...') : t('profileEdit.save', 'Save')}
           onPress={handleSave}
-          disabled={!canSave}
+          disabled={!canSave || profileLoading}
+          loading={profileLoading}
           colors={colors}
         />
       </Animated.View>

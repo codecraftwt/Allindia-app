@@ -211,7 +211,7 @@ const PrivacyPolicyScreen: React.FC = () => {
         </Text>
         
         <Pressable
-          onPress={() => handleLinkPress('tel:+919988888888')}
+          onPress={() => handleLinkPress('tel:+919503545035')}
           style={({ pressed }) => [
             styles.contactBtn,
             { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
@@ -220,7 +220,7 @@ const PrivacyPolicyScreen: React.FC = () => {
         >
           <Icon name="phone" size={16} color={colors.primary} style={{ marginRight: spacing.sm }} />
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            {t('privacyPolicyScreen.callUsBtnText', 'Call Us: +91 99888 88888')}
+            {t('privacyPolicyScreen.callUsBtnText', 'Call Us: +91 95035 45035')}
           </Text>
         </Pressable>
 

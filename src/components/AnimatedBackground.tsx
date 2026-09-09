@@ -4,7 +4,7 @@ import { ThemeColors } from '../theme/colors';
 
 const { width, height } = Dimensions.get('window');
 
-export const AnimatedBackground = ({ colors }: { colors: ThemeColors }) => {
+export const AnimatedBackground = React.memo(({ colors }: { colors: ThemeColors }) => {
   const anims = React.useRef([...Array(5)].map(() => ({
     x: new Animated.Value(Math.random() * width),
     y: new Animated.Value(Math.random() * height),
@@ -35,7 +35,7 @@ export const AnimatedBackground = ({ colors }: { colors: ThemeColors }) => {
   }, []);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: -1, backgroundColor: colors.background }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: -1, backgroundColor: colors.background }]}>
       {anims.map((anim, i) => (
         <Animated.View
           key={i}
@@ -57,7 +57,7 @@ export const AnimatedBackground = ({ colors }: { colors: ThemeColors }) => {
       ))}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   bubble: {

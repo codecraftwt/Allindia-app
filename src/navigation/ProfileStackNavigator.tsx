@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../context/ThemeContext';
 import ProfileOverviewScreen from '../screens/main/profile/ProfileOverviewScreen';
 import ProfilePersonalInfoScreen from '../screens/main/profile/ProfilePersonalInfoScreen';
@@ -16,7 +16,7 @@ import TermsAndConditionsScreen from '../screens/main/profile/TermsAndConditions
 import SavedJobsScreen from '../screens/main/saved/SavedJobsScreen';
 import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
 
-const Stack = createStackNavigator<ProfileStackParamList>();
+const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 const ProfileStackNavigator: React.FC = () => {
   const { colors } = useTheme();
@@ -26,7 +26,8 @@ const ProfileStackNavigator: React.FC = () => {
       initialRouteName="ProfileOverview"
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: 'transparent' },
+        contentStyle: { backgroundColor: colors.background },
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="ProfileOverview" component={ProfileOverviewScreen} />
       <Stack.Screen name="ProfilePersonalInfo" component={ProfilePersonalInfoScreen} />

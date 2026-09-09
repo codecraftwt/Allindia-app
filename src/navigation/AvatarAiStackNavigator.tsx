@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ResumeScreen from '../screens/main/AvatarAi/ResumeScreen';
 import AIAssistantScreen from '../screens/main/AvatarAi/AIAssistantScreen';
 import AiFeaturesScreen from '../screens/main/AvatarAi/AiFeaturesScreen';
@@ -10,7 +10,7 @@ export type AvatarAiStackParamList = {
   AIAssistantScreen: { autoGenerate?: boolean };
 };
 
-const Stack = createStackNavigator<AvatarAiStackParamList>();
+const Stack = createNativeStackNavigator<AvatarAiStackParamList>();
 
 const AvatarAiStackNavigator: React.FC = () => {
   return (
@@ -18,7 +18,7 @@ const AvatarAiStackNavigator: React.FC = () => {
       initialRouteName="AiFeaturesScreen"
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: 'transparent' },
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="AiFeaturesScreen" component={AiFeaturesScreen} />
       <Stack.Screen name="ResumeScreen" component={ResumeScreen} />

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axiosInstance';
 import messaging from '@react-native-firebase/messaging';
-import { clearProfile, updatePersonalProfile, updateProfilePicture, deleteProfilePicture } from './profileSlice';
+import { clearProfile, updatePersonalProfile, updateProfilePicture, deleteProfilePicture, changePassword } from './profileSlice';
 
 interface AuthState {
   user: any | null;
@@ -74,13 +74,18 @@ export const verifyRegisterOtp = createAsyncThunk(
   async (payload: { email: string; otp: string }, { rejectWithValue }) => {
     try {
       const response = await api.post('/api/candidate/register/verify-otp', {
+        email: payload.email,
         identifier: payload.email,
         otp: payload.otp,
       });
       return response?.data;
     } catch (error: any) {
       console.log("OTP Verification Error:", error?.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'Verification failed');
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.data?.errors && Object.values(error.response.data.errors).flat()[0]) ||
+        'Verification failed';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -89,11 +94,18 @@ export const resendRegisterOtp = createAsyncThunk(
   'auth/resendRegisterOtp',
   async (email: string, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register/resend-otp', { identifier: email });
+      const response = await api.post('/api/candidate/register/resend-otp', {
+        email: email,
+        identifier: email,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Resend OTP Error:", error?.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'Failed to resend OTP');
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.data?.errors && Object.values(error.response.data.errors).flat()[0]) ||
+        'Failed to resend OTP';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -130,11 +142,18 @@ export const forgotPasswordCandidate = createAsyncThunk(
   'auth/forgotPasswordCandidate',
   async (email: string, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/forgot-password', { identifier: email });
+      const response = await api.post('/api/candidate/forgot-password', {
+        email: email,
+        identifier: email,
+      });
       return response?.data;
     } catch (error: any) {
       console.log("Forgot Password Error:", error?.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'Failed to send reset link');
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.data?.errors && Object.values(error.response.data.errors).flat()[0]) ||
+        'Failed to send reset link';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -144,13 +163,18 @@ export const verifyForgotPasswordOtp = createAsyncThunk(
   async (payload: { email: string; otp: string }, { rejectWithValue }) => {
     try {
       const response = await api.post('/api/candidate/forgot-password/verify-otp', {
+        email: payload.email,
         identifier: payload.email,
         otp: payload.otp,
       });
       return response?.data;
     } catch (error: any) {
       console.log("Verify Forgot Password OTP Error:", error?.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'OTP Verification failed');
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.data?.errors && Object.values(error.response.data.errors).flat()[0]) ||
+        'OTP Verification failed';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -161,12 +185,17 @@ export const resetPasswordCandidate = createAsyncThunk(
     try {
       const response = await api.post('/api/candidate/reset-password', {
         ...payload,
+        email: payload.email,
         identifier: payload.email,
       });
       return response?.data;
     } catch (error: any) {
       console.log("Reset Password Error:", error?.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.message || 'Failed to reset password');
+      const msg =
+        error.response?.data?.message ||
+        (error.response?.data?.errors && Object.values(error.response.data.errors).flat()[0]) ||
+        'Failed to reset password';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -249,6 +278,12 @@ const authSlice = createSlice({
       .addCase(deleteProfilePicture.fulfilled, (state) => {
         if (state.user) {
           state.user.profile_picture_url = null;
+        }
+      })
+      .addCase(changePassword.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload?.data?.token) {
+          state.token = action.payload.data.token;
         }
       });
   },

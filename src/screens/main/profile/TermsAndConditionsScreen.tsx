@@ -182,7 +182,7 @@ const TermsAndConditionsScreen: React.FC = () => {
         </Text>
         
         <Pressable
-          onPress={() => handleLinkPress('tel:+919987767899')}
+          onPress={() => handleLinkPress('tel:+919503545035')}
           style={({ pressed }) => [
             styles.contactBtn,
             { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
@@ -191,7 +191,7 @@ const TermsAndConditionsScreen: React.FC = () => {
         >
           <Icon name="phone" size={16} color={colors.primary} style={{ marginRight: spacing.sm }} />
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
-            {t('termsAndConditionsScreen.callUsBtnText', 'Call Us: +91 99877 67899')}
+            {t('termsAndConditionsScreen.callUsBtnText', 'Call Us: +91 95035 45035')}
           </Text>
         </Pressable>
 

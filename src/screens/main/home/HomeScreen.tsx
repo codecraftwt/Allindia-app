@@ -39,7 +39,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
-import { fetchProfile, fetchHRInvites } from '../../../redux/slice/profileSlice';
+import { fetchProfile, fetchHRInvites, dismissHRInvite } from '../../../redux/slice/profileSlice';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 import { fetchNotifications } from '../../../redux/slice/notificationSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -670,33 +670,64 @@ const MemoizedHomeContent = React.memo(({
   tagRotationStyle,
   navigation,
   homeMedia,
-  hrInvites
+  hrInvites,
+  isLoggedIn,
 }: any) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
   const [showAppStatus, setShowAppStatus] = useState(false);
-  const currentStatusId = 'mock_status_1'; // Assuming this would be dynamic in future
+  const currentStatusId = 'mock_status_1';
 
-  const [hiddenInviteId, setHiddenInviteId] = useState<number | null>(null);
-  const latestInvite = hrInvites && hrInvites.length > 0 ? hrInvites[0] : null;
+  const [hiddenInviteIds, setHiddenInviteIds] = useState<string[]>([]);
+  const [hasLoadedHiddenInvites, setHasLoadedHiddenInvites] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const checkStatus = async () => {
       try {
         const hiddenStatusId = await AsyncStorage.getItem('hiddenAppStatusId');
-        if (hiddenStatusId !== currentStatusId) {
+        if (isMounted && hiddenStatusId !== currentStatusId) {
           setShowAppStatus(true);
         }
 
-        const storedHiddenInviteId = await AsyncStorage.getItem('hiddenHRInviteId');
-        if (storedHiddenInviteId) {
-          setHiddenInviteId(Number(storedHiddenInviteId));
+        const storedHiddenInvites = await AsyncStorage.getItem('hidden_hr_invite_ids');
+        if (isMounted) {
+          if (storedHiddenInvites) {
+            const parsed = JSON.parse(storedHiddenInvites);
+            if (Array.isArray(parsed)) {
+              setHiddenInviteIds(parsed.map(String));
+            }
+          } else {
+            const oldSingle = await AsyncStorage.getItem('hiddenHRInviteId');
+            if (oldSingle) {
+              setHiddenInviteIds([String(oldSingle)]);
+            }
+          }
         }
       } catch (e) {
-        setShowAppStatus(true);
+        if (isMounted) setShowAppStatus(true);
+      } finally {
+        if (isMounted) setHasLoadedHiddenInvites(true);
       }
     };
     checkStatus();
+    return () => {
+      isMounted = false;
+    };
   }, [currentStatusId]);
+
+  const latestInvite = useMemo(() => {
+    if (!isLoggedIn || !hasLoadedHiddenInvites || !Array.isArray(hrInvites) || hrInvites.length === 0) return null;
+    return hrInvites.find((inv: any) => {
+      if (!inv || !inv.id) return false;
+      const invIdStr = String(inv.id);
+      if (hiddenInviteIds.includes(invIdStr)) return false;
+      if (inv.is_read === true || inv.is_read === 1 || inv.is_read === '1') return false;
+      if (inv.read_at != null && inv.read_at !== '') return false;
+      if (inv.status === 'read' || inv.status === 'dismissed' || inv.status === 'viewed') return false;
+      return true;
+    }) || null;
+  }, [isLoggedIn, hasLoadedHiddenInvites, hrInvites, hiddenInviteIds]);
 
   const handleHideAppStatus = async () => {
     setShowAppStatus(false);
@@ -707,12 +738,49 @@ const MemoizedHomeContent = React.memo(({
     }
   };
 
-  const handleHideInvite = async (inviteId: number) => {
-    setHiddenInviteId(inviteId);
+  const handleHideInvite = async (inviteId: number | string) => {
+    const idStr = String(inviteId);
+    const nextHidden = [...hiddenInviteIds.filter(id => id !== idStr), idStr];
+    setHiddenInviteIds(nextHidden);
+    dispatch(dismissHRInvite(inviteId));
     try {
-      await AsyncStorage.setItem('hiddenHRInviteId', inviteId.toString());
+      await AsyncStorage.setItem('hidden_hr_invite_ids', JSON.stringify(nextHidden));
     } catch (e) {
       console.log('Error hiding invite', e);
+    }
+  };
+
+  const handleSlidePress = (slide?: any) => {
+    if (!slide || !slide.target_action) {
+      goSearch();
+      return;
+    }
+    
+    switch (slide.target_action) {
+      case 'REFER_APP':
+        import('react-native').then(({ Share }) => {
+          Share.share({
+            message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia',
+          });
+        });
+        break;
+      case 'AI_SECTIONS':
+        const aiTab = navigation.getParent() as any;
+        aiTab?.navigate('AIAssistant');
+        break;
+      case 'CHOOSE_LOCATION':
+        navigation.navigate('LocationSelection');
+        break;
+      case 'PROFILE_UPDATE':
+        const profileTab = navigation.getParent() as any;
+        profileTab?.navigate('Profile');
+        break;
+      case 'UPCOMING_EVENT':
+        // Do nothing
+        break;
+      default:
+        goSearch();
+        break;
     }
   };
 
@@ -739,8 +807,8 @@ const MemoizedHomeContent = React.memo(({
         <HomeSkeleton />
       ) : (
         <>
-          <HeroBanner media={homeMedia} colors={colors} onPress={goSearch} />
-          {latestInvite && hiddenInviteId !== latestInvite.id && (
+          <HeroBanner media={homeMedia} colors={colors} onPress={handleSlidePress} />
+          {latestInvite && (
             <HomeHRInviteStatus
               colors={colors}
               invite={latestInvite}
@@ -891,7 +959,7 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeNav>();
   const { draft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { trending, nearby, recommended, latest, homeLoading } = useSelector((state: RootState) => state.jobs);
   const { data: profileData, hrInvites } = useSelector((state: RootState) => state.profile);
@@ -1105,16 +1173,18 @@ const HomeScreen: React.FC = () => {
     if (!hasFeedData) {
       dispatch(fetchHomeFeed());
     }
-    dispatch(fetchAdminMedia({ media_section: 'slide', limit: 5 }));
+    dispatch(fetchAdminMedia({ media_section: 'slide', limit: 10 }));
     dispatch(fetchNotifications());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!profileData) {
-      dispatch(fetchProfile());
+    if (isLoggedIn) {
+      if (!profileData) {
+        dispatch(fetchProfile());
+      }
+      dispatch(fetchHRInvites());
     }
-    dispatch(fetchHRInvites());
-  }, [dispatch, profileData]);
+  }, [dispatch, isLoggedIn, profileData]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
@@ -1156,10 +1226,12 @@ const HomeScreen: React.FC = () => {
   const onRefresh = useCallback(() => {
     dispatch(fetchMetaCategories());
     dispatch(fetchHomeFeed());
-    dispatch(fetchProfile());
+    if (isLoggedIn) {
+      dispatch(fetchProfile());
+      dispatch(fetchHRInvites());
+    }
     dispatch(fetchNotifications());
-    dispatch(fetchHRInvites());
-  }, [dispatch]);
+  }, [dispatch, isLoggedIn]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background }]} >
@@ -1212,6 +1284,7 @@ const HomeScreen: React.FC = () => {
         navigation={navigation}
         homeMedia={homeMedia}
         hrInvites={hrInvites}
+        isLoggedIn={isLoggedIn}
       />
 
       {user && (

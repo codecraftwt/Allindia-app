@@ -207,20 +207,20 @@ const CategoryJobsSkeleton: React.FC = () => {
       {[1, 2, 3, 4, 5].map(i => (
         <View key={i} style={[styles.premiumCard, { backgroundColor: colors.surface }]}>
           <View style={styles.cardTop}>
-            <SkeletonPulse style={styles.skeletonLogo} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <SkeletonPulse style={{ height: 16, width: '70%', borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: '50%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ width: 44, height: 44, borderRadius: 12 }} />
+            <View style={{ flex: 1, gap: 8, marginLeft: 12 }}>
+              <SkeletonPulse style={{ height: 16, width: i % 2 === 0 ? '70%' : '82%', borderRadius: 6 }} />
+              <SkeletonPulse style={{ height: 12, width: '45%', borderRadius: 4 }} />
             </View>
-            <SkeletonPulse style={{ height: 24, width: 24, borderRadius: 12 }} />
+            <SkeletonPulse style={{ width: 28, height: 28, borderRadius: 14 }} />
           </View>
-          <View style={{ height: 1, backgroundColor: colors.border + '30', marginVertical: 12 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: 80, borderRadius: 4 }} />
+          <View style={{ height: 1, backgroundColor: colors.border + '50', marginVertical: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+              <SkeletonPulse style={{ height: 12, width: 85, borderRadius: 4 }} />
+              <SkeletonPulse style={{ height: 12, width: 75, borderRadius: 4 }} />
             </View>
-            <SkeletonPulse style={{ height: 18, width: 60, borderRadius: 6 }} />
+            <SkeletonPulse style={{ height: 22, width: 68, borderRadius: 6 }} />
           </View>
         </View>
       ))}

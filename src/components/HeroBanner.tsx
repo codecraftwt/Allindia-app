@@ -97,7 +97,7 @@ const BannerVideo = ({ uri, paused, onEnd }: { uri: string; paused: boolean; onE
 
 interface HeroBannerProps {
   colors: ThemeColors;
-  onPress: () => void;
+  onPress: (slide?: any) => void;
   media?: any[];
 }
 
@@ -161,7 +161,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
       const isVideo = item.media_type === 'video';
       return (
         <Pressable
-          onPress={onPress}
+          onPress={() => onPress(item)}
           style={[
             styles.slide,
             {
@@ -194,7 +194,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
 
     return (
       <Pressable
-        onPress={onPress}
+        onPress={() => onPress(item)}
         style={[
           styles.slide,
           {

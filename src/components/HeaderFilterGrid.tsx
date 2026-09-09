@@ -56,7 +56,7 @@ const QUICK_FILTERS = [
 
 const OPTIONS: any = {
   jobType: ['Full-time', 'Part-time', 'Contract', 'Internship'],
-  salary: ['₹3L-6L', '₹6L-10L', '₹10L-15L', '₹15L-20L', '₹20L-30L', '₹30L-40L', '₹40L+'],
+  salary: ['₹0-15k', '₹15k-25k', '₹25k-40k', '₹40k-60k', '₹60k-80k', '₹80k-1L', '₹1L+'],
   experience: ['Fresher', '1-3 Yrs', '3-5 Yrs', '5-10 Yrs'],
   location: ['Bangalore', 'Mumbai', 'Delhi', 'Pune', 'Remote'],
   sortBy: ['Relevance', 'Newest First', 'Salary: High to Low', 'Salary: Low to High'],
@@ -468,26 +468,26 @@ const HeaderFilterGrid: React.FC<HeaderFilterGridProps> = ({
       if (selectedFilters.manualSalary.max) filters.salary_max = parseInt(selectedFilters.manualSalary.max, 10);
     } else if (selectedFilters.salary) {
       const salary = selectedFilters.salary;
-      if (salary === '₹3L-6L') {
-        filters.salary_min = 300000;
-        filters.salary_max = 600000;
-      } else if (salary === '₹6L-10L') {
-        filters.salary_min = 600000;
-        filters.salary_max = 1000000;
-      } else if (salary === '₹10L-15L') {
-        filters.salary_min = 1000000;
-        filters.salary_max = 1500000;
-      } else if (salary === '₹15L-20L') {
-        filters.salary_min = 1500000;
-        filters.salary_max = 2000000;
-      } else if (salary === '₹20L-30L') {
-        filters.salary_min = 2000000;
-        filters.salary_max = 3000000;
-      } else if (salary === '₹30L-40L') {
-        filters.salary_min = 3000000;
-        filters.salary_max = 4000000;
-      } else if (salary === '₹40L+') {
-        filters.salary_min = 4000000;
+      if (salary === '₹0-15k' || salary === '₹0 - ₹15k') {
+        filters.salary_min = 0;
+        filters.salary_max = 15000;
+      } else if (salary === '₹15k-25k' || salary === '₹15k - ₹25k') {
+        filters.salary_min = 15000;
+        filters.salary_max = 25000;
+      } else if (salary === '₹25k-40k' || salary === '₹25k - ₹40k') {
+        filters.salary_min = 25000;
+        filters.salary_max = 40000;
+      } else if (salary === '₹40k-60k' || salary === '₹40k - ₹60k') {
+        filters.salary_min = 40000;
+        filters.salary_max = 60000;
+      } else if (salary === '₹60k-80k' || salary === '₹60k - ₹80k') {
+        filters.salary_min = 60000;
+        filters.salary_max = 80000;
+      } else if (salary === '₹80k-1L' || salary === '₹80k - ₹1L') {
+        filters.salary_min = 80000;
+        filters.salary_max = 100000;
+      } else if (salary === '₹1L+' || salary === '₹1L plus') {
+        filters.salary_min = 100000;
       }
     }
     if (selectedFilters.freshness) {

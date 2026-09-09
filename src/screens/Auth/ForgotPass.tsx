@@ -290,6 +290,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   title={loading ? "Sending..." : "Send Verification Code"}
                   onPress={handleStep1Email}
                   disabled={loading}
+                  loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
                   iconRight={!loading && <Icon name="send-o" size={16} color={colors.onPrimary} />}
@@ -335,6 +336,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   title={loading ? "Verifying..." : "Verify Code / Token"}
                   onPress={handleStep2Verify}
                   disabled={loading || verificationCode.trim().length < 4}
+                  loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
                   iconRight={!loading && <Icon name="check" size={16} color={colors.onPrimary} />}
@@ -415,6 +417,7 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   title={loading ? "Updating..." : "Save & Reset Password"}
                   onPress={handleStep3Reset}
                   disabled={loading}
+                  loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
                   iconRight={!loading && <Icon name="check-circle" size={16} color={colors.onPrimary} />}

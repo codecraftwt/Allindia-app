@@ -26,6 +26,7 @@ const CustomTabBarButton = React.memo(({ children, onPress, isReels }: any) => {
       <Pressable
         style={styles.reelsButtonContainer}
         onPress={onPress}
+        delayPressIn={0}
       >
         <View style={[styles.reelsButton, { backgroundColor: colors.primary }]}>
           {children}
@@ -38,6 +39,7 @@ const CustomTabBarButton = React.memo(({ children, onPress, isReels }: any) => {
     <Pressable
       style={styles.tabButton}
       onPress={onPress}
+      delayPressIn={0}
       android_ripple={{ color: colors.surfaceHighlight, borderless: true, radius: 35 }}
     >
       {children}
@@ -210,29 +212,24 @@ const MainTabNavigator: React.FC = () => {
             });
 
             if (!event.defaultPrevented) {
-              const stackRoutes = ['Home', 'AllJobs', 'Applications', 'Profile'];
-              const rootScreen = 
-                route.name === 'Home' ? 'HomeFeed' : 
-                route.name === 'AllJobs' ? 'AllJobsList' : 
-                route.name === 'Applications' ? 'ApplicationsList' : 
-                route.name === 'Profile' ? 'ProfileOverview' : undefined;
+              if (isFocused) {
+                const rootScreen = 
+                  route.name === 'Home' ? 'HomeFeed' : 
+                  route.name === 'AllJobs' ? 'AllJobsList' : 
+                  route.name === 'Applications' ? 'ApplicationsList' : 
+                  route.name === 'Profile' ? 'ProfileOverview' : undefined;
 
-              requestAnimationFrame(() => {
-                InteractionManager.runAfterInteractions(() => {
-                  if (isFocused && rootScreen) {
-                    // If already on this tab, tap again to pop to root screen
-                    navigation.dispatch(
-                      CommonActions.navigate({
-                        name: route.name,
-                        params: { screen: rootScreen },
-                      })
-                    );
-                  } else {
-                    // Normal tab switch (instantly resumes tab's previous state)
-                    navigation.navigate(route.name);
-                  }
-                });
-              });
+                if (rootScreen) {
+                  navigation.dispatch(
+                    CommonActions.navigate({
+                      name: route.name,
+                      params: { screen: rootScreen },
+                    })
+                  );
+                }
+              } else {
+                navigation.navigate(route.name);
+              }
             }
           };
 
@@ -255,12 +252,15 @@ const MainTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       backBehavior="history"
+      detachInactiveScreens={true}
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabInactive,
+        lazy: true,
+        freezeOnBlur: true,
       })}>
       <Tab.Screen
         name="Home"

@@ -30,7 +30,12 @@ const ProfileEducationScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [dispatch, qualifications.length]);
 
-  const displayData = qualifications.length > 0 ? qualifications.map(q => q.name) : QUALIFICATIONS;
+  const displayData =
+    qualifications.length > 0
+      ? Array.from(new Set(qualifications.map(q => q.name).filter(Boolean))).sort((a, b) =>
+          a.localeCompare(b)
+        )
+      : QUALIFICATIONS;
 
   const canContinue = draft.qualification.trim().length > 0;
 

@@ -293,6 +293,7 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               title={loading ? t('auth.creatingAccount') : t('auth.registerBtn')}
               onPress={onRegister}
               disabled={loading}
+              loading={loading}
               colors={colors}
               iconRight={!loading && <Icon name="arrow-right" size={18} color={colors.onPrimary} />}
             />

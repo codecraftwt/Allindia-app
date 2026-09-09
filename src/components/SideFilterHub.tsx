@@ -193,7 +193,7 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
     t('sideFilter.jobTypeWorkFromHome', 'Work from home'),
     t('sideFilter.jobTypeHybrid', 'Hybrid'),
   ];
-  const SALARY_OPTIONS = ['₹3L-6L', '₹6L-10L', '₹10L-20L', '₹20L+'];
+  const SALARY_OPTIONS = ['₹0-15k', '₹15k-25k', '₹25k-40k', '₹40k-60k', '₹60k-80k', '₹80k-1L', '₹1L+'];
   const FRESHNESS_OPTIONS = [
     t('sideFilter.freshnessAll', 'All'),
     t('sideFilter.freshnessLast24h', 'Last 24 Hours'),
@@ -454,17 +454,26 @@ const SideFilterHub: React.FC<SideFilterHubProps> = ({ colors, onFilterSelect, h
       if (selectedFilters.manualSalary.max) filters.salary_max = parseInt(selectedFilters.manualSalary.max, 10);
     } else if (selectedFilters.salary) {
       const salary = selectedFilters.salary;
-      if (salary === '₹3L-6L') {
-        filters.salary_min = 300000;
-        filters.salary_max = 600000;
-      } else if (salary === '₹6L-10L') {
-        filters.salary_min = 600000;
-        filters.salary_max = 1000000;
-      } else if (salary === '₹10L-20L') {
-        filters.salary_min = 1000000;
-        filters.salary_max = 2000000;
-      } else if (salary === '₹20L+') {
-        filters.salary_min = 2000000;
+      if (salary === '₹0-15k' || salary === '₹0 - ₹15k') {
+        filters.salary_min = 0;
+        filters.salary_max = 15000;
+      } else if (salary === '₹15k-25k' || salary === '₹15k - ₹25k') {
+        filters.salary_min = 15000;
+        filters.salary_max = 25000;
+      } else if (salary === '₹25k-40k' || salary === '₹25k - ₹40k') {
+        filters.salary_min = 25000;
+        filters.salary_max = 40000;
+      } else if (salary === '₹40k-60k' || salary === '₹40k - ₹60k') {
+        filters.salary_min = 40000;
+        filters.salary_max = 60000;
+      } else if (salary === '₹60k-80k' || salary === '₹60k - ₹80k') {
+        filters.salary_min = 60000;
+        filters.salary_max = 80000;
+      } else if (salary === '₹80k-1L' || salary === '₹80k - ₹1L') {
+        filters.salary_min = 80000;
+        filters.salary_max = 100000;
+      } else if (salary === '₹1L+' || salary === '₹1L plus') {
+        filters.salary_min = 100000;
       }
     }
     if (selectedFilters.freshness) {

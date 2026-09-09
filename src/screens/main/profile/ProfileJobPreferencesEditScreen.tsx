@@ -890,7 +890,7 @@ export const ProfileJobPreferencesEditScreen: React.FC<Props> = ({ navigation })
       case 'skeleton':
         return <PreferencesSkeleton colors={colors} />;
       case 'button':
-        return <View style={{ padding: 14 }}><PrimaryButton title={saving ? t('profileJobPreferences.saving', 'Saving...') : t('profileJobPreferences.savePreferences', 'Save Preferences')} onPress={handleSave} colors={colors} /></View>;
+        return <View style={{ padding: 14 }}><PrimaryButton title={saving ? t('profileJobPreferences.saving', 'Saving...') : t('profileJobPreferences.savePreferences', 'Save Preferences')} onPress={handleSave} colors={colors} loading={saving} disabled={saving} /></View>;
       default:
         return null;
     }

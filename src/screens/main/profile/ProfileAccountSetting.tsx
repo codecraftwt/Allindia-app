@@ -205,12 +205,7 @@ const ProfileAccountSetting: React.FC = () => {
       showStatus(
         'success',
         t('profileAccountSetting.successTitle', 'Success'),
-        t('profileAccountSetting.changePasswordSuccess', 'Password changed successfully. Please log in again with your new password.'),
-        () => {
-          dispatch(logout());
-          dispatch(clearProfile());
-          logoutToLogin(navigation);
-        }
+        t('profileAccountSetting.changePasswordSuccess', 'Your password has been changed successfully!')
       );
       setShowPasswordModal(false);
       setCurrentPassword('');

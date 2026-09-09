@@ -272,6 +272,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
           title={loading ? t('profileExperience.saving', 'Saving...') : t('profileExperience.save', 'Save')}
           onPress={handleSave}
           disabled={!canSave || loading}
+          loading={loading}
           colors={colors}
         />
       </Animated.View>

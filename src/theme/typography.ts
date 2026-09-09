@@ -1,9 +1,30 @@
+import { Dimensions, PixelRatio } from 'react-native';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Standard mobile baseline width (375pt)
+const guidelineBaseWidth = 375;
+const guidelineBaseHeight = 812;
+
+export const scale = (size: number) => (SCREEN_WIDTH / guidelineBaseWidth) * size;
+export const verticalScale = (size: number) => (SCREEN_HEIGHT / guidelineBaseHeight) * size;
+
+/**
+ * moderateScale smoothly scales sizes according to device screen width
+ * factor 0.3 ensures text scales proportionally without overflowing on smaller/larger phones
+ */
+export const moderateScale = (size: number, factor = 0.3) => {
+  const scaled = size + (scale(size) - size) * factor;
+  return Math.round(PixelRatio.roundToNearestPixel(scaled));
+};
+
 /**
  * Poppins-first scale for job portal UI (titles, job cards, body, captions).
  * Use fontFamily from fontFamilies — on RN, prefer family over fontWeight for custom fonts.
  */
 export const fontFamilies = {
   regular: 'Poppins-Regular',
+  medium: 'Poppins-Medium',
   semiBold: 'Poppins-SemiBold',
   bold: 'Poppins-Bold',
 } as const;
@@ -11,53 +32,70 @@ export const fontFamilies = {
 export type FontFamilyKey = keyof typeof fontFamilies;
 
 export const typography = {
-  /** App title / screen header — 20–22 Bold */
+  /** Heading 1 — 28 Bold */
+  h1: {
+    fontFamily: fontFamilies.bold,
+    fontSize: moderateScale(28),
+  },
+  /** Heading 2 — 24 Bold */
+  h2: {
+    fontFamily: fontFamilies.bold,
+    fontSize: moderateScale(24),
+  },
+  /** Heading 3 — 20 Bold */
+  h3: {
+    fontFamily: fontFamilies.bold,
+    fontSize: moderateScale(20),
+  },
+  /** Heading 4 — 16 Bold */
+  h4: {
+    fontFamily: fontFamilies.bold,
+    fontSize: moderateScale(16),
+  },
+  /** App title / screen header — 21 Bold */
   appTitle: {
     fontFamily: fontFamilies.bold,
-    fontSize: 21,
+    fontSize: moderateScale(21),
   },
   /** Section titles — 18 SemiBold */
   sectionTitle: {
     fontFamily: fontFamilies.semiBold,
-    fontSize: 18,
+    fontSize: moderateScale(18),
   },
   /** Job title — 16 SemiBold */
   jobTitle: {
     fontFamily: fontFamilies.semiBold,
-    fontSize: 16,
+    fontSize: moderateScale(16),
+  },
+  /** Large label — 16 SemiBold */
+  labelLarge: {
+    fontFamily: fontFamilies.semiBold,
+    fontSize: moderateScale(16),
+  },
+  /** Important label (medium weight) — 14 SemiBold */
+  labelMedium: {
+    fontFamily: fontFamilies.semiBold,
+    fontSize: moderateScale(14),
+  },
+  /** Small label — 12 SemiBold */
+  labelSmall: {
+    fontFamily: fontFamilies.semiBold,
+    fontSize: moderateScale(12),
   },
   /** Body — 14 Regular */
   body: {
     fontFamily: fontFamilies.regular,
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   /** Small / meta — 12 Regular */
   small: {
     fontFamily: fontFamilies.regular,
-    fontSize: 12,
+    fontSize: moderateScale(12),
   },
   /** Tiny / caption — 10 Regular */
   tiny: {
     fontFamily: fontFamilies.regular,
-    fontSize: 10,
-  },
-  /** Important label (medium weight) */
-  labelMedium: {
-    fontFamily: fontFamilies.semiBold,
-    fontSize: 14,
-  },
-  h2: {
-    fontFamily: fontFamilies.bold,
-    fontSize: 24,
-  },
-  /** Heading 4 */
-  h4: {
-    fontFamily: fontFamilies.bold,
-    fontSize: 16,
-  },
-  /** Large label */
-  labelLarge: {
-    fontFamily: fontFamilies.semiBold,
-    fontSize: 16,
+    fontSize: moderateScale(10),
   },
 } as const;
+

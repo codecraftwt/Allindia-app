@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ProfileSetupProvider } from '../context/ProfileSetupContext';
 import { useTheme } from '../context/ThemeContext';
 import { useSelector } from 'react-redux';
@@ -20,7 +20,7 @@ import ProfileJobPreferencesScreen from '../screens/ProfileSetup/ProfileJobPrefe
 import ProfileResumeScreen from '../screens/ProfileSetup/ProfileResumeScreen';
 import type { AuthStackParamList } from './types';
 
-const Stack = createStackNavigator<AuthStackParamList>();
+const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 const AuthNavigator: React.FC = () => {
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
@@ -32,8 +32,8 @@ const AuthNavigator: React.FC = () => {
         initialRouteName="Splash"
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: colors.background }, // Dynamic background based on theme
-          animationEnabled: true,
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'slide_from_right',
         }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />

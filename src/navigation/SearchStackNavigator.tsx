@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../context/ThemeContext';
 import JobDetailScreen from '../screens/main/jobs/JobDetailScreen';
 import JobListingScreen from '../screens/main/jobs/JobListingScreen';
@@ -8,7 +8,7 @@ import SearchResultsScreen from '../screens/main/search/SearchResultsScreen';
 import CategoryJobsScreen from '../screens/main/jobs/CategoryJobsScreen';
 import type { SearchStackParamList } from './types';
 
-const Stack = createStackNavigator<SearchStackParamList>();
+const Stack = createNativeStackNavigator<SearchStackParamList>();
 
 const SearchStackNavigator: React.FC = () => {
   const { colors } = useTheme();
@@ -17,7 +17,8 @@ const SearchStackNavigator: React.FC = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        cardStyle: { backgroundColor: colors.background },
+        contentStyle: { backgroundColor: colors.background },
+        animation: 'slide_from_right',
       }}>
       <Stack.Screen name="SearchHome" component={SearchScreen} />
       <Stack.Screen name="JobListing" component={JobListingScreen} />

@@ -22,7 +22,8 @@ export type SearchStackParamList = {
   SearchHome: undefined;
   JobListing: { query?: string; filters?: any } | undefined;
   JobDetail: JobDetailParams;
-  JobCategories: undefined;
+  SearchResults: { query: string };
+  JobCategories?: undefined;
   CategoryJobs: { categoryId?: number; categoryName?: string } | undefined;
 };
 

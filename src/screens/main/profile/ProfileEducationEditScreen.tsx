@@ -8,7 +8,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  withTiming,
   Easing
 } from 'react-native-reanimated';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,16 +18,20 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useToast } from '../../../context/ToastContext';
 import type { StackScreenProps } from '@react-navigation/stack';
 import { PrimaryButton } from '../../../components/auth';
-import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { typography } from '../../../theme/typography';
-import { QUALIFICATIONS } from '../../ProfileSetup/profileSetupConstants';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileEducation'>;
+
+type EducationEntry = {
+  id: string;
+  qual: any | null;
+  notes: string;
+};
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -40,65 +43,103 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
   const { qualifications } = useSelector((state: RootState) => state.meta);
   const { loading, error, data } = useSelector((state: RootState) => state.profile);
 
-  const [open, setOpen] = useState(false);
-  const [selectedQual, setSelectedQual] = useState<any>(null);
-  const [notes, setNotes] = useState('');
+  // List of education entries
+  const [entries, setEntries] = useState<EducationEntry[]>([
+    { id: '1', qual: null, notes: '' },
+  ]);
+
+  // Modal state: which entry index is being edited
+  const [openForIndex, setOpenForIndex] = useState<number | null>(null);
+  const [selectedDegree, setSelectedDegree] = useState<string | null>(null);
+
+  // Step 1: unique degree names (all qualifications)
+  const degreeNameList: string[] = Array.from(
+    new Set(
+      qualifications
+        .map((q: any) => q.name)
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
+  // Step 2: all streams for the selected degree name
+  const streamList = selectedDegree
+    ? qualifications.filter((q: any) => q.name === selectedDegree)
+    : [];
+
+  const closeModal = () => {
+    setSelectedDegree(null);
+    setOpenForIndex(null);
+  };
 
   useEffect(() => {
     dispatch(fetchEducation());
-    if (qualifications.length === 0) {
-      dispatch(fetchMetaQualifications());
-    }
-  }, [dispatch, qualifications.length]);
+    dispatch(fetchMetaQualifications());
+  }, [dispatch]);
 
+  // Pre-fill from backend data
   useEffect(() => {
-    if (data?.education) {
+    if (data?.education && qualifications.length > 0) {
       const edu = data.education;
-      // Handle both numeric ID and nested object cases
-      const qualId = typeof edu.qualification_id === 'object' ? edu.qualification_id?.id : edu.qualification_id;
+      // Support both single and array (qualification_ids)
+      const ids: number[] = Array.isArray(edu.qualification_ids)
+        ? edu.qualification_ids
+        : edu.qualification_id
+        ? [typeof edu.qualification_id === 'object' ? edu.qualification_id.id : edu.qualification_id]
+        : [];
 
-      if (qualId && qualifications.length > 0) {
-        const currentQual = qualifications.find(q => q.id === qualId);
-        setSelectedQual(currentQual || null);
+      if (ids.length > 0) {
+        const preloaded = ids.map((id, i) => {
+          const found = qualifications.find((q: any) => q.id === id);
+          return { id: String(i + 1), qual: found || null, notes: i === 0 ? (edu.education_notes || '') : '' };
+        });
+        setEntries(preloaded.length > 0 ? preloaded : [{ id: '1', qual: null, notes: '' }]);
+      } else {
+        setEntries([{ id: '1', qual: null, notes: edu.education_notes || '' }]);
       }
-      setNotes(edu.education_notes || '');
     }
   }, [data, qualifications]);
 
   const handleSave = async () => {
     try {
+      const validEntries = entries.filter(e => e.qual !== null);
       await dispatch(updateEducation({
-        qualification_id: selectedQual?.id || null,
-        education_notes: notes,
+        qualification_id: validEntries[0]?.qual?.id || null,
+        qualification_ids: validEntries.map(e => e.qual.id),
+        education_notes: entries[0]?.notes || null,
       })).unwrap();
 
       showToast(t('profileEducation.educationUpdated', 'Education updated successfully!'), 'success');
-
-      // Delay navigation to let the user see the success message and progress bar
-      setTimeout(() => {
-        navigation.goBack();
-      }, 3000); // 2.5s progress + 0.5s fade out
+      setTimeout(() => navigation.goBack(), 3000);
     } catch (err: any) {
       showToast(err?.message || t('profileEducation.failedToUpdateEducation', 'Failed to save education'), 'error');
       console.error('Failed to save education:', err);
     }
   };
 
-  const canSave = selectedQual !== null;
+  const addEntry = () => {
+    setEntries(prev => [...prev, { id: Date.now().toString(), qual: null, notes: '' }]);
+  };
+
+  const removeEntry = (id: string) => {
+    setEntries(prev => prev.filter(e => e.id !== id));
+  };
+
+  const setQualForEntry = (id: string, qual: any) => {
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, qual } : e));
+  };
+
+  const setNotesForEntry = (id: string, notes: string) => {
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, notes } : e));
+  };
+
+  const canSave = entries.some(e => e.qual !== null);
 
   const scale = useSharedValue(1);
   const selectStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const renderSection = (children: React.ReactNode, index: number) => (
-    <Animated.View
-      entering={FadeInDown.delay(200 + index * 100).duration(600).springify()}
-      style={{ gap: spacing.xs }}
-    >
-      {children}
-    </Animated.View>
-  );
+  const activeEntry = openForIndex !== null ? entries[openForIndex] : null;
 
   return (
     <ProfileEditLayout
@@ -111,117 +152,174 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       ) : (
         <>
-          {renderSection(
-            <>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileEducation.qualification', 'Qualification')}</Text>
+          {entries.map((entry, index) => (
+            <Animated.View
+              key={entry.id}
+              entering={FadeInDown.delay(index * 80).duration(400).springify()}
+              style={[
+                styles.entryCard,
+                { borderColor: colors.border, backgroundColor: colors.surface },
+              ]}>
+
+              {/* Qualification label */}
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: spacing.xs }]}>
+                {t('profileEducation.qualification', 'Qualification')}
+                {entries.length > 1 ? ` ${index + 1}` : ''}
+              </Text>
+
+              {/* Qualification picker trigger */}
               <AnimatedPressable
                 onPressIn={() => (scale.value = withSpring(0.97))}
                 onPressOut={() => (scale.value = withSpring(1))}
-                onPress={() => setOpen(true)}
+                onPress={() => setOpenForIndex(index)}
                 style={[
                   styles.selectField,
                   selectStyle,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                  },
+                  { backgroundColor: colors.background, borderColor: colors.border },
                 ]}>
                 <Icon name="graduation-cap" size={18} color={colors.primary} />
                 <Text
                   style={[
                     typography.body,
-                    {
-                      color: selectedQual ? colors.textPrimary : colors.textPlaceholder,
-                      flex: 1,
-                    },
+                    { color: entry.qual ? colors.textPrimary : colors.textPlaceholder, flex: 1 },
                   ]}>
-                  {selectedQual ? selectedQual.name : t('profileEducation.selectQualification', 'Select qualification')}
+                  {entry.qual
+                    ? `${entry.qual.display_label || entry.qual.name}${entry.qual.stream ? ' - ' + entry.qual.stream : ''}`
+                    : t('profileEducation.selectQualification', 'Select qualification')}
                 </Text>
                 <Icon name="chevron-down" size={14} color={colors.textPlaceholder} />
               </AnimatedPressable>
-            </>,
-            0
-          )}
 
-          {renderSection(
-            <>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
+              {/* Education Notes */}
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md, marginBottom: spacing.xs }]}>
                 {t('profileEducation.educationNotes', 'Education Notes')}
               </Text>
               <TextInput
                 multiline
                 numberOfLines={4}
-                value={notes}
-                onChangeText={setNotes}
+                value={entry.notes}
+                onChangeText={(val) => setNotesForEntry(entry.id, val)}
                 placeholder={t('profileEducation.notesPlaceholder', 'Describe your education background...')}
                 placeholderTextColor={colors.textPlaceholder}
                 style={[
                   styles.textArea,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.background,
                     borderColor: colors.border,
                     color: colors.textPrimary,
-                  }
+                  },
                 ]}
               />
-            </>,
-            1
-          )}
+            </Animated.View>
+          ))}
+
+          {/* Add another education button */}
+          <Pressable
+            style={[
+              styles.addButton,
+              { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
+            ]}
+            onPress={addEntry}>
+            <Icon name="plus-circle" size={20} color={colors.primary} />
+            <Text style={[typography.labelLarge, { color: colors.primary, marginLeft: spacing.sm }]}>
+              {t('profileEducation.addEducation', 'Add another education')}
+            </Text>
+          </Pressable>
 
           {error && (
             <Text style={[styles.errorText, { color: colors.error }]}>
-              {typeof error === 'string' ? error : (error.message || 'An error occurred')}
+              {typeof error === 'string' ? error : ((error as any).message || 'An error occurred')}
             </Text>
           )}
         </>
       )}
 
+      {/* Qualification Picker Modal — shared for all entries */}
       <Modal
-        visible={open}
+        visible={openForIndex !== null}
         animationType="fade"
         transparent
-        onRequestClose={() => setOpen(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setOpen(false)}>
+        onRequestClose={closeModal}>
+        <Pressable style={styles.modalOverlay} onPress={closeModal}>
           <AnimatedPressable
             entering={SlideInDown.duration(300).easing(Easing.out(Easing.quad))}
             exiting={SlideOutDown.duration(250).easing(Easing.in(Easing.quad))}
             style={[styles.sheet, { backgroundColor: colors.surface }]}
             onPress={(e: any) => e.stopPropagation()}>
+
+            {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
-                {t('profileEducation.qualification', 'Qualification')}
-              </Text>
-              <Pressable onPress={() => setOpen(false)} hitSlop={12}>
+              {selectedDegree ? (
+                <Pressable
+                  onPress={() => setSelectedDegree(null)}
+                  hitSlop={12}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                  <Icon name="arrow-left" size={16} color={colors.primary} />
+                  <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
+                    {selectedDegree}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>
+                  {t('profileEducation.qualification', 'Qualification')}
+                </Text>
+              )}
+              <Pressable onPress={closeModal} hitSlop={12}>
                 <Icon name="times" size={20} color={colors.textSecondary} />
               </Pressable>
             </View>
-            <FlatList
-              data={qualifications}
-              keyExtractor={item => item.id.toString()}
-              style={styles.list}
-              renderItem={({ item, index }) => (
-                <Animated.View entering={FadeInDown.delay(index * 50).duration(400)}>
-                  <Pressable
-                    onPress={() => {
-                      setSelectedQual(item);
-                      setOpen(false);
-                    }}
-                    style={[
-                      styles.row,
-                      {
-                        backgroundColor:
-                          selectedQual?.id === item.id ? colors.surfaceHighlight : 'transparent',
-                      },
-                    ]}>
-                    <Text style={[typography.body, { color: colors.textPrimary }]}>{item.name}</Text>
-                    {selectedQual?.id === item.id ? (
-                      <Icon name="check" size={16} color={colors.primary} />
-                    ) : null}
-                  </Pressable>
-                </Animated.View>
-              )}
-            />
+
+            {/* Step 1: Unique degree names */}
+            {!selectedDegree && (
+              <FlatList
+                data={degreeNameList}
+                keyExtractor={name => name}
+                style={styles.list}
+                renderItem={({ item: name, index }) => (
+                  <Animated.View entering={FadeInDown.delay(index * 40).duration(350)}>
+                    <Pressable
+                      onPress={() => setSelectedDegree(name)}
+                      style={[styles.row, { backgroundColor: 'transparent' }]}>
+                      <Text style={[typography.body, { color: colors.textPrimary }]}>{name}</Text>
+                      <Icon name="chevron-right" size={13} color={colors.textPlaceholder} />
+                    </Pressable>
+                  </Animated.View>
+                )}
+              />
+            )}
+
+            {/* Step 2: Streams for selected degree */}
+            {selectedDegree && (
+              <FlatList
+                data={streamList}
+                keyExtractor={item => item.id.toString()}
+                style={styles.list}
+                renderItem={({ item, index }) => {
+                  const isSelected = activeEntry?.qual?.id === item.id;
+                  return (
+                    <Animated.View entering={FadeInDown.delay(index * 40).duration(350)}>
+                      <Pressable
+                        onPress={() => {
+                          if (openForIndex !== null) {
+                            setQualForEntry(entries[openForIndex].id, item);
+                          }
+                          closeModal();
+                        }}
+                        style={[
+                          styles.row,
+                          { backgroundColor: isSelected ? colors.surfaceHighlight : 'transparent' },
+                        ]}>
+                        <Text style={[typography.body, { color: colors.textPrimary, flex: 1 }]}>
+                          {item.stream || item.name}
+                        </Text>
+                        {isSelected && <Icon name="check" size={16} color={colors.primary} />}
+                      </Pressable>
+                    </Animated.View>
+                  );
+                }}
+              />
+            )}
+
           </AnimatedPressable>
         </Pressable>
       </Modal>
@@ -231,6 +329,7 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
           title={loading ? t('profileEducation.saving', 'Saving...') : t('profileEducation.save', 'Save')}
           onPress={handleSave}
           disabled={!canSave || loading}
+          loading={loading}
           colors={colors}
         />
       </Animated.View>
@@ -239,6 +338,20 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  entryCard: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    position: 'relative',
+  },
+  removeBtn: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    zIndex: 10,
+    padding: spacing.xs,
+  },
   selectField: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -283,7 +396,6 @@ const styles = StyleSheet.create({
     height: 120,
     textAlignVertical: 'top',
     fontSize: 15,
-    marginTop: spacing.xs,
   },
   errorText: {
     ...typography.small,
@@ -293,6 +405,16 @@ const styles = StyleSheet.create({
   centerLoader: {
     paddingVertical: 50,
     alignItems: 'center',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: radius.card,
   },
 });
 

@@ -4,7 +4,7 @@ import { logout } from '../redux/slice/authSlice';
 import { clearProfile } from '../redux/slice/profileSlice';
 
 export const BASE_URL = 'https://jobindia.ai/';
-// export const BASE_URL = 'https://8724-103-226-142-125.ngrok-free.app'
+// export const BASE_URL = 'https://juvenile-cartwheel-thinner.ngrok-free.dev/';
 
 
 const api = axios.create({

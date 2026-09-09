@@ -23,6 +23,7 @@ export const updatePersonalProfile = createAsyncThunk(
   'profile/updatePersonalProfile',
   async (personalData: {
     name: string;
+    email?: string;
     phone?: string;
     gender?: string;
     date_of_birth?: string;
@@ -191,6 +192,9 @@ export const fetchHRInvites = createAsyncThunk(
     try {
       const state = getState() as any;
       const token = state.auth.token;
+      if (!token) {
+        return { data: { invitations: [] } };
+      }
       const response = await api.get('api/candidate/profile/invitations', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -243,6 +247,7 @@ export const updateEducation = createAsyncThunk(
   'profile/updateEducation',
   async (educationData: {
     qualification_id: number | null;
+    qualification_ids?: number[];
     education_notes: string | null;
   }, { getState, dispatch, rejectWithValue }) => {
     try {
@@ -452,6 +457,10 @@ const profileSlice = createSlice({
       state.wishlistJobs = [];
       state.hrInvites = [];
       state.error = null;
+    },
+    dismissHRInvite: (state, action) => {
+      const inviteId = action.payload;
+      state.hrInvites = (state.hrInvites || []).filter((inv: any) => String(inv.id) !== String(inviteId));
     }
   },
   extraReducers: (builder) => {
@@ -574,7 +583,14 @@ const profileSlice = createSlice({
       })
       .addCase(fetchHRInvites.fulfilled, (state, action) => {
         state.loading = false;
-        state.hrInvites = action.payload.data?.invitations || [];
+        const all = action.payload.data?.invitations || [];
+        state.hrInvites = all.filter((inv: any) => {
+          if (!inv || !inv.id) return false;
+          if (inv.is_read === true || inv.is_read === 1 || inv.is_read === '1') return false;
+          if (inv.read_at != null && inv.read_at !== '') return false;
+          if (inv.status === 'read' || inv.status === 'dismissed' || inv.status === 'viewed') return false;
+          return true;
+        });
       })
       .addCase(fetchHRInvites.rejected, (state, action) => {
         state.loading = false;
@@ -702,5 +718,5 @@ const profileSlice = createSlice({
   },
 });
 
-export const { clearProfile } = profileSlice.actions;
+export const { clearProfile, dismissHRInvite } = profileSlice.actions;
 export default profileSlice.reducer;

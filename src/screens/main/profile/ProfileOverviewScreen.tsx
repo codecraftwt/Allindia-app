@@ -15,6 +15,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
@@ -73,6 +74,7 @@ const ProfileOverviewScreen: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
   const [imageError, setImageError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const scrollY = React.useRef(new Animated.Value(0)).current;
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -148,21 +150,37 @@ const ProfileOverviewScreen: React.FC = () => {
     }
   };
 
-  React.useEffect(() => {
-    if (isLoggedIn) {
-      dispatch(fetchProfile());
-      dispatch(fetchProfileCompletion());
-      dispatch(fetchSkills());
-      dispatch(fetchMetaCategories());
-      dispatch(fetchMetaCities());
-      dispatch(fetchMetaQualifications());
+  const loadProfileData = React.useCallback(async (isPullToRefresh = false) => {
+    if (!isLoggedIn) return;
+    if (isPullToRefresh) setRefreshing(true);
+    try {
+      const promises: Promise<any>[] = [
+        dispatch(fetchProfile()).unwrap().catch(() => {}),
+        dispatch(fetchProfileCompletion()).unwrap().catch(() => {}),
+        dispatch(fetchSkills()).unwrap().catch(() => {}),
+      ];
+
+      if (isPullToRefresh || !categories || categories.length === 0) {
+        promises.push(dispatch(fetchMetaCategories()).unwrap().catch(() => {}));
+      }
+      if (isPullToRefresh || !cities || cities.length === 0) {
+        promises.push(dispatch(fetchMetaCities()).unwrap().catch(() => {}));
+      }
+      if (isPullToRefresh || !qualifications || qualifications.length === 0) {
+        promises.push(dispatch(fetchMetaQualifications()).unwrap().catch(() => {}));
+      }
+
+      await Promise.all(promises);
+    } finally {
+      if (isPullToRefresh) setRefreshing(false);
     }
-  }, [dispatch, isLoggedIn]);
+  }, [dispatch, isLoggedIn, categories, cities, qualifications]);
 
   useFocusEffect(
     React.useCallback(() => {
       StatusBar.setBarStyle('light-content');
-    }, [])
+      loadProfileData(false);
+    }, [loadProfileData])
   );
 
   const { resetDraft } = useProfileSetup();
@@ -270,22 +288,37 @@ const ProfileOverviewScreen: React.FC = () => {
   const getSelectedCategory = () => {
     if (!profile?.preferences) return 'Software Engineer';
     const pref = profile.preferences;
-    const catIds = (pref.job_category_ids && pref.job_category_ids.length > 0)
-      ? pref.job_category_ids.map(Number)
-      : (Array.isArray(pref.job_category_id) ? pref.job_category_id.map(Number) : (pref.job_category_id ? [Number(pref.job_category_id)] : []));
-    
+
+    if (Array.isArray(pref.job_categories) && pref.job_categories.length > 0) {
+      const first = pref.job_categories[0];
+      const name = typeof first === 'string' ? first : (first?.name || first?.job_title || first?.display_label || first?.job_category);
+      if (typeof name === 'string' && name.trim()) return name.trim();
+    }
+
+    let catIds: number[] = [];
+    const rawCatIds = pref.job_category_ids || pref.job_category_id;
+    if (Array.isArray(rawCatIds)) {
+      catIds = rawCatIds.map(Number).filter(n => !isNaN(n));
+    } else if (typeof rawCatIds === 'number') {
+      catIds = [rawCatIds];
+    } else if (typeof rawCatIds === 'string' && rawCatIds.trim()) {
+      catIds = rawCatIds.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+    }
+
     if (catIds.length === 0) return 'Selected Role';
     let selectedName = '';
-    for (const cat of (categories || [])) {
-      if (catIds.includes(Number(cat.id))) {
-        selectedName = cat.name;
-        break;
-      }
-      if (cat.subcategories) {
-        const sub = cat.subcategories.find((s: any) => catIds.includes(Number(s.id)));
-        if (sub) {
-          selectedName = sub.name;
+    if (Array.isArray(categories)) {
+      for (const cat of categories) {
+        if (catIds.includes(Number(cat?.id))) {
+          selectedName = cat?.name || cat?.display_label || cat?.job_title || '';
           break;
+        }
+        if (Array.isArray(cat?.subcategories)) {
+          const sub = cat.subcategories.find((s: any) => catIds.includes(Number(s?.id)));
+          if (sub) {
+            selectedName = sub?.name || sub?.display_label || sub?.job_title || '';
+            break;
+          }
         }
       }
     }
@@ -295,30 +328,101 @@ const ProfileOverviewScreen: React.FC = () => {
   const getJobPrefBottomText = () => {
     if (!profile?.preferences) return 'Pune • ₹6-8 LPA';
     const pref = profile.preferences;
-    
-    const cityIds = pref.preferred_city_ids ? pref.preferred_city_ids.map(Number) : [];
-    let cityName = '';
-    if (cityIds.length > 0 && cities) {
-      const cityData = cities.find((c: any) => Number(c.id) === cityIds[0]);
-      cityName = cityData?.area || cityData?.city || cityData?.label || '';
+
+    const uniqueCityNames: string[] = [];
+
+    // Safely parse preferred_city_ids
+    let cityIds: number[] = [];
+    if (Array.isArray(pref.preferred_city_ids)) {
+      cityIds = pref.preferred_city_ids.map(Number).filter(n => !isNaN(n));
+    } else if (typeof pref.preferred_city_ids === 'number') {
+      cityIds = [pref.preferred_city_ids];
+    } else if (typeof pref.preferred_city_ids === 'string' && pref.preferred_city_ids.trim()) {
+      cityIds = pref.preferred_city_ids.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
     }
-    if (!cityName && pref.preferred_cities && pref.preferred_cities.length > 0) {
-       cityName = pref.preferred_cities[0];
+
+    if (cityIds.length > 0 && Array.isArray(cities)) {
+      cityIds.forEach((id: number) => {
+        const cityData = cities.find((c: any) => Number(c?.id) === id);
+        if (cityData) {
+          let cName = '';
+          if (typeof cityData.city === 'string' && cityData.city.trim()) {
+            cName = cityData.city.trim();
+          } else if (typeof cityData.name === 'string' && cityData.name.trim()) {
+            cName = cityData.name.trim();
+          } else if (typeof cityData.area === 'string' && cityData.area.trim()) {
+            const parts = cityData.area.split(',');
+            cName = parts[parts.length - 1].trim();
+          } else if (typeof cityData.area === 'object' && cityData.area !== null) {
+            cName = cityData.area.city || cityData.area.name || '';
+          } else if (typeof cityData.label === 'string' && cityData.label.trim()) {
+            const parts = cityData.label.split(',');
+            cName = parts[0].trim();
+          }
+          if (cName && !uniqueCityNames.includes(cName)) {
+            uniqueCityNames.push(cName);
+          }
+        }
+      });
     }
-    
+
+    // Safely parse preferred_cities if no IDs matched
+    if (uniqueCityNames.length === 0 && pref.preferred_cities) {
+      const rawCities = Array.isArray(pref.preferred_cities)
+        ? pref.preferred_cities
+        : typeof pref.preferred_cities === 'string'
+        ? pref.preferred_cities.split(',')
+        : [];
+
+      rawCities.forEach((rawCity: any) => {
+        let cName = '';
+        if (typeof rawCity === 'string' && rawCity.trim()) {
+          const parts = rawCity.split(',');
+          cName = parts[parts.length - 1].trim();
+        } else if (typeof rawCity === 'object' && rawCity !== null) {
+          cName = rawCity.city || rawCity.name || rawCity.label || '';
+        }
+        if (cName && !uniqueCityNames.includes(cName)) {
+          uniqueCityNames.push(cName);
+        }
+      });
+    }
+
+    // Fallback to current_city_id
+    if (uniqueCityNames.length === 0 && pref.current_city_id && Array.isArray(cities)) {
+      const cityData = cities.find((c: any) => Number(c?.id) === Number(pref.current_city_id));
+      if (cityData) {
+        let cName = '';
+        if (typeof cityData.city === 'string' && cityData.city.trim()) {
+          cName = cityData.city.trim();
+        } else if (typeof cityData.name === 'string' && cityData.name.trim()) {
+          cName = cityData.name.trim();
+        } else if (typeof cityData.label === 'string' && cityData.label.trim()) {
+          cName = cityData.label.trim();
+        }
+        if (cName && !uniqueCityNames.includes(cName)) {
+          uniqueCityNames.push(cName);
+        }
+      }
+    }
+
+    const cityText = uniqueCityNames.slice(0, 2).join(', ');
+
     let salaryText = '';
-    if (pref.expected_salary_min || pref.expected_salary_max) {
-      const min = (pref.expected_salary_min || 0) / 100000;
-      const max = (pref.expected_salary_max || 0) / 100000;
+    const minSalary = Number(pref.expected_salary_min);
+    const maxSalary = Number(pref.expected_salary_max);
+    if ((!isNaN(minSalary) && minSalary > 0) || (!isNaN(maxSalary) && maxSalary > 0)) {
+      const min = (minSalary || 0) / 100000;
+      const max = (maxSalary || 0) / 100000;
       if (min > 0 || max > 0) {
         salaryText = `₹${min.toFixed(1)}-${max.toFixed(1)} LPA`;
       }
     }
 
-    if (cityName && salaryText) return `${cityName} • ${salaryText}`;
-    if (cityName) return cityName;
+    if (cityText && salaryText) return `${cityText} • ${salaryText}`;
+    if (cityText) return cityText;
     if (salaryText) return salaryText;
-    
+
     return 'Any Location';
   };
 
@@ -359,7 +463,6 @@ const ProfileOverviewScreen: React.FC = () => {
   const SettingsRow = ({ title, subtitle, icon, onPress, isMissing, color, isLast, bottomText, bottomTextColor = '#10B981', tags, subtitleColor }: any) => (
     <Pressable
       onPress={onPress}
-      delayPressIn={0}
       style={({ pressed }) => [
         styles.settingsRow,
         pressed && { backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)' },
@@ -505,7 +608,15 @@ const ProfileOverviewScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, paddingTop: 16 }}
           keyboardShouldPersistTaps="handled"
-          delayContentTouches={false}
+          delaysContentTouches={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadProfileData(true)}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
         >
 
 
@@ -654,16 +765,6 @@ const ProfileOverviewScreen: React.FC = () => {
             )}
           </View>
         </Pressable>
-      </Modal>
-
-      <Modal visible={showImageViewer} transparent animationType="slide" onRequestClose={() => setShowImageViewer(false)}>
-        <View style={styles.viewerBackground}>
-          <Pressable style={styles.viewerClose} onPress={() => setShowImageViewer(false)}>
-            <Icon name="x" size={24} color="#FFF" />
-          </Pressable>
-          {profilePic && <Image source={{ uri: profilePic }} style={styles.fullImage} resizeMode="contain" />}
-          <View style={styles.viewerFooter}><Text style={[typography.labelMedium, { color: '#FFF' }]}>{displayName}</Text></View>
-        </View>
       </Modal>
 
       <Modal visible={showImageViewer} transparent animationType="slide" onRequestClose={() => setShowImageViewer(false)}>
