@@ -26,7 +26,7 @@ import Animated, {
 import { useToast } from '../../../context/ToastContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { updatePersonalProfile } from '../../../redux/slice/profileSlice';
+import { updatePersonalProfile, updatePreferencesProfile } from '../../../redux/slice/profileSlice';
 import { fetchMetaCities } from '../../../redux/slice/metaSlice';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -38,7 +38,7 @@ import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { INDIAN_CITIES } from '../../ProfileSetup/profileSetupConstants';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import { useTranslation } from 'react-i18next';
@@ -498,7 +498,6 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         dateOfBirth: p.date_of_birth || '',
         city: city,
         area: area,
-        boundary: '',
         bio: p.bio || '',
       });
 
@@ -577,7 +576,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>{t('profileEdit.fullName', 'Full name')}</Text>
           <AnimatedInput
             value={fullName}
-            onChangeText={t => updateDraft({ fullName: t })}
+            onChangeText={(t: string) => updateDraft({ fullName: t })}
             placeholder={t('profileEdit.fullNamePlaceholder', 'As on your ID / resume')}
             placeholderTextColor={colors.textPlaceholder}
             style={[
@@ -745,7 +744,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
             multiline
             numberOfLines={4}
             value={draft.bio}
-            onChangeText={t => updateDraft({ bio: t })}
+            onChangeText={(t: string) => updateDraft({ bio: t })}
             placeholder={t('profileEdit.bioPlaceholder', 'A short introduction about yourself...')}
             placeholderTextColor={colors.textPlaceholder}
             style={[
@@ -806,8 +805,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   genderChip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(14),
     borderRadius: radius.button,
     borderWidth: StyleSheet.hairlineWidth,
     minWidth: '28%',
@@ -819,8 +818,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(12),
   },
   selectField: {
     flexDirection: 'row',
@@ -828,8 +827,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(12),
   },
   modalOverlay: {
     flex: 1,
@@ -837,51 +836,51 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    paddingBottom: spacing.xl,
+    borderTopLeftRadius: moderateScale(24),
+    borderTopRightRadius: moderateScale(24),
+    paddingBottom: moderateScale(28),
     maxHeight: '72%',
   },
   citySheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: moderateScale(24),
+    borderTopRightRadius: moderateScale(24),
     maxHeight: '78%',
-    paddingBottom: spacing.md,
+    paddingBottom: moderateScale(20),
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(14),
   },
   searchInput: {
-    marginHorizontal: spacing.lg,
+    marginHorizontal: moderateScale(16),
     marginBottom: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.search,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    fontSize: 15,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(10),
+    fontSize: moderateScale(14),
     fontFamily: typography.body.fontFamily,
   },
   cityList: {
-    maxHeight: 360,
+    maxHeight: moderateScale(360),
   },
   cityRow: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
   },
   yearToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
     borderRadius: radius.xs,
   },
   yearRow: {
-    paddingVertical: spacing.md,
+    paddingVertical: moderateScale(12),
     borderBottomWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
@@ -889,7 +888,7 @@ const styles = StyleSheet.create({
   monthGridItem: {
     flex: 1,
     margin: 4,
-    paddingVertical: spacing.md,
+    paddingVertical: moderateScale(12),
     borderRadius: radius.md,
     borderWidth: 1,
     alignItems: 'center',
@@ -898,9 +897,9 @@ const styles = StyleSheet.create({
   textArea: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
-    minHeight: 100,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(12),
+    minHeight: moderateScale(90),
     textAlignVertical: 'top',
   },
 });

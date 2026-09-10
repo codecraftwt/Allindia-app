@@ -33,7 +33,8 @@ import { useProfileSetup } from '../../../context/ProfileSetupContext';
 import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { radius } from '../../../theme/radius';
+import { typography, moderateScale } from '../../../theme/typography';
 import { logoutToLogin } from './logoutToLogin';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -334,11 +335,11 @@ const ProfileOverviewScreen: React.FC = () => {
     // Safely parse preferred_city_ids
     let cityIds: number[] = [];
     if (Array.isArray(pref.preferred_city_ids)) {
-      cityIds = pref.preferred_city_ids.map(Number).filter(n => !isNaN(n));
+      cityIds = pref.preferred_city_ids.map((n: any) => Number(n)).filter((n: number) => !isNaN(n));
     } else if (typeof pref.preferred_city_ids === 'number') {
       cityIds = [pref.preferred_city_ids];
     } else if (typeof pref.preferred_city_ids === 'string' && pref.preferred_city_ids.trim()) {
-      cityIds = pref.preferred_city_ids.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+      cityIds = pref.preferred_city_ids.split(',').map((s: string) => Number(s.trim())).filter((n: number) => !isNaN(n));
     }
 
     if (cityIds.length > 0 && Array.isArray(cities)) {
@@ -606,9 +607,8 @@ const ProfileOverviewScreen: React.FC = () => {
 
         <Animated.ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, paddingTop: 16 }}
+          contentContainerStyle={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(100), paddingTop: moderateScale(16) }}
           keyboardShouldPersistTaps="handled"
-          delaysContentTouches={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -801,26 +801,26 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 280,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    height: moderateScale(280),
+    borderBottomLeftRadius: moderateScale(36),
+    borderBottomRightRadius: moderateScale(36),
     overflow: 'hidden',
   },
   decorativeCircle: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: moderateScale(200),
+    height: moderateScale(200),
+    borderRadius: moderateScale(100),
   },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 56,
+    height: moderateScale(52),
   },
   settingsBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -828,9 +828,9 @@ const styles = StyleSheet.create({
   profileSummaryHorizontal: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 24,
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(4),
+    paddingBottom: moderateScale(20),
   },
   avatarContainer: {
     position: 'relative',
@@ -841,9 +841,9 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   avatarCircleHuge: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: moderateScale(68),
+    height: moderateScale(68),
+    borderRadius: moderateScale(34),
     borderWidth: 3,
     borderColor: '#FFFFFF',
     overflow: 'hidden',
@@ -859,9 +859,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: moderateScale(24),
+    height: moderateScale(24),
+    borderRadius: moderateScale(12),
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -873,47 +873,47 @@ const styles = StyleSheet.create({
   },
   summaryTextLeft: {
     flex: 1,
-    marginLeft: 20,
+    marginLeft: moderateScale(16),
     alignItems: 'flex-start',
   },
   openToWorkPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    marginTop: moderateScale(10),
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(4),
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
     alignSelf: 'flex-start',
   },
   openToWorkDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: moderateScale(8),
+    height: moderateScale(8),
+    borderRadius: moderateScale(4),
     backgroundColor: '#10B981',
-    marginRight: 6,
+    marginRight: moderateScale(6),
   },
   openToWorkText: {
     color: '#FFF',
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '600',
-    marginRight: 6,
+    marginRight: moderateScale(6),
   },
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: moderateScale(4),
   },
   contentBody: {
-    paddingHorizontal: 20,
-    marginTop: -16,
+    paddingHorizontal: moderateScale(16),
+    marginTop: moderateScale(-16),
   },
   strengthCardPremium: {
-    padding: 16,
-    borderRadius: 20,
+    padding: moderateScale(14),
+    borderRadius: radius.card,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: moderateScale(14),
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -924,63 +924,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: moderateScale(14),
   },
   percentageCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: moderateScale(52),
+    height: moderateScale(52),
+    borderRadius: moderateScale(26),
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
   },
   strengthBarBase: {
-    height: 8,
-    borderRadius: 4,
+    height: moderateScale(8),
+    borderRadius: moderateScale(4),
     overflow: 'hidden',
   },
   strengthBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: moderateScale(4),
   },
   reelsCardPremium: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 24,
+    padding: moderateScale(14),
+    borderRadius: radius.card,
+    marginBottom: moderateScale(20),
     elevation: 1,
   },
   reelsIconBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 16,
+    width: moderateScale(42),
+    height: moderateScale(42),
+    borderRadius: moderateScale(14),
     alignItems: 'center',
     justifyContent: 'center',
   },
   newBadge: {
     backgroundColor: '#EC4899',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(8),
   },
   newBadgeText: {
     color: '#FFF',
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   groupContainer: {
-    marginBottom: 24,
+    marginBottom: moderateScale(20),
   },
   groupTitle: {
-    marginLeft: 8,
-    marginBottom: 10,
+    marginLeft: moderateScale(8),
+    marginBottom: moderateScale(8),
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   groupCard: {
-    borderRadius: 24,
+    borderRadius: radius.card,
     borderWidth: 1,
     overflow: 'hidden',
     elevation: 1,
@@ -992,44 +992,44 @@ const styles = StyleSheet.create({
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: moderateScale(14),
   },
   settingsIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingsText: {
     flex: 1,
-    marginLeft: 16,
-    marginRight: 12,
+    marginLeft: moderateScale(14),
+    marginRight: moderateScale(10),
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: radius.sm,
   },
   proTipPremium: {
     flexDirection: 'row',
-    padding: 20,
-    borderRadius: 20,
+    padding: moderateScale(16),
+    borderRadius: radius.card,
     borderWidth: 1,
-    marginTop: 8,
-    marginBottom: 30,
+    marginTop: moderateScale(8),
+    marginBottom: moderateScale(24),
     alignItems: 'flex-start',
   },
   proTipText: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: moderateScale(14),
   },
   uploadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  pickerContainer: { borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
-  pickerLine: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 24 },
-  pickerMenuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
-  pickerIconWrapSmall: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  pickerContainer: { borderTopLeftRadius: moderateScale(28), borderTopRightRadius: moderateScale(28), padding: moderateScale(20), paddingBottom: moderateScale(36) },
+  pickerLine: { width: moderateScale(36), height: moderateScale(4), borderRadius: moderateScale(2), alignSelf: 'center', marginBottom: moderateScale(20) },
+  pickerMenuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: moderateScale(14) },
+  pickerIconWrapSmall: { width: moderateScale(34), height: moderateScale(34), borderRadius: moderateScale(8), alignItems: 'center', justifyContent: 'center' },
   viewerBackground: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
   viewerClose: { position: 'absolute', top: 40, right: 20, zIndex: 10, padding: 10 },
   fullImage: { width: width, height: height * 0.8 },
@@ -1042,8 +1042,8 @@ const styles = StyleSheet.create({
   },
   guestCard: {
     width: '100%',
-    padding: 24,
-    borderRadius: 32,
+    padding: moderateScale(20),
+    borderRadius: radius.card,
     borderWidth: 1,
     alignItems: 'center',
     elevation: 4,
@@ -1053,35 +1053,35 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   guestIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(72),
+    height: moderateScale(72),
+    borderRadius: moderateScale(36),
     alignItems: 'center',
     justifyContent: 'center',
   },
   guestActionBox: {
     width: '100%',
-    marginTop: 32,
-    gap: 16,
+    marginTop: moderateScale(28),
+    gap: moderateScale(14),
   },
   guestLoginBtn: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: moderateScale(8),
   },
   guestBenefits: {
-    marginTop: 40,
-    gap: 12,
+    marginTop: moderateScale(32),
+    gap: moderateScale(10),
   },
   benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  modalContainer: { borderTopLeftRadius: 32, borderTopRightRadius: 32, maxHeight: '85%' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
-  modalContent: { padding: 24, paddingBottom: 40 },
-  languageItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, borderWidth: 1, borderRadius: 16 },
+  modalContainer: { borderTopLeftRadius: moderateScale(28), borderTopRightRadius: moderateScale(28), maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: moderateScale(20), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  modalContent: { padding: moderateScale(20), paddingBottom: moderateScale(36) },
+  languageItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: moderateScale(14), paddingHorizontal: moderateScale(14), borderWidth: 1, borderRadius: radius.md },
   languageItemIcon: { alignItems: 'center' },
-  languageItemText: { flex: 1, marginLeft: 12 },
+  languageItemText: { flex: 1, marginLeft: moderateScale(10) },
 });
 
 export default ProfileOverviewScreen;

@@ -714,6 +714,17 @@
     "createNewAccount": "ಹೊಸ ಖಾತೆ ರಚಿಸಿ",
     "orDivider": "ಅಥವಾ",
     "browseAsGuest": "ಅತಿಥಿಯಾಗಿ ಬ್ರೌಸ್ ಮಾಡಿ",
-    "trustBadgeText": "ಪರಿಶೀಲಿಸಿದ ಉದ್ಯೋಗದಾತರು • ಸುರಕ್ಷಿತ ಗೌಪ್ಯತೆ"
+    "trustBadgeText": "ಪರಿಶೀಲಿಸಿದ ಉದ್ಯೋಗದಾತರು • ಸುರಕ್ಷಿತ ಗೌಪ್ಯತೆ",
+    "signIn": "ಸೈನ್ ಇನ್",
+    "signUp": "ಸೈನ್ ಅಪ್",
+    "dontHaveAccount": "ಖಾತೆ ಇಲ್ಲವೇ?",
+    "emailOrPhoneLabel": "ಇಮೇಲ್ ಅಥವಾ ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+    "emailOrPhonePlaceholder": "ನಿಮ್ಮ ಇಮೇಲ್ ಅಥವಾ ಫೋನ್ ನಮೂದಿಸಿ",
+    "emailRequiredForEmail": "ಇಮೇಲ್ ಪರಿಶೀಲನೆಗಾಗಿ ಇಮೇಲ್ ಅಗತ್ಯವಿದೆ",
+    "sendVerificationCodeTo": "ಪರಿಶೀಲನಾ ಕೋಡ್ ಕಳುಹಿಸಿ:",
+    "register": "ಖಾತೆ ರಚಿಸಿ",
+    "login": "ಸೈನ್ ಇನ್",
+    "loginSubtitle": "ಈಗಿರುವ ಖಾತೆ",
+    "skip": "ಅತಿಥಿಯಾಗಿ ಅನ್ವೇಷಿಸಿ"
   }
 }

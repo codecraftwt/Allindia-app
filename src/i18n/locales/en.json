@@ -718,6 +718,17 @@
     "createNewAccount": "Create New Account",
     "orDivider": "OR",
     "browseAsGuest": "Browse as Guest",
-    "trustBadgeText": "Verified Employers • Secure Privacy"
+    "trustBadgeText": "Verified Employers • Secure Privacy",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "dontHaveAccount": "Don't have an account?",
+    "emailOrPhoneLabel": "Email or Phone Number",
+    "emailOrPhonePlaceholder": "Enter your email or phone",
+    "emailRequiredForEmail": "Email is required for Email verification",
+    "sendVerificationCodeTo": "Send verification code via:",
+    "register": "Create Account",
+    "login": "Sign In",
+    "loginSubtitle": "Existing Account",
+    "skip": "Explore as Guest"
   }
 }

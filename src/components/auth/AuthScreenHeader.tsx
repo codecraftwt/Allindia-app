@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import type { ThemeColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
+import { radius } from '../../theme/radius';
 
 type Props = {
   title?: string;
@@ -21,7 +22,7 @@ export const AuthScreenHeader: React.FC<Props> = ({ title, onBack, colors }) => 
         styles.leftBtn,
         { backgroundColor: pressed ? colors.surfaceMuted : 'transparent' },
       ]}>
-      <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+      <Icon name="chevron-left" size={moderateScale(20)} color={colors.textPrimary} />
     </Pressable>
 
     {title ? (
@@ -44,20 +45,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
-    minHeight: 48,
+    minHeight: moderateScale(48),
   },
   sideSlot: {
-    width: 44,
-    height: 44,
+    width: moderateScale(44),
+    height: moderateScale(44),
   },
   leftBtn: {
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     flex: 1,
-    fontSize: 17,
+    fontSize: moderateScale(17),
     textAlign: 'center',
   },
   titlePlaceholder: {

@@ -11,7 +11,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, clearAllNotifications, ApiNotification } from '../../../redux/slice/notificationSlice';
 import type { RootState, AppDispatch } from '../../../redux/store';
 import { useTranslation } from 'react-i18next';
@@ -53,13 +53,13 @@ function NotificationRow({ item, colors, onPress, t }: { item: ApiNotification; 
         },
       ]}>
       <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-        <Icon name={isJob ? 'briefcase' : 'building-o'} size={18} color={iconColor} />
+        <Icon name={isJob ? 'briefcase' : 'building-o'} size={moderateScale(18)} color={iconColor} />
       </View>
       <View style={styles.cardBody}>
         <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4 }]} numberOfLines={3}>
+        <Text style={[typography.small, { color: colors.textSecondary, marginTop: moderateScale(4) }]} numberOfLines={3}>
           {item.message}
         </Text>
         <View style={styles.cardFooter}>
@@ -164,8 +164,8 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.backBtn} accessibilityLabel="Go back">
-            <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+          <Pressable onPress={() => navigation.goBack()} hitSlop={moderateScale(10)} style={styles.backBtn} accessibilityLabel="Go back">
+            <Icon name="chevron-left" size={moderateScale(20)} color={colors.textPrimary} />
           </Pressable>
         </View>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
@@ -174,11 +174,11 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.headerRight}>
           {notifications.length > 0 && (
             <>
-              <Pressable onPress={handleMarkAllRead} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Mark all read">
-                <Icon name="check-square-o" size={22} color={colors.primary} />
+              <Pressable onPress={handleMarkAllRead} hitSlop={moderateScale(10)} style={styles.actionBtn} accessibilityLabel="Mark all read">
+                <Icon name="check-square-o" size={moderateScale(20)} color={colors.primary} />
               </Pressable>
-              <Pressable onPress={handleClearAll} hitSlop={12} style={styles.actionBtn} accessibilityLabel="Clear all">
-                <Icon name="trash-o" size={22} color={colors.error} />
+              <Pressable onPress={handleClearAll} hitSlop={moderateScale(10)} style={styles.actionBtn} accessibilityLabel="Clear all">
+                <Icon name="trash-o" size={moderateScale(20)} color={colors.error} />
               </Pressable>
             </>
           )}
@@ -208,7 +208,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
                     onPress={() => handleDelete(item.id)}
                     style={[styles.deleteAction, { backgroundColor: colors.error }]}
                   >
-                    <Icon name="trash" size={20} color="#FFF" />
+                    <Icon name="trash" size={moderateScale(18)} color="#FFF" />
                   </Pressable>
                 </View>
               )}
@@ -218,7 +218,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
                   swipeable.close();
                 }
               }}
-              rightThreshold={80}
+              rightThreshold={moderateScale(70)}
             >
               <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} t={t} />
             </Swipeable>
@@ -246,15 +246,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
+    paddingVertical: moderateScale(6),
     borderBottomWidth: StyleSheet.hairlineWidth,
     maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
   },
   backBtn: {
-    width: 44,
-    height: 44,
+    width: moderateScale(40),
+    height: moderateScale(40),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     maxWidth: 768,
     width: '100%',
@@ -284,8 +284,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: moderateScale(40),
+    height: moderateScale(40),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -303,37 +303,37 @@ const styles = StyleSheet.create({
   },
   typePill: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: moderateScale(3),
     borderRadius: radius.sm,
   },
   deleteActionContainer: {
-    width: 80,
+    width: moderateScale(70),
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
   deleteAction: {
-    width: 70,
+    width: moderateScale(60),
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: radius.card,
   },
   headerLeft: {
-    width: 80,
+    width: moderateScale(70),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
   headerRight: {
-    width: 80,
+    width: moderateScale(70),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: spacing.xs,
   },
   actionBtn: {
-    width: 36,
-    height: 40,
+    width: moderateScale(34),
+    height: moderateScale(38),
     alignItems: 'center',
     justifyContent: 'center',
   },

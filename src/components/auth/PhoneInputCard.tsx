@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import type { ThemeColors } from '../../theme/colors';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 
 type Props = {
   value: string;
@@ -53,7 +53,7 @@ export const PhoneInputCard: React.FC<Props> = ({
               borderRightColor: colors.border,
             },
           ]}>
-          <Icon name="phone" size={20} color={colors.primary} />
+          <Icon name="phone" size={moderateScale(18)} color={colors.primary} />
           <Text style={[typography.labelMedium, styles.code, { color: colors.textPrimary }]}>
             +91
           </Text>
@@ -73,7 +73,7 @@ export const PhoneInputCard: React.FC<Props> = ({
       </View>
       {error ? (
         <View style={styles.errorRow}>
-          <Icon name="exclamation-circle" size={16} color={colors.error} />
+          <Icon name="exclamation-circle" size={moderateScale(15)} color={colors.error} />
           <Text style={[typography.small, { color: colors.error, flex: 1 }]}>{error}</Text>
         </View>
       ) : null}
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     borderWidth: 1,
     overflow: 'hidden',
-    minHeight: 56,
+    minHeight: moderateScale(54),
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07,
     shadowRadius: 12,
@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
     borderRightWidth: StyleSheet.hairlineWidth,
   },
   code: {
-    fontSize: 16,
+    fontSize: moderateScale(15),
   },
   input: {
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: 17,
+    fontSize: moderateScale(16),
     letterSpacing: 0.3,
     fontFamily: typography.body.fontFamily,
   },

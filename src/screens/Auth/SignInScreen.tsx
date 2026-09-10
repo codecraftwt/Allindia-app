@@ -25,7 +25,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { registerCandidate } from '../../redux/slice/authSlice';
 import type { RootState, AppDispatch } from '../../redux/store';
 
@@ -347,9 +347,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   blob: {
     position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
+    width: moderateScale(180),
+    height: moderateScale(180),
+    borderRadius: moderateScale(90),
   },
   scroll: {
     flexGrow: 1,
@@ -359,14 +359,14 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    maxWidth: 440,
+    maxWidth: moderateScale(440),
     width: '100%',
     alignSelf: 'center',
   },
   heroCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: radius.xl,
+    width: moderateScale(88),
+    height: moderateScale(88),
+    borderRadius: moderateScale(44),
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
@@ -385,16 +385,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     paddingHorizontal: spacing.md,
-    height: 56,
+    minHeight: moderateScale(52),
   },
   inputIcon: {
     marginRight: spacing.sm,
-    width: 20,
+    width: moderateScale(20),
     textAlign: 'center',
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: moderateScale(15),
     fontFamily: typography.body.fontFamily,
   },
   channelContainer: {
@@ -418,11 +418,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
+    minHeight: moderateScale(48),
   },
   channelIconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: moderateScale(17),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -431,9 +432,9 @@ const styles = StyleSheet.create({
     top: -6,
     right: -6,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    borderRadius: moderateScale(10),
+    width: moderateScale(20),
+    height: moderateScale(20),
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -458,7 +459,7 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     width: '90%',
-    maxWidth: 400,
+    maxWidth: moderateScale(380),
     borderRadius: radius.lg,
     padding: spacing.xl,
     alignItems: 'center',
@@ -469,16 +470,16 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   statusIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(72),
+    height: moderateScale(72),
+    borderRadius: moderateScale(36),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
   statusBtn: {
     width: '100%',
-    height: 52,
+    height: moderateScale(50),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

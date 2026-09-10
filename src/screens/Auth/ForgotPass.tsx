@@ -26,7 +26,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 
 import { useDispatch } from 'react-redux';
 import { forgotPasswordCandidate, resetPasswordCandidate, verifyForgotPasswordOtp, loginCandidate } from '../../redux/slice/authSlice';
@@ -496,19 +496,19 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: moderateScale(spacing.lg),
+    paddingTop: moderateScale(spacing.sm),
+    paddingBottom: moderateScale(spacing.xxl),
   },
   content: {
     flex: 1,
-    maxWidth: 440,
+    maxWidth: moderateScale(440),
     width: '100%',
     alignSelf: 'center',
   },
   heroCircle: {
-    width: 96,
-    height: 96,
+    width: moderateScale(96),
+    height: moderateScale(96),
     borderRadius: radius.xl,
     borderWidth: 1.5,
     alignItems: 'center',
@@ -516,28 +516,28 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   inputContainer: {
-    gap: spacing.lg,
-    marginBottom: spacing.xl,
-    marginTop: spacing.md,
+    gap: moderateScale(spacing.lg),
+    marginBottom: moderateScale(spacing.xl),
+    marginTop: moderateScale(spacing.md),
   },
   inputGroup: {
-    gap: 8,
+    gap: moderateScale(8),
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: moderateScale(4),
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius.lg,
     borderWidth: 1.5,
-    paddingHorizontal: spacing.md,
-    height: 58,
+    paddingHorizontal: moderateScale(spacing.md),
+    height: moderateScale(56),
   },
   inputIcon: {
-    marginRight: spacing.sm,
+    marginRight: moderateScale(spacing.sm),
   },
   input: {
     flex: 1,
@@ -546,31 +546,31 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionBtn: {
-    marginTop: spacing.md,
-    height: 56,
+    marginTop: moderateScale(spacing.md),
+    height: moderateScale(54),
     borderRadius: radius.lg,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.xl,
-    gap: spacing.xs,
+    marginTop: moderateScale(spacing.xl),
+    gap: moderateScale(spacing.xs),
   },
   otpSection: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xl,
+    marginTop: moderateScale(spacing.md),
+    marginBottom: moderateScale(spacing.xl),
   },
   otpLabel: {
-    marginBottom: spacing.sm,
-    marginLeft: 4,
+    marginBottom: moderateScale(spacing.sm),
+    marginLeft: moderateScale(4),
   },
   otpBlock: {
     alignItems: 'center',
   },
   resendLink: {
-    marginTop: spacing.lg,
-    padding: spacing.xs,
+    marginTop: moderateScale(spacing.lg),
+    padding: moderateScale(spacing.xs),
   },
   statusOverlay: {
     flex: 1,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     width: '90%',
-    maxWidth: 400,
+    maxWidth: moderateScale(400),
     borderRadius: radius.lg,
     padding: spacing.xl,
     alignItems: 'center',
@@ -592,24 +592,24 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   statusIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(80),
+    height: moderateScale(80),
+    borderRadius: moderateScale(40),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
   statusBtn: {
     width: '100%',
-    height: 52,
+    height: moderateScale(52),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    marginTop: 16,
+    marginTop: moderateScale(16),
   },
   successLoader: {
-    paddingBottom: 8,
+    paddingBottom: moderateScale(8),
   },
 });
 

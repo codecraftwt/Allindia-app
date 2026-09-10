@@ -22,7 +22,7 @@ import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileEducation'>;
@@ -340,8 +340,8 @@ const ProfileEducationEditScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   entryCard: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.card,
+    padding: moderateScale(14),
     marginBottom: spacing.md,
     position: 'relative',
   },
@@ -358,8 +358,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(12),
   },
   modalOverlay: {
     flex: 1,
@@ -367,35 +367,35 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: moderateScale(24),
+    borderTopRightRadius: moderateScale(24),
     maxHeight: '70%',
-    paddingBottom: spacing.lg,
+    paddingBottom: moderateScale(24),
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(14),
   },
   list: {
-    maxHeight: 400,
+    maxHeight: moderateScale(380),
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
   },
   textArea: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radius.card,
-    padding: spacing.md,
-    height: 120,
+    padding: moderateScale(12),
+    height: moderateScale(110),
     textAlignVertical: 'top',
-    fontSize: 15,
+    fontSize: moderateScale(14),
   },
   errorText: {
     ...typography.small,
@@ -403,14 +403,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   centerLoader: {
-    paddingVertical: 50,
+    paddingVertical: moderateScale(40),
     alignItems: 'center',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.md,
+    padding: moderateScale(12),
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderStyle: 'dashed',

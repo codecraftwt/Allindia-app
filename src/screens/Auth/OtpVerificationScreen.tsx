@@ -23,7 +23,7 @@ import { useProfileSetup } from '../../context/ProfileSetupContext';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { useDispatch } from 'react-redux';
 import { verifyRegisterOtp, resendRegisterOtp } from '../../redux/slice/authSlice';
 import type { AppDispatch } from '../../redux/store';
@@ -148,7 +148,11 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
                       shadowColor: colors.shadow,
                     },
                   ]}>
-                  <Icon name={isWhatsApp ? 'whatsapp' : 'envelope'} size={32} color={isWhatsApp ? '#25D366' : colors.primary} />
+                  <Icon
+                    name={isWhatsApp ? 'whatsapp' : 'envelope-o'}
+                    size={moderateScale(40)}
+                    color={isWhatsApp ? '#25D366' : colors.primary}
+                  />
                 </View>
               }
             />
@@ -157,38 +161,42 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
               style={[
                 styles.phoneChip,
                 {
-                  backgroundColor: isWhatsApp ? '#25D36615' : colors.surfaceHighlight,
-                  borderColor: isWhatsApp ? '#25D36630' : colors.border,
+                  backgroundColor: colors.surface,
+                  borderColor: isWhatsApp ? '#25D36666' : colors.border,
                   shadowColor: colors.shadow,
                 },
               ]}>
-              <Icon name={isWhatsApp ? 'whatsapp' : 'envelope-o'} size={16} color={isWhatsApp ? '#25D366' : colors.primary} />
-              <Text style={[typography.labelMedium, styles.phoneText, { color: isWhatsApp ? '#25D366' : colors.textPrimary }]}>
-                {isWhatsApp ? maskPhone(phone) : (email ? maskEmail(email) : maskPhone(phone))}
+              <Icon
+                name={isWhatsApp ? 'whatsapp' : 'envelope'}
+                size={moderateScale(14)}
+                color={isWhatsApp ? '#25D366' : colors.primary}
+              />
+              <Text style={[typography.labelMedium, styles.phoneText, { color: colors.textPrimary }]}>
+                {isWhatsApp ? maskPhone(phone) : maskEmail(email || '')}
               </Text>
             </View>
 
-            <Text style={[typography.small, styles.otpLabel, { color: colors.textSecondary }]}>
-              4-digit code
-            </Text>
             <View style={styles.otpBlock}>
+              <Text style={[typography.labelMedium, styles.otpLabel, { color: colors.textSecondary }]}>
+                4-digit Code
+              </Text>
               <OtpDigitInputs value={otp} onChange={setOtp} colors={colors} />
             </View>
-            
-            {!!errorMsg && (
-              <Text style={[typography.small, { color: colors.error, marginBottom: spacing.md, textAlign: 'center' }]}>
-                {errorMsg}
-              </Text>
-            )}
 
-            {!!successMsg && (
-              <Text style={[typography.small, { color: colors.success, marginBottom: spacing.md, textAlign: 'center', fontWeight: 'bold' }]}>
-                {successMsg}
-              </Text>
-            )}
+            {errorMsg ? (
+              <View style={{ marginBottom: spacing.md, padding: spacing.sm, backgroundColor: colors.error + '15', borderRadius: radius.sm, borderWidth: 1, borderColor: colors.error }}>
+                <Text style={[typography.small, { color: colors.error, textAlign: 'center' }]}>{errorMsg}</Text>
+              </View>
+            ) : null}
+
+            {successMsg ? (
+              <View style={{ marginBottom: spacing.md, padding: spacing.sm, backgroundColor: colors.success + '15', borderRadius: radius.sm, borderWidth: 1, borderColor: colors.success }}>
+                <Text style={[typography.small, { color: colors.success, textAlign: 'center' }]}>{successMsg}</Text>
+              </View>
+            ) : null}
 
             <PrimaryButton
-              title="Verify & continue"
+              title="Verify & Continue"
               onPress={handleVerify}
               disabled={!otpComplete}
               loading={verifying}
@@ -199,38 +207,36 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
               {canResend ? (
                 <Pressable
                   onPress={handleResend}
-                  hitSlop={12}
                   style={({ pressed }) => [
                     styles.resendBtn,
                     {
-                      backgroundColor: pressed ? colors.surfaceMuted : colors.surface,
+                      backgroundColor: pressed ? colors.surfaceHighlight : colors.surface,
                       borderColor: colors.border,
                     },
                   ]}>
-                  <Icon name="refresh" size={16} color={colors.primary} />
-                  <Text style={[typography.labelMedium, { color: colors.primary }]}>Resend OTP</Text>
+                  <Icon name="refresh" size={moderateScale(14)} color={colors.primary} />
+                  <Text style={[typography.labelMedium, { color: colors.primary }]}>
+                    Resend OTP
+                  </Text>
                 </Pressable>
               ) : (
                 <View
                   style={[
                     styles.timerRow,
-                    {
-                      backgroundColor: colors.surfaceSecondary,
-                      borderColor: colors.border,
-                    },
+                    { backgroundColor: colors.surfaceHighlight, borderColor: colors.border },
                   ]}>
-                  <Icon name="clock-o" size={14} color={colors.textPlaceholder} />
-                  <Text style={[typography.small, { color: colors.textSecondary }]}>
-                    Resend in {secondsLeft}s
+                  <Icon name="clock-o" size={moderateScale(14)} color={colors.textSecondary} />
+                  <Text style={[typography.body, { color: colors.textSecondary }]}>
+                    Resend in <Text style={{ color: colors.textPrimary, fontWeight: 'bold' }}>{secondsLeft}s</Text>
                   </Text>
                 </View>
               )}
             </View>
 
             <View style={styles.trustRow}>
-              <Icon name="lock" size={14} color={colors.textPlaceholder} />
-              <Text style={[typography.small, styles.trustText, { color: colors.textPlaceholder }]}>
-                Codes are for your eyes only. JobIndia never asks for OTPs over a phone call.
+              <Icon name="lock" size={moderateScale(15)} color={colors.textSecondary} style={{ marginTop: 2 }} />
+              <Text style={[typography.small, styles.trustText, { color: colors.textSecondary }]}>
+                We will only send verification codes — no spam or unsolicited messages.
               </Text>
             </View>
           </View>
@@ -241,8 +247,12 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  flex: { flex: 1 },
+  safe: {
+    flex: 1,
+  },
+  flex: {
+    flex: 1,
+  },
   blob: {
     position: 'absolute',
     width: 180,
@@ -251,19 +261,19 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: moderateScale(spacing.lg),
+    paddingTop: moderateScale(spacing.sm),
+    paddingBottom: moderateScale(spacing.xxl),
   },
   content: {
     flex: 1,
-    maxWidth: 440,
+    maxWidth: moderateScale(440),
     width: '100%',
     alignSelf: 'center',
   },
   heroCircle: {
-    width: 96,
-    height: 96,
+    width: moderateScale(96),
+    height: moderateScale(96),
     borderRadius: radius.xl,
     borderWidth: 1.5,
     alignItems: 'center',
@@ -277,12 +287,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
+    gap: moderateScale(spacing.sm),
+    paddingVertical: moderateScale(spacing.sm + 2),
+    paddingHorizontal: moderateScale(spacing.md),
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: spacing.lg,
+    marginBottom: moderateScale(spacing.lg),
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -302,32 +312,32 @@ const styles = StyleSheet.create({
   resendRow: {
     marginTop: spacing.lg,
     alignItems: 'center',
-    minHeight: 44,
+    minHeight: moderateScale(44),
     justifyContent: 'center',
   },
   resendBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    gap: moderateScale(spacing.sm),
+    paddingVertical: moderateScale(spacing.sm),
+    paddingHorizontal: moderateScale(spacing.md),
     borderRadius: radius.button,
     borderWidth: StyleSheet.hairlineWidth,
   },
   timerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    gap: moderateScale(spacing.sm),
+    paddingVertical: moderateScale(spacing.sm),
+    paddingHorizontal: moderateScale(spacing.md),
     borderRadius: radius.button,
     borderWidth: StyleSheet.hairlineWidth,
   },
   trustRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
+    gap: moderateScale(spacing.sm),
+    marginTop: moderateScale(spacing.xl),
     paddingHorizontal: spacing.xs,
   },
   trustText: {

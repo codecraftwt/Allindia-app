@@ -15,7 +15,7 @@ import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileSkills'>;
@@ -242,35 +242,35 @@ const styles = StyleSheet.create({
   selectField: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    height: 56,
-    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(14),
+    height: moderateScale(50),
+    borderRadius: radius.card,
     borderWidth: 1,
     gap: spacing.sm,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(14),
+    borderRadius: radius.card,
     borderWidth: 1,
   },
   addBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(6),
     borderRadius: radius.sm,
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: moderateScale(8),
     marginTop: spacing.sm,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(6),
     borderRadius: radius.pill,
     borderWidth: 1,
   },
@@ -280,26 +280,26 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.lg,
+    borderTopLeftRadius: moderateScale(24),
+    borderTopRightRadius: moderateScale(24),
+    padding: moderateScale(16),
     maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   modalSearchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(12),
+    borderRadius: radius.card,
     marginBottom: spacing.md,
   },
   modalItem: {
-    paddingVertical: spacing.md,
+    paddingVertical: moderateScale(12),
     borderBottomWidth: 1,
   },
   emptyContainer: {

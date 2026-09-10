@@ -14,7 +14,7 @@ import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 type Props = StackScreenProps<ProfileStackParamList, 'ProfileResume'>;
@@ -111,7 +111,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.cardContainer}>
           <View style={[styles.preview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.docIcon, { backgroundColor: colors.primary + '15' }]}>
-              <Icon name="file-pdf-o" size={24} color={colors.primary} />
+              <Icon name="file-pdf-o" size={moderateScale(24)} color={colors.primary} />
             </View>
             <View style={styles.previewText}>
               <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>
@@ -123,10 +123,10 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             <View style={styles.actionRow}>
               <Pressable onPress={handleViewResume} style={styles.actionBtn} hitSlop={10}>
-                <Icon name="eye" size={20} color={colors.primary} />
+                <Icon name="eye" size={moderateScale(20)} color={colors.primary} />
               </Pressable>
               <Pressable onPress={() => setShowDeleteModal(true)} style={styles.actionBtn} hitSlop={10}>
-                <Icon name="trash-o" size={20} color={colors.error} />
+                <Icon name="trash-o" size={moderateScale(20)} color={colors.error} />
               </Pressable>
             </View>
           </View>
@@ -141,12 +141,12 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
           disabled={profileLoading}
           style={[styles.uploadBox, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '30', borderStyle: 'dashed' }]}>
           <View style={[styles.uploadCircle, { backgroundColor: colors.primary + '10' }]}>
-            <Icon name="cloud-upload" size={32} color={colors.primary} />
+            <Icon name="cloud-upload" size={moderateScale(32)} color={colors.primary} />
           </View>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: spacing.md }]}>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary, marginTop: moderateScale(spacing.md) }]}>
             {profileLoading ? t('profileResume.uploading', 'Uploading...') : t('profileResume.tapToUpload', 'Tap to upload resume')}
           </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center', marginTop: 4 }]}>
+          <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center', marginTop: moderateScale(4) }]}>
             {t('profileResume.fileRequirements', 'PDF, DOC, DOCX up to 5MB')}
           </Text>
         </Pressable>
@@ -154,7 +154,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
 
       {draft.resumeSkipped && !draft.resumeUri && (
         <View style={[styles.skipBanner, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
-          <Icon name="info-circle" size={18} color={colors.textSecondary} />
+          <Icon name="info-circle" size={moderateScale(18)} color={colors.textSecondary} />
           <Text style={[typography.small, { color: colors.textSecondary, flex: 1 }]}>
             {t('profileResume.skipInfo', 'You haven’t attached a file yet. You can skip and add one later.')}
           </Text>
@@ -185,7 +185,7 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
       <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
         <Pressable style={styles.modalOverlay} onPress={() => setShowDeleteModal(false)}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            <View style={[styles.deleteIconWrap, { backgroundColor: colors.error + '15' }]}><Icon name="trash" size={28} color={colors.error} /></View>
+            <View style={[styles.deleteIconWrap, { backgroundColor: colors.error + '15' }]}><Icon name="trash" size={moderateScale(28)} color={colors.error} /></View>
             <Text style={[typography.appTitle, { color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.xs }]}>{t('profileResume.deleteResumeTitle', 'Delete Resume?')}</Text>
             <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.lg }]}>{t('profileResume.deleteResumeMessage', 'Are you sure you want to remove your resume?')}</Text>
             <View style={styles.modalActions}>
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
   preview: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 20,
+    padding: moderateScale(16),
+    borderRadius: radius.card,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -213,21 +213,21 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  docIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  previewText: { flex: 1, marginLeft: 12 },
-  actionRow: { flexDirection: 'row', gap: 12 },
-  actionBtn: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)' },
-  reUploadBtn: { alignSelf: 'center', marginTop: 12, paddingVertical: 8, paddingHorizontal: 16 },
-  uploadBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40, paddingHorizontal: 20, borderRadius: 24, borderWidth: 2, marginBottom: spacing.md },
-  uploadCircle: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  docIcon: { width: moderateScale(48), height: moderateScale(48), borderRadius: moderateScale(12), alignItems: 'center', justifyContent: 'center' },
+  previewText: { flex: 1, marginLeft: moderateScale(12) },
+  actionRow: { flexDirection: 'row', gap: moderateScale(12) },
+  actionBtn: { width: moderateScale(36), height: moderateScale(36), borderRadius: moderateScale(10), alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.02)' },
+  reUploadBtn: { alignSelf: 'center', marginTop: moderateScale(12), paddingVertical: moderateScale(8), paddingHorizontal: moderateScale(16) },
+  uploadBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: moderateScale(40), paddingHorizontal: moderateScale(20), borderRadius: moderateScale(24), borderWidth: 2, marginBottom: spacing.md },
+  uploadCircle: { width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), alignItems: 'center', justifyContent: 'center', marginBottom: moderateScale(8) },
   skipBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, padding: spacing.md, borderRadius: radius.card, borderWidth: StyleSheet.hairlineWidth, marginBottom: spacing.lg },
   footer: { marginTop: spacing.md },
-  skipBtn: { alignSelf: 'center', paddingVertical: 16, width: '100%', alignItems: 'center' },
+  skipBtn: { alignSelf: 'center', paddingVertical: moderateScale(16), width: '100%', alignItems: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  modalContent: { width: '100%', maxWidth: 320, borderRadius: 24, padding: spacing.xl, alignItems: 'center' },
-  deleteIconWrap: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  modalContent: { width: '100%', maxWidth: moderateScale(320), borderRadius: moderateScale(24), padding: spacing.xl, alignItems: 'center' },
+  deleteIconWrap: { width: moderateScale(64), height: moderateScale(64), borderRadius: moderateScale(32), alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
   modalActions: { flexDirection: 'row', gap: spacing.md, width: '100%' },
-  modalBtn: { flex: 1, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  modalBtn: { flex: 1, height: moderateScale(48), borderRadius: moderateScale(12), alignItems: 'center', justifyContent: 'center' },
 });
 
 export default ProfileResumeEditScreen;

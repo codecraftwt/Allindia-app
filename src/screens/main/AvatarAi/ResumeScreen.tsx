@@ -26,15 +26,15 @@ import { RootState, AppDispatch } from '../../../redux/store';
 import { fetchProfile } from '../../../redux/slice/profileSlice';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
+import { radius } from '../../../theme/radius';
+import { typography, moderateScale } from '../../../theme/typography';
 
 import { AiResumeAnalyzer } from './components/AiResumeAnalyzer';
 
-
-
 const { width } = Dimensions.get('window');
 const ORANGE_COLOR = '#FF9800';
-const CARD_WIDTH = width - 36; // Dynamic width with padding
-const CARD_HEIGHT = CARD_WIDTH * 1.4; // Proper A4 ratio aspect height
+const CARD_WIDTH = Math.min(width - 32, moderateScale(340));
+const CARD_HEIGHT = CARD_WIDTH * 1.38;
 
 const ResumeScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -195,7 +195,7 @@ const ResumeScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={{ padding: spacing.md, paddingTop: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: spacing.md, paddingTop: moderateScale(16), paddingBottom: moderateScale(160) }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -525,9 +525,9 @@ const styles = StyleSheet.create({
   hudCallout: {
     position: 'absolute',
     borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 5,
-    paddingHorizontal: 8,
+    borderRadius: radius.md,
+    paddingVertical: moderateScale(5),
+    paddingHorizontal: moderateScale(8),
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
@@ -538,10 +538,10 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   resumeCard: {
-    width: 310,
-    height: 420,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: radius.card,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     shadowColor: '#000',
@@ -555,38 +555,38 @@ const styles = StyleSheet.create({
   contactText: {
     color: '#000',
     fontWeight: 'bold',
-    fontSize: 7.8,
+    fontSize: moderateScale(8),
   },
   contactSep: {
     color: '#cbd5e1',
-    marginHorizontal: 3,
-    fontSize: 8,
+    marginHorizontal: moderateScale(3),
+    fontSize: moderateScale(8),
   },
   divider: {
     height: 1,
     backgroundColor: '#cbd5e1',
-    marginVertical: 3,
+    marginVertical: moderateScale(3),
   },
   sectionTitle: {
     color: '#FF9800',
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    fontSize: 8.2,
+    fontSize: moderateScale(8.5),
   },
   bodyText: {
     color: '#000',
     marginTop: 1,
-    fontSize: 7.8,
-    lineHeight: 12,
+    fontSize: moderateScale(8),
+    lineHeight: moderateScale(12),
   },
   aiBadge: {
     position: 'absolute',
-    bottom: 14,
-    right: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    bottom: moderateScale(14),
+    right: moderateScale(14),
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: radius.sm,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,

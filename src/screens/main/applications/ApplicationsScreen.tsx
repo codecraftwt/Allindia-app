@@ -91,7 +91,7 @@ const AppliedJobCard = React.memo(function AppliedJobCard({ job, colors, onPress
       const userName = profileData?.personal?.name || 'Candidate';
       const userExp = profileData?.preferences?.experience_type || 'Fresh';
       const userLoc = profileData?.preferences?.current_city?.city || 'India';
-      const userPhone = profileData?.personal?.phone || profileData?.personal?.mobile || user?.phone || user?.mobile || '';
+      const userPhone = profileData?.personal?.phone || profileData?.personal?.mobile || '';
       const userQual = profileData?.preferences?.qualification?.name || 'Graduate';
       const userResume = profileData?.resume_url || 'Resume attached to profile';
       const userSkills = profileData?.skills?.map((s: any) => s.name).join(', ') || 'Skills mentioned in profile';

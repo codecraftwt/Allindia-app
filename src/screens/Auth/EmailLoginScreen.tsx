@@ -27,7 +27,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { loginCandidate } from '../../redux/slice/authSlice';
 import type { RootState, AppDispatch } from '../../redux/store';
 
@@ -71,7 +71,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const onLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      showStatus('error', t('auth.requiredField'), t('auth.enterEmailPass', 'Please enter your email/phone and password.'));
+      showStatus('error', t('auth.requiredField', 'Required Field'), t('auth.enterEmailPass', 'Please enter your email/phone and password.'));
       return;
     }
 
@@ -79,15 +79,15 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
       email: identifier.trim(), 
       password: password.trim() 
     }));
-    console.log("resultAction ", resultAction)
+    console.log("resultAction ", resultAction);
 
     if (loginCandidate.fulfilled.match(resultAction)) {
-      showStatus('success', t('auth.success'), t('auth.redirectingJob'));
+      showStatus('success', t('auth.success', 'Success!'), t('auth.redirectingJob', 'Redirecting to Your Job...'));
       setTimeout(() => {
         navigation.replace('Main');
       }, 1500);
     } else {
-      showStatus('error', t('auth.loginFailed'), (resultAction.payload as string) || t('auth.invalidCredentials'));
+      showStatus('error', t('auth.loginFailed', 'Login Failed'), (resultAction.payload as string) || t('auth.invalidCredentials', 'Invalid credentials'));
     }
   };
 
@@ -101,7 +101,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled">
           <AuthScreenHeader
-            title={t('auth.loginHeader')}
+            title={t('auth.loginHeader', 'Login')}
             onBack={() => navigation.goBack()}
             colors={colors}
           />
@@ -109,12 +109,12 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.content}>
             <AuthHeadline
               colors={colors}
-              title={t('auth.welcomeBack')}
-              subtitle={t('auth.welcomeSubtitle')}
+              title={t('auth.welcomeBack', 'Welcome Back')}
+              subtitle={t('auth.welcomeSubtitle', 'Please enter your credentials to access your job dashboard.')}
               centerDecor
               decor={
                 <View style={[styles.heroCircle, { backgroundColor: colors.surface, borderColor: `${colors.primary}40` }]}>
-                  <Icon name="user-circle" size={44} color={colors.primary} />
+                  <Icon name="user-circle" size={moderateScale(44)} color={colors.primary} />
                 </View>
               }
             />
@@ -123,7 +123,7 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
               <View style={[styles.inputGroup]}>
                 <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.emailOrPhoneLabel', 'Email or Phone Number')}</Text>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                  <Icon name="user-o" size={16} color={colors.primary} style={styles.inputIcon} />
+                  <Icon name="user-o" size={moderateScale(16)} color={colors.primary} style={styles.inputIcon} />
                   <TextInput
                     placeholder={t('auth.emailOrPhonePlaceholder', 'Enter your email or phone')}
                     placeholderTextColor={colors.textPlaceholder}
@@ -137,48 +137,47 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
 
               <View style={[styles.inputGroup]}>
                 <View style={styles.passwordHeader}>
-                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.passwordLabel')}</Text>
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t('auth.passwordLabel', 'Password')}</Text>
                   <Pressable onPress={() => navigation.navigate('ForgotPass')}>
-                    <Text style={[styles.forgotText, { color: colors.primary }]}>{t('auth.forgotPassword')}</Text>
+                    <Text style={[styles.forgotText, { color: colors.primary }]}>{t('auth.forgotPassword', 'Forgot Password?')}</Text>
                   </Pressable>
                 </View>
                 <View style={[styles.inputWrapper, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-                  <Icon name="lock" size={16} color={colors.primary} style={styles.inputIcon} />
+                  <Icon name="lock" size={moderateScale(16)} color={colors.primary} style={styles.inputIcon} />
                   <TextInput
-                    placeholder={t('auth.passwordPlaceholder')}
+                    placeholder={t('auth.passwordPlaceholder', 'Enter your password')}
                     placeholderTextColor={colors.textPlaceholder}
                     style={[styles.input, { color: colors.textPrimary }]}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                   />
-                  <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={12}>
+                  <Pressable onPress={() => setShowPassword(!showPassword)}>
                     <Icon
-                      name={showPassword ? "eye" : "eye-slash"}
-                      size={18}
+                      name={showPassword ? 'eye' : 'eye-slash'}
+                      size={moderateScale(16)}
                       color={colors.textPlaceholder}
                     />
                   </Pressable>
                 </View>
               </View>
-            </View>
 
-            <PrimaryButton
-              title={loading ? t('auth.authenticating') : t('auth.signInBtn')}
-              onPress={onLogin}
-              disabled={loading}
-              loading={loading}
-              colors={colors}
-              style={styles.loginBtn}
-            />
+              <PrimaryButton
+                title={t('auth.signIn', 'Sign In')}
+                onPress={onLogin}
+                loading={loading}
+                colors={colors}
+                style={styles.loginBtn}
+              />
+            </View>
 
             <View style={styles.footer}>
               <Text style={[typography.body, { color: colors.textSecondary }]}>
-                {t('auth.newHere')}{' '}
+                {t('auth.dontHaveAccount', "Don't have an account?")}{' '}
               </Text>
               <Pressable onPress={() => navigation.navigate('SignIn')}>
-                <Text style={[typography.body, { color: colors.primary, fontWeight: '800' }]}>
-                  {t('auth.createAccountLink')}
+                <Text style={[typography.labelMedium, { color: colors.primary }]}>
+                  {t('auth.signUp', 'Sign Up')}
                 </Text>
               </Pressable>
             </View>
@@ -186,17 +185,22 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Custom Status Modal */}
+      {/* Custom Animated Status Modal */}
       <Modal
         visible={statusModal.visible}
-        transparent={true}
-        animationType="none"
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (statusModal.type === 'error') {
+            setStatusModal(prev => ({ ...prev, visible: false }));
+          }
+        }}
       >
         <View style={styles.statusOverlay}>
-          <Animated.View 
+          <Animated.View
             style={[
-              styles.statusCard, 
-              { 
+              styles.statusCard,
+              {
                 backgroundColor: colors.surface,
                 transform: [{ scale: scaleAnim }],
                 opacity: scaleAnim
@@ -206,12 +210,12 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.statusIcon, { backgroundColor: statusModal.type === 'success' ? colors.success + '20' : colors.error + '20' }]}>
               <Icon
                 name={statusModal.type === 'success' ? "check-circle" : "exclamation-circle"}
-                size={42}
+                size={moderateScale(42)}
                 color={statusModal.type === 'success' ? colors.success : colors.error}
               />
             </View>
-            <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: 8 }]}>{statusModal.title}</Text>
-            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: statusModal.type === 'success' ? 0 : 24 }]}>
+            <Text style={[typography.h3, { color: colors.textPrimary, marginBottom: moderateScale(8) }]}>{statusModal.title}</Text>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: statusModal.type === 'success' ? 0 : moderateScale(24) }]}>
               {statusModal.message}
             </Text>
 
@@ -220,13 +224,13 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
                 onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
                 style={[styles.statusBtn, { backgroundColor: colors.primary }]}
               >
-                <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('auth.gotIt')}</Text>
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>{t('auth.gotIt', 'Got it')}</Text>
               </TouchableOpacity>
             )}
             
             {statusModal.type === 'success' && (
               <View style={styles.successLoader}>
-                <ActivityIndicator size="small" color={colors.success} style={{ marginTop: 16 }} />
+                <ActivityIndicator size="small" color={colors.success} style={{ marginTop: moderateScale(16) }} />
               </View>
             )}
           </Animated.View>
@@ -241,19 +245,19 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: moderateScale(spacing.lg),
+    paddingTop: moderateScale(spacing.sm),
+    paddingBottom: moderateScale(spacing.xxl),
   },
   content: {
     flex: 1,
-    maxWidth: 440,
+    maxWidth: moderateScale(440),
     width: '100%',
     alignSelf: 'center',
   },
   heroCircle: {
-    width: 96,
-    height: 96,
+    width: moderateScale(96),
+    height: moderateScale(96),
     borderRadius: radius.xl,
     borderWidth: 1.5,
     alignItems: 'center',
@@ -261,16 +265,16 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   inputContainer: {
-    gap: spacing.lg,
-    marginBottom: spacing.xl,
+    gap: moderateScale(spacing.lg),
+    marginBottom: moderateScale(spacing.xl),
   },
   inputGroup: {
-    gap: 8,
+    gap: moderateScale(8),
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: moderateScale(4),
   },
   passwordHeader: {
     flexDirection: 'row',
@@ -286,11 +290,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.lg,
     borderWidth: 1.5,
-    paddingHorizontal: spacing.md,
-    height: 58,
+    paddingHorizontal: moderateScale(spacing.md),
+    height: moderateScale(56),
   },
   inputIcon: {
-    marginRight: spacing.sm,
+    marginRight: moderateScale(spacing.sm),
   },
   input: {
     flex: 1,
@@ -299,16 +303,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   loginBtn: {
-    marginTop: spacing.md,
-    height: 56,
+    marginTop: moderateScale(spacing.md),
+    height: moderateScale(54),
     borderRadius: radius.lg,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.xl,
-    gap: spacing.xs,
+    marginTop: moderateScale(spacing.xl),
+    gap: moderateScale(spacing.xs),
   },
   statusOverlay: {
     flex: 1,
@@ -319,7 +323,7 @@ const styles = StyleSheet.create({
   },
   statusCard: {
     width: '90%',
-    maxWidth: 400,
+    maxWidth: moderateScale(400),
     borderRadius: radius.lg,
     padding: spacing.xl,
     alignItems: 'center',
@@ -330,24 +334,24 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   statusIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(80),
+    height: moderateScale(80),
+    borderRadius: moderateScale(40),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
   statusBtn: {
     width: '100%',
-    height: 52,
+    height: moderateScale(52),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 2,
-    marginTop: 16,
+    marginTop: moderateScale(16),
   },
   successLoader: {
-    paddingBottom: 8,
+    paddingBottom: moderateScale(8),
   },
 });
 

@@ -17,59 +17,68 @@ import { AppDispatch, RootState } from '../../../redux/store';
 import { searchJobs, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import type { ThemeColors } from '../../../theme/colors';
 import SideFilterHub from '../../../components/SideFilterHub';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const company = job.employer?.company || {};
-  const location = job.location?.label || 'Remote';
-  const salary = job.salary_label || 'Negotiable';
+  const companyName = company.company_name || job.company_name || job.company || 'Hiring Company';
+  const location = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'Remote';
+  const salary = job.salary_label || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
   const tags = job.tags || [];
+  const isVerified = job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved';
 
   return (
     <Pressable 
       onPress={onPress}
-      style={[styles.premiumCard, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
+      style={[styles.premiumCard, { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.shadow }]}
     >
-      <View style={styles.cardTop}>
+      <View style={[styles.cardTop, { marginBottom: moderateScale(8) }]}>
         <View style={[styles.logoBox, { backgroundColor: colors.surfaceHighlight }]}>
           {company.company_logo_url ? (
-            <Image source={{ uri: company.company_logo_url }} style={styles.logoImage} />
+            <Image source={{ uri: company.company_logo_url }} style={styles.logoImage} resizeMode="contain" />
           ) : (
-            <Icon name="briefcase" size={20} color={colors.primary} />
+            <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
           )}
         </View>
-        <View style={styles.titleInfo}>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700', fontSize: 15 }]} numberOfLines={1}>
+        <View style={[styles.titleInfo, { paddingRight: moderateScale(22) }]}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {job.title}
           </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
-            {company.company_name || 'Hiring Company'}
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+            {companyName}
           </Text>
         </View>
-        <View style={styles.arrowBox}>
-          <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
-        </View>
+        {isVerified && (
+          <View style={{ position: 'absolute', right: 0, top: 0 }}>
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
+          </View>
+        )}
       </View>
 
-      <View style={styles.cardFooter}>
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-            <Text style={[typography.tiny, { color: colors.textSecondary, flexShrink: 1 }]} numberOfLines={1}>{location}</Text>
-          </View>
-          <View style={styles.metaDivider} />
-          <View style={styles.metaItem}>
-            <Icon name="money" size={12} color={colors.success} />
-            <Text style={[typography.tiny, { color: colors.textSecondary }]}>{salary}</Text>
-          </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
+          <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} />
+          <Text style={[typography.small, { color: colors.textSecondary, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>{location}</Text>
         </View>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>{salary}</Text>
+      </View>
+
+      <View style={[styles.cardFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        {job.job_type ? (
+          <View style={[styles.tagPill, { backgroundColor: colors.badgeBackground, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+            <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
+              {job.job_type}
+            </Text>
+          </View>
+        ) : <View />}
         {tags.length > 0 && (
-          <View style={[styles.tagPill, { backgroundColor: colors.primary + '15' }]}>
-            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]} numberOfLines={1}>
+          <View style={[styles.tagPill, { backgroundColor: colors.primary + '15', paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold', fontSize: moderateScale(10) }]} numberOfLines={1}>
               {typeof tags[0] === 'string' ? tags[0] : tags[0].name}
             </Text>
           </View>
@@ -234,8 +243,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
   },
   premiumCard: {
-    padding: spacing.md,
+    padding: moderateScale(12),
     borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
     elevation: 2,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -244,12 +254,12 @@ const styles = StyleSheet.create({
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   logoBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(8),
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -257,15 +267,15 @@ const styles = StyleSheet.create({
   logoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   titleInfo: {
     flex: 1,
   },
   arrowBox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: moderateScale(24),
+    height: moderateScale(24),
+    borderRadius: moderateScale(12),
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -21,6 +21,8 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
+import { moderateScale } from '../../theme/typography';
+import { radius } from '../../theme/radius';
 
 const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-01.png');
 const IC_LAUNCHER = require('../../assets/ic_launcher.png');
@@ -207,7 +209,7 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
 
   // Progress bar
   const progress = useRef(new Animated.Value(0)).current;
-  const PROGRESS_BAR_W = 200;
+  const PROGRESS_BAR_W = moderateScale(200);
   const barWidth = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, PROGRESS_BAR_W],
@@ -460,59 +462,59 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(6),
   },
   logo: {
-    width: 260,
-    height: 100,
+    width: moderateScale(250),
+    height: moderateScale(95),
   },
   taglineContainer: {
-    marginTop: 2,
-    paddingHorizontal: 28,
-    paddingVertical: 4,
+    marginTop: moderateScale(2),
+    paddingHorizontal: moderateScale(28),
+    paddingVertical: moderateScale(4),
     alignItems: 'center',
   },
   tricolorBar: {
     flexDirection: 'row',
-    height: 3,
+    height: moderateScale(3),
     width: '60%',
-    borderRadius: 2,
+    borderRadius: moderateScale(2),
     overflow: 'hidden',
-    marginBottom: 6,
+    marginBottom: moderateScale(6),
   },
   tricolorSegment: {
     flex: 1,
   },
   taglineSub: {
     color: 'rgba(255,255,255,0.75)',
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontWeight: '600',
     letterSpacing: 1.5,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: moderateScale(4),
     textTransform: 'uppercase',
   },
   footer: {
     position: 'absolute',
-    bottom: 50,
+    bottom: moderateScale(50),
     alignItems: 'center',
   },
   track: {
-    width: 200,
-    height: 3,
-    borderRadius: 1.5,
+    width: moderateScale(200),
+    height: moderateScale(3),
+    borderRadius: moderateScale(1.5),
     overflow: 'hidden',
-    marginBottom: 12,
+    marginBottom: moderateScale(12),
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   trackFill: {
     height: '100%',
-    borderRadius: 1.5,
+    borderRadius: moderateScale(1.5),
     backgroundColor: '#f59e0b',
   },
   footerHint: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     fontWeight: '700',
@@ -523,13 +525,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: moderateScale(24),
   },
   updateModal: {
     width: '100%',
-    maxWidth: 340,
-    borderRadius: 20,
-    padding: 24,
+    maxWidth: moderateScale(340),
+    borderRadius: radius.card,
+    padding: moderateScale(24),
     alignItems: 'center',
     elevation: 10,
     shadowColor: '#000',
@@ -538,34 +540,34 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: moderateScale(16),
   },
   updateTitle: {
-    fontSize: 22,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: moderateScale(12),
     textAlign: 'center',
   },
   updateDesc: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: moderateScale(14),
+    lineHeight: moderateScale(20),
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: moderateScale(24),
   },
   updateBtn: {
     width: '100%',
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: moderateScale(13),
+    borderRadius: radius.md,
     alignItems: 'center',
   },
   updateBtnText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: moderateScale(15),
     fontWeight: 'bold',
   },
 });

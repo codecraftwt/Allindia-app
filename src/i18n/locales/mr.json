@@ -714,6 +714,17 @@
     "createNewAccount": "नवीन खाते तयार करा",
     "orDivider": "किंवा",
     "browseAsGuest": "अतिथी म्हणून ब्राउझ करा",
-    "trustBadgeText": "सत्यापित नियोक्ते • सुरक्षित गोपनीयता"
+    "trustBadgeText": "सत्यापित नियोक्ते • सुरक्षित गोपनीयता",
+    "signIn": "साइन इन करा",
+    "signUp": "साइन अप करा",
+    "dontHaveAccount": "खाते नाही का?",
+    "emailOrPhoneLabel": "ईमेल किंवा फोन नंबर",
+    "emailOrPhonePlaceholder": "तुमचा ईमेल किंवा फोन प्रविष्ट करा",
+    "emailRequiredForEmail": "ईमेल सत्यापनासाठी ईमेल आवश्यक आहे",
+    "sendVerificationCodeTo": "सत्यापन कोड याद्वारे पाठवा:",
+    "register": "खाते तयार करा",
+    "login": "साइन इन करा",
+    "loginSubtitle": "विद्यमान खाते",
+    "skip": "अतिथी म्हणून एक्सप्लोर करा"
   }
 }

@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import { PrimaryButton } from '../../../components/auth';
 import { useToast } from '../../../context/ToastContext';
@@ -372,9 +372,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   contactIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: moderateScale(42),
+    height: moderateScale(42),
+    borderRadius: moderateScale(12),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -383,8 +383,8 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   contactBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
     borderRadius: radius.xs,
   },
   contactBadgeText: {
@@ -413,9 +413,9 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   arrowCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   inputGroup: {
-    gap: 6,
+    gap: moderateScale(6),
   },
   inputLabel: {
     ...typography.small,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: radius.md,
     overflow: 'hidden',
-    height: 48,
+    height: moderateScale(48),
   },
   input: {
     flex: 1,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     fontSize: 14,
-    height: 90,
+    height: moderateScale(90),
     textAlignVertical: 'top',
   },
   categoriesRow: {
@@ -458,8 +458,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   catBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
     borderRadius: radius.pill,
     borderWidth: 1,
     alignItems: 'center',

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'rea
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../../../context/ThemeContext';
 import { spacing } from '../../../../theme/spacing';
+import { radius } from '../../../../theme/radius';
+import { typography, moderateScale } from '../../../../theme/typography';
 
 const { width } = Dimensions.get('window');
 const ORANGE_COLOR = '#FF9800';
@@ -68,13 +70,13 @@ export const CommingSoonAi: React.FC = () => {
                 {/* Mock Voice UI */}
                 <View style={styles.voiceUiArea}>
                     <View style={styles.waveformContainer}>
-                        <View style={[styles.waveBar, { height: 12, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 28, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 42, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 18, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 35, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 14, backgroundColor: ORANGE_COLOR }]} />
-                        <View style={[styles.waveBar, { height: 8, backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(12), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(28), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(42), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(18), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(35), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(14), backgroundColor: ORANGE_COLOR }]} />
+                        <View style={[styles.waveBar, { height: moderateScale(8), backgroundColor: ORANGE_COLOR }]} />
                     </View>
 
                     <View style={styles.micOuterCircle}>
@@ -132,32 +134,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: ORANGE_COLOR + '18',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 6,
+        paddingHorizontal: moderateScale(8),
+        paddingVertical: moderateScale(2),
+        borderRadius: radius.xs,
         alignSelf: 'flex-start',
         marginBottom: 6,
     },
     badgeText: {
-        fontSize: 9,
+        fontSize: moderateScale(9),
         fontWeight: '900',
         color: ORANGE_COLOR,
         textTransform: 'uppercase',
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: moderateScale(18),
         fontWeight: '900',
         letterSpacing: -0.4,
     },
     sectionSubtitle: {
-        fontSize: 12,
-        lineHeight: 16,
+        fontSize: moderateScale(12),
+        lineHeight: moderateScale(16),
         marginTop: 2,
     },
     demoCard: {
         width: '100%',
-        borderRadius: 24,
-        padding: 16,
+        borderRadius: radius.xl,
+        padding: moderateScale(16),
         overflow: 'hidden',
         position: 'relative',
         shadowColor: '#000',
@@ -171,30 +173,28 @@ const styles = StyleSheet.create({
     mockHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        paddingHorizontal: moderateScale(14),
+        paddingVertical: moderateScale(12),
         borderBottomWidth: 1,
         borderBottomColor: '#1e293b',
-        paddingBottom: 12,
     },
     avatarContainer: {
+        width: moderateScale(36),
+        height: moderateScale(36),
         position: 'relative',
-        width: 38,
-        height: 38,
-        marginRight: 10,
+        marginRight: moderateScale(10),
     },
     avatarGlow: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        borderRadius: 19,
-        opacity: 0.35,
+        width: moderateScale(36),
+        height: moderateScale(36),
+        borderRadius: radius.pill,
+        opacity: 0.3,
     },
     avatar: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
+        width: moderateScale(36),
+        height: moderateScale(36),
+        borderRadius: radius.pill,
         backgroundColor: '#1e293b',
         justifyContent: 'center',
         alignItems: 'center',
@@ -205,9 +205,9 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         right: 0,
-        width: 10,
-        height: 10,
-        borderRadius: 5,
+        width: moderateScale(10),
+        height: moderateScale(10),
+        borderRadius: moderateScale(5),
         backgroundColor: '#10b981',
         borderWidth: 1.5,
         borderColor: '#0f172a',
@@ -217,35 +217,35 @@ const styles = StyleSheet.create({
     },
     botName: {
         color: '#f8fafc',
-        fontSize: 13,
+        fontSize: moderateScale(13),
         fontWeight: '800',
     },
     botStatus: {
         color: '#94a3b8',
-        fontSize: 10,
+        fontSize: moderateScale(10),
     },
     featureLabel: {
         backgroundColor: '#1e293b',
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
+        paddingHorizontal: moderateScale(8),
+        paddingVertical: moderateScale(3),
+        borderRadius: radius.xs,
         borderWidth: 1,
         borderColor: '#334155',
     },
     featureLabelText: {
         color: '#cbd5e1',
-        fontSize: 8,
+        fontSize: moderateScale(8),
         fontWeight: '900',
     },
     chatArea: {
-        marginBottom: 22,
+        marginBottom: moderateScale(22),
         alignItems: 'flex-start',
     },
     speechBubble: {
         backgroundColor: '#1e293b',
-        borderRadius: 16,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
+        borderRadius: radius.card,
+        paddingHorizontal: moderateScale(14),
+        paddingVertical: moderateScale(12),
         maxWidth: '90%',
         position: 'relative',
         borderWidth: 1,
@@ -266,45 +266,45 @@ const styles = StyleSheet.create({
     },
     speechText: {
         color: '#e2e8f8',
-        fontSize: 12,
-        lineHeight: 16,
+        fontSize: moderateScale(12),
+        lineHeight: moderateScale(16),
         fontStyle: 'italic',
     },
     voiceUiArea: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
+        paddingVertical: moderateScale(8),
     },
     waveformContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 50,
-        marginBottom: 16,
+        height: moderateScale(50),
+        marginBottom: moderateScale(16),
     },
     waveBar: {
-        width: 4,
-        borderRadius: 2,
-        marginHorizontal: 3.5,
+        width: moderateScale(4),
+        borderRadius: radius.xs,
+        marginHorizontal: moderateScale(3.5),
     },
     micOuterCircle: {
-        width: 64,
-        height: 64,
+        width: moderateScale(64),
+        height: moderateScale(64),
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
-        marginBottom: 10,
+        marginBottom: moderateScale(10),
     },
     micPulse: {
         position: 'absolute',
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: moderateScale(80),
+        height: moderateScale(80),
+        borderRadius: moderateScale(40),
     },
     micButton: {
-        width: 54,
-        height: 54,
-        borderRadius: 27,
+        width: moderateScale(54),
+        height: moderateScale(54),
+        borderRadius: moderateScale(27),
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: ORANGE_COLOR,
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     },
     tapToTalkText: {
         color: '#64748b',
-        fontSize: 10,
+        fontSize: moderateScale(10),
         fontWeight: '600',
     },
     comingSoonRibbon: {
@@ -323,8 +323,8 @@ const styles = StyleSheet.create({
         top: 14,
         right: -32,
         backgroundColor: ORANGE_COLOR,
-        paddingHorizontal: 30,
-        paddingVertical: 4,
+        paddingHorizontal: moderateScale(30),
+        paddingVertical: moderateScale(4),
         transform: [{ rotate: '45deg' }],
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -334,18 +334,18 @@ const styles = StyleSheet.create({
     },
     ribbonText: {
         color: '#fff',
-        fontSize: 8,
+        fontSize: moderateScale(8),
         fontWeight: '900',
         letterSpacing: 0.5,
     },
     notifyBtn: {
         width: '100%',
-        height: 48,
-        borderRadius: 14,
+        height: moderateScale(48),
+        borderRadius: radius.md,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 16,
+        marginTop: moderateScale(16),
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 6,
@@ -353,7 +353,9 @@ const styles = StyleSheet.create({
     },
     notifyBtnText: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: moderateScale(13),
         fontWeight: '800',
     },
 });
+
+export default CommingSoonAi;

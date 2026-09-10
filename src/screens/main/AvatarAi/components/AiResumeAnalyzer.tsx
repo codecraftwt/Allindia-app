@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../../../context/ThemeContext';
 import { spacing } from '../../../../theme/spacing';
+import { radius } from '../../../../theme/radius';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 const ORANGE_COLOR = '#FF9800';
@@ -35,7 +37,7 @@ export const AiResumeAnalyzer: React.FC<AiResumeAnalyzerProps> = ({ profile }) =
       {/* Trigger Button State */}
       <View style={styles.emptyContainer}>
         <View style={[styles.infoIconWrapper, { backgroundColor: ORANGE_COLOR + '10' }]}>
-          <Icon name="document-text-outline" size={32} color={ORANGE_COLOR} />
+          <Icon name="document-text-outline" size={moderateScale(30)} color={ORANGE_COLOR} />
         </View>
         <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
           Transform your profile data into an ATS-optimized professional resume. Choose from multiple stunning templates.
@@ -52,7 +54,7 @@ export const AiResumeAnalyzer: React.FC<AiResumeAnalyzerProps> = ({ profile }) =
           onPress={handleGenerateResume}
           activeOpacity={0.85}
         >
-          <Icon name="sparkles" size={16} color="#fff" style={{ marginRight: 6 }} />
+          <Icon name="sparkles" size={moderateScale(16)} color="#fff" style={{ marginRight: 6 }} />
           <Text style={styles.actionBtnText}>
             Generate AI Resume
           </Text>
@@ -65,7 +67,7 @@ export const AiResumeAnalyzer: React.FC<AiResumeAnalyzerProps> = ({ profile }) =
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    borderRadius: 18,
+    borderRadius: radius.card,
     borderWidth: 1,
     padding: spacing.md,
     marginTop: spacing.xs,
@@ -80,39 +82,39 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: '900',
     letterSpacing: -0.4,
   },
   sectionSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: moderateScale(12),
+    lineHeight: moderateScale(16),
     marginTop: 2,
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: moderateScale(10),
   },
   infoIconWrapper: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: moderateScale(12),
   },
   emptyText: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: moderateScale(12),
+    lineHeight: moderateScale(18),
     textAlign: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 12,
+    marginBottom: moderateScale(16),
+    paddingHorizontal: moderateScale(12),
   },
   actionBtn: {
     flexDirection: 'row',
-    height: 44,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    height: moderateScale(44),
+    paddingHorizontal: moderateScale(20),
+    borderRadius: radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     shadowOffset: { width: 0, height: 4 },
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: '800',
   },
 });

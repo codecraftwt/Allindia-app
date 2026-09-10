@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import type { ThemeColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
+import { radius } from '../../theme/radius';
 
 export const OTP_LENGTH = 4;
 
@@ -129,12 +130,12 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    minWidth: 44,
-    maxWidth: 52,
-    height: 54,
-    borderRadius: 12,
+    minWidth: moderateScale(44),
+    maxWidth: moderateScale(54),
+    height: moderateScale(54),
+    borderRadius: radius.md,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontFamily: typography.jobTitle.fontFamily,
     paddingVertical: 0,
     paddingHorizontal: 0,

@@ -17,6 +17,7 @@ import {
   BackHandler,
   Image,
   Alert,
+  NativeModules,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -26,7 +27,7 @@ import { RootState, AppDispatch } from '../../../redux/store';
 import { pick, types, isErrorWithCode, errorCodes } from '@react-native-documents/picker';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { useTheme } from '../../../context/ThemeContext';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import {
@@ -36,8 +37,7 @@ import {
   updatePersonalProfile,
 } from '../../../redux/slice/profileSlice';
 import { fetchMetaQualifications } from '../../../redux/slice/metaSlice';
-import { generateAIResume, AIResumeResponse, generateAISuggestions } from '../../../services/geminiService';
-import { extractResumeFromPDF } from '../../../services/giminiServiceNew';
+import { generateAIResume, AIResumeResponse, extractResumeFromPDF } from '../../../services/giminiServiceNew';
 import GuestView from '../../../components/GuestView';
 import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 import { AiResumeWorkspace } from './components/AiResumeWorkspace';
@@ -834,8 +834,8 @@ const AIAssistantScreen: React.FC = () => {
     };
   }, []);
 
-  // Screen States: 'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE'
-  const [currentScreen, setCurrentScreen] = useState<'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES'>('UPLOAD');
+  // Screen States: 'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES'
+  const [currentScreen, setCurrentScreen] = useState<'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES'>('UPLOAD');
 
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -949,7 +949,7 @@ const AIAssistantScreen: React.FC = () => {
             school_university: university,
             passing_year: profile?.education?.[0]?.passing_year || 2026,
             gpa_percentage: profile?.education?.[0]?.gpa_percentage || '80%',
-          })
+          } as any)
         ).unwrap();
       }
 
@@ -965,16 +965,16 @@ const AIAssistantScreen: React.FC = () => {
             start_date: profile?.experience?.[0]?.start_date || '2025-01-01',
             end_date: profile?.experience?.[0]?.end_date || null,
             is_current: profile?.experience?.[0]?.is_current ?? true,
-          })
+          } as any)
         ).unwrap();
       }
 
       // Refresh
       await dispatch(fetchProfile()).unwrap();
-      alert('Profile details successfully updated! ✅');
+      Alert.alert('Success', 'Profile details successfully updated! ✅');
       setShowQuickEdit(false);
     } catch (err) {
-      alert('Failed to update profile details.');
+      Alert.alert('Error', 'Failed to update profile details.');
     }
   };
 
@@ -1108,11 +1108,11 @@ const AIAssistantScreen: React.FC = () => {
 
       setGeneratedResume(response);
       setEditedSummary(response.summary);
-      setEditedBullets(response.experienceBullets);
+      setEditedBullets(response.experiences?.flatMap((e: any) => e.bullets) || []);
       setCurrentScreen('WORKSPACE');
     } catch (error) {
       setCurrentScreen('UPLOAD');
-      alert('Failed to connect to Gemini AI. Please try again.');
+      Alert.alert('Connection Error', 'Failed to connect to Gemini AI. Please try again.');
     }
   };
 
@@ -1288,10 +1288,10 @@ const AIAssistantScreen: React.FC = () => {
           bio: editedSummary,
         })
       ).unwrap();
-      alert('Resume summary successfully synced and saved to your Candidate Bio! ✅');
+      Alert.alert('Success', 'Resume summary successfully synced and saved to your Candidate Bio! ✅');
       setCurrentScreen('ATS_REPORT');
     } catch (e) {
-      alert('Failed to sync summary with profile.');
+      Alert.alert('Error', 'Failed to sync summary with profile.');
     }
   };
 
@@ -1529,8 +1529,8 @@ const AIAssistantScreen: React.FC = () => {
 
       if (typeof convertFn !== 'function') {
         setIsExportingPdf(false);
-        alert("Native Module 'HtmlToPdf' is not compiled in your current app binary.\n\n👉 Please close the app, stop your Metro server (Ctrl+C), and run 'npm run android' in your terminal to compile the PDF generator!");
-        console.log("PDF converter is not available! Checked generatePDF:", generatePDF, "NativeModules.HtmlToPdf:", NativeModules.HtmlToPdf, "NativeModules.RNHTMLtoPDF:", NativeModules.RNHTMLtoPDF);
+        Alert.alert("Module Notice", "Native Module 'HtmlToPdf' is not compiled in your current app binary.\n\n👉 Please close the app, stop your Metro server (Ctrl+C), and run 'npm run android' in your terminal to compile the PDF generator!");
+        console.log("PDF converter is not available! Checked generatePDF:", generatePDF, "NativeModules.HtmlToPdf:", NativeModules?.HtmlToPdf, "NativeModules.RNHTMLtoPDF:", NativeModules?.RNHTMLtoPDF);
         return;
       }
 
@@ -1542,13 +1542,13 @@ const AIAssistantScreen: React.FC = () => {
           url: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
           title: `Download Resume PDF`,
         });
-        alert(`PDF successfully generated & downloaded! ✅\nSaved to: ${file.filePath}`);
+        Alert.alert('Success', `PDF successfully generated & downloaded! ✅\nSaved to: ${file.filePath}`);
       } else {
-        alert('Failed to generate PDF file.');
+        Alert.alert('Error', 'Failed to generate PDF file.');
       }
     } catch (e: any) {
       setIsExportingPdf(false);
-      alert('Failed to generate export file: ' + (e?.message || e));
+      Alert.alert('Error', 'Failed to generate export file: ' + (e?.message || e));
     }
   };
 
@@ -1669,27 +1669,27 @@ ${generatedResume?.skills.join(', ')}
 
         {/* ==================== SCREEN: UPLOAD ==================== */}
         {currentScreen === 'UPLOAD' && (
-          <View style={[styles.screenContainer, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+          <View style={[styles.screenContainer, { justifyContent: 'center', alignItems: 'center', padding: moderateScale(24) }]}>
             <View style={{
-              width: 80, height: 80, borderRadius: 40, backgroundColor: ORANGE_COLOR + '20',
-              justifyContent: 'center', alignItems: 'center', marginBottom: 24
+              width: moderateScale(80), height: moderateScale(80), borderRadius: moderateScale(40), backgroundColor: ORANGE_COLOR + '20',
+              justifyContent: 'center', alignItems: 'center', marginBottom: moderateScale(24)
             }}>
-              <Icon name="document-text" size={40} color={ORANGE_COLOR} />
+              <Icon name="document-text" size={moderateScale(40)} color={ORANGE_COLOR} />
             </View>
-            <Text style={[typography.headingMedium, { color: colors.textPrimary, textAlign: 'center', marginBottom: 12 }]}>
+            <Text style={[typography.h3, { color: colors.textPrimary, textAlign: 'center', marginBottom: moderateScale(12) }]}>
               Upload Old Resume
             </Text>
-            <Text style={[typography.bodyMedium, { color: colors.textSecondary, textAlign: 'center', marginBottom: 32 }]}>
+            <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: moderateScale(32) }]}>
               Upload your old resume PDF. Our AI will automatically extract all your experiences, skills, and education to generate stunning new templates!
             </Text>
             
             {profile?.resume?.has_resume ? (
               <View style={{ width: '100%', alignItems: 'center' }}>
-                <View style={{ backgroundColor: '#f0fdf4', padding: 16, borderRadius: 12, marginBottom: 24, width: '100%', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <View style={{ backgroundColor: '#f0fdf4', padding: moderateScale(16), borderRadius: radius.md, marginBottom: moderateScale(24), width: '100%', borderWidth: 1, borderColor: '#bbf7d0' }}>
                   <Text style={[typography.labelMedium, { color: '#166534', textAlign: 'center', marginBottom: 4 }]}>
                     We found your uploaded resume:
                   </Text>
-                  <Text style={[typography.bodyMedium, { color: '#14532d', textAlign: 'center', fontWeight: 'bold' }]}>
+                  <Text style={[typography.body, { color: '#14532d', textAlign: 'center', fontWeight: 'bold' }]}>
                     {profile.resume.resume_original_name || 'resume.pdf'}
                   </Text>
                 </View>
@@ -1699,9 +1699,9 @@ ${generatedResume?.skills.join(', ')}
                   style={({ pressed }) => [
                     {
                       backgroundColor: ORANGE_COLOR,
-                      paddingVertical: 16,
-                      paddingHorizontal: 32,
-                      borderRadius: 100,
+                      paddingVertical: moderateScale(16),
+                      paddingHorizontal: moderateScale(32),
+                      borderRadius: radius.pill,
                       flexDirection: 'row',
                       alignItems: 'center',
                       opacity: pressed ? 0.8 : 1,
@@ -1710,23 +1710,23 @@ ${generatedResume?.skills.join(', ')}
                       shadowOpacity: 0.3,
                       shadowRadius: 16,
                       elevation: 8,
-                      marginBottom: 16,
+                      marginBottom: moderateScale(16),
                       width: '100%',
                       justifyContent: 'center',
                     }
                   ]}
                 >
-                  <Icon name="sparkles" size={20} color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={[typography.button, { color: '#fff' }]}>Use Existing Resume</Text>
+                  <Icon name="sparkles" size={moderateScale(20)} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={[typography.labelMedium, { color: '#fff' }]}>Use Existing Resume</Text>
                 </Pressable>
 
                 <Pressable
                   onPress={handleUploadPDF}
                   style={({ pressed }) => [
                     {
-                      paddingVertical: 12,
-                      paddingHorizontal: 24,
-                      borderRadius: 100,
+                      paddingVertical: moderateScale(12),
+                      paddingHorizontal: moderateScale(24),
+                      borderRadius: radius.pill,
                       borderWidth: 1,
                       borderColor: ORANGE_COLOR,
                       flexDirection: 'row',
@@ -1735,8 +1735,8 @@ ${generatedResume?.skills.join(', ')}
                     }
                   ]}
                 >
-                  <Icon name="cloud-upload-outline" size={18} color={ORANGE_COLOR} style={{ marginRight: 8 }} />
-                  <Text style={[typography.button, { color: ORANGE_COLOR }]}>Upload a Different PDF</Text>
+                  <Icon name="cloud-upload-outline" size={moderateScale(18)} color={ORANGE_COLOR} style={{ marginRight: 8 }} />
+                  <Text style={[typography.labelMedium, { color: ORANGE_COLOR }]}>Upload a Different PDF</Text>
                 </Pressable>
               </View>
             ) : (
@@ -1745,9 +1745,9 @@ ${generatedResume?.skills.join(', ')}
                 style={({ pressed }) => [
                   {
                     backgroundColor: ORANGE_COLOR,
-                    paddingVertical: 16,
-                    paddingHorizontal: 32,
-                    borderRadius: 100,
+                    paddingVertical: moderateScale(16),
+                    paddingHorizontal: moderateScale(32),
+                    borderRadius: radius.pill,
                     flexDirection: 'row',
                     alignItems: 'center',
                     opacity: pressed ? 0.8 : 1,
@@ -1759,8 +1759,8 @@ ${generatedResume?.skills.join(', ')}
                   }
                 ]}
               >
-                <Icon name="cloud-upload-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={[typography.button, { color: '#fff' }]}>Select PDF File</Text>
+                <Icon name="cloud-upload-outline" size={moderateScale(20)} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={[typography.labelMedium, { color: '#fff' }]}>Select PDF File</Text>
               </Pressable>
             )}
 
@@ -1768,14 +1768,14 @@ ${generatedResume?.skills.join(', ')}
               onPress={handleSkipAndUseProfile}
               style={({ pressed }) => [
                 {
-                  marginTop: 24,
-                  paddingVertical: 12,
-                  paddingHorizontal: 24,
+                  marginTop: moderateScale(24),
+                  paddingVertical: moderateScale(12),
+                  paddingHorizontal: moderateScale(24),
                   opacity: pressed ? 0.6 : 1,
                 }
               ]}
             >
-              <Text style={[typography.button, { color: colors.textSecondary, textDecorationLine: 'underline' }]}>
+              <Text style={[typography.labelMedium, { color: colors.textSecondary, textDecorationLine: 'underline' }]}>
                 Skip & Use Profile Data Instead
               </Text>
             </Pressable>
@@ -1807,7 +1807,7 @@ ${generatedResume?.skills.join(', ')}
           <Animated.View style={[styles.screenContainer, { transform: [{ scale: slideAnim }] }]}>
             {/* Header bar with Back button to go back to LANDING screen */}
 
-            <ScrollView contentContainerStyle={{ padding: spacing.md, paddingTop: 16 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: spacing.md, paddingTop: moderateScale(16), paddingBottom: moderateScale(160) }} showsVerticalScrollIndicator={false}>
               <AtsScoreOrb
                 score={getBaselineATSScore()}
                 colors={colors}

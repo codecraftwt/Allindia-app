@@ -22,7 +22,7 @@ import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -263,7 +263,7 @@ const ProfileExperienceEditScreen: React.FC<Props> = ({ navigation }) => {
 
       {error && (
         <Text style={[styles.errorText, { color: colors.error }]}>
-          {typeof error === 'string' ? error : (error.message || 'An error occurred')}
+          {typeof error === 'string' ? error : ((error as any)?.message || 'An error occurred')}
         </Text>
       )}
 
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.md,
+    paddingVertical: moderateScale(14),
     borderRadius: radius.card,
     borderWidth: StyleSheet.hairlineWidth,
   },
@@ -302,17 +302,17 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   yearChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(10),
+    borderRadius: radius.pill,
     borderWidth: 1,
   },
   input: {
     borderRadius: radius.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 52,
-    fontSize: 16,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(12),
+    minHeight: moderateScale(48),
+    fontSize: moderateScale(15),
     fontFamily: typography.body.fontFamily,
   },
   errorText: {

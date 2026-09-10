@@ -10,7 +10,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LOGO = require('../../assets/Job india Icon & logo file/Final logo Job india-02.png');
@@ -90,11 +90,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setShowLanguageModal(true)}
           style={[styles.languageBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
-          <Icon name="language" size={14} color={colors.primary} style={{ marginRight: 6 }} />
+          <Icon name="language" size={moderateScale(14)} color={colors.primary} style={{ marginRight: 6 }} />
           <Text style={[typography.small, { color: colors.textPrimary, fontWeight: 'bold' }]}>
             {getLanguageLabel(i18n.language)}
           </Text>
-          <Icon name="chevron-down" size={10} color={colors.textPlaceholder} style={{ marginLeft: 6 }} />
+          <Icon name="chevron-down" size={moderateScale(10)} color={colors.textPlaceholder} style={{ marginLeft: 6 }} />
         </TouchableOpacity>
       </View>
 
@@ -125,7 +125,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.cardContent}>
               <View style={[styles.iconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Icon name="user-plus" size={20} color="#FFF" />
+                <Icon name="user-plus" size={moderateScale(20)} color="#FFF" />
               </View>
               <View style={styles.textContainer}>
                 <Text style={[typography.h4, { color: '#FFF', fontWeight: 'bold' }]}>{t('auth.register', 'Create Account')}</Text>
@@ -133,7 +133,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
             <View style={[styles.arrowCircle, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Icon name="arrow-right" size={14} color="#FFF" />
+              <Icon name="arrow-right" size={moderateScale(14)} color="#FFF" />
             </View>
           </TouchableOpacity>
 
@@ -145,112 +145,117 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           >
             <View style={styles.cardContent}>
               <View style={[styles.iconBox, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name="sign-in" size={22} color={colors.primary} />
+                <Icon name="sign-in" size={moderateScale(22)} color={colors.primary} />
               </View>
               <View style={styles.textContainer}>
-                <Text style={[typography.h4, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('auth.login', 'Login')}</Text>
-                <Text style={[typography.small, { color: colors.textSecondary }]}>via WhatsApp or Email</Text>
+                <Text style={[typography.h4, { color: colors.textPrimary, fontWeight: 'bold' }]}>{t('auth.login', 'Sign In')}</Text>
+                <Text style={[typography.small, { color: colors.textSecondary }]}>{t('auth.loginSubtitle', 'Existing Account')}</Text>
               </View>
             </View>
-            <Icon name="chevron-right" size={16} color={colors.textPlaceholder} />
+            <View style={[styles.arrowCircle, { backgroundColor: colors.surfaceHighlight }]}>
+              <Icon name="chevron-right" size={moderateScale(12)} color={colors.textSecondary} />
+            </View>
           </TouchableOpacity>
 
-          {/* Skip & Explore Jobs First */}
-          <Pressable
+          {/* Skip Button */}
+          <TouchableOpacity 
+            style={styles.skipBtn} 
+            activeOpacity={0.7}
             onPress={handleSkip}
             disabled={isSkipping}
-            style={({ pressed }) => [
-              styles.skipBtn,
-              pressed && { opacity: 0.6 }
-            ]}>
+          >
             {isSkipping ? (
-              <ActivityIndicator color={colors.textSecondary} size="small" />
+              <ActivityIndicator size="small" color={colors.textSecondary} style={{ marginRight: 8 }} />
             ) : (
-              <>
-                <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>
-                  {t('auth.skipExplore', 'Skip & Explore Jobs First')}
-                </Text>
-                <Icon name="long-arrow-right" size={14} color={colors.textSecondary} style={{ marginLeft: 8 }} />
-              </>
+              <Text style={[typography.labelMedium, { color: colors.textSecondary, marginRight: 6 }]}>
+                {t('auth.skip', 'Explore as Guest')}
+              </Text>
             )}
-          </Pressable>
+            {!isSkipping && (
+              <Icon name="angle-right" size={moderateScale(16)} color={colors.textSecondary} />
+            )}
+          </TouchableOpacity>
+        </View>
 
-          <View style={styles.trustRow}>
-            <Icon name="shield" size={14} color={colors.success} />
-            <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-              {t('auth.trustBadgeText')}
-            </Text>
-          </View>
+        {/* Features / Trust signals */}
+        <View style={styles.trustRow}>
+          <Icon name="shield" size={moderateScale(14)} color={colors.textSecondary} />
+          <Text style={[typography.tiny, { color: colors.textSecondary }]}>
+            100% Free & Verified Jobs
+          </Text>
         </View>
       </ScrollView>
 
+      {/* Language Selection Modal */}
       <Modal
         visible={showLanguageModal}
-        animationType="slide"
-        transparent={true}
+        transparent
+        animationType="fade"
         onRequestClose={() => setShowLanguageModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLanguageModal(false)} />
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setShowLanguageModal(false)}
+        >
           <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[typography.h4, { color: colors.textPrimary, fontWeight: 'bold' }]}>
-                {t('profile.chooseLanguage', 'Choose your preferred language')}
-              </Text>
-              <Pressable onPress={() => setShowLanguageModal(false)} hitSlop={12}>
-                <Icon name="times" size={20} color={colors.textSecondary} />
-              </Pressable>
+              <Text style={[typography.h4, { color: colors.textPrimary }]}>Choose Language</Text>
+              <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                <Icon name="times" size={moderateScale(18)} color={colors.textSecondary} />
+              </TouchableOpacity>
             </View>
-
-            <ScrollView contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
+            
+            <View style={styles.modalContent}>
               {[
-                { code: 'en', label: 'English' },
-                { code: 'hi', label: 'Hindi (हिंदी)' },
-                { code: 'mr', label: 'Marathi (मराठी)' },
-                { code: 'kn', label: 'Kannada (ಕನ್ನಡ)' },
-              ].map((lang) => {
-                const isSelected = i18n.language === lang.code;
-                return (
-                  <TouchableOpacity
-                    key={lang.code}
-                    onPress={() => changeLanguage(lang.code)}
-                    style={[
-                      styles.langItem,
-                      {
-                        borderColor: isSelected ? colors.primary : colors.border,
-                        backgroundColor: isSelected ? colors.surfaceHighlight : colors.surface,
-                      }
-                    ]}
-                  >
-                    <Icon name="language" size={18} color={isSelected ? colors.primary : colors.textSecondary} style={{ marginRight: 12 }} />
-                    <Text style={[typography.body, { color: isSelected ? colors.primary : colors.textPrimary, fontWeight: isSelected ? 'bold' : 'normal', flex: 1 }]}>
-                      {lang.label}
+                { code: 'en', label: 'English', sub: 'Default' },
+                { code: 'hi', label: 'हिंदी', sub: 'Hindi' },
+                { code: 'mr', label: 'मराठी', sub: 'Marathi' },
+                { code: 'kn', label: 'ಕನ್ನಡ', sub: 'Kannada' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.code}
+                  style={[
+                    styles.langItem,
+                    {
+                      borderColor: i18n.language === item.code ? colors.primary : colors.border,
+                      backgroundColor: i18n.language === item.code ? colors.surfaceHighlight : colors.surface,
+                    }
+                  ]}
+                  onPress={() => changeLanguage(item.code)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: i18n.language === item.code ? 'bold' : 'normal' }]}>
+                      {item.label}
                     </Text>
-                    {isSelected && (
-                      <Icon name="check-circle" size={18} color={colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                    <Text style={[typography.small, { color: colors.textSecondary }]}>{item.sub}</Text>
+                  </View>
+                  {i18n.language === item.code && (
+                    <Icon name="check-circle" size={moderateScale(18)} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: {
+    flex: 1,
+  },
   blob: {
     position: 'absolute',
-    borderRadius: 150,
+    borderRadius: 999,
   },
   scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-    paddingTop: spacing.md,
-    maxWidth: 440,
+    flexGrow: 1,
+    paddingHorizontal: moderateScale(spacing.lg),
+    paddingBottom: moderateScale(spacing.xl),
+    paddingTop: moderateScale(spacing.md),
+    maxWidth: moderateScale(440),
     width: '100%',
     alignSelf: 'center',
   },
@@ -260,13 +265,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   smallLogo: {
-    width: 220,
-    height: 110,
+    width: moderateScale(220),
+    height: moderateScale(110),
     marginBottom: spacing.md,
   },
   badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(6),
     borderRadius: 999,
   },
   content: {
@@ -283,18 +288,18 @@ const styles = StyleSheet.create({
   lead: {
     lineHeight: 22,
     textAlign: 'center',
-    maxWidth: 320,
+    maxWidth: moderateScale(320),
     opacity: 0.8,
   },
   ctaBlock: {
-    gap: spacing.lg,
+    gap: moderateScale(spacing.lg),
     paddingTop: spacing.md,
   },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: spacing.md,
+    padding: moderateScale(spacing.md),
     borderRadius: radius.xl,
     borderWidth: 1,
     elevation: 3,
@@ -304,12 +309,12 @@ const styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: moderateScale(spacing.md),
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: moderateScale(48),
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -317,9 +322,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   arrowCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -327,16 +332,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: moderateScale(spacing.md),
     marginTop: spacing.sm,
   },
 
   trustRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: moderateScale(spacing.sm),
     justifyContent: 'center',
-    marginTop: spacing.xl,
+    marginTop: moderateScale(spacing.xl),
     opacity: 0.6,
   },
   languageHeader: {
@@ -348,8 +353,8 @@ const styles = StyleSheet.create({
   languageBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
     borderRadius: 999,
     borderWidth: 1,
     shadowColor: '#000',
@@ -366,24 +371,24 @@ const styles = StyleSheet.create({
   modalContainer: {
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: moderateScale(spacing.xl),
   },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: spacing.lg,
+    padding: moderateScale(spacing.lg),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   modalContent: {
-    padding: spacing.lg,
-    gap: spacing.md,
+    padding: moderateScale(spacing.lg),
+    gap: moderateScale(spacing.md),
   },
   langItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: moderateScale(spacing.md),
+    paddingHorizontal: moderateScale(spacing.lg),
     borderRadius: radius.md,
     borderWidth: 1,
   },

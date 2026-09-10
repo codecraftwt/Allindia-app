@@ -141,20 +141,20 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
       onPress={onPress}
       style={[
         styles.premiumCard,
-        { backgroundColor: cardBgColor, borderColor: cardBorderColor, shadowColor: cardShadowColor, elevation: cardElevation },
+        { backgroundColor: cardBgColor, borderColor: cardBorderColor, shadowColor: cardShadowColor, elevation: cardElevation, padding: moderateScale(12) },
         (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: moderateScale(8), shadowOffset: { width: 0, height: moderateScale(4) } }
       ]}
     >
-      <View style={styles.cardHeader}>
+      <View style={[styles.cardHeader, { marginBottom: moderateScale(8) }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: moderateScale(10) }}>
           <View style={[styles.iconBox, { backgroundColor: colors.surfaceHighlight }]}>
             {job.employer?.company?.company_logo_url ? (
-              <Image source={{ uri: job.employer.company.company_logo_url }} style={styles.logoImage} />
+              <Image source={{ uri: job.employer.company.company_logo_url }} style={styles.logoImage} resizeMode="contain" />
             ) : (
               <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
             )}
           </View>
-          <View style={[styles.titleBox, { paddingRight: moderateScale(20) }]}>
+          <View style={[styles.titleBox, { paddingRight: moderateScale(22) }]}>
             <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
               {job.title}
             </Text>
@@ -170,20 +170,17 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
         </View>
       </View>
 
-      <View style={styles.cardMeta}>
-        <View style={styles.metaItem}>
-          <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} style={{ marginRight: moderateScale(4) }} />
-          <Text style={[typography.small, { color: colors.textSecondary }]}>{locationLabel}</Text>
+      <View style={[styles.cardMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8), marginTop: 0, paddingTop: 0, borderTopWidth: 0 }]}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
+          <Icon name="map-marker" size={moderateScale(12)} color={colors.textPlaceholder} style={{ marginRight: moderateScale(4) }} />
+          <Text style={[typography.small, { color: colors.textSecondary, flexShrink: 1 }]} numberOfLines={1}>{locationLabel}</Text>
         </View>
-        <View style={styles.metaItem}>
-          <Icon name="money" size={moderateScale(11)} color={colors.success} style={{ marginRight: moderateScale(4) }} />
-          <Text style={[typography.small, { color: colors.textSecondary }]}>{salaryLabel}</Text>
-        </View>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>{salaryLabel}</Text>
       </View>
 
-      <View style={styles.cardFooter}>
-        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground }]}>
-          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: 'bold' }]}>
+      <View style={[styles.cardFooter, { marginTop: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
             {jobType}
           </Text>
         </View>

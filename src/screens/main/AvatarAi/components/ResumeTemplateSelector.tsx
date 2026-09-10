@@ -18,10 +18,11 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { WebView } from 'react-native-webview';
 import ReactNativeBlobUtil from 'react-native-blob-util';
-
 import { useNavigation } from '@react-navigation/native';
-import { typography } from '../../../../theme/typography';
+
+import { typography, moderateScale } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
+import { radius } from '../../../../theme/radius';
 import {
   RESUME_TEMPLATES,
   generateResumeHtml,
@@ -64,9 +65,9 @@ export interface ResumeTemplateSelectorProps {
   resumeLinkedin: string;
   resumeGithub: string;
   selectedTheme: string;
-  setSelectedTheme: (theme: string) => void;
+  setSelectedTheme: (theme: any) => void;
   themeColors: TemplateThemeColors;
-  setCurrentScreen: (screen: 'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE') => void;
+  setCurrentScreen: (screen: 'UPLOAD' | 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES') => void;
   slideAnim: Animated.Value;
   ORANGE_COLOR: string;
 }
@@ -895,8 +896,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
-    paddingTop: 12,
-    paddingBottom: 40,
+    paddingTop: moderateScale(12),
+    paddingBottom: moderateScale(160),
   },
   themeCard: {
     borderRadius: 12,
@@ -950,8 +951,8 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: 12,
+    height: moderateScale(48),
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -961,25 +962,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: radius.sm,
   },
   bottomBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(12),
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   downloadBtn: {
-    height: 50,
-    borderRadius: 14,
+    height: moderateScale(50),
+    borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -991,7 +992,7 @@ const styles = StyleSheet.create({
   },
   downloadBtnText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: moderateScale(15),
     fontWeight: '800',
     letterSpacing: 0.3,
   },
@@ -1003,8 +1004,8 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   exportCard: {
-    padding: 28,
-    borderRadius: 18,
+    padding: moderateScale(28),
+    borderRadius: radius.lg,
     width: '80%',
     alignItems: 'center',
     elevation: 5,
@@ -1014,17 +1015,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: moderateScale(24),
     zIndex: 99999,
   },
   modalCard: {
     width: '100%',
-    maxWidth: 380,
-    borderRadius: 24,
+    maxWidth: moderateScale(380),
+    borderRadius: radius.xl,
     borderWidth: 1,
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 24,
+    paddingHorizontal: moderateScale(24),
+    paddingTop: moderateScale(28),
+    paddingBottom: moderateScale(24),
     alignItems: 'center',
     elevation: 20,
     shadowColor: '#000',
@@ -1033,37 +1034,37 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
   },
   modalIconWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(76),
+    height: moderateScale(76),
+    borderRadius: moderateScale(38),
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalIconInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
     alignItems: 'center',
     justifyContent: 'center',
   },
   folderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(8),
+    borderRadius: radius.md,
     borderWidth: 1,
-    marginTop: 14,
-    marginBottom: 6,
+    marginTop: moderateScale(14),
+    marginBottom: moderateScale(6),
   },
   modalButtonContainer: {
     width: '100%',
-    marginTop: 20,
+    marginTop: moderateScale(20),
   },
   modalActionBtn: {
     width: '100%',
-    height: 50,
-    borderRadius: 14,
+    height: moderateScale(50),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 3,

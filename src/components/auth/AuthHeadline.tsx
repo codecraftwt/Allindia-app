@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import type { ThemeColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 type Props = {
@@ -34,13 +34,13 @@ export const AuthHeadline: React.FC<Props> = ({
     <View style={styles.titleContainer}>
       {onBack && (
         <Pressable onPress={onBack} style={styles.backButton}>
-          <Icon name="chevron-left" size={24} color={colors.textPrimary} />
+          <Icon name="chevron-left" size={moderateScale(22)} color={colors.textPrimary} />
         </Pressable>
       )}
       <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
     </View>
     {subtitle ? (
-      <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary, marginLeft: onBack ? 36 : 0 }]}>
+      <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary, marginLeft: onBack ? moderateScale(34) : 0 }]}>
         {subtitle}
       </Text>
     ) : null}
@@ -58,8 +58,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: spacing.sm,
-    padding: 4,
-    marginLeft: -4,
+    padding: moderateScale(4),
+    marginLeft: moderateScale(-4),
   },
   decor: {
     marginBottom: spacing.md,
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subtitle: {
-    marginTop: 2,
-    lineHeight: 22,
+    marginTop: moderateScale(2),
+    lineHeight: moderateScale(22),
   },
 });

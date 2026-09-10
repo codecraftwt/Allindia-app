@@ -229,9 +229,13 @@ export async function generateAIResume(
   console.error('[GeminiService] All models in the fallback chain failed. Invoking graceful local mock generator.');
   return {
     summary: `Motivated and accomplished professional targeting a career as a ${targetJob}, using excellent skills to bring high value.`,
-    experienceBullets: experiences.length > 0
-      ? experiences.map((exp: any) => `Worked as ${exp.designation || 'Specialist'} at ${exp.company || 'Organization'}`)
-      : [`Enhanced career milestones for ${targetJob}`],
+    experiences: experiences.length > 0
+      ? experiences.map((exp: any) => ({
+          company: exp.company || 'Organization',
+          designation: exp.designation || 'Specialist',
+          bullets: [`Enhanced career milestones for ${targetJob}`]
+        }))
+      : [{ company: 'Organization', designation: targetJob, bullets: [`Enhanced career milestones for ${targetJob}`] }],
     skills: ['Leadership', 'Problem Solving', targetJob],
     score: 80,
   };

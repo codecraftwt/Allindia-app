@@ -29,7 +29,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import GuestView from '../../../components/GuestView';
 import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 
@@ -58,7 +58,10 @@ const SavedJobCard = React.memo(function SavedJobCard({
   onOpenDetail: () => void;
 }) {
   const company = job.employer?.company || {};
-  const location = job.location?.label || 'Remote';
+  const companyName = company.company_name || job.company_name || job.company || 'Anonymous Company';
+  const location = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'Remote';
+  const salary = job.salary_label || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
+  const isVerified = job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved';
 
   return (
     <View
@@ -67,29 +70,30 @@ const SavedJobCard = React.memo(function SavedJobCard({
         {
           backgroundColor: colors.surface,
           borderColor: colors.border,
+          padding: moderateScale(12),
         },
       ]}>
-      <View style={styles.cardHeader}>
+      <View style={[styles.cardHeader, { marginBottom: moderateScale(8) }]}>
         <Pressable onPress={onOpenDetail} style={styles.headerInfo}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(10) }}>
             <View style={[styles.logoContainer, { backgroundColor: colors.surfaceHighlight }]}>
               {company.company_logo_url ? (
-                <Image source={{ uri: company.company_logo_url }} style={styles.logo} />
+                <Image source={{ uri: company.company_logo_url }} style={styles.logo} resizeMode="contain" />
               ) : (
-                <Icon name="briefcase" size={20} color={colors.primary} />
+                <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
               )}
             </View>
-            <View style={{ flex: 1, paddingRight: 24 }}>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>
+            <View style={{ flex: 1, paddingRight: moderateScale(22) }}>
+              <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
                 {job.title}
               </Text>
-              <Text style={[typography.small, { color: colors.textSecondary }]} numberOfLines={1}>
-                {company.company_name || 'Anonymous Company'}
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+                {companyName}
               </Text>
             </View>
-            {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+            {isVerified && (
               <View style={{ position: 'absolute', right: 0, top: 0 }}>
-                <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+                <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
               </View>
             )}
           </View>
@@ -101,17 +105,21 @@ const SavedJobCard = React.memo(function SavedJobCard({
           style={styles.removeBtn}
           activeOpacity={0.6}
         >
-          <Icon name="trash" size={18} color={colors.error} />
+          <Icon name="trash" size={moderateScale(16)} color={colors.error} />
         </TouchableOpacity>
       </View>
 
-      <Pressable onPress={onOpenDetail} style={styles.cardFooter}>
-        <View style={styles.footerItem}>
-          <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
-          <Text style={[typography.tiny, { color: colors.textSecondary }]}>{location}</Text>
+      <Pressable onPress={onOpenDetail} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }}>
+        <View style={[styles.footerItem, { flex: 1, marginRight: moderateScale(8) }]}>
+          <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} />
+          <Text style={[typography.small, { color: colors.textSecondary, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>{location}</Text>
         </View>
-        <View style={[styles.typeBadge, { backgroundColor: colors.surfaceHighlight }]}>
-          <Text style={[typography.tiny, { color: colors.primary }]}>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>{salary}</Text>
+      </Pressable>
+
+      <Pressable onPress={onOpenDetail} style={[styles.cardFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 0, borderTopWidth: 0 }]}>
+        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6), marginLeft: 0 }]}>
+          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
             {formatJobType(job.job_type)}
           </Text>
         </View>
@@ -145,7 +153,7 @@ const SavedJobsSkeleton: React.FC = () => {
 };
 
 const SavedJobsScreen: React.FC = () => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<SavedNav>();
   const dispatch = useDispatch<AppDispatch>();
@@ -375,9 +383,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   logoContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(8),
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -385,7 +393,7 @@ const styles = StyleSheet.create({
   logo: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   headerInfo: {
     flex: 1,

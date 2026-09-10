@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Keyboard,
   StatusBar,
+  Image,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
@@ -95,6 +96,7 @@ function JobListCard({
           backgroundColor: colors.surface,
           borderColor: colors.border,
           shadowColor: colors.shadow,
+          padding: moderateScale(12),
         },
       ]}>
       <View style={styles.listCardTags}>
@@ -121,12 +123,19 @@ function JobListCard({
           })
         )}
       </View>
-      <View style={styles.listCardTop}>
+      <View style={[styles.listCardTop, { marginBottom: moderateScale(8) }]}>
         <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
-          <Icon name="briefcase" size={moderateScale(16)} color={colors.primary} />
+          {job.employer?.company?.company_logo_url ? (
+            <Image
+              source={{ uri: job.employer.company.company_logo_url }}
+              style={{ width: moderateScale(36), height: moderateScale(36), borderRadius: moderateScale(8), resizeMode: 'contain' }}
+            />
+          ) : (
+            <Icon name="briefcase" size={moderateScale(16)} color={colors.primary} />
+          )}
         </View>
-        <View style={[styles.listCardText, { paddingRight: moderateScale(20) }]}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+        <View style={[styles.listCardText, { paddingRight: moderateScale(22) }]}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {job.title}
           </Text>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
@@ -139,23 +148,25 @@ function JobListCard({
           </View>
         )}
       </View>
-      <View style={styles.listMeta}>
-        <View style={styles.metaItem}>
+      <View style={[styles.listMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }]}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
           <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textSecondary }]}>{locationLabel}</Text>
+          <Text style={[typography.small, { color: colors.textSecondary, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>{locationLabel}</Text>
         </View>
-        <View style={styles.metaItem}>
-          <Icon name="clock-o" size={moderateScale(11)} color={colors.textPlaceholder} />
-          <Text style={[typography.small, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
-        </View>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>{salaryLabel}</Text>
       </View>
-      <View style={styles.listFooter}>
-        <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
-        <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground }]}>
-          <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily }]}>
+      <View style={[styles.listFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={[styles.typePillSm, { backgroundColor: colors.badgeBackground, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+          <Text style={[typography.small, { color: colors.badgeText, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10), fontWeight: '600' }]}>
             {jobType}
           </Text>
         </View>
+        {postedLabel ? (
+          <View style={styles.metaItem}>
+            <Icon name="clock-o" size={moderateScale(11)} color={colors.textPlaceholder} style={{ marginRight: moderateScale(4) }} />
+            <Text style={[typography.small, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );

@@ -14,9 +14,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { AuthHeadline, AuthScreenHeader } from '../../../components/auth';
-import type { ProfileStackParamList } from '../../../navigation/types';
 import { useTheme } from '../../../context/ThemeContext';
+import type { ProfileStackParamList } from '../../../navigation/types';
 import { spacing } from '../../../theme/spacing';
+import { moderateScale } from '../../../theme/typography';
 
 type Nav = StackNavigationProp<ProfileStackParamList>;
 
@@ -28,7 +29,7 @@ type Props = {
   flatListData?: any[];
   renderFlatItem?: ListRenderItem<any>;
   flatListExtraData?: any;
-  scrollProps?: Partial<ScrollViewProps>;
+  scrollProps?: Partial<ScrollViewProps> & { ListHeaderComponent?: React.ReactNode | (() => React.ReactNode) };
 };
 
 export const ProfileEditLayout: React.FC<Props> = ({
@@ -134,15 +135,15 @@ const styles = StyleSheet.create({
   },
   blob: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: moderateScale(160),
+    height: moderateScale(160),
+    borderRadius: moderateScale(80),
   },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
-    paddingBottom: 120,
+    paddingBottom: moderateScale(120),
   },
   body: {
     maxWidth: 800,
@@ -152,3 +153,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+
+export default ProfileEditLayout;

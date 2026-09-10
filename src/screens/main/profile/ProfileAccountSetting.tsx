@@ -22,7 +22,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { useTranslation } from 'react-i18next';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import { logoutCandidate, logout } from '../../../redux/slice/authSlice';
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   itemIconContainer: {
-    width: 32,
+    width: moderateScale(32),
     alignItems: 'center',
   },
   itemTextContainer: {
@@ -623,8 +623,8 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(2),
     borderRadius: radius.pill,
   },
   badgeText: {
@@ -660,7 +660,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 6,
+    marginBottom: moderateScale(6),
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -671,13 +671,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 48,
-    paddingHorizontal: spacing.md,
+    height: moderateScale(48),
+    paddingHorizontal: moderateScale(spacing.md),
     fontSize: 14,
   },
   eyeIcon: {
-    paddingHorizontal: spacing.md,
-    height: 48,
+    paddingHorizontal: moderateScale(spacing.md),
+    height: moderateScale(48),
     justifyContent: 'center',
   },
   errorText: {
@@ -688,13 +688,13 @@ const styles = StyleSheet.create({
   },
   requirementsContainer: {
     marginTop: spacing.sm,
-    gap: 6,
-    paddingHorizontal: 4,
+    gap: moderateScale(6),
+    paddingHorizontal: moderateScale(4),
   },
   requirementRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: moderateScale(8),
   },
   requirementText: {
     fontSize: 11,
@@ -718,16 +718,16 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   statusIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: moderateScale(72),
+    height: moderateScale(72),
+    borderRadius: moderateScale(36),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
   statusBtn: {
     width: '100%',
-    height: 52,
+    height: moderateScale(52),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
   },
   statusBtnSmall: {
     flex: 1,
-    height: 52,
+    height: moderateScale(52),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -748,12 +748,12 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     width: '100%',
-    height: 48,
+    height: moderateScale(48),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: moderateScale(8),
   },
 });
 

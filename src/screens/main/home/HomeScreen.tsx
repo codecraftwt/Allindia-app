@@ -300,7 +300,7 @@ const JobTrendCard = React.memo(function JobTrendCard({
           borderColor: cardBorderColor,
           shadowColor: cardShadowColor,
           elevation: cardElevation,
-          paddingBottom: moderateScale(38),
+          padding: moderateScale(12),
         },
         (isSpotlight || isBoost) && { shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
@@ -315,47 +315,43 @@ const JobTrendCard = React.memo(function JobTrendCard({
         </View>
       ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(8) }}>
         {job.employer?.company?.company_logo_url ? (
           <Image
             source={{ uri: job.employer.company.company_logo_url }}
-            style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), marginRight: moderateScale(10) }}
+            style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), marginRight: moderateScale(10), resizeMode: 'contain' }}
           />
         ) : (
           <View style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', marginRight: moderateScale(10) }}>
             <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
           </View>
         )}
-          <View style={{ flex: 1, paddingRight: moderateScale(22) }}>
-            <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
-              {job.title}
-            </Text>
-            <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
-              {companyName}
-            </Text>
+        <View style={{ flex: 1, paddingRight: moderateScale(22) }}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+            {job.title}
+          </Text>
+          <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
+            {companyName}
+          </Text>
+        </View>
+        {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 0, top: 0 }}>
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
           </View>
-          {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
-            <View style={{ position: 'absolute', right: 0, top: 0 }}>
-              <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
-            </View>
-          )}
+        )}
       </View>
 
-      <View style={styles.cardMetaRow}>
+      <View style={[styles.cardMetaRow, { marginBottom: moderateScale(6) }]}>
         <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
-        <Text style={[typography.small, { color: locationTextColor, flex: 1 }]} numberOfLines={1}>
+        <Text style={[typography.small, { color: locationTextColor, flex: 1, marginLeft: moderateScale(4) }]} numberOfLines={1}>
           {locationLabel}
         </Text>
       </View>
 
-      <View style={styles.cardFooter}>
-        <Text style={[typography.labelMedium, { color: salaryTextColor }]}>{salaryLabel}</Text>
-      </View>
-
-      {/* Bottom Section: Job Type (Left) */}
-      <View style={{ position: 'absolute', bottom: moderateScale(10), left: moderateScale(10), right: moderateScale(10), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={[styles.cardFooter, { marginTop: moderateScale(6), alignItems: 'center', justifyContent: 'space-between' }]}>
+        <Text style={[typography.labelMedium, { color: salaryTextColor, fontWeight: '700' }]}>{salaryLabel}</Text>
         <View style={[styles.typePill, { backgroundColor: pillBgColor, marginTop: 0 }]}>
-          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10) }]}>
+          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10), fontWeight: '600' }]}>
             {jobType}
           </Text>
         </View>
@@ -440,6 +436,7 @@ const JobListCard = React.memo(function JobListCard({
           borderColor: cardBorderColor,
           shadowColor: cardShadowColor,
           elevation: cardElevation,
+          padding: moderateScale(12),
         },
         (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
@@ -453,12 +450,12 @@ const JobListCard = React.memo(function JobListCard({
         </View>
       ) : null}
 
-      <View style={[styles.listCardTop, { alignItems: 'center' }]}>
+      <View style={[styles.listCardTop, { alignItems: 'center', marginBottom: moderateScale(8) }]}>
         <View style={styles.listIconWrap}>
           {job.employer?.company?.company_logo_url ? (
             <Image
               source={{ uri: job.employer.company.company_logo_url }}
-              style={{ width: moderateScale(34), height: moderateScale(34), borderRadius: moderateScale(8) }}
+              style={{ width: moderateScale(36), height: moderateScale(36), borderRadius: moderateScale(8), resizeMode: 'contain' }}
             />
           ) : (
             <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
@@ -467,7 +464,7 @@ const JobListCard = React.memo(function JobListCard({
           )}
         </View>
         <View style={[styles.listCardText, { flex: 1, paddingRight: moderateScale(22) }]}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {job.title}
           </Text>
           <Text style={[typography.small, { color: companyTextColor, marginTop: 2 }]} numberOfLines={1}>
@@ -481,24 +478,25 @@ const JobListCard = React.memo(function JobListCard({
         )}
       </View>
 
-      <View style={[styles.listMeta, { justifyContent: 'space-between', flexWrap: 'nowrap' }]}>
+      <View style={[styles.listMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }]}>
         <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
           <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
-          <Text style={[typography.small, { color: locationTextColor, flexShrink: 1 }]} numberOfLines={1}>
+          <Text style={[typography.small, { color: locationTextColor, flexShrink: 1, marginLeft: moderateScale(4) }]} numberOfLines={1}>
             {locationLabel}
           </Text>
         </View>
+        <Text style={[typography.labelMedium, { color: salaryTextColor, fontWeight: '700' }]}>{salaryLabel}</Text>
       </View>
 
-      <View style={styles.listFooter}>
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.labelMedium, { color: salaryTextColor }]}>{salaryLabel}</Text>
-          <View style={[styles.typePillSm, { backgroundColor: pillBgColor, alignSelf: 'flex-start', marginTop: 4 }]}>
-            <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10) }]}>
-              {jobType}
-            </Text>
-          </View>
+      <View style={[styles.listFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={[styles.typePillSm, { backgroundColor: pillBgColor, marginTop: 0 }]}>
+          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10), fontWeight: '600' }]}>
+            {jobType}
+          </Text>
         </View>
+        {postedLabel ? (
+          <Text style={[typography.tiny, { color: colors.textPlaceholder }]}>{postedLabel}</Text>
+        ) : null}
       </View>
     </Pressable>
   );

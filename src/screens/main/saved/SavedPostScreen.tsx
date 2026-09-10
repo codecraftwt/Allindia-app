@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useTheme } from '../../../context/ThemeContext';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import { useNavigation } from '@react-navigation/native';
@@ -54,13 +54,13 @@ const SavedPostScreen: React.FC = () => {
         <Text style={[styles.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>{item.title}</Text>
         <Text style={[styles.company, { color: colors.primary }]}>{item.company}</Text>
         <View style={styles.meta}>
-          <Icon name="map-marker" size={12} color={colors.textSecondary} />
+          <Icon name="map-marker" size={moderateScale(12)} color={colors.textSecondary} />
           <Text style={[styles.location, { color: colors.textSecondary }]}>{item.location}</Text>
         </View>
         <Text style={[styles.date, { color: colors.textSecondary }]}>{item.date}</Text>
       </View>
       <Pressable style={styles.removeBtn}>
-        <Icon name="bookmark" size={20} color={colors.primary} />
+        <Icon name="bookmark" size={moderateScale(20)} color={colors.primary} />
       </Pressable>
     </Pressable>
   );
@@ -72,10 +72,10 @@ const SavedPostScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="chevron-left" size={18} color={colors.textPrimary} />
+          <Icon name="chevron-left" size={moderateScale(18)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Saved Reels</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: moderateScale(40) }} />
       </View>
 
       <FlatList
@@ -85,7 +85,7 @@ const SavedPostScreen: React.FC = () => {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Icon name="bookmark-o" size={60} color={colors.textSecondary} />
+            <Icon name="bookmark-o" size={moderateScale(60)} color={colors.textSecondary} />
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No saved reels yet</Text>
           </View>
         }
@@ -102,14 +102,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: moderateScale(spacing.lg),
+    paddingVertical: moderateScale(spacing.md),
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    width: moderateScale(40),
+    height: moderateScale(40),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -118,27 +118,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   list: {
-    padding: spacing.lg,
-    gap: 16,
+    padding: moderateScale(spacing.lg),
+    gap: moderateScale(16),
   },
   card: {
     flexDirection: 'row',
     borderRadius: radius.lg,
     overflow: 'hidden',
-    padding: spacing.md,
+    padding: moderateScale(spacing.md),
     elevation: 3,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
   thumbnail: {
-    width: 80,
-    height: 100,
+    width: moderateScale(80),
+    height: moderateScale(100),
     borderRadius: radius.md,
   },
   info: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: moderateScale(spacing.md),
     justifyContent: 'center',
   },
   jobTitle: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   meta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: moderateScale(4),
     marginBottom: 8,
   },
   location: {
@@ -165,15 +165,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   removeBtn: {
-    padding: 10,
+    padding: moderateScale(10),
     justifyContent: 'center',
   },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 100,
-    gap: 16,
+    marginTop: moderateScale(100),
+    gap: moderateScale(16),
   },
   emptyText: {
     fontSize: 16,

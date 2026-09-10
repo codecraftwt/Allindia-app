@@ -364,11 +364,12 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
           shadowColor: cardShadowColor,
           shadowOpacity: (isSpotlight || isBoost) ? 0.2 : 0.05,
           elevation: cardElevation,
+          padding: moderateScale(12),
         }
       ]}
     >
       {(hasAppliedTags || (item.tags && item.tags.length > 0)) ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: moderateScale(8) }}>
           {hasAppliedTags ? (
             <TagCycling tags={item.applied_tags} colors={colors} />
           ) : item.tags && item.tags.length > 0 ? (
@@ -377,19 +378,19 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
         </View>
       ) : null}
 
-      <View style={styles.cardHeader}>
+      <View style={[styles.cardHeader, { marginBottom: moderateScale(8) }]}>
         <View style={[styles.iconBox, { backgroundColor: hasAppliedTags ? primaryTagColor + '20' : colors.surfaceHighlight }]}>
           {item.employer?.company?.company_logo_url ? (
             <Image
               source={{ uri: item.employer.company.company_logo_url }}
-              style={{ width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(10) }}
+              style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), resizeMode: 'contain' }}
             />
           ) : (
             <Icon name="briefcase" size={moderateScale(18)} color={hasAppliedTags ? primaryTagColor : colors.primary} />
           )}
         </View>
-        <View style={styles.titleBox}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
+        <View style={[styles.titleBox, { paddingRight: moderateScale(22) }]}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {item.title}
           </Text>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
@@ -403,25 +404,23 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
         )}
       </View>
 
-      <View style={styles.cardMeta}>
-        <View style={styles.metaItem}>
+      <View style={[styles.cardMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }]}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
           <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
-          <Text style={[typography.small, { color: locationTextColor, marginLeft: 6 }]}>
+          <Text style={[typography.small, { color: locationTextColor, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>
             {locationLabel}
           </Text>
         </View>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>
+          {salaryLabel}
+        </Text>
       </View>
 
-      <View style={styles.cardFooter}>
-        <View style={{ flex: 1 }}>
-          <Text style={[typography.labelMedium, { color: colors.success }]}>
-            {salaryLabel}
+      <View style={[styles.cardFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground, borderColor: 'transparent', borderWidth: 0, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
+            {jobType}
           </Text>
-          <View style={[styles.typeBadge, { borderColor: colors.primary + '40', borderWidth: 1, alignSelf: 'flex-start', marginTop: 4 }]}>
-            <Text style={[typography.tiny, { color: colors.primary, fontWeight: 'bold' }]}>
-              {jobType}
-            </Text>
-          </View>
         </View>
       </View>
     </Pressable>

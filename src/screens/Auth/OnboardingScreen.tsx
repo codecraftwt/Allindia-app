@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 
@@ -146,7 +146,7 @@ const OnboardingScreen = () => {
             const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 24, 8],
+              outputRange: [moderateScale(8), moderateScale(24), moderateScale(8)],
               extrapolate: 'clamp',
             });
             const opacity = scrollX.interpolate({
@@ -195,25 +195,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
+    paddingHorizontal: moderateScale(spacing.xl),
+    paddingTop: moderateScale(spacing.lg),
   },
   skipText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: typography.body.fontFamily,
     fontWeight: '600',
   },
   slide: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: moderateScale(spacing.xl),
   },
   imageContainer: {
     flex: 0.55,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    marginTop: spacing.xl,
+    marginTop: moderateScale(spacing.xl),
   },
   imageBlob: {
     position: 'absolute',
@@ -230,45 +230,45 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 0.45,
     alignItems: 'center',
-    paddingTop: spacing.xl,
+    paddingTop: moderateScale(spacing.xl),
   },
   title: {
-    fontSize: 28,
+    fontSize: moderateScale(28),
     fontFamily: typography.appTitle.fontFamily,
     fontWeight: '800',
-    marginBottom: spacing.lg,
+    marginBottom: moderateScale(spacing.lg),
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   description: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: typography.body.fontFamily,
     fontWeight: '400',
     textAlign: 'center',
-    lineHeight: 26,
-    paddingHorizontal: spacing.sm,
+    lineHeight: moderateScale(26),
+    paddingHorizontal: moderateScale(spacing.sm),
   },
   footer: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: moderateScale(spacing.xl),
+    paddingBottom: moderateScale(spacing.xxl),
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: moderateScale(spacing.xl),
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: moderateScale(8),
+    height: moderateScale(8),
+    borderRadius: moderateScale(4),
+    marginHorizontal: moderateScale(4),
   },
   activeDot: {
-    width: 20,
+    width: moderateScale(20),
   },
   buttonContainer: {
-    height: 56,
+    height: moderateScale(56),
     borderRadius: radius.lg,
     shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 8 },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: moderateScale(18),
     fontWeight: '700',
     fontFamily: typography.labelLarge.fontFamily,
     letterSpacing: 0.5,

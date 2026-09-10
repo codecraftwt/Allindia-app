@@ -7,12 +7,11 @@ import {
   TextInput,
   Animated,
   StyleSheet,
-  Image,
   useWindowDimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
-import { typography } from '../../../../theme/typography';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
 
@@ -22,14 +21,15 @@ export interface AiResumeWorkspaceProps {
   profile: any;
   generatedResume: {
     summary: string;
-    experienceBullets: string[];
-   
+    experiences?: { company?: string; designation?: string; bullets: string[] }[];
+    experienceBullets?: string[];
+    skills?: string[];
     score: number;
   };
   targetJob: string;
   setTargetJob: (job: string) => void;
   selectedTheme: string;
-  setSelectedTheme: (theme: string) => void;
+  setSelectedTheme: (theme: any) => void;
   educationText?: string;
   experienceText?: string;
   themeColors: {
@@ -61,7 +61,7 @@ export interface AiResumeWorkspaceProps {
   handleSaveToProfile: () => void;
   handleExportHtmlResume: () => void;
   handleExportResume: () => void;
-  setCurrentScreen: (screen: 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE') => void;
+  setCurrentScreen: (screen: 'LANDING' | 'SCANNING' | 'ATS_REPORT' | 'CHAT' | 'WIZARD' | 'GENERATING' | 'WORKSPACE' | 'TEMPLATES' | 'UPLOAD') => void;
   slideAnim: Animated.Value;
   ORANGE_COLOR: string;
 }
@@ -139,7 +139,6 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
     if (type === 'fresher' || expObj.is_fresher) {
       return [{
         designation: 'Fresher',
-      
         start_date: 'N/A',
         end_date: '',
         is_current: false,
@@ -207,7 +206,6 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
     if (isFresherText) {
       finalExperience = [{
         designation: 'Fresher',
-    
         start_date: 'N/A',
         end_date: '',
         is_current: false,
@@ -230,7 +228,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
   return (
     <Animated.View style={[styles.screenContainer, { transform: [{ scale: slideAnim }] }]}>
-      <View style={[styles.workspaceHeader, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+      <View style={[styles.workspaceHeader, { flexDirection: 'row', alignItems: 'center', gap: moderateScale(12) }]}>
         <Pressable
           onPress={() => navigation.goBack()}
           style={({ pressed }) => ({
@@ -238,12 +236,15 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
             opacity: pressed ? 0.7 : 1
           })}
         >
-          <Icon name="arrow-back" size={24} color={colors.textPrimary} />
+          <Icon name="arrow-back" size={moderateScale(24)} color={colors.textPrimary} />
         </Pressable>
+
         <View style={{ flex: 1 }}>
-          <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>AI Resume Workspace</Text>
+          <Text style={[typography.h3, { color: colors.textPrimary }]}>
+            AI Resume Workspace
+          </Text>
           <Text style={[typography.small, { color: colors.textSecondary }]}>
-            Tap any text card below to instantly edit inline!
+            Tailored for {targetJob || 'Target Job'}
           </Text>
         </View>
 
@@ -255,11 +256,11 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
       <ScrollView contentContainerStyle={styles.workspaceScroll} showsVerticalScrollIndicator={false}>
         {/* Theme Selector (5 Templates) */}
-        <View style={[styles.editorCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: 12 }]}>
-          <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: 8, fontWeight: 'bold' }]}>
+        <View style={[styles.editorCard, { backgroundColor: colors.surface, borderColor: colors.border, padding: moderateScale(12) }]}>
+          <Text style={[typography.labelMedium, { color: colors.textPrimary, marginBottom: moderateScale(8), fontWeight: 'bold' }]}>
             Resume Color Theme 🎨
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingVertical: 8, paddingLeft: 12, paddingRight: 4 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: moderateScale(14), paddingVertical: moderateScale(8), paddingLeft: moderateScale(12), paddingRight: moderateScale(4) }}>
             {[
               { id: 'OrangeGlow', color: ORANGE_COLOR },
               { id: 'MidnightSlate', color: '#60a5fa' },
@@ -272,16 +273,15 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
                 onPress={() => setSelectedTheme(theme.id as any)}
                 style={({ pressed }) => [
                   {
-                    width: 38,
-                    height: 38,
+                    width: moderateScale(38),
+                    height: moderateScale(38),
                     backgroundColor: theme.color,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    // Modern leaf / droplet shape
-                    borderTopLeftRadius: 18,
-                    borderBottomRightRadius: 18,
-                    borderTopRightRadius: 6,
-                    borderBottomLeftRadius: 6,
+                    borderTopLeftRadius: moderateScale(18),
+                    borderBottomRightRadius: moderateScale(18),
+                    borderTopRightRadius: moderateScale(6),
+                    borderBottomLeftRadius: moderateScale(6),
                     shadowColor: theme.color,
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.35,
@@ -298,7 +298,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
                   }
                 ]}
               >
-                {selectedTheme === theme.id && <Icon name="checkmark-done" size={18} color="#fff" style={{ transform: [{ rotate: '10deg' }] }} />}
+                {selectedTheme === theme.id && <Icon name="checkmark-done" size={moderateScale(18)} color="#fff" style={{ transform: [{ rotate: '10deg' }] }} />}
               </Pressable>
             ))}
           </ScrollView>
@@ -316,12 +316,12 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
         ]}>
           {/* Header */}
           <View style={{ alignItems: 'center', marginBottom: 2 }}>
-            <Text style={[typography.appTitle, { color: themeColors.accent, fontWeight: '900', fontSize: 14.5, letterSpacing: -0.5, textAlign: 'center' }]}>
+            <Text style={[typography.appTitle, { color: themeColors.accent, fontWeight: '900', fontSize: moderateScale(14.5), letterSpacing: -0.5, textAlign: 'center' }]}>
               {profile?.personal?.name || 'Your Name'}
             </Text>
 
             {targetJob ? (
-              <Text style={[typography.labelMedium, { color: '#334155', fontWeight: '700', marginTop: 1, marginBottom: 1, fontSize: 8.5, letterSpacing: 0.5, textTransform: 'uppercase' }]}>
+              <Text style={[typography.labelMedium, { color: '#334155', fontWeight: '700', marginTop: 1, marginBottom: 1, fontSize: moderateScale(8.5), letterSpacing: 0.5, textTransform: 'uppercase' }]}>
                 {targetJob}
               </Text>
             ) : null}
@@ -329,42 +329,42 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginTop: 2 }}>
               {(resumePhone || profile?.personal?.phone || profile?.personal?.mobile) && (
                 <>
-                  <Icon name="phone-portrait" size={8} color="#000" style={{ marginRight: 2 }} />
-                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 7.8 }]}>
+                  <Icon name="phone-portrait" size={moderateScale(8)} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(7.8) }]}>
                     {resumePhone || profile?.personal?.phone || profile?.personal?.mobile}
                   </Text>
-                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>
+                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: moderateScale(8) }}>|</Text>
                 </>
               )}
               {(resumeEmail || profile?.personal?.email) && (
                 <>
-                  <Icon name="mail" size={8} color="#000" style={{ marginRight: 2 }} />
-                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 7.8 }]}>
+                  <Icon name="mail" size={moderateScale(8)} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(7.8) }]}>
                     {resumeEmail || profile?.personal?.email}
                   </Text>
-                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>
+                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: moderateScale(8) }}>|</Text>
                 </>
               )}
               {profile?.personal?.city && (
                 <>
-                  <Icon name="location" size={8} color="#000" style={{ marginRight: 2 }} />
-                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 7.8 }]}>{profile.personal.city}</Text>
-                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>
+                  <Icon name="location" size={moderateScale(8)} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(7.8) }]}>{profile.personal.city}</Text>
+                  <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: moderateScale(8) }}>|</Text>
                 </>
               )}
               {(resumeLinkedin || profile?.personal?.linkedin) && (
                 <>
-                  <Icon name="logo-linkedin" size={8} color="#000" style={{ marginRight: 2 }} />
-                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 7.8 }]}>
+                  <Icon name="logo-linkedin" size={moderateScale(8)} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(7.8) }]}>
                     {(resumeLinkedin || profile?.personal?.linkedin).replace(/^https?:\/\/(www\.)?/, '')}
                   </Text>
-                  {(resumeGithub || profile?.personal?.github) && <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: 8 }}>|</Text>}
+                  {(resumeGithub || profile?.personal?.github) && <Text style={{ color: '#cbd5e1', marginHorizontal: 3, fontSize: moderateScale(8) }}>|</Text>}
                 </>
               )}
               {(resumeGithub || profile?.personal?.github) && (
                 <>
-                  <Icon name="logo-github" size={8} color="#000" style={{ marginRight: 2 }} />
-                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 7.8 }]}>
+                  <Icon name="logo-github" size={moderateScale(8)} color="#000" style={{ marginRight: 2 }} />
+                  <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(7.8) }]}>
                     {(resumeGithub || profile?.personal?.github).replace(/^https?:\/\/(www\.)?/, '')}
                   </Text>
                 </>
@@ -375,7 +375,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
           <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
 
           {/* Summary Section */}
-          <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2 }]}>
+          <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2) }]}>
             SUMMARY
           </Text>
           <TextInput
@@ -387,28 +387,45 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
           <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
 
-
+          {/* Skills Section */}
+          {generatedResume.skills && generatedResume.skills.length > 0 && (
+            <>
+              <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
+                CORE SKILLS
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginBottom: 2 }}>
+                {generatedResume.skills.map((skill, idx) => (
+                  <View key={idx} style={[styles.skillBadge, { backgroundColor: themeColors.bg, paddingHorizontal: moderateScale(6), paddingVertical: moderateScale(2), borderRadius: radius.xs }]}>
+                    <Text style={[typography.tiny, { color: themeColors.textAccent, fontWeight: 'bold', fontSize: moderateScale(7.5) }]}>
+                      {skill}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
+            </>
+          )}
 
           {/* Experience Section */}
           {finalExperience && finalExperience.length > 0 && (
             <>
-              <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+              <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                 EXPERIENCE
               </Text>
               {finalExperience.map((exp: any, idx: number) => (
                 <View key={idx} style={{ marginBottom: exp.designation === 'Fresher' ? 0 : 3 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                    <Text style={[typography.small, { color: '#000', fontWeight: 'bold', flex: 1, fontSize: 9 }]}>
+                    <Text style={[typography.small, { color: '#000', fontWeight: 'bold', flex: 1, fontSize: moderateScale(9) }]}>
                       {exp.designation || 'Specialist'}
                       {exp.company ? ` , ${exp.company}` : ''}
                       {(exp.location || profile?.personal?.city) ? ` | ${exp.location || profile?.personal?.city}` : ''}
                     </Text>
                     {exp.start_date && exp.start_date !== 'N/A' && exp.start_date !== 'Joined' ? (
-                      <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 8 }]}>
+                      <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(8) }]}>
                         {exp.start_date} - {exp.is_current ? 'Present' : exp.end_date || ''}
                       </Text>
                     ) : exp.start_date === 'N/A' ? null : (
-                      <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 8 }]}>
+                      <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(8) }]}>
                         Active
                       </Text>
                     )}
@@ -417,7 +434,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
                     idx === 0 && editedBullets.length > 0 ? (
                       editedBullets.map((bullet, bIdx) => (
                         <View key={bIdx} style={[styles.bulletRow, { marginTop: 2 }]}>
-                          <Text style={{ color: '#000', marginRight: 6, fontSize: 8.2 }}>-</Text>
+                          <Text style={{ color: '#000', marginRight: 6, fontSize: moderateScale(8.2) }}>-</Text>
                           <TextInput
                             value={bullet}
                             onChangeText={(text) => {
@@ -432,8 +449,8 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
                       ))
                     ) : (
                       <View style={[styles.bulletRow, { marginTop: 2 }]}>
-                        <Text style={{ color: '#000', marginRight: 6, fontSize: 8.2 }}>-</Text>
-                        <Text style={[typography.tiny, { color: '#000', flex: 1, lineHeight: 14, fontSize: 8.2 }]}>
+                        <Text style={{ color: '#000', marginRight: 6, fontSize: moderateScale(8.2) }}>-</Text>
+                        <Text style={[typography.tiny, { color: '#000', flex: 1, lineHeight: moderateScale(14), fontSize: moderateScale(8.2) }]}>
                           {exp.description || 'Contributed to key projects and operational workflows.'}
                         </Text>
                       </View>
@@ -450,7 +467,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {projects ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     PROJECTS
                   </Text>
                   <TextInput
@@ -465,19 +482,19 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {finalEducation && finalEducation.length > 0 && (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     EDUCATION
                   </Text>
                   {finalEducation.map((edu: any, idx: number) => (
                     <View key={idx} style={{ marginBottom: 4 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={[typography.small, { color: '#000', fontWeight: '500', fontSize: 8.8 }]}>
+                        <Text style={[typography.small, { color: '#000', fontWeight: '500', fontSize: moderateScale(8.8) }]}>
                           <Text style={{ fontWeight: 'bold' }}>{edu.degree || 'Degree'}</Text>
                           {edu.school_university ? ` - ${edu.school_university}` : ''}
                           {edu.passing_year ? ` | ${edu.passing_year}` : ''}
                         </Text>
                         {edu.gpa_percentage ? (
-                          <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: 8 }]}>
+                          <Text style={[typography.tiny, { color: '#000', fontWeight: 'bold', fontSize: moderateScale(8) }]}>
                             GPA: {edu.gpa_percentage}
                           </Text>
                         ) : null}
@@ -490,7 +507,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {certifications ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     CERTIFICATIONS
                   </Text>
                   <TextInput
@@ -505,7 +522,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {careerObjective ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     CAREER OBJECTIVE
                   </Text>
                   <TextInput
@@ -520,7 +537,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {languages ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     LANGUAGES
                   </Text>
                   <TextInput
@@ -535,7 +552,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {achievements ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     ACHIEVEMENTS
                   </Text>
                   <TextInput
@@ -550,7 +567,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               {hobbies ? (
                 <>
                   <View style={[styles.sheetDivider, { backgroundColor: '#cbd5e1', marginVertical: 3 }]} />
-                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                  <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                     HOBBIES & INTERESTS
                   </Text>
                   <TextInput
@@ -579,17 +596,17 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
           ]}>
             {/* Header for Page 2 */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 4, marginBottom: 8 }}>
-              <Text style={{ fontSize: 9, color: themeColors.accent, fontWeight: 'bold', textTransform: 'uppercase' }}>
+              <Text style={{ fontSize: moderateScale(9), color: themeColors.accent, fontWeight: 'bold', textTransform: 'uppercase' }}>
                 {profile?.personal?.name || 'Resume'}
               </Text>
-              <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: 'bold' }}>
+              <Text style={{ fontSize: moderateScale(9), color: '#94a3b8', fontWeight: 'bold' }}>
                 Page 2 of 2
               </Text>
             </View>
 
             {projects ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   PROJECTS
                 </Text>
                 <TextInput
@@ -604,7 +621,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {finalEducation && finalEducation.length > 0 && (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   EDUCATION
                 </Text>
                 {finalEducation.map((edu: any, idx: number) => (
@@ -629,7 +646,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {certifications ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   CERTIFICATIONS
                 </Text>
                 <TextInput
@@ -644,7 +661,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {careerObjective ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   CAREER OBJECTIVE
                 </Text>
                 <TextInput
@@ -659,7 +676,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {languages ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   LANGUAGES
                 </Text>
                 <TextInput
@@ -674,7 +691,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {achievements ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   ACHIEVEMENTS
                 </Text>
                 <TextInput
@@ -689,7 +706,7 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
 
             {hobbies ? (
               <>
-                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: 8.2, marginBottom: 2 }]}>
+                <Text style={[typography.labelMedium, { color: themeColors.accent, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', fontSize: moderateScale(8.2), marginBottom: 2 }]}>
                   HOBBIES & INTERESTS
                 </Text>
                 <TextInput
@@ -702,28 +719,28 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
             ) : null}
 
             <View style={{ position: 'absolute', bottom: 4, right: 12 }}>
-              <Text style={{ fontSize: 9, color: '#94a3b8', fontWeight: 'bold' }}>Page 2 of 2</Text>
+              <Text style={{ fontSize: moderateScale(9), color: '#94a3b8', fontWeight: 'bold' }}>Page 2 of 2</Text>
             </View>
           </View>
         )}
 
         {/* Action Buttons */}
-        <View style={{ marginTop: spacing.md, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 12, paddingHorizontal: 12 }}>
+        <View style={{ marginTop: spacing.md, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: moderateScale(12), paddingHorizontal: spacing.sm }}>
           <Pressable
             onPress={handleSaveToProfile}
             style={({ pressed }) => [
               styles.workspaceBtn,
               {
                 backgroundColor: '#f1f5f9',
-                height: 48,
+                height: moderateScale(48),
                 flex: 1,
-                borderRadius: 24,
+                borderRadius: radius.pill,
                 opacity: pressed ? 0.85 : 1,
               }
             ]}
           >
-            <Icon name="save-outline" size={18} color="#475569" />
-            <Text style={[typography.small, { color: '#475569', fontWeight: 'bold', fontSize: 13 }]}>
+            <Icon name="save-outline" size={moderateScale(18)} color="#475569" />
+            <Text style={[typography.labelMedium, { color: '#475569' }]}>
               Save Draft
             </Text>
           </Pressable>
@@ -734,9 +751,9 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               styles.workspaceBtn,
               {
                 backgroundColor: ORANGE_COLOR,
-                height: 48,
+                height: moderateScale(48),
                 flex: 1.5,
-                borderRadius: 24,
+                borderRadius: radius.pill,
                 opacity: pressed ? 0.85 : 1,
                 shadowColor: ORANGE_COLOR,
                 shadowOffset: { width: 0, height: 4 },
@@ -746,19 +763,15 @@ export const AiResumeWorkspace: React.FC<AiResumeWorkspaceProps> = ({
               }
             ]}
           >
-            <Icon name="document-text" size={18} color="#fff" />
-            <Text style={[typography.small, { color: '#fff', fontWeight: 'bold', fontSize: 13 }]}>
+            <Icon name="document-text" size={moderateScale(18)} color="#fff" />
+            <Text style={[typography.labelMedium, { color: '#fff' }]}>
               Select Template
             </Text>
           </Pressable>
         </View>
 
-        <Pressable
-          onPress={() => setCurrentScreen('WIZARD')}
-          style={[styles.textBtn, { marginBottom: 50 }]}
-        >
-     
-        </Pressable>
+        {/* Generous bottom spacer for floating bottom tab bar */}
+        <View style={{ height: moderateScale(40) }} />
       </ScrollView>
     </Animated.View>
   );
@@ -773,18 +786,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    gap: 12,
+    gap: moderateScale(12),
   },
   scoreBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
     alignItems: 'center',
     justifyContent: 'center',
   },
   workspaceScroll: {
     paddingHorizontal: spacing.md,
-    paddingBottom: 110,
+    paddingBottom: moderateScale(160),
   },
   editorCard: {
     padding: spacing.md,
@@ -796,24 +809,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   colorDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
   },
   resumeSheet: {
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    borderRadius: 2,
-    padding: 12,
-    minHeight: 520,
+    borderRadius: radius.xs,
+    padding: moderateScale(12),
+    minHeight: moderateScale(500),
     width: '100%',
     alignSelf: 'center',
     shadowColor: '#000',
@@ -825,12 +838,12 @@ const styles = StyleSheet.create({
   },
   sheetDivider: {
     height: 1,
-    marginVertical: 3,
+    marginVertical: moderateScale(3),
   },
   inlineInput: {
     paddingVertical: 0,
-    fontSize: 8.2,
-    lineHeight: 11,
+    fontSize: moderateScale(8.2),
+    lineHeight: moderateScale(11),
     fontFamily: 'Poppins-Regular',
   },
   bulletRow: {
@@ -838,18 +851,17 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 2,
   },
-
   skillBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: radius.sm,
   },
   workspaceBtn: {
     flex: 1,
-    height: 48,
+    minHeight: moderateScale(48),
     borderRadius: radius.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -858,6 +870,8 @@ const styles = StyleSheet.create({
   },
   textBtn: {
     alignSelf: 'center',
-    paddingVertical: 8,
+    paddingVertical: moderateScale(8),
   },
 });
+
+export default AiResumeWorkspace;

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Linking, Pressable } from 'react-native';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { ProfileEditLayout } from './ProfileEditLayout';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTranslation } from 'react-i18next';
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 18,
     marginRight: spacing.sm,
-    width: 8,
+    width: moderateScale(8),
     textAlign: 'center',
   },
   bulletContent: {
