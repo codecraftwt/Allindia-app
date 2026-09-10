@@ -11,6 +11,9 @@ import {
 import VersionCheck from 'react-native-version-check';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
+import { typography, moderateScale } from '../theme/typography';
+import { spacing } from '../theme/spacing';
+import { radius } from '../theme/radius';
 
 const AppUpdateChecker = () => {
   const [updateNeeded, setUpdateNeeded] = useState(false);
@@ -36,9 +39,11 @@ const AppUpdateChecker = () => {
     };
 
     // Add a small delay so it doesn't block initial rendering
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       checkUpdate();
     }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleUpdate = () => {
@@ -61,17 +66,16 @@ const AppUpdateChecker = () => {
       visible={updateNeeded}
       transparent={true}
       animationType="fade"
-      // Removing onRequestClose prevents Android back button from dismissing it (forces update)
     >
       <View style={styles.container}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Icon name="rocket-outline" size={60} color={colors.primary} style={styles.icon} />
+          <Icon name="rocket-outline" size={moderateScale(56)} color={colors.primary} style={styles.icon} />
           
-          <Text style={[styles.title, { color: colors.textPrimary }]}>
+          <Text style={[typography.h3, styles.title, { color: colors.textPrimary }]}>
             Update Required
           </Text>
           
-          <Text style={[styles.subtitle, { color: colors.textPrimary, opacity: 0.8 }]}>
+          <Text style={[typography.body, styles.subtitle, { color: colors.textSecondary }]}>
             A new version of the app is available! Please update to get the latest features and improvements.
           </Text>
           
@@ -79,7 +83,7 @@ const AppUpdateChecker = () => {
             style={[styles.button, { backgroundColor: colors.primary }]} 
             onPress={handleUpdate}
           >
-            <Text style={styles.buttonText}>UPDATE NOW</Text>
+            <Text style={[typography.labelMedium, styles.buttonText]}>UPDATE NOW</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -92,13 +96,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.lg,
     backgroundColor: 'rgba(0,0,0,0.6)', 
   },
   card: {
     width: '90%',
-    borderRadius: 20,
-    padding: 30,
+    maxWidth: moderateScale(340),
+    borderRadius: radius.xl,
+    padding: moderateScale(28),
     alignItems: 'center',
     elevation: 10,
     shadowColor: '#000',
@@ -107,32 +112,28 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
   },
   icon: {
-    marginBottom: 20,
+    marginBottom: moderateScale(16),
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: moderateScale(10),
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
     textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 24,
+    marginBottom: moderateScale(24),
+    lineHeight: moderateScale(22),
   },
   button: {
-    paddingVertical: 14,
-    paddingHorizontal: 30,
-    borderRadius: 12,
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(24),
+    borderRadius: radius.button,
     width: '100%',
     alignItems: 'center',
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
     fontWeight: 'bold',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });
 

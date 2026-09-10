@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { radius } from '../theme/radius';
 import type { ThemeColors } from '../theme/colors';
 
@@ -53,7 +53,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <View style={[styles.iconBox, { backgroundColor: accentColor + '15' }]}>
             <Icon 
               name={type === 'danger' ? 'trash-2' : (type === 'success' ? 'check-circle' : 'help-circle')} 
-              size={28} 
+              size={moderateScale(28)} 
               color={accentColor} 
             />
           </View>
@@ -62,7 +62,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             {title}
           </Text>
           
-          <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}>
+          <Text style={[typography.labelMedium, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: moderateScale(20) }]}>
             {message}
           </Text>
 
@@ -106,9 +106,9 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    maxWidth: 340,
-    padding: 24,
-    borderRadius: 32,
+    maxWidth: moderateScale(340),
+    padding: moderateScale(24),
+    borderRadius: radius.xl,
     alignItems: 'center',
     elevation: 10,
     shadowColor: '#000',
@@ -117,27 +117,27 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   iconBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionBox: {
     width: '100%',
-    marginTop: 32,
-    gap: 12,
+    marginTop: moderateScale(28),
+    gap: moderateScale(10),
   },
   btn: {
     width: '100%',
-    height: 48,
+    height: moderateScale(46),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtn: {
     width: '100%',
-    height: 40,
+    height: moderateScale(38),
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   dropdownCard: {
     height: 520,
     marginHorizontal: spacing.md,
-    borderRadius: radius.xxl,
+    borderRadius: radius.xl,
     borderWidth: 1,
     overflow: 'hidden',
     elevation: 16,

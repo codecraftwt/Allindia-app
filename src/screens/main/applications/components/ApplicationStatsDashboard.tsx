@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Animated, { 
   useSharedValue, 
@@ -8,12 +8,12 @@ import Animated, {
   withTiming, 
   Easing 
 } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import { ThemeColors } from '../../../../theme/colors';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { useTheme } from '../../../../context/ThemeContext';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const StatShimmer = ({ colors }: { colors: ThemeColors }) => {
   const shimmerValue = useSharedValue(0.3);
@@ -24,7 +24,7 @@ const StatShimmer = ({ colors }: { colors: ThemeColors }) => {
       -1,
       true
     );
-  }, []);
+  }, [shimmerValue]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: shimmerValue.value,
@@ -33,7 +33,7 @@ const StatShimmer = ({ colors }: { colors: ThemeColors }) => {
   return (
     <View style={styles.stepContainer}>
       <Animated.View style={[styles.stepCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border + '40' }, animatedStyle]} />
-      <Animated.View style={[{ width: 40, height: 10, backgroundColor: colors.surfaceHighlight, borderRadius: 2, marginTop: 8 }, animatedStyle]} />
+      <Animated.View style={[{ width: moderateScale(40), height: moderateScale(10), backgroundColor: colors.surfaceHighlight, borderRadius: radius.xs, marginTop: moderateScale(8) }, animatedStyle]} />
     </View>
   );
 };
@@ -43,13 +43,13 @@ const PipelineStep = ({ label, value, color, colors, isLast }: any) => {
     <View style={styles.stepContainer}>
       <View style={styles.circleWrapper}>
         <View style={[styles.stepCircle, { backgroundColor: colors.surface, borderColor: color }]}>
-          <Text style={[styles.stepValue, { color: colors.textPrimary }]}>
+          <Text style={[typography.labelMedium, styles.stepValue, { color: colors.textPrimary }]}>
             {String(value || 0).padStart(2, '0')}
           </Text>
         </View>
         {!isLast && <View style={[styles.stepLine, { backgroundColor: colors.border }]} />}
       </View>
-      <Text style={[styles.stepLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+      <Text style={[typography.tiny, styles.stepLabel, { color: colors.textSecondary }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -63,23 +63,26 @@ interface ApplicationStatsDashboardProps {
 
 const ApplicationStatsDashboard: React.FC<ApplicationStatsDashboardProps> = ({ applicationCounts, countsLoading }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const pipelineSteps = [
-    { label: 'Applied', value: applicationCounts?.total_applied, color: '#3b82f6' },
-    { label: 'Pending', value: applicationCounts?.pending, color: '#f59e0b' },
-    { label: 'Interview', value: applicationCounts?.interview_scheduled, color: '#6366f1' },
-    { label: 'Selected', value: applicationCounts?.selected, color: '#10b981' },
+    { label: t('applications.statusApplied', 'Applied'), value: applicationCounts?.total_applied, color: '#3b82f6' },
+    { label: t('applications.statusPendingShort', 'Pending'), value: applicationCounts?.pending, color: '#f59e0b' },
+    { label: t('applications.statusInterviewShort', 'Interview'), value: applicationCounts?.interview_scheduled, color: '#6366f1' },
+    { label: t('applications.statusSelectedShort', 'Selected'), value: applicationCounts?.selected, color: '#10b981' },
   ];
 
   const others = [
-    { label: 'Shortlisted', value: applicationCounts?.shortlisted, color: '#06b6d4', icon: 'check-circle-o' },
-    { label: 'Rejected', value: applicationCounts?.rejected, color: '#ef4444', icon: 'times-circle-o' },
+    { label: t('applications.statusShortlistedShort', 'Shortlisted'), value: applicationCounts?.shortlisted, color: '#06b6d4', icon: 'check-circle-o' },
+    { label: t('applications.statusRejectedShort', 'Rejected'), value: applicationCounts?.rejected, color: '#ef4444', icon: 'times-circle-o' },
   ];
 
   return (
-    <View style={[styles.dashboardCard, { backgroundColor: colors.surface }]}>
+    <View style={[styles.dashboardCard, { backgroundColor: colors.surface, borderColor: colors.border + '60' }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>My Activity</Text>
+        <Text style={[typography.labelLarge, styles.title, { color: colors.textPrimary }]}>
+          {t('applications.myActivity', 'My Activity')}
+        </Text>
       </View>
 
       <View style={styles.pipelineRow}>
@@ -104,12 +107,12 @@ const ApplicationStatsDashboard: React.FC<ApplicationStatsDashboardProps> = ({ a
       <View style={styles.othersRow}>
         {others.map((item) => (
           <View key={item.label} style={styles.otherItem}>
-            <View style={[styles.otherIconWrap, { backgroundColor: item.color + '10' }]}>
-              <Icon name={item.icon} size={12} color={item.color} />
+            <View style={[styles.otherIconWrap, { backgroundColor: item.color + '15' }]}>
+              <Icon name={item.icon} size={moderateScale(12)} color={item.color} />
             </View>
             <View>
-              <Text style={[styles.otherValue, { color: colors.textPrimary }]}>{item.value || 0}</Text>
-              <Text style={[styles.otherLabel, { color: colors.textSecondary }]}>{item.label}</Text>
+              <Text style={[typography.labelMedium, styles.otherValue, { color: colors.textPrimary }]}>{item.value || 0}</Text>
+              <Text style={[typography.tiny, styles.otherLabel, { color: colors.textSecondary }]}>{item.label}</Text>
             </View>
           </View>
         ))}
@@ -120,32 +123,27 @@ const ApplicationStatsDashboard: React.FC<ApplicationStatsDashboardProps> = ({ a
 
 const styles = StyleSheet.create({
   dashboardCard: {
-    padding: 6,
-    borderRadius: 12,
+    padding: moderateScale(10),
+    borderRadius: radius.card,
     elevation: 3,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
   },
   header: {
-    marginBottom: 6,
+    marginBottom: moderateScale(8),
   },
   title: {
-    fontSize: 16,
     fontWeight: '800',
-  },
-  subtitle: {
-    fontSize: 10,
-    opacity: 0.6,
+    letterSpacing: -0.2,
   },
   pipelineRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
-    paddingHorizontal: 4,
+    paddingHorizontal: moderateScale(4),
   },
   stepContainer: {
     flex: 1,
@@ -156,16 +154,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     justifyContent: 'center',
-    marginBottom: 2,
+    marginBottom: moderateScale(4),
   },
   stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: moderateScale(17),
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
     zIndex: 2,
   },
   stepLine: {
@@ -176,43 +173,42 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   stepValue: {
-    fontSize: 14,
     fontWeight: '800',
+    fontSize: moderateScale(13),
   },
   stepLabel: {
-    fontSize: 10,
     fontWeight: '700',
     textAlign: 'center',
+    fontSize: moderateScale(10),
   },
   divider: {
     height: 1,
-    marginVertical: 2,
+    marginVertical: moderateScale(6),
   },
   othersRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 4,
+    paddingVertical: moderateScale(4),
   },
   otherItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: moderateScale(8),
   },
   otherIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: moderateScale(26),
+    height: moderateScale(26),
+    borderRadius: moderateScale(13),
     alignItems: 'center',
     justifyContent: 'center',
   },
   otherValue: {
-    fontSize: 14,
     fontWeight: '800',
+    fontSize: moderateScale(13),
   },
   otherLabel: {
-    fontSize: 10,
     fontWeight: '600',
-    opacity: 0.6,
+    fontSize: moderateScale(10),
   },
 });
 

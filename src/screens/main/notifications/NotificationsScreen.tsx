@@ -15,6 +15,7 @@ import { typography, moderateScale } from '../../../theme/typography';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, clearAllNotifications, ApiNotification } from '../../../redux/slice/notificationSlice';
 import type { RootState, AppDispatch } from '../../../redux/store';
 import { useTranslation } from 'react-i18next';
+import GuestView from '../../../components/GuestView';
 
 type Props = StackScreenProps<HomeStackParamList, 'Notifications'>;
 
@@ -81,11 +82,37 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { notifications, loading } = useSelector((state: RootState) => state.notifications);
 
   useEffect(() => {
-    dispatch(fetchNotifications(50));
-  }, [dispatch]);
+    if (isLoggedIn) {
+      dispatch(fetchNotifications(50));
+    }
+  }, [dispatch, isLoggedIn]);
+
+  if (!isLoggedIn) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+        <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
+          <View style={styles.headerLeft}>
+            <Pressable onPress={() => navigation.goBack()} hitSlop={moderateScale(10)} style={styles.backBtn} accessibilityLabel="Go back">
+              <Icon name="chevron-left" size={moderateScale(20)} color={colors.textPrimary} />
+            </Pressable>
+          </View>
+          <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
+            {t('notificationsScreen.title', 'Notifications')}
+          </Text>
+          <View style={styles.headerRight} />
+        </View>
+        <GuestView
+          icon="bell-o"
+          title={t('notificationsScreen.guestTitle', 'Notifications')}
+          subtitle={t('notificationsScreen.guestSubtitle', 'Log in or register to receive real-time updates on your job applications, interview alerts, and employer messages.')}
+        />
+      </SafeAreaView>
+    );
+  }
 
   const handleMarkAsRead = (item: ApiNotification) => {
     if (!item.is_read) {

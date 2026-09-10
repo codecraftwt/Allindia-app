@@ -5,7 +5,7 @@ export type JobDetailParams = {
 };
 
 export type HomeStackParamList = {
-  HomeFeed: undefined;
+  HomeFeed: { tabBarHidden?: boolean } | undefined;
   JobDetail: JobDetailParams;
   Notifications: undefined;
   SearchHome: undefined;
@@ -74,7 +74,7 @@ export type AuthStackParamList = {
   Login: undefined;
   SignIn: undefined;
   EmailLogin: undefined;
-  ForgotPass: undefined;
+  ForgotPass: { token?: string; email?: string } | undefined;
   OtpVerification: { email: string; verification_channel?: string; phone?: string };
   ProfileBasicInfo: undefined;
   ProfileLocation: undefined;

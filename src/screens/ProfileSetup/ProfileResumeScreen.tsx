@@ -26,7 +26,7 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
         type: [types.pdf, types.doc, types.docx],
       });
       const file = res[0];
-      const uri = file.fileCopyUri ?? file.uri;
+      const uri = (file as any).fileCopyUri ?? file.uri;
       updateDraft({
         resumeUri: uri,
         resumeName: file.name ?? 'Resume',

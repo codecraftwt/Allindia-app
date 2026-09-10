@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { radius } from '../theme/radius';
 import { spacing } from '../theme/spacing';
 import { ThemeColors } from '../theme/colors';
@@ -269,13 +269,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: spacing.lg,
   },
   content: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: moderateScale(380),
     borderRadius: radius.lg,
-    padding: 24,
+    padding: moderateScale(22),
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   dropdownContent: {
     position: 'absolute',
-    width: 130,
+    width: moderateScale(130),
     borderRadius: radius.md,
     borderWidth: 1,
     padding: 2,
@@ -297,48 +297,48 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: moderateScale(18),
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    gap: 12,
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(12),
+    gap: moderateScale(12),
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtn: {
-    paddingVertical: 12,
+    paddingVertical: moderateScale(12),
     alignItems: 'center',
   },
   input: {
-    height: 100,
+    height: moderateScale(90),
     borderRadius: radius.md,
     borderWidth: 1,
-    padding: 12,
+    padding: moderateScale(12),
     textAlignVertical: 'top',
-    fontSize: 14,
+    fontSize: moderateScale(13),
   },
   reasonsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 24,
+    gap: moderateScale(8),
+    marginBottom: moderateScale(20),
   },
   reasonChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(7),
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   submitBtn: {
-    height: 48,
+    height: moderateScale(46),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',

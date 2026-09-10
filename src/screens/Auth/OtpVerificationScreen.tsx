@@ -49,7 +49,7 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { resetDraft } = useProfileSetup();
   const dispatch = useDispatch<AppDispatch>();
   const { email, verification_channel, phone } = route.params;
-  const identifier = email || phone;
+  const identifier = email || phone || '';
   const isWhatsApp = verification_channel === 'whatsapp';
   const [otp, setOtp] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);

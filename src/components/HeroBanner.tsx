@@ -110,7 +110,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
   const isFocused = useIsFocused();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
-  const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
+  const autoScrollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const slides = useMemo(() => {
     if (media && media.length > 0) {

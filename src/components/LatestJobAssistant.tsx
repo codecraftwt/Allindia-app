@@ -14,7 +14,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { useNavigation } from '@react-navigation/native';
@@ -293,15 +293,15 @@ const styles = StyleSheet.create({
   },
   fabRippleLarge: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
     zIndex: 1,
   },
   circleRing: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: moderateScale(54),
+    height: moderateScale(54),
+    borderRadius: moderateScale(27),
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
@@ -312,17 +312,17 @@ const styles = StyleSheet.create({
   iconStack: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
+    width: moderateScale(32),
+    height: moderateScale(32),
   },
   badgeCountFab: {
     position: 'absolute',
     top: -2,
     right: -2,
     backgroundColor: '#FF5A5F',
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    minWidth: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -331,17 +331,17 @@ const styles = StyleSheet.create({
   },
   badgeTextCount: {
     color: '#FFF',
-    fontSize: 9,
+    fontSize: moderateScale(9),
     fontWeight: '900',
   },
   autoHint: {
     position: 'absolute',
-    bottom: 72,
+    bottom: moderateScale(72),
     right: 0,
     paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    paddingVertical: moderateScale(8),
     borderRadius: radius.pill,
-    minWidth: 120,
+    minWidth: moderateScale(120),
     alignItems: 'center',
     elevation: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -362,11 +362,11 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: 'absolute',
-    bottom: 75,
+    bottom: moderateScale(75),
     right: 0,
-    width: 270,
+    width: moderateScale(270),
     padding: spacing.md,
-    borderRadius: radius.xxl,
+    borderRadius: radius.xl,
     borderWidth: 1,
     elevation: 20,
     shadowOffset: { width: 0, height: 12 },
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   countBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
     borderRadius: radius.sm,
   },
   miniList: {
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   miniJobItem: {
-    paddingVertical: 8,
+    paddingVertical: moderateScale(8),
   },
   jobMeta: {
     flexDirection: 'row',
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   },
   tooltipBtn: {
     marginTop: spacing.md,
-    paddingVertical: 12,
+    paddingVertical: moderateScale(12),
     borderRadius: radius.xl,
     flexDirection: 'row',
     alignItems: 'center',

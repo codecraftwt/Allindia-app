@@ -35,10 +35,16 @@ const initialState: NotificationState = {
 
 export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
-  async (per_page: number = 20, { getState, rejectWithValue }) => {
+  async (per_page: number | void = 20, { getState, rejectWithValue }) => {
     try {
       const state = getState() as any;
-      const token = state.auth.token;
+      const token = state.auth?.token;
+      const isLoggedIn = state.auth?.isLoggedIn;
+
+      if (!token || !isLoggedIn) {
+        return { data: { notifications: [], unread_count: 0 }, meta: null };
+      }
+
       const response = await api.get(`api/candidate/notifications?per_page=${per_page}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -177,7 +183,16 @@ const notificationSlice = createSlice({
       .addCase(clearAllNotifications.fulfilled, (state) => {
         state.notifications = [];
         state.unreadCount = 0;
-      });
+      })
+      .addMatcher(
+        (action) => action.type === 'auth/logoutCandidate/fulfilled' || action.type === 'auth/logout',
+        (state) => {
+          state.notifications = [];
+          state.unreadCount = 0;
+          state.meta = null;
+          state.error = null;
+        }
+      );
   },
 });
 

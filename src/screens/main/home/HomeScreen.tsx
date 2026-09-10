@@ -1000,19 +1000,21 @@ const HomeScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       InteractionManager.runAfterInteractions(() => {
-        dispatch(fetchNotifications());
+        if (isLoggedIn) {
+          dispatch(fetchNotifications());
+        }
       });
       StatusBar.setBarStyle('light-content');
-    }, [dispatch])
+    }, [dispatch, isLoggedIn])
   );
 
   useEffect(() => {
     Animated.timing(badgeAnim, {
-      toValue: unreadCount > 0 ? 1 : 0,
+      toValue: isLoggedIn && unreadCount > 0 ? 1 : 0,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [unreadCount, badgeAnim]);
+  }, [unreadCount, badgeAnim, isLoggedIn]);
 
   // Load recent searches from AsyncStorage on screen focus
   useFocusEffect(
@@ -1105,7 +1107,10 @@ const HomeScreen: React.FC = () => {
   }, [notifyHintAnim]);
 
   useEffect(() => {
-    if (unreadCount === 0) return;
+    if (!isLoggedIn || unreadCount === 0) {
+      setShowNotifyHint(false);
+      return;
+    }
 
     let hideTimer: ReturnType<typeof setTimeout>;
     const timer = setTimeout(() => {
@@ -1129,7 +1134,7 @@ const HomeScreen: React.FC = () => {
         clearTimeout(hideTimer);
       }
     };
-  }, [notifyHintAnim, shakeBell, dismissNotifyHint, unreadCount]);
+  }, [notifyHintAnim, shakeBell, dismissNotifyHint, unreadCount, isLoggedIn]);
 
   useEffect(() => {
     tagShakeAnim.value = withRepeat(
@@ -1172,8 +1177,10 @@ const HomeScreen: React.FC = () => {
       dispatch(fetchHomeFeed());
     }
     dispatch(fetchAdminMedia({ media_section: 'slide', limit: 10 }));
-    dispatch(fetchNotifications());
-  }, [dispatch]);
+    if (isLoggedIn) {
+      dispatch(fetchNotifications());
+    }
+  }, [dispatch, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -1227,8 +1234,8 @@ const HomeScreen: React.FC = () => {
     if (isLoggedIn) {
       dispatch(fetchProfile());
       dispatch(fetchHRInvites());
+      dispatch(fetchNotifications());
     }
-    dispatch(fetchNotifications());
   }, [dispatch, isLoggedIn]);
 
   return (

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Modal, StyleSheet, Text, View, Pressable, Animated } from 'react-native';
+import { Modal, StyleSheet, Text, View, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { radius } from '../theme/radius';
 import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 
 interface LogoutModalProps {
   visible: boolean;
@@ -24,7 +24,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ visible, onClose, onConfirm, 
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
           <View style={[styles.iconContainer, { backgroundColor: colors.error + '15' }]}>
-            <Icon name="sign-out" size={24} color={colors.error} />
+            <Icon name="sign-out" size={moderateScale(24)} color={colors.error} />
           </View>
           
           <Text style={[typography.h4, { color: colors.textPrimary, marginTop: spacing.md }]}>
@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '100%',
-    maxWidth: 340,
-    borderRadius: radius.xxl,
+    maxWidth: moderateScale(340),
+    borderRadius: radius.xl,
     padding: spacing.xl,
     alignItems: 'center',
     elevation: 24,
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: moderateScale(60),
+    height: moderateScale(60),
+    borderRadius: moderateScale(30),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    height: 48,
+    height: moderateScale(48),
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',

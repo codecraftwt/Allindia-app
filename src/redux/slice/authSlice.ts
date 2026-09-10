@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api/axiosInstance';
 import messaging from '@react-native-firebase/messaging';
 import { clearProfile, updatePersonalProfile, updateProfilePicture, deleteProfilePicture, changePassword } from './profileSlice';
+import { clearNotifications } from './notificationSlice';
 
 interface AuthState {
   user: any | null;
@@ -182,12 +183,14 @@ export const logoutCandidate = createAsyncThunk(
 
       dispatch(logout());
       dispatch(clearProfile());
+      dispatch(clearNotifications());
       return true;
     } catch (error: any) {
 
       // Still logout locally even if API fails (e.g. token expired)
       dispatch(logout());
       dispatch(clearProfile());
+      dispatch(clearNotifications());
       return rejectWithValue(error.response?.data?.message || 'Logout failed');
     }
   }

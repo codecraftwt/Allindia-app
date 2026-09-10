@@ -17,13 +17,13 @@ import { fetchMetaCategories, fetchMetaCities } from '../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { useTranslation } from 'react-i18next';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('screen');
-const DRAWER_WIDTH = 280;
-const DRAWER_HEIGHT = 500;
-const HANDLE_HEIGHT = 50;
+const DRAWER_WIDTH = moderateScale(280);
+const DRAWER_HEIGHT = moderateScale(500);
+const HANDLE_HEIGHT = moderateScale(50);
 
 interface SideFilterHubProps {
   colors: any;
@@ -778,8 +778,8 @@ const styles = StyleSheet.create({
     top: 0,
     height: DRAWER_HEIGHT,
     width: DRAWER_WIDTH,
-    borderTopRightRadius: radius.xxl,
-    borderBottomRightRadius: radius.xxl,
+    borderTopRightRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
     borderWidth: 1,
     borderLeftWidth: 0,
     zIndex: 1000,
@@ -791,12 +791,12 @@ const styles = StyleSheet.create({
   },
   handle: {
     position: 'absolute',
-    right: -44,
+    right: -moderateScale(44),
     top: 0,
-    width: 44,
-    height: 50,
-    borderTopRightRadius: 25,
-    borderBottomRightRadius: 25,
+    width: moderateScale(44),
+    height: moderateScale(50),
+    borderTopRightRadius: moderateScale(25),
+    borderBottomRightRadius: moderateScale(25),
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 10,
@@ -810,16 +810,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   sidebar: {
-    width: 95,
+    width: moderateScale(95),
     paddingTop: spacing.lg,
   },
   sideItem: {
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: moderateScale(14),
     gap: 4,
   },
   sideText: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: '700',
     textAlign: 'center',
   },
@@ -829,64 +829,64 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontWeight: '800',
     textTransform: 'uppercase',
-    marginBottom: 12,
+    marginBottom: moderateScale(12),
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 36,
-    borderRadius: 8,
+    height: moderateScale(36),
+    borderRadius: radius.sm,
     borderWidth: 1,
-    paddingHorizontal: 10,
-    marginBottom: 12,
+    paddingHorizontal: moderateScale(10),
+    marginBottom: moderateScale(12),
     gap: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: moderateScale(13),
     paddingVertical: 0,
     height: '100%',
   },
   optionsScroll: {
-    paddingBottom: 40,
+    paddingBottom: moderateScale(40),
   },
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    gap: 12,
+    marginBottom: moderateScale(10),
+    gap: moderateScale(12),
   },
   radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: moderateScale(20),
+    height: moderateScale(20),
+    borderRadius: moderateScale(10),
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: moderateScale(20),
+    height: moderateScale(20),
     borderRadius: 4,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxInner: {
-    width: 12,
-    height: 12,
+    width: moderateScale(12),
+    height: moderateScale(12),
     borderRadius: 2,
   },
   optionText: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: '600',
   },
   activeDot: {
@@ -900,27 +900,27 @@ const styles = StyleSheet.create({
   browsingHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: moderateScale(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 8,
+    paddingHorizontal: moderateScale(8),
     marginBottom: 8,
   },
   browsingBackBtn: {
-    width: 32,
-    height: 30,
+    width: moderateScale(32),
+    height: moderateScale(30),
     alignItems: 'center',
     justifyContent: 'center',
   },
   browsingTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   checkboxTouch: {
-    paddingRight: 10,
+    paddingRight: moderateScale(10),
     paddingVertical: 4,
   },
   textTouch: {
@@ -928,17 +928,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
-    gap: 10,
+    gap: moderateScale(10),
   },
   footer: {
     flexDirection: 'row',
     padding: spacing.md,
     borderTopWidth: 1,
-    gap: 12,
+    gap: moderateScale(12),
   },
   resetBtn: {
     flex: 1,
-    height: 48,
+    height: moderateScale(48),
     borderRadius: radius.md,
     borderWidth: 1,
     alignItems: 'center',
@@ -946,11 +946,11 @@ const styles = StyleSheet.create({
   },
   resetText: {
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   applyBtn: {
     flex: 2,
-    height: 48,
+    height: moderateScale(48),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -958,29 +958,29 @@ const styles = StyleSheet.create({
   applyText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   manualSalaryRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
+    gap: moderateScale(8),
+    marginBottom: moderateScale(16),
   },
   manualInputBox: {
     flex: 1,
   },
   manualLabel: {
-    fontSize: 9,
+    fontSize: moderateScale(9),
     fontWeight: '700',
     color: '#999',
     marginBottom: 4,
     textTransform: 'uppercase',
   },
   manualInput: {
-    height: 36,
+    height: moderateScale(36),
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    fontSize: 12,
+    borderRadius: radius.sm,
+    paddingHorizontal: moderateScale(8),
+    fontSize: moderateScale(12),
   },
 });
 

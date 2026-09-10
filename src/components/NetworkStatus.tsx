@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { typography, moderateScale } from '../theme/typography';
+import { spacing } from '../theme/spacing';
 
 const { width } = Dimensions.get('window');
 
@@ -33,17 +35,17 @@ const NetworkStatus = () => {
       style={[
         styles.container,
         {
-          paddingTop: Math.max(insets.top, 20),
+          paddingTop: Math.max(insets.top, moderateScale(20)),
           transform: [{ translateY: slideAnim }],
         },
       ]}
       pointerEvents="none"
     >
       <View style={styles.content}>
-        <Icon name="cloud-offline-outline" size={24} color="#FFFFFF" style={styles.icon} />
+        <Icon name="cloud-offline-outline" size={moderateScale(24)} color="#FFFFFF" style={styles.icon} />
         <View style={styles.textContainer}>
-          <Text style={styles.title}>No Internet Connection</Text>
-          <Text style={styles.subtitle}>Please start your internet first to continue.</Text>
+          <Text style={[typography.h4, styles.title]}>No Internet Connection</Text>
+          <Text style={[typography.small, styles.subtitle]}>Please check your internet connection to continue.</Text>
         </View>
       </View>
     </Animated.View>
@@ -58,8 +60,8 @@ const styles = StyleSheet.create({
     width: width,
     backgroundColor: '#E53935',
     zIndex: 9999,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -71,20 +73,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    marginRight: 12,
+    marginRight: moderateScale(12),
   },
   textContainer: {
     flex: 1,
   },
   title: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 4,
+    marginBottom: moderateScale(2),
   },
   subtitle: {
     color: '#FFFFFF',
-    fontSize: 14,
     opacity: 0.9,
   },
 });

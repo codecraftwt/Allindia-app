@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../context/ThemeContext';
+import { ProfileStackParamList } from './types';
 import ProfileOverviewScreen from '../screens/main/profile/ProfileOverviewScreen';
 import ProfilePersonalInfoScreen from '../screens/main/profile/ProfilePersonalInfoScreen';
 import ProfileEducationEditScreen from '../screens/main/profile/ProfileEducationEditScreen';

@@ -2,20 +2,27 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 import { useTheme } from '../context/ThemeContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 
 interface NotificationAssistantProps {
   navigation: any;
 }
 
 const NotificationAssistant: React.FC<NotificationAssistantProps> = ({ navigation }) => {
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [showStatus, setShowStatus] = useState(false);
   const [showHint, setShowHint] = useState(false);
+
+  if (!isLoggedIn) {
+    return null;
+  }
 
   // Animations
   const pulseAnim = useMemo(() => new Animated.Value(1), []);
@@ -178,9 +185,9 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   fab: {
-    width: 46,
-    height: 46,
-    borderRadius: 28,
+    width: moderateScale(46),
+    height: moderateScale(46),
+    borderRadius: moderateScale(23),
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 5,
@@ -195,15 +202,15 @@ const styles = StyleSheet.create({
   },
   fabRippleLarge: {
     position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
     zIndex: 1,
   },
   fabBadge: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
     borderWidth: 1.5,
   },
   badgeContainer: {
@@ -215,12 +222,12 @@ const styles = StyleSheet.create({
   },
   ripple: {
     position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
   },
   statusCard: {
-    width: 220,
+    width: moderateScale(220),
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     padding: spacing.md,
@@ -247,9 +254,9 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xs,
   },
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: moderateScale(8),
+    height: moderateScale(8),
+    borderRadius: moderateScale(4),
   },
   statusMore: {
     flexDirection: 'row',
@@ -260,12 +267,12 @@ const styles = StyleSheet.create({
   },
   hintBubble: {
     position: 'absolute',
-    bottom: 70,
+    bottom: moderateScale(70),
     right: 0,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.md,
-    minWidth: 160,
+    minWidth: moderateScale(160),
     alignItems: 'center',
     elevation: 4,
     shadowOffset: { width: 0, height: 2 },

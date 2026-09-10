@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { spacing } from '../theme/spacing';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { radius } from '../theme/radius';
 import { PrimaryButton } from './auth';
 
@@ -34,13 +34,13 @@ const GuestView: React.FC<GuestViewProps> = ({ title, subtitle, icon, image }) =
           {image ? (
             <Image source={image} style={styles.imageIcon} />
           ) : (
-            <Icon name={icon || 'user'} size={32} color={colors.primary} />
+            <Icon name={icon || 'user'} size={moderateScale(32)} color={colors.primary} />
           )}
         </View>
-        <Text style={[typography.h4, { color: colors.textPrimary, marginTop: 20, textAlign: 'center' }]}>
+        <Text style={[typography.h4, { color: colors.textPrimary, marginTop: moderateScale(18), textAlign: 'center' }]}>
           {title}
         </Text>
-        <Text style={[typography.body, { color: colors.textSecondary, marginTop: 12, textAlign: 'center', lineHeight: 22 }]}>
+        <Text style={[typography.body, { color: colors.textSecondary, marginTop: moderateScale(10), textAlign: 'center', lineHeight: moderateScale(22) }]}>
           {subtitle}
         </Text>
         
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    padding: 24,
-    borderRadius: 32,
+    padding: moderateScale(24),
+    borderRadius: radius.xl,
     borderWidth: 1,
     alignItems: 'center',
     elevation: 4,
@@ -82,20 +82,20 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
   },
   iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(76),
+    height: moderateScale(76),
+    borderRadius: moderateScale(38),
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionBox: {
     width: '100%',
-    marginTop: 32,
-    gap: 16,
+    marginTop: moderateScale(28),
+    gap: moderateScale(14),
   },
   loginBtn: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: moderateScale(8),
   },
   imageIcon: {
     width: '100%',
