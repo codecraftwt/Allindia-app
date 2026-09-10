@@ -19,7 +19,7 @@ import { fetchProfileCompletion } from '../redux/slice/profileSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { useTranslation } from 'react-i18next';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sideText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
   },
   optionsArea: {
     flex: 1,
@@ -909,18 +909,18 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '800',
-    marginBottom: 12,
+    marginBottom: moderateScale(10),
     textTransform: 'uppercase',
   },
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: moderateScale(8),
   },
   checkboxTouch: {
-    paddingRight: 10,
+    paddingRight: moderateScale(10),
     paddingVertical: 4,
   },
   textTouch: {
@@ -928,43 +928,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
-    gap: 10,
+    gap: moderateScale(8),
   },
   arrowTouch: {
-    padding: 6,
+    padding: moderateScale(6),
   },
   radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: moderateScale(18),
+    height: moderateScale(18),
     borderRadius: 4,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxInner: {
-    width: 10,
-    height: 10,
+    width: moderateScale(10),
+    height: moderateScale(10),
     borderRadius: 2,
   },
   optionText: {
-    fontSize: 14,
+    fontSize: moderateScale(13),
     fontWeight: '600',
   },
   emptyText: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     textAlign: 'center',
     width: '100%',
     marginTop: 20,
@@ -975,58 +975,58 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skeletonChip: {
-    width: 80,
-    height: 32,
+    width: moderateScale(80),
+    height: moderateScale(30),
     borderRadius: radius.pill,
     opacity: 0.6,
   },
   quickBar: {
-    paddingVertical: 10,
+    paddingVertical: moderateScale(8),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   quickBarContent: {
     paddingHorizontal: spacing.md,
-    gap: 8,
+    gap: moderateScale(6),
   },
   quickChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(5),
     borderRadius: radius.pill,
     borderWidth: 1,
     gap: 6,
   },
   quickText: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: '700',
   },
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: moderateScale(10),
     paddingTop: 0,
   },
   browsingHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 0,
-    paddingBottom: 10,
+    paddingBottom: moderateScale(8),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingRight: 12,
+    paddingRight: moderateScale(12),
     marginBottom: 8,
   },
   browsingBackBtn: {
-    width: 32,
-    height: 30,
+    width: moderateScale(30),
+    height: moderateScale(28),
     alignItems: 'center',
     justifyContent: 'center',
   },
   browsingTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1034,21 +1034,21 @@ const styles = StyleSheet.create({
   headerSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 38,
+    height: moderateScale(36),
     borderRadius: radius.md,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: moderateScale(10),
     gap: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: moderateScale(12),
     fontWeight: '600',
     paddingVertical: 0,
     height: '100%',
   },
   clearLink: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '700',
     textTransform: 'uppercase',
   },
@@ -1057,35 +1057,35 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 12,
+    paddingVertical: moderateScale(10),
     borderTopWidth: 1,
   },
   resetBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(7),
     borderRadius: radius.pill,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   resetText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '800',
     textTransform: 'uppercase',
   },
   footerRight: {
     flexDirection: 'row',
-    gap: 10,
+    gap: moderateScale(8),
   },
   applyBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(7),
     borderRadius: radius.pill,
   },
   applyText: {
     color: '#fff',
     fontWeight: '800',
-    fontSize: 12,
+    fontSize: moderateScale(11),
   },
   activeDot: {
     width: 6,
@@ -1096,13 +1096,13 @@ const styles = StyleSheet.create({
     top: 22,
   },
   selectedSubtext: {
-    fontSize: 10,
+    fontSize: moderateScale(9),
     fontWeight: '600',
     marginTop: 2,
   },
   profileBar: {
     paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    paddingVertical: moderateScale(8),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   profileBarHeader: {
@@ -1112,11 +1112,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   profileBarText: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: '700',
   },
   profileBarPercent: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: '800',
   },
   profileProgressBase: {
@@ -1131,26 +1131,26 @@ const styles = StyleSheet.create({
   },
   manualSalaryRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: moderateScale(10),
+    marginBottom: moderateScale(16),
     paddingHorizontal: 4,
   },
   manualInputBox: {
     flex: 1,
   },
   manualLabel: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '700',
     color: '#999',
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   manualInput: {
-    height: 40,
+    height: moderateScale(38),
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 14,
+    paddingHorizontal: moderateScale(10),
+    fontSize: moderateScale(13),
   },
 });
 

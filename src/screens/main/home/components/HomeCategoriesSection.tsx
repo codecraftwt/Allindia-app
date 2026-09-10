@@ -1,8 +1,9 @@
 import React from 'react';
 import { ScrollView, Pressable, View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { typography } from '../../../../theme/typography';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
+import { radius } from '../../../../theme/radius';
 import type { ThemeColors } from '../../../../theme/colors';
 import { useTranslation } from 'react-i18next';
 import SkeletonPulse from '../../../../components/SkeletonPulse';
@@ -35,7 +36,7 @@ function SectionHeader({
   return (
     <View style={styles.sectionHeader}>
       {icon ? (
-        <Icon name={icon} size={18} color={iconColor ?? colors.primary} style={styles.sectionIcon} />
+        <Icon name={icon} size={moderateScale(16)} color={iconColor ?? colors.primary} style={styles.sectionIcon} />
       ) : null}
       <Text style={[typography.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
       <Pressable hitSlop={8} onPress={onPress}>
@@ -58,7 +59,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
 
   if (loading) {
     return (
-      <View style={[styles.container, { minHeight: 100 }]}>
+      <View style={[styles.container, { minHeight: moderateScale(95) }]}>
         <SectionHeader
           title={t('home.categories', 'Categories')}
           colors={colors}
@@ -67,7 +68,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesScroll}
-          style={{ minHeight: 60 }}
+          style={{ minHeight: moderateScale(60) }}
           decelerationRate="fast">
           {[1, 2, 3, 4, 5].map(i => (
             <View
@@ -80,8 +81,8 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
                 },
               ]}>
               <SkeletonPulse style={styles.categoryIconBox} />
-              <SkeletonPulse style={{ width: 60, height: 10, borderRadius: 5, marginBottom: 6 }} />
-              <SkeletonPulse style={{ width: 40, height: 10, borderRadius: 5 }} />
+              <SkeletonPulse style={{ width: moderateScale(55), height: 10, borderRadius: 5, marginBottom: 6 }} />
+              <SkeletonPulse style={{ width: moderateScale(35), height: 10, borderRadius: 5 }} />
             </View>
           ))}
         </ScrollView>
@@ -90,7 +91,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
   }
 
   return (
-    <View style={[styles.container, { minHeight: 100 }]}>
+    <View style={[styles.container, { minHeight: moderateScale(95) }]}>
       <SectionHeader
         title={t('home.categories', 'Categories')}
         colors={colors}
@@ -107,7 +108,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoriesScroll}
-        style={{ minHeight: 60 }}
+        style={{ minHeight: moderateScale(60) }}
         decelerationRate="fast">
         {displayData.map((cat, idx) => {
           const catName = cat.name || cat.label || 'Category';
@@ -142,7 +143,7 @@ const HomeCategoriesSection: React.FC<HomeCategoriesSectionProps> = ({
                 },
               ]}>
               <View style={[styles.categoryIconBox, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-                <Icon name={catIcon} size={14} color="#FFFFFF" />
+                <Icon name={catIcon} size={moderateScale(14)} color="#FFFFFF" />
               </View>
               <Text style={[styles.categoryLabel, { color: "#FFFFFF" }]} numberOfLines={1}>
                 {catName}
@@ -163,8 +164,8 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 10,
-    paddingBottom: 12,
+    paddingTop: moderateScale(10),
+    paddingBottom: moderateScale(10),
     marginTop: 0,
     paddingHorizontal: spacing.xs,
   },
@@ -173,38 +174,38 @@ const styles = StyleSheet.create({
   },
   categoriesScroll: {
     paddingRight: spacing.md,
-    gap: 10,
+    gap: moderateScale(10),
     paddingVertical: 4,
   },
   categoryCard: {
-    width: 105,
-    height: 80,
+    width: moderateScale(100),
+    height: moderateScale(76),
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: radius.md,
     borderWidth: 1,
-    padding: 8,
+    padding: moderateScale(8),
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   categoryIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 12,
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
+    marginBottom: moderateScale(6),
   },
   categoryLabel: {
     ...typography.tiny,
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontWeight: '700',
     textAlign: 'center',
     paddingHorizontal: 2,
-    lineHeight: 14,
+    lineHeight: moderateScale(14),
   },
 });
 

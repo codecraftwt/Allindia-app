@@ -34,7 +34,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import JobActionModal from '../../../components/JobActionModal';
 
@@ -115,7 +115,7 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
         transform: [{ translateY }]
       }
     ]}>
-      <Icon name={tagIcon} size={14} color={tagColor} />
+      <Icon name={tagIcon} size={moderateScale(12)} color={tagColor} />
       <Text style={[styles.cornerBadgeText, { color: tagColor }]}>
         {tagName}
       </Text>
@@ -166,7 +166,7 @@ function InfoRow({ label, value, icon, colors, style, textWrap }: { label: strin
   return (
     <View style={[styles.infoRow, style]}>
       <View style={[styles.infoIcon, { backgroundColor: colors.surfaceHighlight }]}>
-        <Icon name={icon} size={14} color={colors.primary} />
+        <Icon name={icon} size={moderateScale(13)} color={colors.primary} />
       </View>
       <View style={textWrap ? { flex: 1 } : undefined}>
         <Text style={[typography.small, { color: colors.textPlaceholder }]} numberOfLines={textWrap ? 1 : undefined}>{label}</Text>
@@ -212,12 +212,12 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
     <Pressable
       onPress={onPress}
       style={{
-        width: 260,
+        width: moderateScale(240),
         backgroundColor: colors.surface,
         borderColor: colors.border,
         borderWidth: 1,
         borderRadius: radius.md,
-        padding: spacing.md,
+        padding: moderateScale(10),
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.05,
@@ -225,30 +225,30 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
         elevation: 3,
       }}
     >
-      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
-        <View style={{ width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', gap: moderateScale(10), marginBottom: moderateScale(10) }}>
+        <View style={{ width: moderateScale(36), height: moderateScale(36), borderRadius: radius.md, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }}>
           {job.employer?.company?.company_logo_url ? (
-            <Image source={{ uri: job.employer.company.company_logo_url }} style={{ width: 32, height: 32, borderRadius: radius.sm }} />
+            <Image source={{ uri: job.employer.company.company_logo_url }} style={{ width: moderateScale(28), height: moderateScale(28), borderRadius: radius.sm }} />
           ) : (
-            <Icon name="briefcase" size={16} color={colors.primary} />
+            <Icon name="briefcase" size={moderateScale(15)} color={colors.primary} />
           )}
         </View>
-        <View style={{ flex: 1, paddingRight: 24 }}>
+        <View style={{ flex: 1, paddingRight: moderateScale(20) }}>
           <Text style={[typography.labelMedium, { color: colors.textPrimary }]} numberOfLines={1}>{job.title}</Text>
           <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
             {companyName}
           </Text>
         </View>
         {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
-          <View style={{ position: 'absolute', right: 12, top: 12 }}>
-            <MaterialCommunityIcons name="check-decagram" size={16} color="#3B82F6" />
+          <View style={{ position: 'absolute', right: moderateScale(10), top: moderateScale(10) }}>
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(15)} color="#3B82F6" />
           </View>
         )}
       </View>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: 8 }}>
-          <Icon name="map-marker" size={12} color={colors.textPlaceholder} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(4), flex: 1, marginRight: moderateScale(6) }}>
+          <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} />
           <Text style={[typography.tiny, { color: colors.textSecondary }]} numberOfLines={1}>{locationLabel}</Text>
         </View>
         <Text style={[typography.tiny, { color: colors.success, fontWeight: 'bold' }]}>
@@ -261,13 +261,13 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
 
 const GuestLockedContent = ({ children, colors }: { children: React.ReactNode, colors: ThemeColors }) => {
   return (
-    <View style={{ position: 'relative', marginTop: 8, overflow: 'hidden', minHeight: 80 }}>
+    <View style={{ position: 'relative', marginTop: moderateScale(6), overflow: 'hidden', minHeight: moderateScale(70) }}>
       <View style={{ opacity: 0.15 }} pointerEvents="none">
         {children}
       </View>
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-        <View style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, alignItems: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: colors.border }}>
-          <Icon name="lock" size={16} color={colors.textSecondary} />
+        <View style={{ backgroundColor: colors.surface, paddingHorizontal: moderateScale(14), paddingVertical: moderateScale(10), borderRadius: moderateScale(10), elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, alignItems: 'center', flexDirection: 'row', gap: moderateScale(6), borderWidth: 1, borderColor: colors.border }}>
+          <Icon name="lock" size={moderateScale(14)} color={colors.textSecondary} />
           <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Login to view</Text>
         </View>
       </View>
@@ -538,7 +538,7 @@ const JobDetailScreen: React.FC = () => {
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
-            <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+            <Icon name="chevron-left" size={moderateScale(18)} color={colors.textPrimary} />
           </Pressable>
         </View>
         <JobDetailSkeleton />
@@ -552,7 +552,7 @@ const JobDetailScreen: React.FC = () => {
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
         <View style={[styles.topBar, { borderBottomWidth: 0 }]}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.iconBtn}>
-            <Icon name="chevron-left" size={22} color={colors.textPrimary} />
+            <Icon name="chevron-left" size={moderateScale(18)} color={colors.textPrimary} />
           </Pressable>
         </View>
         <View style={styles.empty}>
@@ -582,7 +582,7 @@ const JobDetailScreen: React.FC = () => {
           ]}>
           <Icon
             name={toast.type === 'success' ? 'check-circle' : (toast.type === 'error' ? 'exclamation-circle' : 'info-circle')}
-            size={18}
+            size={moderateScale(16)}
             color="#FFFFFF"
           />
           <Text style={[typography.labelMedium, { color: '#FFFFFF', marginLeft: spacing.sm, flexShrink: 1 }]}>
@@ -593,7 +593,7 @@ const JobDetailScreen: React.FC = () => {
 
       <View style={[styles.topBar, { position: 'absolute', top: actualTop, left: 0, right: 0, zIndex: 10 }]}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]} accessibilityLabel={t('jobDetail.goBack', 'Go back')}>
-          <Icon name="chevron-left" size={20} color="#FFF" />
+          <Icon name="chevron-left" size={moderateScale(18)} color="#FFF" />
         </Pressable>
         <View style={{ flex: 1 }} />
 
@@ -601,12 +601,12 @@ const JobDetailScreen: React.FC = () => {
           onPress={handleToggleWishlist}
           disabled={isWishlisting}
           hitSlop={12}
-          style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)', marginRight: 8 }]}
+          style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)', marginRight: moderateScale(6) }]}
           accessibilityLabel={saved ? 'Remove from saved' : 'Save job'}>
           {isWishlisting ? (
             <ActivityIndicator size="small" color="#FFF" />
           ) : (
-            <Icon name={saved ? 'heart' : 'heart-o'} size={20} color={saved ? colors.error : '#FFF'} />
+            <Icon name={saved ? 'heart' : 'heart-o'} size={moderateScale(18)} color={saved ? colors.error : '#FFF'} />
           )}
         </Pressable>
         <Pressable
@@ -614,7 +614,7 @@ const JobDetailScreen: React.FC = () => {
           hitSlop={12}
           style={[styles.iconBtn, { backgroundColor: 'rgba(0,0,0,0.3)' }]}
           accessibilityLabel="More actions">
-          <Icon name="ellipsis-v" size={20} color="#FFF" />
+          <Icon name="ellipsis-v" size={moderateScale(18)} color="#FFF" />
         </Pressable>
       </View>
 
@@ -624,7 +624,7 @@ const JobDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}>
 
         {/* Full-Bleed Cover Image */}
-        <View style={{ width: '100%', height: 200, backgroundColor: colors.primary }}>
+        <View style={{ width: '100%', height: moderateScale(180), backgroundColor: colors.primary }}>
           {currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url ? (
             <Pressable onPress={() => handleOpenPreview([currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url], 0)} style={{ flex: 1 }}>
               <Image source={{ uri: currentJob?.employer?.company?.company_cover_url || currentJob?.company_cover_url }} style={{ width: '100%', height: '100%', resizeMode: 'cover' }} />
@@ -637,7 +637,7 @@ const JobDetailScreen: React.FC = () => {
         <View style={styles.scrollContent}>
           {/* Overlapping Hero Section */}
           <View style={styles.headerHero}>
-            <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight, marginTop: -40, borderColor: colors.surface }]}>
+            <View style={[styles.heroLogoContainer, { backgroundColor: colors.surfaceHighlight, marginTop: -moderateScale(32), borderColor: colors.surface }]}>
               {currentJob.employer?.company?.company_logo_url ? (
                 <Pressable
                   onPress={() => handleOpenPreview([currentJob.employer.company.company_logo_url], 0)}
@@ -649,7 +649,7 @@ const JobDetailScreen: React.FC = () => {
                   />
                 </Pressable>
               ) : (
-                <Icon name="briefcase" size={32} color={colors.primary} />
+                <Icon name="briefcase" size={moderateScale(28)} color={colors.primary} />
               )}
             </View>
 
@@ -661,16 +661,16 @@ const JobDetailScreen: React.FC = () => {
                   backgroundColor: colors.successBackground,
                   borderWidth: 1,
                   borderColor: colors.success + '40',
-                  padding: spacing.md,
+                  padding: moderateScale(10),
                   borderRadius: radius.md,
-                  marginTop: spacing.md,
+                  marginTop: moderateScale(10),
                   marginBottom: spacing.xs,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: spacing.sm,
+                  gap: moderateScale(8),
                 }}
               >
-                <Icon name="check-circle" size={24} color={colors.success} />
+                <Icon name="check-circle" size={moderateScale(20)} color={colors.success} />
                 <View style={{ flex: 1 }}>
                   <Text style={[typography.labelMedium, { color: colors.success, fontWeight: 'bold' }]}>
                     {justApplied ? t('jobDetail.appliedSuccess', 'You have successfully applied!') : t('jobDetail.alreadyApplied', 'You have already applied!')}
@@ -679,11 +679,11 @@ const JobDetailScreen: React.FC = () => {
                     {t('jobDetail.checkStatus', 'Tap here to check your application status.')}
                   </Text>
                 </View>
-                <Icon name="chevron-right" size={14} color={colors.success} />
+                <Icon name="chevron-right" size={moderateScale(12)} color={colors.success} />
               </Pressable>
             )}
 
-            <View style={{ marginTop: spacing.md }}>
+            <View style={{ marginTop: moderateScale(10) }}>
               <Text style={[typography.h2, { color: colors.textPrimary }]} numberOfLines={2}>
                 {currentJob.title}
               </Text>
@@ -694,30 +694,30 @@ const JobDetailScreen: React.FC = () => {
 
             <View style={styles.metaRow}>
               <View style={[styles.metaPill, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name="map-marker" size={14} color={colors.primary} />
+                <Icon name="map-marker" size={moderateScale(12)} color={colors.primary} />
                 <Text style={[typography.small, { color: colors.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
                   {locationLabel}
                 </Text>
               </View>
               <View style={[styles.metaPill, { backgroundColor: colors.successBackground }]}>
-                <Icon name="money" size={14} color={colors.success} />
+                <Icon name="money" size={moderateScale(12)} color={colors.success} />
                 <Text style={[typography.labelMedium, { color: colors.success }]}>{salaryLabel}</Text>
               </View>
               <View style={[styles.metaPill, { backgroundColor: colors.badgeBackground }]}>
-                <Icon name="briefcase" size={12} color={colors.badgeText} />
+                <Icon name="briefcase" size={moderateScale(11)} color={colors.badgeText} />
                 <Text style={[typography.small, { color: colors.badgeText }]}>{jobTypeLabel}</Text>
               </View>
             </View>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
-              <Icon name="clock-o" size={12} color={colors.textSecondary} style={{ marginRight: 6 }} />
+              <Icon name="clock-o" size={moderateScale(11)} color={colors.textSecondary} style={{ marginRight: moderateScale(4) }} />
               <Text style={[typography.small, { color: colors.textSecondary }]}>
                 {t('jobDetail.posted', 'Posted')} {postedDate}
               </Text>
             </View>
 
             {(currentJob.applied_tags?.length > 0 || currentJob.tags?.length > 0) && (
-              <View style={{ marginTop: spacing.md }}>
+              <View style={{ marginTop: moderateScale(10) }}>
                 <TagCycling
                   tags={currentJob.applied_tags?.length > 0 ? currentJob.applied_tags : currentJob.tags}
                   colors={colors}
@@ -934,8 +934,8 @@ const JobDetailScreen: React.FC = () => {
                     }}
                   >
                     <Text style={[typography.small, { color: colors.textSecondary, marginBottom: 4 }]}>{t('jobDetail.interviewLocation', 'Interview Location')}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
-                      <Icon name="map-marker" size={14} color={colors.primary} style={{ marginTop: 2 }} />
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: moderateScale(6) }}>
+                      <Icon name="map-marker" size={moderateScale(12)} color={colors.primary} style={{ marginTop: 2 }} />
                       <View style={{ flex: 1 }}>
                         <Text style={[typography.body, { color: colors.textPrimary, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]}>
                           {[
@@ -1005,7 +1005,7 @@ const JobDetailScreen: React.FC = () => {
                 <View style={styles.tagsRow}>
                   {currentJob.perks_benefits.map((perk: string, idx: number) => (
                     <View key={idx} style={[styles.badge, { backgroundColor: colors.successBackground }]}>
-                      <Icon name="check-circle" size={12} color={colors.success} style={{ marginRight: 6 }} />
+                      <Icon name="check-circle" size={moderateScale(11)} color={colors.success} style={{ marginRight: moderateScale(4) }} />
                       <Text style={[typography.small, { color: colors.success, fontWeight: 'bold' }]}>{formatJobType(perk)}</Text>
                     </View>
                   ))}
@@ -1022,7 +1022,7 @@ const JobDetailScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text style={[typography.sectionTitle, { color: colors.textPrimary }]}>{t('jobDetail.aboutCompany', 'About Company')}</Text>
-                <Icon name={isCompanyDetailsOpen ? "chevron-up" : "chevron-down"} size={16} color={colors.textSecondary} />
+                <Icon name={isCompanyDetailsOpen ? "chevron-up" : "chevron-down"} size={moderateScale(14)} color={colors.textSecondary} />
               </TouchableOpacity>
 
               {isCompanyDetailsOpen && (
@@ -1049,17 +1049,17 @@ const JobDetailScreen: React.FC = () => {
                           </Pressable>
                         ) : (
                           <View style={[styles.companyLogo, { backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center' }]}>
-                            <Icon name="building" size={24} color={colors.primary} />
+                            <Icon name="building" size={moderateScale(20)} color={colors.primary} />
                           </View>
                         )}
                         {currentJob.employer.company.verification_status === 'approved' && (
                           <View style={[styles.verifiedBadge, { backgroundColor: colors.success }]}>
-                            <Icon name="check" size={8} color="#fff" />
+                            <Icon name="check" size={moderateScale(7)} color="#fff" />
                           </View>
                         )}
                       </View>
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(6) }}>
                           <Text style={[typography.labelMedium, { color: colors.textPrimary }]}>
                             {currentJob.employer.company.company_name}
                           </Text>
@@ -1076,7 +1076,7 @@ const JobDetailScreen: React.FC = () => {
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         style={styles.galleryScroll}
-                        contentContainerStyle={{ gap: 10, paddingRight: 20 }}
+                        contentContainerStyle={{ gap: moderateScale(8), paddingRight: moderateScale(16) }}
                       >
                         {currentJob.employer.company.gallery_media.map((media: any, idx: number) => (
                           <Pressable
@@ -1116,7 +1116,7 @@ const JobDetailScreen: React.FC = () => {
                         }}
                       >
                         <View style={[styles.addressIcon, { backgroundColor: colors.surfaceHighlight }]}>
-                          <Icon name="map-marker" size={16} color={colors.primary} />
+                          <Icon name="map-marker" size={moderateScale(14)} color={colors.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
@@ -1160,7 +1160,7 @@ const JobDetailScreen: React.FC = () => {
                     {/* Hiring Manager Info */}
                     <View style={[styles.employerCard, { backgroundColor: colors.surfaceHighlight }]}>
                       <View style={styles.employerAvatar}>
-                        <Icon name="user-circle" size={32} color={colors.primary} />
+                        <Icon name="user-circle" size={moderateScale(28)} color={colors.primary} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.hiringManager', 'Hiring Manager')}</Text>
@@ -1170,8 +1170,8 @@ const JobDetailScreen: React.FC = () => {
 
                     <View style={styles.companyMeta}>
                       {currentJob.employer.company.established_year && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Icon name="calendar" size={12} color={colors.textPlaceholder} />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(6) }}>
+                          <Icon name="calendar" size={moderateScale(11)} color={colors.textPlaceholder} />
                           <Text style={[typography.small, { color: colors.textPlaceholder }]}>
                             Est: {currentJob.employer.company.established_year}
                           </Text>
@@ -1180,9 +1180,9 @@ const JobDetailScreen: React.FC = () => {
                       {currentJob.employer.company.website && (
                         <Pressable
                           onPress={() => Linking.openURL(currentJob.employer.company.website)}
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(6) }}
                         >
-                          <Icon name="external-link" size={12} color={colors.primary} />
+                          <Icon name="external-link" size={moderateScale(11)} color={colors.primary} />
                           <Text style={[typography.small, { color: colors.primary }]}>Visit Website</Text>
                         </Pressable>
                       )}
@@ -1201,13 +1201,13 @@ const JobDetailScreen: React.FC = () => {
 
             <View style={styles.referHeader}>
               <View style={[styles.referIconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
-                <Icon name="gift" size={20} color="#FFFFFF" />
+                <Icon name="gift" size={moderateScale(18)} color="#FFFFFF" />
               </View>
               <View style={styles.referTextContainer}>
                 <View style={[styles.referBadge, { backgroundColor: 'rgba(255, 255, 255, 0.25)' }]}>
                   <Text style={styles.referBadgeText}>{t('jobDetail.referSpreadWord', 'REFER & SPREAD THE WORD')}</Text>
                 </View>
-                <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginTop: 6 }]}>
+                <Text style={[typography.labelMedium, { color: '#FFFFFF', fontSize: moderateScale(15), fontWeight: 'bold', marginTop: moderateScale(4) }]}>
                   {t('jobDetail.knowSomeone', 'Know someone who fits this?')}
                 </Text>
               </View>
@@ -1218,7 +1218,7 @@ const JobDetailScreen: React.FC = () => {
                 style={[styles.referBtnSecondary, { borderColor: 'rgba(255, 255, 255, 0.4)', backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}
                 activeOpacity={0.8}
               >
-                <Icon name="share-alt" size={14} color="#FFFFFF" />
+                <Icon name="share-alt" size={moderateScale(12)} color="#FFFFFF" />
                 <Text style={[typography.small, { color: '#FFFFFF', fontWeight: 'bold' }]}>
                   {t('jobDetail.shareJob', 'Share Job')}
                 </Text>
@@ -1229,7 +1229,7 @@ const JobDetailScreen: React.FC = () => {
                 style={[styles.referBtnPrimary, { backgroundColor: '#FFFFFF' }]}
                 activeOpacity={0.8}
               >
-                <Icon name="paper-plane" size={14} color={colors.primary} />
+                <Icon name="paper-plane" size={moderateScale(12)} color={colors.primary} />
                 <Text style={[typography.small, { color: colors.primary, fontWeight: 'bold' }]}>
                   {t('jobDetail.shareApp', 'Share App')}
                 </Text>
@@ -1303,7 +1303,7 @@ const JobDetailScreen: React.FC = () => {
                   <SimilarJobCard
                     job={item}
                     colors={colors}
-                    onPress={() => navigation.push('JobDetail', { jobId: item.slug || item.id })}
+                    onPress={() => (navigation as any).push('JobDetail', { jobId: item.slug || item.id })}
                   />
                 )}
                 ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
@@ -1321,7 +1321,7 @@ const JobDetailScreen: React.FC = () => {
             {
               backgroundColor: colors.surface,
               borderTopColor: colors.border,
-              paddingBottom: 60,
+              paddingBottom: moderateScale(50),
             },
           ]}>
           <View style={styles.footerContent}>
@@ -1357,7 +1357,7 @@ const JobDetailScreen: React.FC = () => {
           <Pressable style={styles.modalBackdrop} onPress={() => setShowValidationModal(false)} />
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={[styles.modalIconBox, { backgroundColor: colors.error + '15' }]}>
-              <Icon name="exclamation-triangle" size={24} color={colors.error} />
+              <Icon name="exclamation-triangle" size={moderateScale(22)} color={colors.error} />
             </View>
             <Text style={[typography.h4, { color: colors.textPrimary, marginTop: spacing.md }]}>
               Required Answers
@@ -1384,7 +1384,7 @@ const JobDetailScreen: React.FC = () => {
           <Pressable style={styles.modalBackdrop} onPress={() => setShowAuthModal(false)} />
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={[styles.modalIconBox, { backgroundColor: colors.primary + '15' }]}>
-              <Icon name="user-circle-o" size={28} color={colors.primary} />
+              <Icon name="user-circle-o" size={moderateScale(24)} color={colors.primary} />
             </View>
             <Text style={[typography.h4, { color: colors.textPrimary, marginTop: spacing.md, textAlign: 'center' }]}>
               Registration Required
@@ -1442,7 +1442,7 @@ const JobDetailScreen: React.FC = () => {
             onPress={() => setPreviewIndex(-1)}
             activeOpacity={0.7}
           >
-            <Icon name="times" size={24} color="#FFFFFF" />
+            <Icon name="times" size={moderateScale(20)} color="#FFFFFF" />
           </TouchableOpacity>
 
           {previewImages.length > 1 && (
@@ -1460,10 +1460,10 @@ const JobDetailScreen: React.FC = () => {
                 onPress={() => setPreviewIndex((prev) => (prev > 0 ? prev - 1 : previewImages.length - 1))}
                 activeOpacity={0.7}
               >
-                <Icon name="chevron-left" size={20} color="#FFFFFF" />
+                <Icon name="chevron-left" size={moderateScale(18)} color="#FFFFFF" />
               </TouchableOpacity>
             ) : (
-              <View style={{ width: 44 }} />
+              <View style={{ width: moderateScale(38) }} />
             )}
 
             {previewIndex >= 0 && previewIndex < previewImages.length && (
@@ -1480,10 +1480,10 @@ const JobDetailScreen: React.FC = () => {
                 onPress={() => setPreviewIndex((prev) => (prev < previewImages.length - 1 ? prev + 1 : 0))}
                 activeOpacity={0.7}
               >
-                <Icon name="chevron-right" size={20} color="#FFFFFF" />
+                <Icon name="chevron-right" size={moderateScale(18)} color="#FFFFFF" />
               </TouchableOpacity>
             ) : (
-              <View style={{ width: 44 }} />
+              <View style={{ width: moderateScale(38) }} />
             )}
           </View>
         </View>
@@ -1499,17 +1499,17 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-    minHeight: 56,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(6),
+    minHeight: moderateScale(48),
     maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
   },
   iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.md,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1517,8 +1517,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingHorizontal: moderateScale(12),
+    paddingTop: moderateScale(10),
     maxWidth: 768,
     width: '100%',
     alignSelf: 'center',
@@ -1529,50 +1529,50 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   heroLogoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.md,
+    width: moderateScale(64),
+    height: moderateScale(64),
+    borderRadius: moderateScale(10),
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 2.5,
   },
   heroLogo: {
-    width: 64,
-    height: 64,
+    width: moderateScale(56),
+    height: moderateScale(56),
     borderRadius: radius.sm,
   },
   cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(5),
+    borderRadius: moderateScale(7),
     borderWidth: 1.5,
-    gap: 6,
+    gap: moderateScale(5),
   },
   cornerBadgeText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: 'bold',
   },
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
+    gap: moderateScale(6),
+    marginTop: moderateScale(10),
   },
   metaPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.button,
+    gap: moderateScale(4),
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(5),
+    borderRadius: moderateScale(16),
     maxWidth: '100%',
   },
   typePill: {
     marginTop: spacing.sm,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: moderateScale(5),
     borderRadius: radius.sm,
   },
   bulletRow: {
@@ -1588,19 +1588,19 @@ const styles = StyleSheet.create({
     marginTop: 7,
   },
   sectionCard: {
-    padding: spacing.md,
-    borderRadius: radius.card,
+    padding: moderateScale(12),
+    borderRadius: moderateScale(12),
     borderWidth: 1,
-    marginTop: spacing.lg,
+    marginTop: moderateScale(10),
   },
   footer: {
     ...components.jobCard,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingHorizontal: moderateScale(12),
+    paddingTop: moderateScale(10),
     borderTopWidth: StyleSheet.hairlineWidth,
     shadowOpacity: 0.08,
     elevation: 8,
-    paddingBottom: 100,
+    paddingBottom: moderateScale(50),
   },
   footerContent: {
     maxWidth: 768,
@@ -1617,8 +1617,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   saveBtn: {
-    width: 52,
-    height: 48,
+    width: moderateScale(46),
+    height: moderateScale(44),
     borderRadius: radius.button,
     borderWidth: 1,
     alignItems: 'center',
@@ -1644,8 +1644,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   optionChip: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
+    paddingVertical: moderateScale(5),
+    paddingHorizontal: moderateScale(10),
     borderRadius: radius.button,
     borderWidth: 1,
   },
@@ -1655,70 +1655,70 @@ const styles = StyleSheet.create({
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: moderateScale(8),
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     width: '45%',
-    marginBottom: spacing.xs,
+    marginBottom: moderateScale(4),
   },
   infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
     alignItems: 'center',
     justifyContent: 'center',
   },
   companySection: {
     marginTop: spacing.xl,
-    padding: spacing.md,
+    padding: moderateScale(12),
     backgroundColor: 'rgba(0,0,0,0.02)',
-    borderRadius: radius.card,
+    borderRadius: moderateScale(12),
   },
   companyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.xs,
+    gap: moderateScale(10),
+    marginBottom: moderateScale(4),
   },
   companyLogo: {
-    width: 50,
-    height: 50,
-    borderRadius: radius.md,
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(8),
     resizeMode: 'contain',
   },
   companyMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
+    marginTop: moderateScale(10),
+    paddingTop: moderateScale(8),
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(0,0,0,0.1)',
   },
   galleryScroll: {
-    marginTop: spacing.md,
+    marginTop: moderateScale(8),
     marginBottom: spacing.xs,
   },
   galleryImage: {
-    width: 140,
-    height: 90,
-    borderRadius: radius.md,
+    width: moderateScale(120),
+    height: moderateScale(80),
+    borderRadius: moderateScale(8),
     backgroundColor: '#eee',
   },
   employerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginTop: spacing.lg,
-    gap: spacing.md,
+    padding: moderateScale(10),
+    borderRadius: moderateScale(8),
+    marginTop: moderateScale(10),
+    gap: moderateScale(10),
   },
   employerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(19),
     backgroundColor: 'rgba(255,255,255,0.8)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1727,9 +1727,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
     borderWidth: 2,
     borderColor: '#fff',
     alignItems: 'center',
@@ -1738,22 +1738,22 @@ const styles = StyleSheet.create({
   addressBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.sm,
+    gap: moderateScale(8),
+    marginTop: moderateScale(10),
+    paddingHorizontal: spacing.xs,
   },
   addressIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
     alignItems: 'center',
     justifyContent: 'center',
   },
   companyStatsGrid: {
     flexDirection: 'row',
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.sm,
-    gap: spacing.xl,
+    marginTop: moderateScale(10),
+    paddingHorizontal: spacing.xs,
+    gap: moderateScale(12),
     justifyContent: 'space-between',
   },
   companyStatItem: {
@@ -1765,12 +1765,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   skeletonTitle: {
-    height: 32,
+    height: moderateScale(28),
     width: '80%',
     borderRadius: radius.sm,
   },
   skeletonSubTitle: {
-    height: 20,
+    height: moderateScale(18),
     width: '40%',
     borderRadius: radius.sm,
     marginBottom: spacing.md,
@@ -1781,13 +1781,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   skeletonPill: {
-    height: 36,
-    width: 120,
+    height: moderateScale(30),
+    width: moderateScale(100),
     borderRadius: radius.button,
   },
   skeletonSectionTitle: {
-    height: 24,
-    width: 150,
+    height: moderateScale(20),
+    width: moderateScale(130),
     borderRadius: radius.sm,
     marginTop: spacing.lg,
   },
@@ -1798,12 +1798,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   skeletonGridItem: {
-    height: 60,
+    height: moderateScale(50),
     width: '45%',
     borderRadius: radius.md,
   },
   skeletonLongText: {
-    height: 16,
+    height: moderateScale(14),
     width: '100%',
     borderRadius: radius.xs,
     marginTop: spacing.xs,
@@ -1811,27 +1811,27 @@ const styles = StyleSheet.create({
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: moderateScale(6),
     marginBottom: spacing.sm,
   },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
     borderRadius: radius.sm,
   },
   // Toast Styles
   toastContainer: {
     position: 'absolute',
-    top: 50,
+    top: moderateScale(40),
     left: spacing.lg,
     right: spacing.lg,
     zIndex: 1000,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(14),
     borderRadius: radius.xl,
     elevation: 10,
     shadowColor: '#000',
@@ -1852,23 +1852,23 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '100%',
-    maxWidth: 320,
-    borderRadius: radius.xxl,
-    padding: spacing.xl,
+    maxWidth: moderateScale(300),
+    borderRadius: moderateScale(20),
+    padding: moderateScale(16),
     alignItems: 'center',
     elevation: 20,
   },
   modalIconBox: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: moderateScale(48),
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalBtn: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     width: '100%',
-    height: 48,
+    height: moderateScale(42),
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1885,10 +1885,10 @@ const styles = StyleSheet.create({
   },
   previewCloseBtn: {
     position: 'absolute',
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    right: moderateScale(16),
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(19),
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
@@ -1900,8 +1900,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(5),
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -1909,7 +1909,7 @@ const styles = StyleSheet.create({
   },
   previewIndicatorText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: moderateScale(12),
     fontWeight: '600',
   },
   previewContainer: {
@@ -1926,9 +1926,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   previewArrowBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(19),
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
@@ -1937,8 +1937,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   referCard: {
-    padding: spacing.md,
-    borderRadius: radius.card,
+    padding: moderateScale(12),
+    borderRadius: moderateScale(12),
     marginTop: spacing.md,
     gap: spacing.sm,
     position: 'relative',
@@ -1951,19 +1951,19 @@ const styles = StyleSheet.create({
   },
   referBlob1: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    top: -40,
-    right: -30,
+    width: moderateScale(120),
+    height: moderateScale(120),
+    borderRadius: moderateScale(60),
+    top: -moderateScale(30),
+    right: -moderateScale(20),
   },
   referBlob2: {
     position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    bottom: -30,
-    left: -30,
+    width: moderateScale(90),
+    height: moderateScale(90),
+    borderRadius: moderateScale(45),
+    bottom: -moderateScale(25),
+    left: -moderateScale(25),
   },
   referHeader: {
     flexDirection: 'row',
@@ -1971,21 +1971,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   referIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(38),
+    height: moderateScale(38),
+    borderRadius: moderateScale(19),
     alignItems: 'center',
     justifyContent: 'center',
   },
   referBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: moderateScale(6),
+    paddingVertical: moderateScale(2),
     borderRadius: radius.sm,
   },
   referBadgeText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: moderateScale(8.5),
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
@@ -2001,9 +2001,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: moderateScale(10),
     borderRadius: radius.button,
-    gap: 8,
+    gap: moderateScale(6),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -2015,10 +2015,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: moderateScale(10),
     borderRadius: radius.button,
     borderWidth: 1,
-    gap: 8,
+    gap: moderateScale(6),
   },
 });
 

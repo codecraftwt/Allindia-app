@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import type { ThemeColors } from '../../../../theme/colors';
 import { radius } from '../../../../theme/radius';
 import { spacing } from '../../../../theme/spacing';
+import { moderateScale } from '../../../../theme/typography';
 import { useTranslation } from 'react-i18next';
 
 export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors; onHide: () => void }) => {
@@ -28,7 +29,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
           {t('home.applicationStatus', 'Application Status')}
         </Text>
         <TouchableOpacity onPress={onHide} style={styles.closeBtn}>
-          <Icon name="times" size={16} color={colors.textSecondary} />
+          <Icon name="times" size={moderateScale(15)} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -39,7 +40,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
         {/* Compact Status Row (Always visible) */}
         <View style={styles.compactRow}>
           <View style={[styles.wiJourneyCircle, { borderColor: '#10b981', backgroundColor: colors.surface }]}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' }} />
+            <View style={{ width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: '#10b981' }} />
           </View>
           
           <View style={styles.statusTextWrapper}>
@@ -47,12 +48,12 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
               You are Shortlisted!{' '}
             </Text>
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <Text style={{ fontSize: 16 }}>🎉</Text>
+              <Text style={{ fontSize: moderateScale(15) }}>🎉</Text>
             </Animated.View>
           </View>
           
           <View style={styles.toggleBtn}>
-            <Icon name={expanded ? "times" : "chevron-down"} size={14} color={colors.textSecondary} />
+            <Icon name={expanded ? "times" : "chevron-down"} size={moderateScale(13)} color={colors.textSecondary} />
           </View>
         </View>
 
@@ -61,7 +62,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
           <View style={[styles.expandedContent, { borderTopColor: colors.border }]}>
             <View style={styles.wiCardHeader}>
               <View style={[styles.wiLogoBox, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name="building" size={24} color={colors.primary} />
+                <Icon name="building" size={moderateScale(22)} color={colors.primary} />
               </View>
               <View style={styles.wiHeaderInfo}>
                 <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>Accountant Manager</Text>
@@ -71,11 +72,11 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
 
             <View style={styles.wiMetaSection}>
               <View style={styles.wiMetaItem}>
-                <Icon name="money" size={14} color={colors.textSecondary} />
+                <Icon name="money" size={moderateScale(13)} color={colors.textSecondary} />
                 <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>Salary Negotiable</Text>
               </View>
               <View style={styles.wiMetaItem}>
-                <Icon name="map-marker" size={14} color={colors.textSecondary} />
+                <Icon name="map-marker" size={moderateScale(13)} color={colors.textSecondary} />
                 <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>Dhule, MAHARASHTRA</Text>
               </View>
             </View>
@@ -84,7 +85,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
               <View style={styles.wiJourneyRow}>
                 <View style={styles.wiJourneyIconWrap}>
                   <View style={[styles.wiJourneyDot, { backgroundColor: '#10b981' }]}>
-                    <Icon name="check" size={8} color="#fff" />
+                    <Icon name="check" size={moderateScale(8)} color="#fff" />
                   </View>
                   <View style={[styles.wiJourneyLine, { borderColor: colors.border }]} />
                 </View>
@@ -92,13 +93,13 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
                   <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>
                     Applied successfully
                   </Text>
-                  <Text style={{ fontSize: 10, color: colors.textSecondary }}>7 Jul</Text>
+                  <Text style={{ fontSize: moderateScale(10), color: colors.textSecondary }}>7 Jul</Text>
                 </View>
               </View>
               <View style={[styles.wiJourneyRow, { marginTop: 4 }]}>
                 <View style={styles.wiJourneyIconWrap}>
                   <View style={[styles.wiJourneyCircle, { borderColor: '#10b981', backgroundColor: colors.surface }]}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' }} />
+                    <View style={{ width: moderateScale(8), height: moderateScale(8), borderRadius: moderateScale(4), backgroundColor: '#10b981' }} />
                   </View>
                 </View>
                 <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>
@@ -108,7 +109,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
             </View>
 
             <View style={styles.wiManagerRow}>
-              <Icon name="user-circle" size={16} color={colors.textSecondary} />
+              <Icon name="user-circle" size={moderateScale(15)} color={colors.textSecondary} />
               <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>Ramesh (Manager)</Text>
             </View>
           </View>
@@ -130,15 +131,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: moderateScale(16),
     fontWeight: '700',
   },
   closeBtn: {
-    padding: 4,
+    padding: moderateScale(4),
   },
   wiCard: {
-    padding: spacing.md,
-    borderRadius: 16,
+    padding: moderateScale(12),
+    borderRadius: radius.lg,
     borderWidth: 1,
     elevation: 3,
     shadowColor: '#000',
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   compactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: moderateScale(10),
   },
   statusTextWrapper: {
     flex: 1,
@@ -157,8 +158,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   toggleBtn: {
-    padding: 4,
-    paddingLeft: 12,
+    padding: moderateScale(4),
+    paddingLeft: moderateScale(10),
   },
   expandedContent: {
     marginTop: spacing.md,
@@ -172,9 +173,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   wiLogoBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -183,72 +184,72 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wiJobTitle: {
-    fontSize: 16,
+    fontSize: moderateScale(14),
     fontWeight: '800',
   },
   wiCompanyName: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     marginTop: 2,
   },
   wiMetaSection: {
-    gap: 8,
+    gap: moderateScale(6),
     marginBottom: spacing.md,
   },
   wiMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: moderateScale(8),
   },
   wiMetaText: {
-    fontSize: 13,
+    fontSize: moderateScale(12),
     fontWeight: '600',
   },
   wiJourneyBox: {
-    padding: 12,
-    borderRadius: 12,
+    padding: moderateScale(10),
+    borderRadius: radius.md,
     marginBottom: spacing.md,
   },
   wiJourneyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: moderateScale(10),
   },
   wiJourneyIconWrap: {
     alignItems: 'center',
-    width: 20,
+    width: moderateScale(18),
   },
   wiJourneyDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
     alignItems: 'center',
     justifyContent: 'center',
   },
   wiJourneyCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   wiJourneyLine: {
     width: 2,
-    height: 16,
+    height: moderateScale(14),
     borderStyle: 'dashed',
     borderWidth: 1,
     marginVertical: 2,
   },
   wiJourneyText: {
-    fontSize: 14,
+    fontSize: moderateScale(13),
   },
   wiManagerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: moderateScale(6),
   },
   wiManagerText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '600',
   },
 });

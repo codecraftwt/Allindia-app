@@ -56,7 +56,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import ProfileStrengthAssistant from '../../../components/ProfileStrengthAssistant';
 import HeaderFilterGrid from '../../../components/HeaderFilterGrid';
 import HeroBanner from '../../../components/HeroBanner';
@@ -82,7 +82,7 @@ const formatJobType = (type: string) => {
     .join(' ');
 };
 
-const H_CARD_W = Math.min(Dimensions.get('window').width * 0.72, 280);
+const H_CARD_W = Math.min(Dimensions.get('window').width * 0.68, 260);
 
 type HomeNav = StackNavigationProp<HomeStackParamList, 'HomeFeed'>;
 
@@ -130,7 +130,7 @@ function SectionHeader({
   return (
     <View style={styles.sectionHeader}>
       {icon ? (
-        <Icon name={icon} size={18} color={iconColor ?? colors.primary} style={styles.sectionIcon} />
+        <Icon name={icon} size={moderateScale(16)} color={iconColor ?? colors.primary} style={styles.sectionIcon} />
       ) : null}
       <Text style={[typography.sectionTitle, { color: colors.textPrimary, flex: 1 }]}>{title}</Text>
       <Pressable hitSlop={8} onPress={onPress}>
@@ -211,11 +211,11 @@ const TagCycling = ({ tags, colors, tagRotationStyle, isSmall = false }: { tags:
       animatedStyle
     ]}>
       <ReAnimated.View style={tagRotationStyle}>
-        <Icon name={tagIcon} size={isSmall ? 13 : 16} color={finalTextColor} />
+        <Icon name={tagIcon} size={isSmall ? moderateScale(12) : moderateScale(14)} color={finalTextColor} />
       </ReAnimated.View>
       <Text style={[
         isSmall ? styles.tagTextSm : typography.small,
-        { color: finalTextColor, fontSize: isSmall ? 11 : 10, fontWeight: 'bold', marginLeft: 4 }
+        { color: finalTextColor, fontSize: isSmall ? moderateScale(11) : moderateScale(10), fontWeight: 'bold', marginLeft: 4 }
       ]}>
         {tagName}
       </Text>
@@ -300,13 +300,13 @@ const JobTrendCard = React.memo(function JobTrendCard({
           borderColor: cardBorderColor,
           shadowColor: cardShadowColor,
           elevation: cardElevation,
-          paddingBottom: 40,
+          paddingBottom: moderateScale(38),
         },
         (isSpotlight || isBoost) && { shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
 
       {(hasAppliedTags || (job.tags && job.tags.length > 0)) ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: moderateScale(8) }}>
           {hasAppliedTags ? (
             <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} />
           ) : job.tags && job.tags.length > 0 ? (
@@ -315,18 +315,18 @@ const JobTrendCard = React.memo(function JobTrendCard({
         </View>
       ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) }}>
         {job.employer?.company?.company_logo_url ? (
           <Image
             source={{ uri: job.employer.company.company_logo_url }}
-            style={{ width: 40, height: 40, borderRadius: 8, marginRight: 10 }}
+            style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), marginRight: moderateScale(10) }}
           />
         ) : (
-          <View style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
-            <Icon name="briefcase" size={20} color={colors.primary} />
+          <View style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), backgroundColor: colors.surfaceHighlight, alignItems: 'center', justifyContent: 'center', marginRight: moderateScale(10) }}>
+            <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
           </View>
         )}
-          <View style={{ flex: 1, paddingRight: 24 }}>
+          <View style={{ flex: 1, paddingRight: moderateScale(22) }}>
             <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
               {job.title}
             </Text>
@@ -336,13 +336,13 @@ const JobTrendCard = React.memo(function JobTrendCard({
           </View>
           {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
             <View style={{ position: 'absolute', right: 0, top: 0 }}>
-              <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+              <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
             </View>
           )}
       </View>
 
       <View style={styles.cardMetaRow}>
-        <Icon name="map-marker" size={12} color={locationIconColor} />
+        <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
         <Text style={[typography.small, { color: locationTextColor, flex: 1 }]} numberOfLines={1}>
           {locationLabel}
         </Text>
@@ -353,9 +353,9 @@ const JobTrendCard = React.memo(function JobTrendCard({
       </View>
 
       {/* Bottom Section: Job Type (Left) */}
-      <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ position: 'absolute', bottom: moderateScale(10), left: moderateScale(10), right: moderateScale(10), flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View style={[styles.typePill, { backgroundColor: pillBgColor, marginTop: 0 }]}>
-          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+          <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10) }]}>
             {jobType}
           </Text>
         </View>
@@ -444,7 +444,7 @@ const JobListCard = React.memo(function JobListCard({
         (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
       ]}>
       {(hasAppliedTags || (job.tags && job.tags.length > 0)) ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 8 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: moderateScale(8) }}>
           {hasAppliedTags ? (
             <TagCycling tags={job.applied_tags} colors={colors} tagRotationStyle={tagRotationStyle} isSmall />
           ) : job.tags && job.tags.length > 0 ? (
@@ -458,15 +458,15 @@ const JobListCard = React.memo(function JobListCard({
           {job.employer?.company?.company_logo_url ? (
             <Image
               source={{ uri: job.employer.company.company_logo_url }}
-              style={{ width: 40, height: 40, borderRadius: 8 }}
+              style={{ width: moderateScale(34), height: moderateScale(34), borderRadius: moderateScale(8) }}
             />
           ) : (
             <View style={[styles.listIconWrap, { backgroundColor: colors.surfaceHighlight }]}>
-              <Icon name="briefcase" size={18} color={colors.primary} />
+              <Icon name="briefcase" size={moderateScale(16)} color={colors.primary} />
             </View>
           )}
         </View>
-        <View style={[styles.listCardText, { flex: 1, paddingRight: 24 }]}>
+        <View style={[styles.listCardText, { flex: 1, paddingRight: moderateScale(22) }]}>
           <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={2}>
             {job.title}
           </Text>
@@ -476,14 +476,14 @@ const JobListCard = React.memo(function JobListCard({
         </View>
         {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
           <View style={{ position: 'absolute', right: 0, top: 0 }}>
-            <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
           </View>
         )}
       </View>
 
       <View style={[styles.listMeta, { justifyContent: 'space-between', flexWrap: 'nowrap' }]}>
-        <View style={[styles.metaItem, { flex: 1, marginRight: 8 }]}>
-          <Icon name="map-marker" size={13} color={locationIconColor} />
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
+          <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
           <Text style={[typography.small, { color: locationTextColor, flexShrink: 1 }]} numberOfLines={1}>
             {locationLabel}
           </Text>
@@ -494,7 +494,7 @@ const JobListCard = React.memo(function JobListCard({
         <View style={{ flex: 1 }}>
           <Text style={[typography.labelMedium, { color: salaryTextColor }]}>{salaryLabel}</Text>
           <View style={[styles.typePillSm, { backgroundColor: pillBgColor, alignSelf: 'flex-start', marginTop: 4 }]}>
-            <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: 10 }]}>
+            <Text style={[typography.small, { color: pillTextColor, fontFamily: typography.labelMedium.fontFamily, fontSize: moderateScale(10) }]}>
               {jobType}
             </Text>
           </View>
@@ -572,16 +572,16 @@ const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () 
   }, [pulseAnim]);
 
   return (
-    <Animated.View style={{ transform: [{ scale: pulseAnim }], marginHorizontal: spacing.md, marginBottom: 20, marginTop: 5 }}>
+    <Animated.View style={{ transform: [{ scale: pulseAnim }], marginHorizontal: spacing.md, marginBottom: moderateScale(16), marginTop: 4 }}>
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [
           {
             backgroundColor: colors.surface,
-            padding: 16,
+            padding: moderateScale(14),
             flexDirection: 'row',
             alignItems: 'center',
-            borderRadius: 24,
+            borderRadius: radius.xl,
             borderWidth: 1.5,
             borderColor: '#EC489930',
             elevation: 4,
@@ -596,22 +596,22 @@ const JobReelsBanner = ({ colors, onPress }: { colors: ThemeColors, onPress: () 
       >
         <View style={[StyleSheet.absoluteFill, { backgroundColor: '#EC489908' }]} />
 
-        <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#EC489915', alignItems: 'center', justifyContent: 'center', marginRight: 16, borderWidth: 1, borderColor: '#EC489930' }}>
-          <Icon name="play" size={24} color="#EC4899" style={{ marginLeft: 4 }} />
+        <View style={{ width: moderateScale(50), height: moderateScale(50), borderRadius: moderateScale(18), backgroundColor: '#EC489915', alignItems: 'center', justifyContent: 'center', marginRight: moderateScale(14), borderWidth: 1, borderColor: '#EC489930' }}>
+          <Icon name="play" size={moderateScale(22)} color="#EC4899" style={{ marginLeft: 3 }} />
         </View>
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <Text style={[typography.h4, { color: colors.textPrimary, fontSize: 18, marginRight: 8 }]}>{t('home.watchReels', 'Job Bites')}</Text>
+            <Text style={[typography.h4, { color: colors.textPrimary, fontSize: moderateScale(16), marginRight: 8 }]}>{t('home.watchReels', 'Job Bites')}</Text>
             <View style={{ backgroundColor: '#EC4899', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-              <Text style={{ color: '#FFF', fontSize: 9, fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
+              <Text style={{ color: '#FFF', fontSize: moderateScale(9), fontWeight: 'bold' }}>{t('home.reelsTag', 'NEW')}</Text>
             </View>
           </View>
-          <Text style={[typography.small, { color: colors.textSecondary }]}>{t('home.reelsDesc', 'Swipe through short job videos')}</Text>
+          <Text style={[typography.small, { color: colors.textSecondary, fontSize: moderateScale(11) }]}>{t('home.reelsDesc', 'Swipe through short job videos')}</Text>
         </View>
 
-        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#EC4899', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="arrow-right" size={14} color="#FFF" />
+        <View style={{ width: moderateScale(32), height: moderateScale(32), borderRadius: moderateScale(16), backgroundColor: '#EC4899', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="arrow-right" size={moderateScale(13)} color="#FFF" />
         </View>
       </Pressable>
     </Animated.View>
@@ -1433,7 +1433,7 @@ const HomeScreen: React.FC = () => {
                     });
                   }}
                   style={[styles.mainSearchBtn, { backgroundColor: colors.primary }]}>
-                  <Text style={[typography.button, { color: colors.onPrimary }]}>{t('home.searchJobs', 'Search Jobs')}</Text>
+                  <Text style={[typography.labelMedium, { color: colors.onPrimary, fontWeight: '600' }]}>{t('home.searchJobs', 'Search Jobs')}</Text>
                   <Icon name="arrow-right" size={18} color={colors.onPrimary} style={{ marginLeft: 8 }} />
                 </TouchableOpacity>
               </View>
@@ -1492,8 +1492,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   headerAvatar: {
-    width: 52,
-    height: 52,
+    width: moderateScale(46),
+    height: moderateScale(46),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1512,9 +1512,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   locationIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1533,20 +1533,20 @@ const styles = StyleSheet.create({
   referBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(5),
     borderRadius: radius.pill,
-    gap: 6,
-    marginRight: 4,
+    gap: moderateScale(5),
+    marginRight: moderateScale(4),
   },
   referText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: 'bold',
   },
   notifyBtnCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
@@ -1560,32 +1560,32 @@ const styles = StyleSheet.create({
   },
   notifyBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    top: moderateScale(10),
+    right: moderateScale(10),
+    width: moderateScale(9),
+    height: moderateScale(9),
+    borderRadius: moderateScale(5),
     borderWidth: 2,
   },
   headerNotifyHint: {
     position: 'absolute',
-    right: 54, // Positioned to the left of the 46px bell icon
-    top: 6,
+    right: moderateScale(50),
+    top: moderateScale(6),
     paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
+    paddingVertical: moderateScale(6),
     borderRadius: radius.sm,
     zIndex: 100,
     elevation: 10,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
-    minWidth: 110,
+    minWidth: moderateScale(110),
     alignItems: 'center',
   },
   hintArrowRight: {
     position: 'absolute',
     right: -6,
-    top: 10,
+    top: moderateScale(10),
     width: 0,
     height: 0,
     borderTopWidth: 6,
@@ -1595,28 +1595,28 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   searchBarOuter: {
+    ...components.jobCard,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 46, // Reduced from 52
+    minHeight: moderateScale(44),
     overflow: 'hidden',
-    ...components.jobCard,
     shadowOpacity: 0.06,
     elevation: 2,
-    zIndex: 10, // Higher than HeaderFilterGrid
+    zIndex: 10,
   },
   searchBarMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: spacing.xs, // Reduced from sm
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
     minWidth: 0,
   },
   searchPlaceholderWide: {
-    fontSize: 15,
+    fontSize: moderateScale(13),
     fontFamily: typography.body.fontFamily,
   },
   searchDivider: {
@@ -1625,8 +1625,8 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   searchFilterBtnPremium: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(7),
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
@@ -1640,10 +1640,10 @@ const styles = StyleSheet.create({
   filterBtnContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: moderateScale(6),
   },
   filterLabelText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -1662,45 +1662,45 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: moderateScale(10),
     marginTop: spacing.sm,
   },
   sectionIcon: {
     marginRight: spacing.sm,
   },
   categoriesScroll: {
-    gap: 10,
+    gap: moderateScale(10),
     paddingBottom: spacing.md,
     paddingRight: spacing.md,
   },
   categoryChip: {
-    minWidth: 84,
-    maxWidth: 104,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    ...components.jobCard,
+    minWidth: moderateScale(80),
+    maxWidth: moderateScale(100),
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(8),
     borderRadius: radius.md,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     gap: 4,
-    ...components.jobCard,
     shadowOpacity: 0.04,
     elevation: 1,
   },
   categoryIcon: {
-    width: 36,
-    height: 36,
+    width: moderateScale(34),
+    height: moderateScale(34),
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   trendingScroll: {
-    gap: 12,
+    gap: moderateScale(12),
     paddingBottom: spacing.md,
     paddingRight: spacing.md,
   },
 
   trendCard: {
-    padding: 12,
+    padding: moderateScale(12),
     borderRadius: radius.md,
     width: H_CARD_W,
     marginRight: spacing.md,
@@ -1715,21 +1715,21 @@ const styles = StyleSheet.create({
   hotBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(4),
     borderRadius: radius.sm,
     gap: 4,
   },
   cardTitle: {
-    minHeight: 36,
+    minHeight: moderateScale(36),
   },
   tickerContainer: {
     flex: 1,
-    height: 30,
+    height: moderateScale(30),
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 6,
+    marginLeft: moderateScale(6),
   },
   cardMetaRow: {
     flexDirection: 'row',
@@ -1747,27 +1747,27 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 4,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: moderateScale(4),
     borderRadius: radius.sm,
   },
   verticalList: {
-    gap: 12,
+    gap: moderateScale(12),
     marginBottom: 0,
   },
   listCard: {
-    padding: 6,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
     ...components.jobCard,
+    padding: moderateScale(8),
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   listCardTop: {
     flexDirection: 'row',
-    gap: 10,
+    gap: moderateScale(10),
   },
   listIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1778,7 +1778,7 @@ const styles = StyleSheet.create({
   listMeta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: moderateScale(8),
     marginTop: 6,
   },
   metaItem: {
@@ -1795,34 +1795,34 @@ const styles = StyleSheet.create({
   },
   typePillSm: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: moderateScale(4),
     borderRadius: radius.sm,
   },
   // Skeleton Styles
   heroSkeleton: {
-    height: 160,
+    height: moderateScale(160),
     borderRadius: radius.xl,
     width: '100%',
     marginBottom: spacing.lg,
   },
   sectionTitleSkeleton: {
-    height: 24,
-    width: 150,
+    height: moderateScale(24),
+    width: moderateScale(150),
     borderRadius: radius.sm,
     marginBottom: spacing.md,
   },
   chipSkeleton: {
-    height: 44,
-    width: 100,
+    height: moderateScale(44),
+    width: moderateScale(100),
     borderRadius: radius.card,
   },
   trendSkeleton: {
-    height: 180,
+    height: moderateScale(180),
     width: H_CARD_W,
     borderRadius: radius.card,
   },
   listSkeleton: {
-    height: 140,
+    height: moderateScale(140),
     width: '100%',
     borderRadius: radius.card,
     marginBottom: spacing.md,
@@ -1832,7 +1832,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.md,
-    gap: 8,
+    gap: moderateScale(8),
     marginTop: -spacing.xs,
     marginBottom: spacing.sm,
   },
@@ -1845,13 +1845,13 @@ const styles = StyleSheet.create({
   tagBadgeSm: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
     borderRadius: radius.sm,
     gap: 3,
   },
   tagTextSm: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontWeight: '700',
     fontFamily: typography.labelMedium.fontFamily,
   },
@@ -1863,13 +1863,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    paddingTop: 4, // Reduced to move inputs higher
+    paddingTop: 4,
     borderBottomWidth: 1,
     gap: spacing.md,
   },
   backBtn: {
-    padding: 4,
-    marginTop: 4, // Reduced margin
+    padding: moderateScale(4),
+    marginTop: 4,
   },
   dualInputContainer: {
     flex: 1,
@@ -1877,10 +1877,10 @@ const styles = StyleSheet.create({
   overlayInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: moderateScale(12),
     borderRadius: radius.md,
     borderWidth: 1,
-    minHeight: 52, // Increased height
+    minHeight: moderateScale(48),
   },
   recentHeader: {
     flexDirection: 'row',
@@ -1891,18 +1891,18 @@ const styles = StyleSheet.create({
   recentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: moderateScale(12),
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   popularTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: moderateScale(8),
   },
   popularTag: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(7),
     borderRadius: radius.pill,
     borderWidth: 1,
   },
@@ -1914,7 +1914,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: moderateScale(13),
     borderRadius: radius.md,
   },
 });

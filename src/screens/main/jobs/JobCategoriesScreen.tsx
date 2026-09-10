@@ -18,7 +18,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 
@@ -53,8 +53,8 @@ const JobCategoriesScreen: React.FC = () => {
         <View key={i} style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SkeletonPulse style={[styles.iconBox, { backgroundColor: colors.primary }]} />
           <View style={styles.cardContent}>
-            <SkeletonPulse style={{ height: 18, width: '60%', borderRadius: 4, marginBottom: 6 }} />
-            <SkeletonPulse style={{ height: 12, width: '30%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ height: moderateScale(16), width: '60%', borderRadius: moderateScale(4), marginBottom: moderateScale(4) }} />
+            <SkeletonPulse style={{ height: moderateScale(10), width: '30%', borderRadius: moderateScale(4) }} />
           </View>
           <SkeletonPulse style={styles.arrowBox} />
         </View>
@@ -71,17 +71,17 @@ const JobCategoriesScreen: React.FC = () => {
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={handleBackPress} style={styles.backBtn}>
-          <Icon name="chevron-left" size={20} color={colors.textPrimary} />
+          <Icon name="chevron-left" size={moderateScale(18)} color={colors.textPrimary} />
         </Pressable>
         <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center' }]}>
           Job Categories
         </Text>
-        <View style={{ width: 44 }} />
+        <View style={{ width: moderateScale(36) }} />
       </View>
 
       <View style={styles.searchWrapper}>
         <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-          <Icon name="search" size={16} color={colors.textPlaceholder} />
+          <Icon name="search" size={moderateScale(15)} color={colors.textPlaceholder} />
           <TextInput
             placeholder="Search industry or sector..."
             placeholderTextColor={colors.textPlaceholder}
@@ -91,7 +91,7 @@ const JobCategoriesScreen: React.FC = () => {
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery('')}>
-              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+              <Icon name="times-circle" size={moderateScale(15)} color={colors.textPlaceholder} />
             </Pressable>
           )}
         </View>
@@ -111,8 +111,8 @@ const JobCategoriesScreen: React.FC = () => {
                   styles.listCard,
                   { backgroundColor: colors.surface, borderColor: colors.border }
                 ]}>
-                <View style={[styles.iconBox, { backgroundColor: colors.primary, borderRadius: 12 }]}>
-                  <Icon name={getCategoryIcon(cat.name)} size={22} color="#FFFFFF" />
+                <View style={[styles.iconBox, { backgroundColor: colors.primary, borderRadius: moderateScale(10) }]}>
+                  <Icon name={getCategoryIcon(cat.name)} size={moderateScale(18)} color="#FFFFFF" />
                 </View>
                 <View style={styles.cardContent}>
                   <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: '700' }]}>
@@ -123,7 +123,7 @@ const JobCategoriesScreen: React.FC = () => {
                   </Text>
                 </View>
                 <View style={[styles.arrowBox, { backgroundColor: colors.surfaceHighlight }]}>
-                  <Icon name="chevron-right" size={12} color={colors.textPlaceholder} />
+                  <Icon name="chevron-right" size={moderateScale(11)} color={colors.textPlaceholder} />
                 </View>
               </Pressable>
             );
@@ -131,7 +131,7 @@ const JobCategoriesScreen: React.FC = () => {
           ListEmptyComponent={
             filteredCategories.length === 0 && !loading ? (
               <View style={styles.emptyResults}>
-                <Icon name="search-minus" size={40} color={colors.border} />
+                <Icon name="search-minus" size={moderateScale(36)} color={colors.border} />
                 <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.md }]}>
                   No categories matching "{searchQuery}"
                 </Text>
@@ -162,35 +162,35 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: moderateScale(10),
+    paddingHorizontal: moderateScale(12),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     alignItems: 'center',
     justifyContent: 'center',
   },
   searchWrapper: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(6),
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    height: 48,
-    borderRadius: radius.md,
+    paddingHorizontal: moderateScale(12),
+    height: moderateScale(42),
+    borderRadius: moderateScale(10),
     borderWidth: 1,
   },
   searchInput: {
     flex: 1,
-    marginLeft: spacing.sm,
-    fontSize: 15,
-    paddingVertical: 8,
+    marginLeft: moderateScale(6),
+    fontSize: moderateScale(13),
+    paddingVertical: moderateScale(6),
   },
   loader: {
     flex: 1,
@@ -201,16 +201,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.md,
-    paddingBottom: 40,
+    padding: moderateScale(12),
+    paddingBottom: moderateScale(36),
   },
   listCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: radius.lg,
+    padding: moderateScale(10),
+    borderRadius: moderateScale(12),
     borderWidth: 1,
-    marginBottom: spacing.md,
+    marginBottom: moderateScale(10),
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -218,31 +218,31 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: moderateScale(42),
+    height: moderateScale(42),
+    borderRadius: moderateScale(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardContent: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: moderateScale(10),
   },
   arrowBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(8),
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyResults: {
     alignItems: 'center',
-    marginTop: 60,
+    marginTop: moderateScale(50),
     width: '100%',
   },
   footer: {
     alignItems: 'center',
-    marginTop: spacing.xl,
+    marginTop: moderateScale(16),
     opacity: 0.6,
     width: '100%',
   },

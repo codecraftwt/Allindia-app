@@ -14,7 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
-import { typography, fontFamilies } from '../theme/typography';
+import { typography, fontFamilies, moderateScale } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import type { ThemeColors } from '../theme/colors';
@@ -301,15 +301,15 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
               {/* Left side: Copy and CTA */}
               <View style={styles.leftCol}>
                 <View style={[styles.badge, { borderColor: item.badgeColor + '40', backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
-                  <Icon name="star-circle" size={12} color={item.badgeColor} style={{ marginRight: 4 }} />
+                  <Icon name="star-circle" size={moderateScale(11)} color={item.badgeColor} style={{ marginRight: 4 }} />
                   <Text style={[styles.badgeText, { color: item.badgeColor }]}>{item.badge}</Text>
                 </View>
 
-                <Text style={[typography.sectionTitle, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: 17, marginTop: 8 }]} numberOfLines={1}>
+                <Text style={[typography.sectionTitle, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: moderateScale(15), marginTop: moderateScale(6) }]} numberOfLines={1}>
                   {item.title}
                 </Text>
 
-                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4, lineHeight: 17, fontSize: 11.5 }]} numberOfLines={2}>
+                <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4, lineHeight: moderateScale(15), fontSize: moderateScale(11) }]} numberOfLines={2}>
                   {item.subtitle}
                 </Text>
 
@@ -319,7 +319,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
                   </Text>
                   <Icon
                     name={item.actionType === 'share' ? 'share-variant' : item.actionType === 'navigate' ? 'chevron-right' : 'lock-open-outline'}
-                    size={13}
+                    size={moderateScale(12)}
                     color={item.ctaTextClr}
                     style={{ marginLeft: 6 }}
                   />
@@ -330,18 +330,18 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
               <View style={styles.rightCol}>
                 <View style={[styles.circleBg, { backgroundColor: item.badgeColor + '12', borderColor: item.badgeColor + '20' }]}>
                   <View style={[styles.innerCircleBg, { backgroundColor: item.badgeColor + '18' }]} />
-                  <Icon name={item.icon} size={38} color={item.badgeColor} style={styles.adIcon} />
+                  <Icon name={item.icon} size={moderateScale(34)} color={item.badgeColor} style={styles.adIcon} />
                   
                   <View style={[styles.starParticle, { top: 6, left: 10 }]}>
-                    <Icon name="sparkles" size={14} color={item.badgeColor} />
+                    <Icon name="sparkles" size={moderateScale(13)} color={item.badgeColor} />
                   </View>
                   
                   <View style={[styles.starParticle, { bottom: 10, right: 6 }]}>
-                    <Icon name="star" size={12} color={item.badgeColor} />
+                    <Icon name="star" size={moderateScale(11)} color={item.badgeColor} />
                   </View>
 
                   <View style={[styles.starParticle, { top: 12, right: 8 }]}>
-                    <Icon name="sparkles" size={10} color={item.accentColor} />
+                    <Icon name="sparkles" size={moderateScale(9)} color={item.accentColor} />
                   </View>
                 </View>
               </View>
@@ -364,7 +364,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
                   backgroundColor: isActive 
                     ? activeDotColor 
                     : (isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'),
-                  width: isActive ? 18 : 6,
+                  width: isActive ? moderateScale(18) : 6,
                 }
               ]}
             />
@@ -399,7 +399,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
                 style={[styles.modalCloseBtn, { backgroundColor: colors.surfaceHighlight }]}
                 hitSlop={10}
               >
-                <FeatherIcon name="x" size={18} color={colors.textSecondary} />
+                <FeatherIcon name="x" size={moderateScale(16)} color={colors.textSecondary} />
               </Pressable>
 
               {/* Glowing Icon Header */}
@@ -412,22 +412,22 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
                   },
                 ]}
               >
-                <Icon name={promoModalItem.icon} size={36} color={promoModalItem.badgeColor} />
+                <Icon name={promoModalItem.icon} size={moderateScale(32)} color={promoModalItem.badgeColor} />
               </View>
 
               {/* Badge */}
               <View style={[styles.modalBadge, { backgroundColor: promoModalItem.badgeColor + '15', borderColor: promoModalItem.badgeColor + '30' }]}>
-                <Icon name="crown" size={12} color={promoModalItem.badgeColor} style={{ marginRight: 4 }} />
+                <Icon name="crown" size={moderateScale(11)} color={promoModalItem.badgeColor} style={{ marginRight: 4 }} />
                 <Text style={[styles.modalBadgeText, { color: promoModalItem.badgeColor }]}>
                   {promoModalItem.badge}
                 </Text>
               </View>
 
               {/* Title & Subtitle */}
-              <Text style={[typography.h3, { color: colors.textPrimary, fontWeight: '800', textAlign: 'center', marginTop: 10 }]}>
+              <Text style={[typography.h3, { color: colors.textPrimary, fontWeight: '800', textAlign: 'center', marginTop: 10, fontSize: moderateScale(16) }]}>
                 {promoModalItem.alertTitle || promoModalItem.title}
               </Text>
-              <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, lineHeight: 18, paddingHorizontal: 12 }]}>
+              <Text style={[typography.small, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, lineHeight: moderateScale(16), paddingHorizontal: 12, fontSize: moderateScale(12) }]}>
                 {promoModalItem.alertSubtitle || promoModalItem.subtitle}
               </Text>
 
@@ -437,7 +437,7 @@ const ActionForYou: React.FC<ActionForYouProps> = ({ colors }) => {
                   {promoModalItem.alertPerks.map((perk, i) => (
                     <View key={i} style={styles.perkRow}>
                       <View style={[styles.perkCheckCircle, { backgroundColor: promoModalItem.badgeColor + '20' }]}>
-                        <FeatherIcon name="check" size={12} color={promoModalItem.badgeColor} />
+                        <FeatherIcon name="check" size={moderateScale(11)} color={promoModalItem.badgeColor} />
                       </View>
                       <Text style={[styles.perkText, { color: colors.textPrimary }]}>
                         {perk}
@@ -477,8 +477,8 @@ const styles = StyleSheet.create({
   },
   container: {
     marginRight: 12,
-    padding: spacing.md,
-    borderRadius: 24,
+    padding: moderateScale(12),
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
@@ -506,13 +506,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingVertical: moderateScale(2),
+    paddingHorizontal: moderateScale(6),
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: moderateScale(9),
     fontFamily: fontFamilies.bold,
     letterSpacing: 0.6,
   },
@@ -521,22 +521,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     marginTop: spacing.md,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: moderateScale(6),
+    paddingHorizontal: moderateScale(12),
+    borderRadius: radius.md,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
   ctaText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontFamily: fontFamilies.bold,
   },
   circleBg: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
+    width: moderateScale(78),
+    height: moderateScale(78),
+    borderRadius: moderateScale(39),
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -544,9 +544,9 @@ const styles = StyleSheet.create({
   },
   innerCircleBg: {
     position: 'absolute',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: moderateScale(64),
+    height: moderateScale(64),
+    borderRadius: moderateScale(32),
   },
   adIcon: {
     transform: [{ rotate: '-4deg' }],
@@ -588,9 +588,9 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 350,
-    borderRadius: 28,
+    borderRadius: radius.xl,
     borderWidth: 1.5,
-    padding: 24,
+    padding: moderateScale(20),
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -600,19 +600,19 @@ const styles = StyleSheet.create({
   },
   modalCloseBtn: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: moderateScale(14),
+    right: moderateScale(14),
+    width: moderateScale(30),
+    height: moderateScale(30),
+    borderRadius: moderateScale(15),
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 5,
   },
   modalIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: moderateScale(64),
+    height: moderateScale(64),
+    borderRadius: moderateScale(32),
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -622,56 +622,56 @@ const styles = StyleSheet.create({
   modalBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
   modalBadgeText: {
-    fontSize: 10,
+    fontSize: moderateScale(9),
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   perksContainer: {
     width: '100%',
-    borderRadius: 16,
+    borderRadius: radius.md,
     borderWidth: 1,
-    padding: 14,
-    marginTop: 16,
-    gap: 10,
+    padding: moderateScale(12),
+    marginTop: moderateScale(14),
+    gap: moderateScale(8),
   },
   perkRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   perkCheckCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: moderateScale(8),
   },
   perkText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '600',
-    lineHeight: 16,
+    lineHeight: moderateScale(15),
   },
   modalCtaBtn: {
     width: '100%',
-    paddingVertical: 14,
+    paddingVertical: moderateScale(12),
     borderRadius: radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: moderateScale(16),
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   modalCtaText: {
-    fontSize: 15,
+    fontSize: moderateScale(14),
     fontWeight: '700',
     letterSpacing: 0.2,
   },

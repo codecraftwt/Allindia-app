@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { typography, fontFamilies } from '../theme/typography';
+import { typography, fontFamilies, moderateScale } from '../theme/typography';
 import { useTranslation } from 'react-i18next';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
@@ -133,19 +133,19 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
       {/* Dismiss Button */}
       {!isSubmitted && (
         <Pressable onPress={handleDismiss} style={styles.closeBtn} hitSlop={12}>
-          <Icon name="close" size={18} color={colors.textPlaceholder} />
+          <Icon name="close" size={moderateScale(16)} color={colors.textPlaceholder} />
         </Pressable>
       )}
 
       {isSubmitted ? (
         <View style={styles.centerContent}>
           <View style={[styles.successIconWrapper, { backgroundColor: colors.success + '15' }]}>
-            <Icon name="check-decagram" size={48} color={colors.success || '#10b981'} />
+            <Icon name="check-decagram" size={moderateScale(42)} color={colors.success || '#10b981'} />
           </View>
           <Text style={[typography.sectionTitle, { fontFamily: fontFamilies.bold, color: colors.textPrimary, textAlign: 'center', marginTop: spacing.sm }]}>
             {t('appRate.thankYou')}
           </Text>
-          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, paddingHorizontal: 12 }]}>
+          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 6, paddingHorizontal: 12, fontSize: moderateScale(13) }]}>
             {t('appRate.feedbackSuccessSub')}
           </Text>
         </View>
@@ -153,13 +153,13 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
         <View>
           <View style={styles.headerRow}>
             <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
-              <Icon name="star-face" size={22} color={colors.primary} />
+              <Icon name="star-face" size={moderateScale(20)} color={colors.primary} />
             </View>
             <View style={styles.titleCol}>
-              <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: 16 }]}>
+              <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.textPrimary, fontSize: moderateScale(15) }]}>
                 {t('appRate.enjoyingTitle')}
               </Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]}>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2, fontSize: moderateScale(11) }]}>
                 {t('appRate.enjoyingSub')}
               </Text>
             </View>
@@ -176,7 +176,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
               >
                 <Icon
                   name={star <= rating ? 'star' : 'star-outline'}
-                  size={36}
+                  size={moderateScale(32)}
                   color={star <= rating ? '#fbbf24' : colors.textPlaceholder}
                 />
               </TouchableOpacity>
@@ -209,7 +209,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                 activeOpacity={0.8}
                 style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
               >
-                <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
+                <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff', fontSize: moderateScale(13) }]}>
                   {t('appRate.submitFeedback')}
                 </Text>
               </TouchableOpacity>
@@ -218,7 +218,7 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
 
           {rating >= 4 && (
             <View style={styles.successCta}>
-              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: 16, lineHeight: 20 }]}>
+              <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: moderateScale(14), lineHeight: moderateScale(18), fontSize: moderateScale(13) }]}>
                 {t('appRate.ratingCtaPlayStore')}
               </Text>
               <View style={styles.btnRow}>
@@ -227,16 +227,16 @@ const AppRate: React.FC<AppRateProps> = ({ colors }) => {
                   activeOpacity={0.8}
                   style={[styles.subBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
                 >
-                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.semiBold, color: colors.textSecondary }]}>
+                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.semiBold, color: colors.textSecondary, fontSize: moderateScale(13) }]}>
                     {t('appRate.later')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleRateNow}
                   activeOpacity={0.8}
-                  style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1, marginLeft: 12 }]}
+                  style={[styles.submitBtn, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1, marginLeft: moderateScale(10) }]}
                 >
-                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff' }]}>
+                  <Text style={[typography.labelMedium, { fontFamily: fontFamilies.bold, color: colors.onPrimary || '#fff', fontSize: moderateScale(13) }]}>
                     {t('appRate.rateNow')}
                   </Text>
                 </TouchableOpacity>
@@ -253,8 +253,8 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: spacing.md,
     marginVertical: spacing.md,
-    padding: spacing.lg,
-    borderRadius: 24,
+    padding: moderateScale(14),
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     elevation: 4,
     shadowOffset: { width: 0, height: 6 },
@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    top: 14,
-    right: 14,
+    top: moderateScale(12),
+    right: moderateScale(12),
     zIndex: 10,
     padding: 6,
   },
@@ -280,9 +280,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: moderateScale(10),
     marginVertical: spacing.md,
   },
   starTouch: {
@@ -304,18 +304,18 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   textInput: {
-    borderRadius: 16,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: 14,
-    height: 90,
+    paddingVertical: moderateScale(10),
+    fontSize: moderateScale(13),
+    height: moderateScale(80),
     textAlignVertical: 'top',
     fontFamily: fontFamilies.regular,
   },
   submitBtn: {
-    paddingVertical: 12,
-    borderRadius: 14,
+    paddingVertical: moderateScale(10),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 2 },
@@ -334,9 +334,9 @@ const styles = StyleSheet.create({
   },
   subBtn: {
     borderWidth: 1.5,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 14,
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(20),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -346,9 +346,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   successIconWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: moderateScale(70),
+    height: moderateScale(70),
+    borderRadius: moderateScale(35),
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,

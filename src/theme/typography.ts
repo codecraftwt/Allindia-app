@@ -10,11 +10,18 @@ export const scale = (size: number) => (SCREEN_WIDTH / guidelineBaseWidth) * siz
 export const verticalScale = (size: number) => (SCREEN_HEIGHT / guidelineBaseHeight) * size;
 
 /**
- * moderateScale smoothly scales sizes according to device screen width
- * factor 0.3 ensures text scales proportionally without overflowing on smaller/larger phones
+ * moderateScale smoothly scales sizes according to device screen width.
+ * factor 0.25 ensures text & UI scale proportionally without growing too large
+ * on wider/higher-DPI Android devices (was 0.3 — too aggressive on 480dp+ screens).
  */
-export const moderateScale = (size: number, factor = 0.3) => {
+export const moderateScale = (size: number, factor = 0.25) => {
   const scaled = size + (scale(size) - size) * factor;
+  return Math.round(PixelRatio.roundToNearestPixel(scaled));
+};
+
+/** Vertically-anchored moderate scale — use for heights & vertical paddings */
+export const vms = (size: number, factor = 0.2) => {
+  const scaled = size + (verticalScale(size) - size) * factor;
   return Math.round(PixelRatio.roundToNearestPixel(scaled));
 };
 

@@ -14,7 +14,7 @@ import {
 import { useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Video from 'react-native-video';
-import { typography } from '../theme/typography';
+import { typography, moderateScale } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { components } from '../theme/components';
@@ -182,7 +182,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
             styles.slide,
             {
               width: CAROUSEL_WIDTH,
-              height: 160,
+              height: moderateScale(150),
               padding: 0,
               backgroundColor: colors.surfaceHighlight,
               borderRadius: radius.md,
@@ -235,7 +235,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
         </View>
         <View style={styles.heroInner}>
           <View style={styles.heroCopy}>
-            <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: 18, lineHeight: 24 }]} numberOfLines={2}>
+            <Text style={[typography.sectionTitle, { color: colors.onPrimary, fontSize: moderateScale(16), lineHeight: moderateScale(22) }]} numberOfLines={2}>
               {item.title}
             </Text>
             <Text
@@ -245,7 +245,8 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
                   color: colors.onPrimary,
                   opacity: 0.92,
                   marginTop: 6,
-                  lineHeight: 16,
+                  lineHeight: moderateScale(15),
+                  fontSize: moderateScale(11),
                 },
               ]}
               numberOfLines={2}>
@@ -259,7 +260,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
                   marginTop: spacing.md,
                 },
               ]}>
-              <Text style={[typography.labelMedium, { color: colors.primary }]}>{item.cta}</Text>
+              <Text style={[typography.labelMedium, { color: colors.primary, fontSize: moderateScale(11) }]}>{item.cta}</Text>
             </View>
           </View>
           <View style={styles.heroVisual}>
@@ -309,7 +310,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
               {
                 backgroundColor: isApiMedia ? '#ffffff' : colors.onPrimary,
                 opacity: activeIndex === index ? 1 : 0.4,
-                width: activeIndex === index ? 16 : 6,
+                width: activeIndex === index ? moderateScale(16) : 6,
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.2,
@@ -337,15 +338,15 @@ const styles = StyleSheet.create({
   },
   heroBlob: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: moderateScale(110),
+    height: moderateScale(110),
+    borderRadius: moderateScale(55),
   },
   heroInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    minHeight: 110,
+    minHeight: moderateScale(105),
   },
   heroCopy: {
     flex: 1,
@@ -353,28 +354,28 @@ const styles = StyleSheet.create({
   },
   heroCta: {
     alignSelf: 'flex-start',
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingVertical: moderateScale(5),
+    paddingHorizontal: moderateScale(12),
     borderRadius: radius.button,
   },
   heroVisual: {
-    width: 76,
-    height: 76,
+    width: moderateScale(72),
+    height: moderateScale(72),
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   bannerImage: {
-    width: 76,
-    height: 76,
+    width: moderateScale(72),
+    height: moderateScale(72),
     resizeMode: 'cover',
   },
   pagination: {
     flexDirection: 'row',
     position: 'absolute',
-    bottom: 8,
-    right: 12,
+    bottom: moderateScale(8),
+    right: moderateScale(12),
     gap: 4,
   },
   dot: {

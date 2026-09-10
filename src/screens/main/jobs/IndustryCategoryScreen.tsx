@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import type { ThemeColors } from '../../../theme/colors';
@@ -69,7 +69,7 @@ function JobCard({
           {company.company_logo_url ? (
             <Image source={{ uri: company.company_logo_url }} style={styles.logoImage} />
           ) : (
-            <Icon name="briefcase" size={20} color={colors.primary} />
+            <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
           )}
         </View>
         <View style={styles.titleInfo}>
@@ -83,9 +83,9 @@ function JobCard({
             {isVerified && (
               <MaterialCommunityIcons
                 name="check-decagram"
-                size={15}
+                size={moderateScale(14)}
                 color="#3B82F6"
-                style={{ marginLeft: 4, flexShrink: 0 }}
+                style={{ marginLeft: moderateScale(4), flexShrink: 0 }}
               />
             )}
           </View>
@@ -97,7 +97,7 @@ function JobCard({
           </Text>
         </View>
         <View style={[styles.arrowBox, { backgroundColor: colors.primary + '12' }]}>
-          <FeatherIcon name="chevron-right" size={16} color={colors.primary} />
+          <FeatherIcon name="chevron-right" size={moderateScale(14)} color={colors.primary} />
         </View>
       </View>
 
@@ -106,7 +106,7 @@ function JobCard({
       <View style={styles.cardFooter}>
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <FeatherIcon name="map-pin" size={12} color={colors.textPlaceholder} />
+            <FeatherIcon name="map-pin" size={moderateScale(11)} color={colors.textPlaceholder} />
             <Text
               style={[styles.metaText, { color: colors.textSecondary }]}
               numberOfLines={1}
@@ -116,7 +116,7 @@ function JobCard({
           </View>
           <View style={[styles.metaDivider, { backgroundColor: colors.border }]} />
           <View style={styles.metaItem}>
-            <Icon name="money" size={12} color={colors.success} />
+            <Icon name="money" size={moderateScale(11)} color={colors.success} />
             <Text
               style={[styles.metaText, { color: colors.textSecondary, fontWeight: '600' }]}
               numberOfLines={1}
@@ -145,7 +145,7 @@ const IndustryJobsSkeleton: React.FC = () => {
   const { colors, mode } = useTheme();
   const isDark = mode === 'dark';
   return (
-    <View style={{ gap: spacing.md, paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
+    <View style={{ gap: moderateScale(10), paddingHorizontal: moderateScale(12), paddingTop: moderateScale(10) }}>
       {[1, 2, 3, 4, 5].map((i) => (
         <View
           key={i}
@@ -159,25 +159,25 @@ const IndustryJobsSkeleton: React.FC = () => {
           ]}
         >
           <View style={styles.cardTop}>
-            <SkeletonPulse style={{ width: 44, height: 44, borderRadius: 12 }} />
-            <View style={{ flex: 1, gap: 8, marginLeft: 12 }}>
-              <SkeletonPulse style={{ height: 16, width: i % 2 === 0 ? '70%' : '82%', borderRadius: 6 }} />
-              <SkeletonPulse style={{ height: 12, width: '45%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(10) }} />
+            <View style={{ flex: 1, gap: moderateScale(6), marginLeft: moderateScale(10) }}>
+              <SkeletonPulse style={{ height: moderateScale(14), width: i % 2 === 0 ? '70%' : '82%', borderRadius: moderateScale(4) }} />
+              <SkeletonPulse style={{ height: moderateScale(10), width: '45%', borderRadius: moderateScale(4) }} />
             </View>
-            <SkeletonPulse style={{ width: 28, height: 28, borderRadius: 14 }} />
+            <SkeletonPulse style={{ width: moderateScale(24), height: moderateScale(24), borderRadius: moderateScale(12) }} />
           </View>
           <View style={[styles.cardDivider, { backgroundColor: colors.border + '50' }]} />
           <View style={styles.cardFooter}>
             <View style={styles.metaRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <SkeletonPulse style={{ height: 12, width: 85, borderRadius: 4 }} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(6) }}>
+                <SkeletonPulse style={{ height: moderateScale(10), width: moderateScale(75), borderRadius: moderateScale(4) }} />
               </View>
               <View style={[styles.metaDivider, { backgroundColor: colors.border + '60' }]} />
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <SkeletonPulse style={{ height: 12, width: 75, borderRadius: 4 }} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(6) }}>
+                <SkeletonPulse style={{ height: moderateScale(10), width: moderateScale(65), borderRadius: moderateScale(4) }} />
               </View>
             </View>
-            <SkeletonPulse style={{ height: 22, width: 68, borderRadius: 6 }} />
+            <SkeletonPulse style={{ height: moderateScale(20), width: moderateScale(60), borderRadius: moderateScale(6) }} />
           </View>
         </View>
       ))}
@@ -239,7 +239,7 @@ const IndustryCategoryScreen: React.FC = () => {
           {
             backgroundColor: colors.surface,
             borderBottomColor: colors.border,
-            paddingTop: insets.top + 8,
+            paddingTop: insets.top + moderateScale(8),
           },
         ]}
       >
@@ -251,7 +251,7 @@ const IndustryCategoryScreen: React.FC = () => {
             pressed && { opacity: 0.7 },
           ]}
         >
-          <FeatherIcon name="arrow-left" size={20} color={colors.textPrimary} />
+          <FeatherIcon name="arrow-left" size={moderateScale(18)} color={colors.textPrimary} />
         </Pressable>
 
         <View style={styles.headerText}>
@@ -275,7 +275,7 @@ const IndustryCategoryScreen: React.FC = () => {
             styles.listContent,
             { paddingBottom: insets.bottom + spacing.xl },
           ]}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+          ItemSeparatorComponent={() => <View style={{ height: moderateScale(10) }} />}
           renderItem={({ item }) => (
             <JobCard
               job={item}
@@ -288,16 +288,16 @@ const IndustryCategoryScreen: React.FC = () => {
             <View style={styles.empty}>
               <View
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
+                  width: moderateScale(54),
+                  height: moderateScale(54),
+                  borderRadius: moderateScale(27),
                   backgroundColor: colors.surfaceHighlight,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: spacing.md,
+                  marginBottom: moderateScale(10),
                 }}
               >
-                <FeatherIcon name="briefcase" size={28} color={colors.primary} />
+                <FeatherIcon name="briefcase" size={moderateScale(24)} color={colors.primary} />
               </View>
               <Text
                 style={[
@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
+    paddingHorizontal: moderateScale(12),
+    paddingBottom: moderateScale(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
     elevation: 2,
     shadowColor: '#000',
@@ -349,23 +349,23 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm,
+    marginRight: moderateScale(8),
   },
   headerText: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
+    paddingHorizontal: moderateScale(12),
+    paddingTop: moderateScale(10),
   },
   card: {
-    padding: 14,
+    padding: moderateScale(12),
     borderRadius: radius.lg,
     borderWidth: 1,
     elevation: 2,
@@ -378,9 +378,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(10),
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -393,30 +393,30 @@ const styles = StyleSheet.create({
   },
   titleInfo: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
+    marginLeft: moderateScale(10),
+    marginRight: moderateScale(6),
   },
   jobTitleText: {
-    fontSize: 15,
+    fontSize: moderateScale(14),
     fontWeight: '700',
     letterSpacing: 0.1,
     flexShrink: 1,
   },
   companyText: {
-    fontSize: 13,
-    marginTop: 2,
+    fontSize: moderateScale(12),
+    marginTop: moderateScale(2),
   },
   arrowBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: moderateScale(26),
+    height: moderateScale(26),
+    borderRadius: moderateScale(13),
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   cardDivider: {
     height: StyleSheet.hairlineWidth,
-    marginVertical: 10,
+    marginVertical: moderateScale(8),
   },
   cardFooter: {
     flexDirection: 'row',
@@ -431,33 +431,33 @@ const styles = StyleSheet.create({
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginRight: 10,
+    gap: moderateScale(4),
+    marginRight: moderateScale(8),
   },
   metaText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
   },
   metaDivider: {
     width: 1,
-    height: 10,
-    marginRight: 10,
+    height: moderateScale(10),
+    marginRight: moderateScale(8),
   },
   tagPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: moderateScale(7),
+    paddingVertical: moderateScale(2),
+    borderRadius: moderateScale(5),
     borderWidth: 1,
   },
   tagPillText: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: '700',
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 80,
-    paddingHorizontal: spacing.xl,
+    marginTop: moderateScale(60),
+    paddingHorizontal: moderateScale(16),
   },
 });
 

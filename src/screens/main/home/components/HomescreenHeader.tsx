@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const BRAND_ICON = require('../../../../assets/Job india Icon & logo file/Icon Job india.jpg');
-import { typography } from '../../../../theme/typography';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
 import { components } from '../../../../theme/components';
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   fixedHeader: {
     paddingHorizontal: spacing.md,
     paddingTop: 0,
-    paddingBottom: 10,
+    paddingBottom: 8,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
@@ -75,14 +75,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: moderateScale(8),
     zIndex: 5,
   },
   headerLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
     minWidth: 0,
   },
   headerGreeting: {
@@ -92,17 +92,18 @@ const styles = StyleSheet.create({
   locationSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: moderateScale(8),
   },
   locationIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: moderateScale(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
   locationTextStack: {
     justifyContent: 'center',
+    flexShrink: 1,
   },
   cityRow: {
     flexDirection: 'row',
@@ -111,12 +112,13 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: moderateScale(6),
+    flexShrink: 0,
   },
   notifyBtnCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 25,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -130,11 +132,11 @@ const styles = StyleSheet.create({
   },
   notifyBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 9,
-    height: 9,
-    borderRadius: 5,
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     borderWidth: 2,
   },
   headerNotifyHint: {
@@ -167,9 +169,8 @@ const styles = StyleSheet.create({
   searchBarOuter: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radius.lg,
     borderWidth: 1.5,
-    minHeight: 38,
+    minHeight: moderateScale(40),
     overflow: 'hidden',
     ...components.jobCard,
     shadowOpacity: 0.06,
@@ -187,20 +188,20 @@ const styles = StyleSheet.create({
   },
   searchPlaceholderWide: {
     flex: 1,
-    fontSize: 15,
+    fontSize: moderateScale(13),
     fontFamily: typography.body.fontFamily,
   },
   tickerContainer: {
     flex: 1,
-    height: 24,
+    height: moderateScale(22),
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 6,
   },
   searchFilterBtnPremium: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
@@ -230,18 +231,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
-    height: 40,
-    borderRadius: 25, // fully rounded capsule shape matching height 50
+    paddingHorizontal: moderateScale(10),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    gap: 6,
+    gap: 5,
   },
   referBtnText: {
-    fontSize: 13,
+    fontSize: moderateScale(12),
     fontWeight: '800',
   },
   modalOverlay: {
@@ -500,7 +501,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel="Refer app">
-                <Icon name="gift" size={18} color={colors.primary} />
+                <Icon name="gift" size={moderateScale(15)} color={colors.primary} />
                 <Text style={[styles.referBtnText, { color: colors.textPrimary }]}>{t('home.referBtn', 'Refer')}</Text>
               </Pressable>
 
@@ -513,12 +514,12 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                     backgroundColor: colors.surface,
                     borderColor: colors.border,
                     shadowColor: colors.shadow,
-                    marginRight: 4,
+                    marginRight: 0,
                   },
                 ]}
                 accessibilityRole="button"
                 accessibilityLabel="Change language">
-                <Icon name="language" size={20} color={colors.primary} />
+                <Icon name="language" size={moderateScale(17)} color={colors.primary} />
               </Pressable>
 
               <Pressable
@@ -547,7 +548,7 @@ const HomescreenHeader: React.FC<HomescreenHeaderProps> = ({
                     })
                   }]
                 }}>
-                  <IonIcon name="notifications" size={22} color={colors.primary} />
+                  <IonIcon name="notifications" size={moderateScale(18)} color={colors.primary} />
                 </Animated.View>
                 <Animated.View style={[
                   styles.notifyBadge,

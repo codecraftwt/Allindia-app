@@ -25,7 +25,7 @@ import { fetchJobs, filterJobs, searchJobs } from '../../../redux/slice/jobSlice
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +137,7 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
         transform: [{ translateY }]
       }
     ]}>
-      <Icon name={tagIcon} size={12} color={customText || tagColor} />
+      <Icon name={tagIcon} size={moderateScale(11)} color={customText || tagColor} />
       <Text style={[styles.cornerBadgeText, { color: customText || tagColor }]}>
         {tagName}
       </Text>
@@ -382,10 +382,10 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
           {item.employer?.company?.company_logo_url ? (
             <Image
               source={{ uri: item.employer.company.company_logo_url }}
-              style={{ width: 44, height: 44, borderRadius: 12 }}
+              style={{ width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(10) }}
             />
           ) : (
-            <Icon name="briefcase" size={20} color={hasAppliedTags ? primaryTagColor : colors.primary} />
+            <Icon name="briefcase" size={moderateScale(18)} color={hasAppliedTags ? primaryTagColor : colors.primary} />
           )}
         </View>
         <View style={styles.titleBox}>
@@ -398,14 +398,14 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
         </View>
         {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
           <View style={{ position: 'absolute', right: 0, top: 0 }}>
-            <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
           </View>
         )}
       </View>
 
       <View style={styles.cardMeta}>
         <View style={styles.metaItem}>
-          <Icon name="map-marker" size={14} color={locationIconColor} />
+          <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
           <Text style={[typography.small, { color: locationTextColor, marginLeft: 6 }]}>
             {locationLabel}
           </Text>
@@ -460,7 +460,7 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
         />
       </View>
       <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight, marginTop: 4 }]}>
-        <Icon name="search" size={18} color={colors.textPlaceholder} />
+        <Icon name="search" size={moderateScale(16)} color={colors.textPlaceholder} />
         <TextInput
           style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder={t('allJobs.searchPlaceholder', 'Search jobs, companies...')}
@@ -483,7 +483,7 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
             ]}
           >
             <View style={[styles.actionIconBox, { backgroundColor: activeTab === 'Nearest' ? '#6366F1' : '#EEF2FF' }]}>
-              <Icon name="map-marker" size={18} color={activeTab === 'Nearest' ? '#fff' : '#6366F1'} />
+              <Icon name="map-marker" size={moderateScale(16)} color={activeTab === 'Nearest' ? '#fff' : '#6366F1'} />
             </View>
             <View style={styles.cardInfo}>
               <Text style={[styles.actionTitle, { color: activeTab === 'Nearest' ? '#1E1B4B' : '#4B5563' }]}>{t('allJobs.nearest', 'Nearest')}</Text>
@@ -502,7 +502,7 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
             ]}
           >
             <View style={[styles.actionIconBox, { backgroundColor: activeTab === 'Other Cities' ? '#0284C7' : '#E0F2FE' }]}>
-              <Icon name="globe" size={18} color={activeTab === 'Other Cities' ? '#fff' : '#0284C7'} />
+              <Icon name="globe" size={moderateScale(16)} color={activeTab === 'Other Cities' ? '#fff' : '#0284C7'} />
             </View>
             <View style={styles.cardInfo}>
               <Text style={[styles.actionTitle, { color: activeTab === 'Other Cities' ? '#082F49' : '#4B5563' }]}>{t('allJobs.otherCities', 'Other Cities')}</Text>
@@ -534,7 +534,7 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
                 <View style={[styles.filterIconCircle, { backgroundColor: isSelected ? filter.color : colors.surfaceHighlight }]}>
                   <Icon
                     name={filter.icon}
-                    size={10}
+                    size={moderateScale(10)}
                     color={isSelected ? '#fff' : colors.textPlaceholder}
                   />
                 </View>
@@ -596,7 +596,7 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
           ) : null}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Icon name="briefcase" size={60} color={colors.border} />
+              <Icon name="briefcase" size={moderateScale(50)} color={colors.border} />
               <Text style={[typography.h4, { color: colors.textSecondary, marginTop: 16 }]}>
                 {t('allJobs.noJobs', 'No jobs available yet')}
               </Text>
@@ -612,13 +612,13 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
                   }}
                   style={{
                     marginTop: 24,
-                    paddingHorizontal: 24,
-                    paddingVertical: 12,
+                    paddingHorizontal: moderateScale(20),
+                    paddingVertical: moderateScale(10),
                     backgroundColor: colors.primary,
                     borderRadius: radius.md,
                   }}
                 >
-                  <Text style={[typography.button, { color: '#fff' }]}>
+                  <Text style={[typography.labelMedium, { color: '#fff', fontWeight: '600' }]}>
                     {t('allJobs.clearFilters', 'Clear Filters')}
                   </Text>
                 </Pressable>
@@ -646,31 +646,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: spacing.lg,
     marginTop: 0,
-    marginBottom: 12,
+    marginBottom: moderateScale(10),
     paddingHorizontal: spacing.md,
-    height: 46,
-    borderRadius: 12,
+    height: moderateScale(44),
+    borderRadius: radius.md,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: moderateScale(10),
+    fontSize: moderateScale(14),
   },
   filterBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   list: {
     paddingHorizontal: spacing.lg,
     paddingTop: 4,
-    gap: 10,
+    gap: moderateScale(10),
   },
   jobCard: {
-    padding: 10,
-    borderRadius: 16,
+    padding: moderateScale(10),
+    borderRadius: radius.lg,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: moderateScale(10),
   },
   listCardTags: {
     flexDirection: 'row',
@@ -692,9 +692,9 @@ const styles = StyleSheet.create({
   cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: radius.sm,
     borderWidth: 1.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -703,21 +703,21 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cornerBadgeText: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: 'bold',
     marginLeft: 4,
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  titleBox: { flex: 1, paddingRight: 56 },
+  titleBox: { flex: 1, paddingRight: moderateScale(48) },
   cardMeta: {
     flexDirection: 'row',
-    gap: 16,
+    gap: moderateScale(14),
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
@@ -731,12 +731,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: moderateScale(8),
   },
   typeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: radius.sm,
   },
   empty: {
     flex: 1,
@@ -752,49 +752,49 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   tabItem: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(7),
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: 'transparent',
     backgroundColor: '#f5f5f5',
   },
   tabText: {
-    fontSize: 13,
+    fontSize: moderateScale(12),
     fontWeight: '700',
   },
   actionRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
-    gap: 12,
+    gap: moderateScale(10),
     marginBottom: 4,
   },
   bigActionCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(10),
+    borderRadius: radius.lg,
     borderWidth: 1.5,
-    gap: 8,
+    gap: moderateScale(8),
   },
   cardInfo: {
     flex: 1,
   },
   actionIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: moderateScale(34),
+    height: moderateScale(34),
+    borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionTitle: {
-    fontSize: 13,
+    fontSize: moderateScale(12),
     fontWeight: '800',
   },
   actionSub: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     color: '#666',
     marginTop: 1,
   },
@@ -804,28 +804,28 @@ const styles = StyleSheet.create({
   },
   quickFilterScroll: {
     paddingHorizontal: spacing.lg,
-    gap: 8,
+    gap: moderateScale(6),
   },
   quickFilterChip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: 6,
-    paddingRight: 16,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 10,
+    paddingRight: moderateScale(12),
+    paddingVertical: moderateScale(5),
+    borderRadius: radius.md,
+    marginRight: moderateScale(8),
     borderWidth: 1,
   },
   filterIconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: moderateScale(22),
+    height: moderateScale(22),
+    borderRadius: moderateScale(11),
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 6,
   },
   quickFilterText: {
-    fontSize: 12,
+    fontSize: moderateScale(11),
     fontWeight: '800',
     includeFontPadding: false,
     textAlignVertical: 'center',

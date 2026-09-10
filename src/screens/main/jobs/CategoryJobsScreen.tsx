@@ -21,7 +21,7 @@ import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../../context/ThemeContext';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
 import type { ThemeColors } from '../../../theme/colors';
@@ -93,7 +93,7 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
         transform: [{ translateY }]
       }
     ]}>
-      <Icon name={tagIcon} size={12} color={customText || tagColor} />
+      <Icon name={tagIcon} size={moderateScale(11)} color={customText || tagColor} />
       <Text style={[styles.cornerBadgeText, { color: customText || tagColor }]}>
         {tagName}
       </Text>
@@ -142,19 +142,19 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
       style={[
         styles.premiumCard,
         { backgroundColor: cardBgColor, borderColor: cardBorderColor, shadowColor: cardShadowColor, elevation: cardElevation },
-        (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } }
+        (isSpotlight || isBoost) && { shadowOpacity: 0.2, shadowRadius: moderateScale(8), shadowOffset: { width: 0, height: moderateScale(4) } }
       ]}
     >
       <View style={styles.cardHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: moderateScale(10) }}>
           <View style={[styles.iconBox, { backgroundColor: colors.surfaceHighlight }]}>
             {job.employer?.company?.company_logo_url ? (
               <Image source={{ uri: job.employer.company.company_logo_url }} style={styles.logoImage} />
             ) : (
-              <Icon name="briefcase" size={20} color={colors.primary} />
+              <Icon name="briefcase" size={moderateScale(18)} color={colors.primary} />
             )}
           </View>
-          <View style={[styles.titleBox, { paddingRight: 24 }]}>
+          <View style={[styles.titleBox, { paddingRight: moderateScale(20) }]}>
             <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
               {job.title}
             </Text>
@@ -164,21 +164,19 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
           </View>
           {(job.employer?.company?.verification_status === 'approved' || job.employer?.verification_status === 'approved') && (
             <View style={{ position: 'absolute', right: 0, top: 0 }}>
-              <MaterialCommunityIcons name="check-decagram" size={18} color="#3B82F6" />
+              <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
             </View>
           )}
         </View>
-
-
       </View>
 
       <View style={styles.cardMeta}>
         <View style={styles.metaItem}>
-          <Icon name="map-marker" size={12} color={colors.textPlaceholder} style={{ marginRight: 4 }} />
+          <Icon name="map-marker" size={moderateScale(11)} color={colors.textPlaceholder} style={{ marginRight: moderateScale(4) }} />
           <Text style={[typography.small, { color: colors.textSecondary }]}>{locationLabel}</Text>
         </View>
         <View style={styles.metaItem}>
-          <Icon name="money" size={12} color={colors.success} style={{ marginRight: 4 }} />
+          <Icon name="money" size={moderateScale(11)} color={colors.success} style={{ marginRight: moderateScale(4) }} />
           <Text style={[typography.small, { color: colors.textSecondary }]}>{salaryLabel}</Text>
         </View>
       </View>
@@ -189,11 +187,10 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
             {jobType}
           </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(8) }}>
           {(job.applied_tags?.length > 0 || job.tags?.length > 0) && (
             <TagCycling tags={job.applied_tags?.length > 0 ? job.applied_tags : job.tags} colors={colors} />
           )}
-         
         </View>
       </View>
     </Pressable>
@@ -203,24 +200,24 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
 const CategoryJobsSkeleton: React.FC = () => {
   const { colors } = useTheme();
   return (
-    <View style={{ gap: spacing.md, paddingHorizontal: 6 }}>
+    <View style={{ gap: moderateScale(10), paddingHorizontal: moderateScale(6) }}>
       {[1, 2, 3, 4, 5].map(i => (
         <View key={i} style={[styles.premiumCard, { backgroundColor: colors.surface }]}>
           <View style={styles.cardTop}>
-            <SkeletonPulse style={{ width: 44, height: 44, borderRadius: 12 }} />
-            <View style={{ flex: 1, gap: 8, marginLeft: 12 }}>
-              <SkeletonPulse style={{ height: 16, width: i % 2 === 0 ? '70%' : '82%', borderRadius: 6 }} />
-              <SkeletonPulse style={{ height: 12, width: '45%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(10) }} />
+            <View style={{ flex: 1, gap: moderateScale(6), marginLeft: moderateScale(10) }}>
+              <SkeletonPulse style={{ height: moderateScale(14), width: i % 2 === 0 ? '70%' : '82%', borderRadius: moderateScale(4) }} />
+              <SkeletonPulse style={{ height: moderateScale(10), width: '45%', borderRadius: moderateScale(4) }} />
             </View>
-            <SkeletonPulse style={{ width: 28, height: 28, borderRadius: 14 }} />
+            <SkeletonPulse style={{ width: moderateScale(24), height: moderateScale(24), borderRadius: moderateScale(12) }} />
           </View>
-          <View style={{ height: 1, backgroundColor: colors.border + '50', marginVertical: 12 }} />
+          <View style={{ height: 1, backgroundColor: colors.border + '50', marginVertical: moderateScale(10) }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-              <SkeletonPulse style={{ height: 12, width: 85, borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: 75, borderRadius: 4 }} />
+            <View style={{ flexDirection: 'row', gap: moderateScale(10), alignItems: 'center' }}>
+              <SkeletonPulse style={{ height: moderateScale(10), width: moderateScale(80), borderRadius: moderateScale(4) }} />
+              <SkeletonPulse style={{ height: moderateScale(10), width: moderateScale(70), borderRadius: moderateScale(4) }} />
             </View>
-            <SkeletonPulse style={{ height: 22, width: 68, borderRadius: 6 }} />
+            <SkeletonPulse style={{ height: moderateScale(20), width: moderateScale(60), borderRadius: moderateScale(6) }} />
           </View>
         </View>
       ))}
@@ -342,9 +339,9 @@ const CategoryJobsScreen: React.FC = () => {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="chevron-left" size={20} color={colors.textPrimary} />
+          <Icon name="chevron-left" size={moderateScale(18)} color={colors.textPrimary} />
         </Pressable>
-        <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center', marginRight: 40 }]}>
+        <Text style={[typography.appTitle, { color: colors.textPrimary, flex: 1, textAlign: 'center', marginRight: moderateScale(36) }]}>
           {categoryName || allTabs.find(t => t.id === selectedId)?.name} Jobs
         </Text>
       </View>
@@ -363,7 +360,7 @@ const CategoryJobsScreen: React.FC = () => {
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
         <View style={[styles.searchBar, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }]}>
-          <Icon name="search" size={16} color={colors.textPlaceholder} />
+          <Icon name="search" size={moderateScale(15)} color={colors.textPlaceholder} />
           <TextInput
             placeholder="Search within these jobs..."
             placeholderTextColor={colors.textPlaceholder}
@@ -373,7 +370,7 @@ const CategoryJobsScreen: React.FC = () => {
           />
           {searchQuery.length > 0 && (
             <Pressable onPress={() => setSearchQuery('')}>
-              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+              <Icon name="times-circle" size={moderateScale(15)} color={colors.textPlaceholder} />
             </Pressable>
           )}
         </View>
@@ -400,7 +397,7 @@ const CategoryJobsScreen: React.FC = () => {
           )}
           ListEmptyComponent={() => (
             <View style={styles.empty}>
-              <Icon name="search" size={48} color={colors.border} />
+              <Icon name="search" size={moderateScale(42)} color={colors.border} />
               <Text style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
                 No jobs found in this category
               </Text>
@@ -425,14 +422,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(12),
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -441,36 +438,36 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   searchWrapper: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: moderateScale(12),
     paddingBottom: spacing.sm,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    height: 44,
-    borderRadius: 12,
+    paddingHorizontal: moderateScale(12),
+    height: moderateScale(42),
+    borderRadius: moderateScale(10),
     borderWidth: 1,
   },
   searchInput: {
     flex: 1,
-    marginLeft: spacing.sm,
-    fontSize: 14,
-    paddingVertical: 8,
+    marginLeft: moderateScale(6),
+    fontSize: moderateScale(13),
+    paddingVertical: moderateScale(6),
   },
   tabsContent: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: moderateScale(12),
     gap: spacing.lg, // More gap between text tabs
   },
   tabContainer: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: moderateScale(6),
   },
   activeIndicator: {
-    width: 24,
-    height: 3,
-    borderRadius: 1.5,
-    marginTop: 6,
+    width: moderateScale(20),
+    height: moderateScale(3),
+    borderRadius: moderateScale(1.5),
+    marginTop: moderateScale(4),
   },
   loader: {
     flex: 1,
@@ -478,12 +475,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listContent: {
-    paddingHorizontal: 6, // Minimum padding
+    paddingHorizontal: moderateScale(6), // Minimum padding
     paddingTop: spacing.xs,
   },
   premiumCard: {
-    padding: 12,
-    borderRadius: 16,
+    padding: moderateScale(10),
+    borderRadius: moderateScale(14),
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -494,12 +491,16 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: moderateScale(10),
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(10),
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -508,13 +509,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  titleBox: { flex: 1, paddingRight: 56 },
+  titleBox: { flex: 1, paddingRight: moderateScale(40) },
   cornerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(6),
     borderWidth: 1.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -523,15 +524,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cornerBadgeText: {
-    fontSize: 11,
+    fontSize: moderateScale(10),
     fontWeight: 'bold',
-    marginLeft: 4,
+    marginLeft: moderateScale(3),
   },
   cardMeta: {
     flexDirection: 'row',
-    gap: 16,
-    marginTop: 12,
-    paddingTop: 12,
+    gap: moderateScale(12),
+    marginTop: moderateScale(10),
+    paddingTop: moderateScale(10),
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.03)',
   },
@@ -543,23 +544,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: moderateScale(10),
   },
   typeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(6),
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 100,
+    marginTop: moderateScale(60),
   },
   skeletonLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(10),
   },
 });
 

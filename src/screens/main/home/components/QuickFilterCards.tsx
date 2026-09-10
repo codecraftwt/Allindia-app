@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, Dimensions } from 'react
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
-import { typography } from '../../../../theme/typography';
+import { typography, moderateScale } from '../../../../theme/typography';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -72,7 +72,7 @@ const QuickFilterCard = ({ title, icon, color, onPress, colors }: QuickFilterCar
             </View>
 
             <View style={[styles.iconCircle, { backgroundColor: color, shadowColor: color }]}>
-                <Icon name={icon} size={14} color="#fff" />
+                <Icon name={icon} size={moderateScale(14)} color="#fff" />
             </View>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]} numberOfLines={2}>
                 {title}
@@ -162,20 +162,20 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255, 255, 255, 0.8)',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 80,
+        minHeight: moderateScale(76),
         overflow: 'hidden',
     },
     glassShine: {
         position: 'absolute',
-        width: 45,
+        width: moderateScale(45),
         height: '300%',
         backgroundColor: 'rgba(255, 255, 255, 0.25)',
         top: -100,
     },
     iconCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: moderateScale(30),
+        height: moderateScale(30),
+        borderRadius: moderateScale(15),
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.xs,
@@ -185,18 +185,18 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     cardTitle: {
-        fontSize: 12,
+        fontSize: moderateScale(11),
         fontWeight: '800',
         textAlign: 'center',
-        lineHeight: 15,
+        lineHeight: moderateScale(14),
     },
     dotPattern: {
         position: 'absolute',
-        top: 10,
-        right: 10,
+        top: moderateScale(8),
+        right: moderateScale(8),
         flexDirection: 'row',
         flexWrap: 'wrap',
-        width: 24,
+        width: moderateScale(22),
         gap: 3,
         justifyContent: 'flex-end',
         opacity: 0.8,
