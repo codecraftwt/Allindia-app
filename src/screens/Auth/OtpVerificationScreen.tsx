@@ -89,7 +89,12 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     setVerifying(true);
     setErrorMsg('');
     
-    const result = await dispatch(verifyRegisterOtp({ email: identifier, otp }));
+    const result = await dispatch(verifyRegisterOtp({ 
+      email: email || '', 
+      phone: phone || '', 
+      otp, 
+      verification_channel 
+    }));
     setVerifying(false);
     
     if (verifyRegisterOtp.fulfilled.match(result)) {
@@ -188,8 +193,6 @@ const OtpVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
               disabled={!otpComplete}
               loading={verifying}
               colors={colors}
-              iconLeft={<Icon name="check-circle" size={20} color={colors.onPrimary} />}
-              iconRight={<Icon name="arrow-right" size={16} color={colors.onPrimary} />}
             />
 
             <View style={styles.resendRow}>

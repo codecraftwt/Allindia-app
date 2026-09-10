@@ -108,7 +108,6 @@ const ProfileJobPreferencesScreen: React.FC<Props> = ({ navigation }) => {
         onPress={() => navigation.navigate('ProfileResume')}
         disabled={!canContinue}
         colors={colors}
-        iconRight={<Icon name="arrow-right" size={16} color={colors.onPrimary} />}
       />
     </ProfileSetupLayout>
   );

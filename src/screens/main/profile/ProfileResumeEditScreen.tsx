@@ -167,7 +167,6 @@ const ProfileResumeEditScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           disabled={!canSave}
           colors={colors}
-          iconRight={<Icon name="arrow-right" size={16} color="#FFF" />}
         />
         {!(draft.resumeUri || resume?.has_resume) && (
           <TouchableOpacity

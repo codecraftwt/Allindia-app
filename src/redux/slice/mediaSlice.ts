@@ -42,7 +42,8 @@ const mediaSlice = createSlice({
         if (action.meta.arg.media_section === 'reel') {
           state.reels = action.payload.data.media;
         } else if (action.meta.arg.media_section === 'slide') {
-          state.homeMedia = action.payload.data.media;
+          const list = Array.isArray(action.payload.data.media) ? [...action.payload.data.media] : [];
+          state.homeMedia = list.sort((a: any, b: any) => (Number(a.id) || 0) - (Number(b.id) || 0));
         }
       })
       .addCase(fetchAdminMedia.rejected, (state, action) => {

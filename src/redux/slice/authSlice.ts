@@ -32,12 +32,23 @@ export const loginCandidate = createAsyncThunk(
         console.log("Failed to fetch FCM token for login:", err);
       }
 
-      const response = await api.post('/api/candidate/login', {
-        email: credentials.email,
-        identifier: credentials.email,
+      const identifier = (credentials.email || '').trim();
+      const payload: any = {
+        email: identifier,
+        identifier: identifier,
         password: credentials.password,
         fcm_token: fcm_token,
-      });
+      };
+
+      // If identifier is a phone number (numeric)
+      if (/^\d+$/.test(identifier)) {
+        payload.phone = identifier;
+        payload.mobile = identifier;
+        payload.phone_number = identifier;
+        payload.mobile_number = identifier;
+      }
+
+      const response = await api.post('/api/candidate/login', payload);
       return response?.data;
     } catch (error: any) {
       console.log("Login Error:", error?.response?.data || error.message);
@@ -57,10 +68,31 @@ export const registerCandidate = createAsyncThunk(
         console.log("Failed to fetch FCM token for register:", err);
       }
 
-      const response = await api.post('/api/candidate/register', {
-        ...userData,
+      const cleanPhone = userData.phone ? String(userData.phone).trim() : '';
+      const cleanEmail = userData.email ? String(userData.email).trim() : '';
+
+      const payload: any = {
+        name: userData.name ? String(userData.name).trim() : '',
+        password: userData.password,
+        password_confirmation: userData.password_confirmation,
+        verification_channel: userData.verification_channel || 'email',
         fcm_token: fcm_token,
-      });
+      };
+
+      if (cleanPhone) {
+        payload.phone = cleanPhone;
+        payload.mobile = cleanPhone;
+        payload.phone_number = cleanPhone;
+        payload.mobile_number = cleanPhone;
+      }
+
+      if (cleanEmail) {
+        payload.email = cleanEmail;
+      }
+
+      payload.identifier = cleanPhone || cleanEmail;
+
+      const response = await api.post('/api/candidate/register', payload);
       return response?.data;
     } catch (error: any) {
       console.log("Registration Error:", error?.response?.data || error.message);
@@ -71,13 +103,28 @@ export const registerCandidate = createAsyncThunk(
 
 export const verifyRegisterOtp = createAsyncThunk(
   'auth/verifyRegisterOtp',
-  async (payload: { email: string; otp: string }, { rejectWithValue }) => {
+  async (payload: { email: string; otp: string; phone?: string; verification_channel?: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register/verify-otp', {
-        email: payload.email,
-        identifier: payload.email,
+      const identifier = (payload.email || payload.phone || '').trim();
+      const reqPayload: any = {
+        identifier: identifier,
+        email: identifier,
         otp: payload.otp,
-      });
+      };
+
+      if (/^\d+$/.test(identifier) || payload.phone) {
+        const phoneVal = payload.phone || identifier;
+        reqPayload.phone = phoneVal;
+        reqPayload.mobile = phoneVal;
+        reqPayload.phone_number = phoneVal;
+        reqPayload.mobile_number = phoneVal;
+      }
+
+      if (payload.verification_channel) {
+        reqPayload.verification_channel = payload.verification_channel;
+      }
+
+      const response = await api.post('/api/candidate/register/verify-otp', reqPayload);
       return response?.data;
     } catch (error: any) {
       console.log("OTP Verification Error:", error?.response?.data || error.message);
@@ -92,12 +139,20 @@ export const verifyRegisterOtp = createAsyncThunk(
 
 export const resendRegisterOtp = createAsyncThunk(
   'auth/resendRegisterOtp',
-  async (email: string, { rejectWithValue }) => {
+  async (identifierInput: string, { rejectWithValue }) => {
     try {
-      const response = await api.post('/api/candidate/register/resend-otp', {
-        email: email,
-        identifier: email,
-      });
+      const identifier = (identifierInput || '').trim();
+      const payload: any = {
+        email: identifier,
+        identifier: identifier,
+      };
+
+      if (/^\d+$/.test(identifier)) {
+        payload.phone = identifier;
+        payload.mobile = identifier;
+      }
+
+      const response = await api.post('/api/candidate/register/resend-otp', payload);
       return response?.data;
     } catch (error: any) {
       console.log("Resend OTP Error:", error?.response?.data || error.message);
@@ -224,8 +279,12 @@ const authSlice = createSlice({
       .addCase(loginCandidate.fulfilled, (state, action) => {
         state.loading = false;
         state.isLoggedIn = true;
-        // Updated to match Swagger structure: action.payload.data.user/token
-        state.user = action.payload.data?.user;
+        const userObj = action.payload.data?.user ? { ...action.payload.data.user } : null;
+        if (userObj) {
+          if (!userObj.phone && userObj.mobile) userObj.phone = userObj.mobile;
+          if (!userObj.mobile && userObj.phone) userObj.mobile = userObj.phone;
+        }
+        state.user = userObj;
         state.token = action.payload.data?.token;
         state.tokenType = action.payload.data?.token_type;
       })
@@ -252,7 +311,12 @@ const authSlice = createSlice({
       .addCase(verifyRegisterOtp.fulfilled, (state, action) => {
         state.loading = false;
         state.isLoggedIn = true;
-        state.user = action.payload.data?.user;
+        const userObj = action.payload.data?.user ? { ...action.payload.data.user } : null;
+        if (userObj) {
+          if (!userObj.phone && userObj.mobile) userObj.phone = userObj.mobile;
+          if (!userObj.mobile && userObj.phone) userObj.mobile = userObj.phone;
+        }
+        state.user = userObj;
         state.token = action.payload.data?.token;
         state.tokenType = action.payload.data?.token_type;
       })
@@ -267,6 +331,7 @@ const authSlice = createSlice({
           }
           if (action.meta.arg.phone) {
             state.user.phone = action.meta.arg.phone;
+            state.user.mobile = action.meta.arg.phone;
           }
         }
       })

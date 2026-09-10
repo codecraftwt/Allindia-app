@@ -170,7 +170,6 @@ const EmailLoginScreen: React.FC<Props> = ({ navigation }) => {
               loading={loading}
               colors={colors}
               style={styles.loginBtn}
-              iconRight={!loading && <Icon name="arrow-right" size={16} color={colors.onPrimary} />}
             />
 
             <View style={styles.footer}>

@@ -25,6 +25,7 @@ export const updatePersonalProfile = createAsyncThunk(
     name: string;
     email?: string;
     phone?: string;
+    mobile?: string;
     gender?: string;
     date_of_birth?: string;
     address?: string;
@@ -35,7 +36,28 @@ export const updatePersonalProfile = createAsyncThunk(
     try {
       const state = getState() as any;
       const token = state.auth.token;
-      const response = await api.put('api/candidate/profile/personal', personalData, {
+      const currentUser = state.auth.user;
+      const currentProfile = state.profile?.data?.personal;
+
+      const phoneToUse = personalData.phone || personalData.mobile || currentUser?.phone || currentUser?.mobile || currentProfile?.phone || currentProfile?.mobile;
+      const emailToUse = personalData.email || currentUser?.email || currentProfile?.email;
+
+      const payload: any = {
+        ...personalData,
+      };
+
+      if (phoneToUse) {
+        payload.phone = phoneToUse;
+        payload.mobile = phoneToUse;
+        payload.phone_number = phoneToUse;
+        payload.mobile_number = phoneToUse;
+      }
+
+      if (emailToUse) {
+        payload.email = emailToUse;
+      }
+
+      const response = await api.put('api/candidate/profile/personal', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

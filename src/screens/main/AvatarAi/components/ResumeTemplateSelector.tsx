@@ -12,6 +12,8 @@ import {
   Platform,
   NativeModules,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { WebView } from 'react-native-webview';
@@ -102,6 +104,47 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Custom Status / Alert Modal State
+  const [statusModal, setStatusModal] = useState<{
+    visible: boolean;
+    type: 'success' | 'error' | 'info';
+    title: string;
+    message: string;
+    actionText?: string;
+    onAction?: () => void;
+  }>({
+    visible: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  const modalScaleAnim = useRef(new Animated.Value(0)).current;
+
+  const showStatus = (
+    type: 'success' | 'error' | 'info',
+    title: string,
+    message: string,
+    actionText?: string,
+    onAction?: () => void,
+  ) => {
+    setStatusModal({
+      visible: true,
+      type,
+      title,
+      message,
+      actionText,
+      onAction,
+    });
+    modalScaleAnim.setValue(0);
+    Animated.spring(modalScaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 8,
+    }).start();
+  };
 
   // Build template data from all the props
   const buildTemplateData = (): ResumeTemplateData => {
@@ -260,9 +303,12 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
 
       if (typeof convertFn !== 'function') {
         setIsExportingPdf(false);
-        Alert.alert(
-          'PDF Module Not Compiled',
-          "Native Module 'HtmlToPdf' is not compiled in your current app binary.\n\n👉 Please close the app, stop Metro (Ctrl+C), and run 'npm run android' to compile the PDF generator!",
+        showStatus(
+          'error',
+          'PDF Module Notice',
+          "Native PDF generation is initializing. Please ensure app is fully built with native modules enabled.",
+          'Got It',
+          () => setStatusModal(prev => ({ ...prev, visible: false }))
         );
         return;
       }
@@ -271,8 +317,6 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
       setIsExportingPdf(false);
 
       if (file.filePath) {
-
-
         if (Platform.OS === 'android') {
           try {
             await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
@@ -284,31 +328,162 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
               'Download',
               file.filePath
             );
-            Alert.alert('Download Complete ✅', `Your resume has been successfully downloaded directly to your Downloads folder!`);
+            showStatus(
+              'success',
+              'Download Complete',
+              'Your resume has been successfully downloaded directly to your Downloads folder!',
+              'OK',
+              () => setStatusModal(prev => ({ ...prev, visible: false }))
+            );
           } catch (copyErr) {
             console.error('Failed to copy to MediaStore:', copyErr);
-            Alert.alert('Download Failed', 'Could not save to Downloads folder. Attempting fallback share...', [
-              {
-                text: 'Share',
-                onPress: () => Share.share({ url: file.filePath, title: 'Download Resume PDF' })
+            showStatus(
+              'error',
+              'Download Notice',
+              'Could not save directly to Downloads folder. You can share or export your PDF.',
+              'Share PDF',
+              () => {
+                setStatusModal(prev => ({ ...prev, visible: false }));
+                Share.share({ url: file.filePath, title: 'Download Resume PDF' });
               }
-            ]);
+            );
           }
         } else {
           await Share.share({
             url: file.filePath,
             title: 'Download Resume PDF',
           });
-          Alert.alert('Success! ✅', `PDF saved!`);
+          showStatus(
+            'success',
+            'Download Complete',
+            'Your resume PDF is ready and saved successfully!',
+            'OK',
+            () => setStatusModal(prev => ({ ...prev, visible: false }))
+          );
         }
       } else {
-        Alert.alert('Error', 'Failed to generate PDF file.');
+        showStatus('error', 'Error', 'Failed to generate PDF file.', 'OK', () => setStatusModal(prev => ({ ...prev, visible: false })));
       }
     } catch (e: any) {
       setIsExportingPdf(false);
-      Alert.alert('Export Failed', e?.message || 'Unknown error occurred.');
+      showStatus('error', 'Export Failed', e?.message || 'Unknown error occurred.', 'OK', () => setStatusModal(prev => ({ ...prev, visible: false })));
     }
   };
+
+  // ─── STYLISH STATUS MODAL ───
+  const renderStatusModal = () => (
+    <Modal
+      visible={statusModal.visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+    >
+      <View style={styles.modalOverlay}>
+        <Animated.View
+          style={[
+            styles.modalCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+              transform: [{ scale: modalScaleAnim }],
+              opacity: modalScaleAnim,
+            },
+          ]}
+        >
+          {/* Top glowing icon circle */}
+          <View
+            style={[
+              styles.modalIconWrapper,
+              {
+                backgroundColor:
+                  statusModal.type === 'success'
+                    ? '#10b98118'
+                    : statusModal.type === 'error'
+                    ? '#ef444418'
+                    : ORANGE_COLOR + '18',
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.modalIconInner,
+                {
+                  backgroundColor:
+                    statusModal.type === 'success'
+                      ? '#10b98125'
+                      : statusModal.type === 'error'
+                      ? '#ef444425'
+                      : ORANGE_COLOR + '25',
+                },
+              ]}
+            >
+              <Icon
+                name={
+                  statusModal.type === 'success'
+                    ? 'checkmark-circle'
+                    : statusModal.type === 'error'
+                    ? 'alert-circle'
+                    : 'information-circle'
+                }
+                size={42}
+                color={
+                  statusModal.type === 'success'
+                    ? '#10b981'
+                    : statusModal.type === 'error'
+                    ? '#ef4444'
+                    : ORANGE_COLOR
+                }
+              />
+            </View>
+          </View>
+
+          <Text style={[typography.h3, { color: colors.textPrimary, textAlign: 'center', marginTop: 14, fontWeight: '800' }]}>
+            {statusModal.title}
+          </Text>
+
+          <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: 8, lineHeight: 21, paddingHorizontal: 4 }]}>
+            {statusModal.message}
+          </Text>
+
+          {/* Folder pill indicator on download success */}
+          {statusModal.type === 'success' && (
+            <View style={[styles.folderBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9', borderColor: colors.border }]}>
+              <Icon name="folder-open-outline" size={16} color={ORANGE_COLOR} style={{ marginRight: 6 }} />
+              <Text style={[typography.small, { color: colors.textPrimary, fontWeight: '700' }]} numberOfLines={1}>
+                Saved in: Downloads Folder
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.modalButtonContainer}>
+            {statusModal.actionText && statusModal.onAction ? (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => {
+                  statusModal.onAction?.();
+                }}
+                style={[styles.modalActionBtn, { backgroundColor: ORANGE_COLOR }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: 15 }]}>
+                  {statusModal.actionText}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
+                style={[styles.modalActionBtn, { backgroundColor: ORANGE_COLOR }]}
+              >
+                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: 15 }]}>
+                  OK
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
 
   // ─── FULL PREVIEW MODE ───
   if (isPreviewMode) {
@@ -370,6 +545,8 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
             <Text style={styles.downloadBtnText}>Download as PDF</Text>
           </Pressable>
         </View>
+
+        {renderStatusModal()}
       </Animated.View>
     );
   }
@@ -679,6 +856,8 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
         <View style={{ marginBottom: 80 }} />
       </ScrollView>
 
+      {renderStatusModal()}
+
       {/* PDF Exporting Overlay */}
       {isExportingPdf && (
         <View style={styles.exportOverlay}>
@@ -829,5 +1008,68 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    zIndex: 99999,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 24,
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingTop: 28,
+    paddingBottom: 24,
+    alignItems: 'center',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+  },
+  modalIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalIconInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  folderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  modalButtonContainer: {
+    width: '100%',
+    marginTop: 20,
+  },
+  modalActionBtn: {
+    width: '100%',
+    height: 50,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
 });

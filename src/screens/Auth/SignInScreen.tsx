@@ -295,7 +295,6 @@ const SignInScreen: React.FC<Props> = ({ navigation }) => {
               disabled={loading}
               loading={loading}
               colors={colors}
-              iconRight={!loading && <Icon name="arrow-right" size={18} color={colors.onPrimary} />}
             />
 
             <View style={styles.footer}>

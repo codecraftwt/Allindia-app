@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Alert,
   View,
@@ -29,14 +29,21 @@ import { useTheme } from '../../../context/ThemeContext';
 import { typography } from '../../../theme/typography';
 import { spacing } from '../../../theme/spacing';
 import { radius } from '../../../theme/radius';
-import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, useIsFocused } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
 import SkeletonPulse from '../../../components/SkeletonPulse';
+import Video from 'react-native-video';
 
 const { width, height } = Dimensions.get('window');
 const REEL_HEIGHT = height - (Platform.OS === 'ios' ? 90 : 80);
+
+const isVideoMedia = (item: any) => {
+  if (item?.media_type === 'video') return true;
+  const url = item?.media_url || item?.image || '';
+  return /\.(mp4|mov|mkv|webm|avi|m3u8)(\?.*)?$/i.test(url);
+};
 
 const CATEGORIES = [
   { id: '1', name: 'Software', img: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=200' },
@@ -168,15 +175,385 @@ const ShimmerLoader: React.FC<{ style?: any }> = ({ style }) => {
   );
 };
 
+interface ReelItemProps {
+  item: any;
+  index: number;
+  isActive: boolean;
+  isPaused: boolean;
+  isFocused: boolean;
+  onTogglePause: () => void;
+  onGoBack: () => void;
+  insetsBottom: number;
+}
+
+const ReelItem = React.memo<ReelItemProps>(
+  ({
+    item,
+    index,
+    isActive,
+    isPaused,
+    isFocused,
+    onTogglePause,
+    onGoBack,
+    insetsBottom,
+  }) => {
+    const isVideo = isVideoMedia(item);
+    const mediaUri = item.media_url || item.image;
+    const thumbnailUri = item.thumbnail || item.poster || item.thumbnail_url;
+    const videoSource = useMemo(() => ({ uri: mediaUri }), [mediaUri]);
+
+    return (
+      <View style={[styles.fullReel, { height }]}>
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          {isVideo ? (
+            isActive && isFocused ? (
+              <Video
+                source={videoSource}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+                useTextureView={true}
+                shutterColor="transparent"
+                repeat={true}
+                paused={isPaused}
+                muted={false}
+                disableFocus={true}
+                playInBackground={false}
+                playWhenInactive={false}
+                ignoreSilentSwitch="ignore"
+                poster={thumbnailUri}
+                posterResizeMode="cover"
+              />
+            ) : (
+              <Image
+                source={{ uri: thumbnailUri || mediaUri }}
+                style={styles.fullImage}
+                resizeMode="cover"
+              />
+            )
+          ) : (
+            <Image
+              source={{ uri: thumbnailUri || mediaUri }}
+              style={styles.fullImage}
+              resizeMode="cover"
+            />
+          )}
+          <View style={styles.gradientOverlay} />
+        </View>
+
+        {/* Tap area on video to toggle Play / Pause */}
+        <Pressable 
+          style={StyleSheet.absoluteFill} 
+          onPress={onTogglePause}
+        />
+
+        {/* Play/Pause indicator on tap */}
+        {isVideo && isPaused && (
+          <View style={styles.playPauseOverlay} pointerEvents="none">
+            <View style={styles.playPauseCircle}>
+              <Icon name="play" size={38} color="#fff" />
+            </View>
+          </View>
+        )}
+
+        <View style={styles.reelContent} pointerEvents="box-none">
+          <View style={styles.topActions} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.glassBtn}
+              onPress={onGoBack}
+              activeOpacity={0.7}
+            >
+              <Icon name="chevron-left" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.bottomDetails, { bottom: 40 + insetsBottom }]} pointerEvents="box-none">
+            <View style={styles.companyRow}>
+              <Text style={styles.companyName}>{item.employer?.company?.company_name || 'JobIndia Partner'}</Text>
+              {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
+                <Icon name="check-decagram" size={16} color="#3B82F6" style={{ marginLeft: 6 }} />
+              )}
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  },
+  (prev, next) => (
+    prev.isActive === next.isActive &&
+    prev.isPaused === next.isPaused &&
+    prev.isFocused === next.isFocused &&
+    prev.item?.id === next.item?.id &&
+    prev.insetsBottom === next.insetsBottom
+  )
+);
+
+// ─── Instagram-style Story Viewer ───────────────────────────────────────────
+const STORY_DURATION = 5000; // ms per story
+
+const StoryViewer: React.FC<{
+  stories: any[];
+  startIndex: number;
+  onClose: () => void;
+}> = ({ stories, startIndex, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(startIndex);
+  const progressAnims = useRef(stories.map(() => new Animated.Value(0))).current;
+  const progressRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  const goNext = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(i => i + 1);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
+
+  const goPrev = useCallback(() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(i => i - 1);
+    }
+  }, [currentIndex]);
+
+  // Reset & animate progress bar for current story
+  useEffect(() => {
+    // Reset all bars
+    progressAnims.forEach((anim, i) => {
+      anim.setValue(i < currentIndex ? 1 : 0);
+    });
+    // Animate current bar
+    progressRef.current?.stop();
+    const anim = Animated.timing(progressAnims[currentIndex], {
+      toValue: 1,
+      duration: STORY_DURATION,
+      useNativeDriver: false,
+    });
+    progressRef.current = anim;
+    anim.start(({ finished }) => {
+      if (finished) goNext();
+    });
+    return () => progressRef.current?.stop();
+  }, [currentIndex]);
+
+  const story = stories[currentIndex];
+  const mediaUri = story?.media_url || story?.image || story?.thumbnail;
+  const isVideo = isVideoMedia(story);
+  const label = story?.title && !story.title.includes('.mp4') && !story.title.includes('.jpg')
+    ? story.title
+    : (story?.employer?.company?.company_name || story?.category?.name || 'Story');
+
+  return (
+    <Modal visible animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: '#000' }}>
+        {/* Media */}
+        {isVideo ? (
+          <Video
+            source={{ uri: mediaUri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+            paused={false}
+            muted={false}
+            repeat={false}
+            onEnd={goNext}
+          />
+        ) : (
+          <Image
+            source={{ uri: mediaUri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        )}
+
+        {/* Dark top gradient */}
+        <View style={storyStyles.topGradient} />
+
+        {/* Progress bars */}
+        <View style={storyStyles.progressRow}>
+          {stories.map((_, i) => (
+            <View key={i} style={storyStyles.progressTrack}>
+              <Animated.View
+                style={[
+                  storyStyles.progressFill,
+                  {
+                    width: progressAnims[i].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+          ))}
+        </View>
+
+        {/* Header: label + close */}
+        <View style={storyStyles.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={storyStyles.avatarRing}>
+              <Image
+                source={{ uri: story?.thumbnail || story?.employer?.company?.logo || mediaUri }}
+                style={storyStyles.avatar}
+              />
+            </View>
+            <Text style={storyStyles.label} numberOfLines={1}>{label}</Text>
+          </View>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <Icon name="close" size={26} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tap zones: left = prev, right = next */}
+        <View style={storyStyles.tapZones} pointerEvents="box-none">
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={goPrev} />
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={goNext} />
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const storyStyles = StyleSheet.create({
+  topGradient: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: 160,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  progressRow: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 54 : 36,
+    left: 12, right: 12,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 2.5,
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 2,
+  },
+  header: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 66 : 50,
+    left: 12, right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  avatarRing: {
+    width: 36, height: 36, borderRadius: 18,
+    borderWidth: 2, borderColor: '#fff',
+    overflow: 'hidden',
+  },
+  avatar: { width: '100%', height: '100%' },
+  label: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    maxWidth: 220,
+  },
+  tapZones: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'row',
+    top: 120,
+  },
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TrendingReelCard = React.memo<{
+  reel: any;
+  onPress: (id: string | number) => void;
+}>(
+  ({ reel, onPress }) => {
+    const isVideo = isVideoMedia(reel);
+    const mediaUri = reel.media_url || reel.image;
+    const thumbnailUri = reel.thumbnail || reel.poster || reel.thumbnail_url || (!isVideo ? mediaUri : null);
+    // Safe to use a single paused <Video> here — only 1 card is ever shown in the grid.
+    // The hardware decoder conflict only occurs with MULTIPLE concurrent Video instances.
+    const videoSource = useMemo(() => ({ uri: mediaUri }), [mediaUri]);
+
+    return (
+      <TouchableOpacity
+        style={styles.reelCard}
+        activeOpacity={0.85}
+        onPress={() => onPress(reel.id)}
+      >
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          {thumbnailUri ? (
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={styles.reelThumb}
+              resizeMode="cover"
+            />
+          ) : isVideo ? (
+            // Single paused video — shows the first frame as a live preview thumbnail.
+            // Only 1 instance ever exists in the grid so no surface-sharing issue.
+            <Video
+              source={videoSource}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+              paused={true}
+              muted={true}
+              repeat={false}
+              disableFocus={true}
+              playInBackground={false}
+              playWhenInactive={false}
+            />
+          ) : (
+            <Image
+              source={{ uri: mediaUri }}
+              style={styles.reelThumb}
+              resizeMode="cover"
+            />
+          )}
+        </View>
+
+        {/* Centered play icon overlay */}
+        {isVideo && (
+          <View style={styles.centerPlayIcon} pointerEvents="none">
+            <View style={styles.playCircle}>
+              <Icon name="play" size={28} color="#fff" style={{ marginLeft: 3 }} />
+            </View>
+          </View>
+        )}
+
+        <View style={styles.reelOverlay} pointerEvents="none">
+          <Text style={styles.reelTitle} numberOfLines={1}>
+            {reel.title && !reel.title.includes('.jpg') && !reel.title.includes('.jpeg') && !reel.title.includes('.mp4')
+              ? reel.title
+              : (reel.category?.name || 'Job')}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={[styles.reelCompany, { flexShrink: 1 }]} numberOfLines={1}>
+              {reel.employer?.company?.company_name || 'JobIndia'}
+            </Text>
+            {(reel.employer?.company?.verification_status === 'approved' || reel.employer?.verification_status === 'approved') && (
+              <Icon name="check-circle" size={12} color="#3B82F6" style={{ marginLeft: 4 }} />
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  },
+  (prev, next) =>
+    prev.reel?.id === next.reel?.id &&
+    prev.reel?.thumbnail === next.reel?.thumbnail &&
+    prev.reel?.media_url === next.reel?.media_url
+);
+
 const JobsReelsScreen: React.FC = () => {
   const { colors, mode, isDark } = useTheme();
+  const isFocused = useIsFocused();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const fromScreen = route.params?.from || 'Profile';
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<'grid' | 'full'>('grid');
   const [loading, setLoading] = useState(true);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
   
   const dispatch = useDispatch<AppDispatch>();
   const { reels, loading: apiLoading } = useSelector((state: RootState) => state.media);
@@ -191,14 +568,33 @@ const JobsReelsScreen: React.FC = () => {
     }
   }, [apiLoading]);
   
-  const [likedReels, setLikedReels] = useState<Set<string>>(new Set());
+  // Separate status and reel media
+  const statusList = useMemo(() => {
+    return (reels || []).filter((item: any) => item.reel_status === 'status');
+  }, [reels]);
+
+  const reelsList = useMemo(() => {
+    return (reels || []).filter((item: any) => item.reel_status !== 'status');
+  }, [reels]);
+
+  const [activeType, setActiveType] = useState<'reel' | 'status'>('reel');
   const [activeReelId, setActiveReelId] = useState<string | null>(null);
+  const [currentVisibleIndex, setCurrentVisibleIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [storyViewerVisible, setStoryViewerVisible] = useState(false);
+  const [storyStartIndex, setStoryStartIndex] = useState(0);
+
+  const currentFullList = useMemo(() => {
+    return activeType === 'status' ? statusList : reelsList;
+  }, [activeType, statusList, reelsList]);
 
   useEffect(() => {
-    navigation.setParams({ 
-      isFullScreen: viewMode === 'full' 
-    });
-  }, [viewMode, navigation]);
+    if (route.params?.isFullScreen !== (viewMode === 'full')) {
+      navigation.setParams({ 
+        isFullScreen: viewMode === 'full' 
+      });
+    }
+  }, [viewMode, navigation, route.params?.isFullScreen]);
 
   useFocusEffect(
     useCallback(() => {
@@ -219,57 +615,62 @@ const JobsReelsScreen: React.FC = () => {
     }, [viewMode, navigation, fromScreen])
   );
 
-  const handlePress = (id: string) => {
-    setLoadingId(id);
-    setActiveReelId(id);
-    setTimeout(() => {
-      setLoadingId(null);
-      setViewMode('full');
-    }, 800);
-  };
+  const flatListRef = useRef<FlatList>(null);
 
-  const renderFullReel = ({ item }: any) => (
-    <View style={styles.fullReel}>
-      <Image source={{ uri: item.media_url || item.image }} style={styles.fullImage} resizeMode="cover" />
-      <View style={styles.gradientOverlay} />
-      <View style={styles.reelContent}>
-        <View style={styles.topActions}>
-          <Pressable style={styles.glassBtn} onPress={() => setViewMode('grid')}>
-            <Icon name="chevron-left" size={24} color="#fff" />
-          </Pressable>
-        </View>
+  const handlePress = useCallback((id: string | number, type: 'reel' | 'status' = 'reel') => {
+    if (type === 'status') {
+      // Open Instagram-style story viewer instead of full-screen reel
+      const idx = statusList.findIndex((r: any) => String(r.id) === String(id));
+      setStoryStartIndex(Math.max(0, idx));
+      setStoryViewerVisible(true);
+      return;
+    }
+    setActiveType(type);
+    setActiveReelId(String(id));
+    const list = reelsList;
+    const idx = list.findIndex((r: any) => String(r.id) === String(id));
+    if (idx !== -1) {
+      setCurrentVisibleIndex(idx);
+    }
+    setIsPaused(false);
+    setViewMode('full');
+  }, [statusList, reelsList]);
 
-        <View style={styles.sideActions}>
-          <Pressable style={styles.actionItem} onPress={() => {
-            const newLiked = new Set(likedReels);
-            if (newLiked.has(item.id)) newLiked.delete(item.id);
-            else newLiked.add(item.id);
-            setLikedReels(newLiked);
-          }}>
-            <Icon name={likedReels.has(item.id) ? "heart" : "heart-outline"} size={32} color={likedReels.has(item.id) ? "#ff4b2b" : "#fff"} />
-            <Text style={styles.actionValue}>{item.likes || '0'}</Text>
-          </Pressable>
-          <Pressable style={styles.actionItem}>
-            <Icon name="comment-outline" size={30} color="#fff" />
-            <Text style={styles.actionValue}>{item.comments || '0'}</Text>
-          </Pressable>
-          <Pressable style={styles.actionItem}>
-            <Icon name="share-variant" size={28} color="#fff" />
-            <Text style={styles.actionValue}>Share</Text>
-          </Pressable>
-        </View>
+  const handleTogglePause = useCallback(() => {
+    setIsPaused(p => !p);
+  }, []);
 
-        <View style={[styles.bottomDetails, { bottom: 40 + insets.bottom }]}>
-          <View style={styles.companyRow}>
-            <Text style={styles.companyName}>{item.employer?.company?.company_name || 'JobIndia Partner'}</Text>
-            {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
-              <Icon name="check-decagram" size={16} color="#3B82F6" style={{ marginLeft: 6 }} />
-            )}
-          </View>
+  const handleGoBack = useCallback(() => {
+    setIsPaused(false);
+    setViewMode('grid');
+  }, []);
 
-        </View>
-      </View>
-    </View>
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems && viewableItems.length > 0) {
+      const idx = viewableItems[0].index ?? 0;
+      setCurrentVisibleIndex(idx);
+      setActiveReelId(String(viewableItems[0].item?.id));
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => (
+      <ReelItem
+        item={item}
+        index={index}
+        isActive={currentVisibleIndex === index}
+        isPaused={isPaused}
+        isFocused={isFocused && viewMode === 'full'}
+        onTogglePause={handleTogglePause}
+        onGoBack={handleGoBack}
+        insetsBottom={insets.bottom}
+      />
+    ),
+    [currentVisibleIndex, isPaused, isFocused, viewMode, handleTogglePause, handleGoBack, insets.bottom]
   );
 
   const renderSkeleton = () => (
@@ -283,17 +684,33 @@ const JobsReelsScreen: React.FC = () => {
   );
 
   if (viewMode === 'full') {
+    const initialIndex = activeReelId
+      ? Math.max(0, currentFullList.findIndex((r: any) => String(r.id) === String(activeReelId)))
+      : 0;
+
     return (
       <View style={{ flex: 1, backgroundColor: '#000' }}>
         <StatusBar hidden />
         <FlatList
-          data={reels}
+          ref={flatListRef}
+          data={currentFullList}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           keyExtractor={item => String(item.id)}
-          renderItem={renderFullReel}
-          initialScrollIndex={activeReelId ? Math.max(0, reels.findIndex(r => String(r.id) === String(activeReelId))) : 0}
-          getItemLayout={(data, index) => ({ length: REEL_HEIGHT, offset: REEL_HEIGHT * index, index })}
+          renderItem={renderItem}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          initialScrollIndex={initialIndex >= 0 && initialIndex < currentFullList.length ? initialIndex : 0}
+          getItemLayout={(data, index) => ({ length: height, offset: height * index, index })}
+          removeClippedSubviews={false}
+          windowSize={5}
+          maxToRenderPerBatch={3}
+          initialNumToRender={currentFullList.length}
+          onScrollToIndexFailed={(info) => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+            }, 50);
+          }}
         />
       </View>
     );
@@ -301,6 +718,14 @@ const JobsReelsScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Instagram-style Story Viewer */}
+      {storyViewerVisible && statusList.length > 0 && (
+        <StoryViewer
+          stories={statusList}
+          startIndex={storyStartIndex}
+          onClose={() => setStoryViewerVisible(false)}
+        />
+      )}
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} translucent backgroundColor="transparent" />
       <View style={{ flex: 1, paddingTop: insets.top }}>
         <View style={styles.header}>
@@ -319,57 +744,59 @@ const JobsReelsScreen: React.FC = () => {
               <FeatherIcon name="arrow-left" size={24} color={colors.textPrimary} />
             </TouchableOpacity>
             <View>
-              <Text style={[typography.labelMedium, { color: colors.textSecondary }]}>Discover</Text>
               <Text style={[typography.h2, { color: colors.textPrimary }]}>Job Bites</Text>
             </View>
           </View>
-          <Pressable style={[styles.headerIcon, { backgroundColor: colors.surfaceHighlight }]}>
-            <Icon name="bookmark-outline" size={24} color={colors.primary} />
-          </Pressable>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {loading ? renderSkeleton() : (
             <>
-              {/* Categories/Stories */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-                {CATEGORIES.map(cat => (
-                  <Pressable key={cat.id} style={styles.catItem}>
-                    <View style={[styles.catCircle, { borderColor: colors.primary }]}>
-                      <Image source={{ uri: cat.img }} style={styles.catImg} />
-                    </View>
-                    <Text style={[typography.tiny, { color: colors.textPrimary, marginTop: 4, fontWeight: 'bold' }]}>{cat.name}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
+              {/* Upper Section: Dynamic Status Stories */}
+              {statusList.length > 0 && (
+                <View style={{ marginBottom: 20 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                    {statusList.map((status: any) => (
+                      <TouchableOpacity
+                        key={status.id}
+                        style={styles.catItem}
+                        activeOpacity={0.8}
+                        onPress={() => handlePress(status.id, 'status')}
+                      >
+                        <View style={[styles.catCircle, { borderColor: colors.primary }]}>
+                          <Image
+                            source={{ uri: status.thumbnail || status.media_url || status.image }}
+                            style={styles.catImg}
+                            resizeMode="cover"
+                          />
+                        </View>
+                        <Text
+                          style={[typography.tiny, { color: colors.textPrimary, marginTop: 4, fontWeight: 'bold', maxWidth: 70 }]}
+                          numberOfLines={1}
+                        >
+                          {status.title && !status.title.includes('.jpg') && !status.title.includes('.jpeg') && !status.title.includes('.mp4')
+                            ? status.title
+                            : (status.category?.name || status.employer?.company?.company_name || 'Status')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
 
-              {/* Trending Section */}
-              <View style={styles.section}>
-                <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Trending Bites</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reelGrid}>
-                  {reels.map((reel: any) => (
-                    <Pressable key={reel.id} style={styles.reelCard} onPress={() => handlePress(reel.id)}>
-                      <Image source={{ uri: reel.media_url || reel.image }} style={styles.reelThumb} />
-                      <View style={styles.reelOverlay}>
-                        <Text style={styles.reelTitle} numberOfLines={1}>{reel.title && !reel.title.includes('.jpg') ? reel.title : (reel.category?.name || 'Job')}</Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Text style={[styles.reelCompany, { flexShrink: 1 }]} numberOfLines={1}>
-                            {reel.employer?.company?.company_name || 'JobIndia'}
-                          </Text>
-                          {(reel.employer?.company?.verification_status === 'approved' || reel.employer?.verification_status === 'approved') && (
-                            <Icon name="check-circle" size={12} color="#3B82F6" style={{ marginLeft: 4 }} />
-                          )}
-                        </View>
-                      </View>
-                      {loadingId === reel.id && (
-                        <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
-                          <ActivityIndicator color="#fff" />
-                        </View>
-                      )}
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
+              {/* Trending Bites — show 1 featured card; tap to open full reel player */}
+              {reelsList.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Trending Bites</Text>
+                  {/* Only the FIRST reel is shown as a preview card */}
+                  <View style={styles.reelGrid}>
+                    <TrendingReelCard
+                      reel={reelsList[0]}
+                      onPress={(id) => handlePress(id, 'reel')}
+                    />
+                  </View>
+                </View>
+              )}
 
               {/* Community Threads */}
               <View style={styles.section}>
@@ -450,14 +877,37 @@ const styles = StyleSheet.create({
   },
   catImg: { width: '100%', height: '100%', borderRadius: 30 },
   section: { marginBottom: 30 },
-  reelGrid: { paddingHorizontal: 20, gap: 15 },
+  reelGrid: {
+    paddingHorizontal: 20,
+    gap: 16,
+  },
   reelCard: {
-    width: 160,
-    height: 260,
+    width: width - 40,
+    height: 360,
     borderRadius: 20,
     overflow: 'hidden',
   },
   reelThumb: { width: '100%', height: '100%', resizeMode: 'cover' },
+  videoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#1a1a2e',
+  },
+  centerPlayIcon: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.7)',
+  },
   reelOverlay: {
     position: 'absolute',
     bottom: 0,
@@ -493,11 +943,36 @@ const styles = StyleSheet.create({
   },
   videoThumbLarge: { width: '100%', height: 180, resizeMode: 'cover' },
   videoInfo: { padding: 15 },
-  fullReel: { width: width, height: REEL_HEIGHT, backgroundColor: '#000' },
+  fullReel: { width: width, height: height, backgroundColor: '#000' },
   fullImage: { ...StyleSheet.absoluteFillObject },
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  playPauseOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  playPauseCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   reelContent: { ...StyleSheet.absoluteFillObject, padding: 20 },
   topActions: { marginTop: Platform.OS === 'ios' ? 40 : 10 },
@@ -509,16 +984,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sideActions: {
-    position: 'absolute',
-    right: 20,
-    bottom: 150,
-    alignItems: 'center',
-    gap: 25,
-  },
-  actionItem: { alignItems: 'center', gap: 5 },
-  actionValue: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  bottomDetails: { position: 'absolute', left: 20, right: 80 },
+  bottomDetails: { position: 'absolute', left: 20, right: 20 },
   companyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   companyName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   fullJobTitle: { color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: 20 },

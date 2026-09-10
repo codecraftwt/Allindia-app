@@ -149,7 +149,6 @@ const ProfileResumeScreen: React.FC<Props> = ({ navigation }) => {
         onPress={finish}
         disabled={!canContinue}
         colors={colors}
-        iconRight={<Icon name="check" size={16} color={colors.onPrimary} />}
       />
     </ProfileSetupLayout>
   );

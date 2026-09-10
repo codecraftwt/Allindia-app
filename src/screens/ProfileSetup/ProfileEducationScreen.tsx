@@ -114,7 +114,6 @@ const ProfileEducationScreen: React.FC<Props> = ({ navigation }) => {
         onPress={() => navigation.navigate('ProfileExperience')}
         disabled={!canContinue}
         colors={colors}
-        iconRight={<Icon name="arrow-right" size={16} color={colors.onPrimary} />}
       />
     </ProfileSetupLayout>
   );

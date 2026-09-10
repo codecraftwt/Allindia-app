@@ -112,6 +112,8 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
     [colors.primary, draft.dateOfBirth],
   );
 
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const canContinue =
     draft.fullName.trim().length >= 2 && 
     draft.gender !== '' && 
@@ -122,8 +124,13 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
   const handleContinue = async () => {
     setSaving(true);
     try {
+      const userPhone = user?.phone || user?.mobile || '';
+      const userEmail = user?.email || '';
+
       await dispatch(updatePersonalProfile({
         name: draft.fullName,
+        email: userEmail || undefined,
+        phone: userPhone || undefined,
         gender: draft.gender,
         date_of_birth: draft.dateOfBirth,
         current_city: draft.currentCity,
@@ -475,7 +482,6 @@ const ProfileBasicInfoScreen: React.FC<Props> = ({ navigation }) => {
         disabled={!canContinue || saving}
         loading={saving}
         colors={colors}
-        iconRight={<Icon name="arrow-right" size={16} color={colors.onPrimary} />}
       />
     </ProfileSetupLayout>
   );

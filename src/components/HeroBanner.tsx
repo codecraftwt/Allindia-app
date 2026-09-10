@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   NativeScrollEvent,
   Image,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Video from 'react-native-video';
 import { typography } from '../theme/typography';
@@ -67,7 +68,7 @@ const HERO_SLIDES: SlideData[] = [
   },
 ];
 
-const BannerVideo = ({ uri, paused, onEnd }: { uri: string; paused: boolean; onEnd: () => void }) => {
+const BannerVideo = ({ uri, poster, paused, onEnd }: { uri: string; poster?: string; paused: boolean; onEnd: () => void }) => {
   const videoRef = useRef<any>(null);
   const prevPaused = useRef(paused);
 
@@ -82,6 +83,10 @@ const BannerVideo = ({ uri, paused, onEnd }: { uri: string; paused: boolean; onE
     <Video
       ref={videoRef}
       source={{ uri }}
+      poster={poster}
+      posterResizeMode="cover"
+      useTextureView={true}
+      shutterColor="transparent"
       style={{ width: '100%', height: '100%' }}
       resizeMode="cover"
       muted={true}
@@ -102,11 +107,17 @@ interface HeroBannerProps {
 }
 
 const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
+  const isFocused = useIsFocused();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const autoScrollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const slides = media && media.length > 0 ? media : HERO_SLIDES;
+  const slides = useMemo(() => {
+    if (media && media.length > 0) {
+      return [...media].sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+    }
+    return HERO_SLIDES;
+  }, [media]);
   const isApiMedia = media && media.length > 0;
 
   const handleVideoEnd = () => {
@@ -137,6 +148,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
   };
 
   useEffect(() => {
+    if (!isFocused) {
+      stopAutoScroll();
+      return;
+    }
     const currentSlide = slides[activeIndex];
     const isCurrentSlideVideo = currentSlide && currentSlide.media_type === 'video';
 
@@ -146,7 +161,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
       startAutoScroll();
     }
     return () => stopAutoScroll();
-  }, [activeIndex, slides.length]);
+  }, [activeIndex, slides.length, isFocused]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollOffset = event.nativeEvent.contentOffset.x;
@@ -159,6 +174,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
   const renderItem = ({ item, index }: { item: any; index: number }) => {
     if (isApiMedia) {
       const isVideo = item.media_type === 'video';
+      const posterUri = item.thumbnail || item.poster || item.thumbnail_url;
       return (
         <Pressable
           onPress={() => onPress(item)}
@@ -175,17 +191,18 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ colors, onPress, media }) => {
               overflow: 'hidden',
             },
           ]}>
-          {isVideo ? (
+          {isVideo && isFocused ? (
             <BannerVideo
               uri={item.media_url}
-              paused={activeIndex !== index}
+              poster={posterUri}
+              paused={activeIndex !== index || !isFocused}
               onEnd={handleVideoEnd}
             />
           ) : (
             <Image
-              source={{ uri: item.media_url }}
+              source={{ uri: posterUri || item.media_url }}
               style={{ width: '100%', height: '100%', borderRadius: radius.md }}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           )}
         </Pressable>

@@ -293,7 +293,6 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
-                  iconRight={!loading && <Icon name="send-o" size={16} color={colors.onPrimary} />}
                 />
               </>
             )}
@@ -339,7 +338,6 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
-                  iconRight={!loading && <Icon name="check" size={16} color={colors.onPrimary} />}
                 />
 
                 <Pressable onPress={() => setVerificationCode('')} style={styles.resendLink}>
@@ -420,7 +418,6 @@ const ForgotPassScreen: React.FC<Props> = ({ navigation, route }) => {
                   loading={loading}
                   colors={colors}
                   style={styles.actionBtn}
-                  iconRight={!loading && <Icon name="check-circle" size={16} color={colors.onPrimary} />}
                 />
               </>
             )}

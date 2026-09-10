@@ -431,7 +431,7 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
   const { t } = useTranslation();
   const [dobOpen, setDobOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
+  const [phoneNumber, setPhoneNumber] = useState(profileData?.personal?.phone || profileData?.personal?.mobile || user?.phone || user?.mobile || '');
 
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -502,9 +502,11 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
         bio: p.bio || '',
       });
 
-      setPhoneNumber(p.phone || user?.phone || '');
+      setPhoneNumber(p.phone || p.mobile || user?.phone || user?.mobile || '');
+    } else if (user) {
+      setPhoneNumber(user?.phone || user?.mobile || '');
     }
-  }, [profileData, updateDraft]);
+  }, [profileData, updateDraft, user]);
 
   const fullName = draft.fullName || user?.name || '';
   const email = draft.email || user?.email || '';
@@ -529,8 +531,9 @@ const ProfilePersonalInfoScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await dispatch(updatePersonalProfile({
         name: nameToSave,
-        email: draft.email,
+        email: draft.email || user?.email,
         phone: phoneNumber || undefined,
+        mobile: phoneNumber || undefined,
         gender: draft.gender as string,
         date_of_birth: draft.dateOfBirth,
         address: address,

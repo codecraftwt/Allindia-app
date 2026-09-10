@@ -581,7 +581,7 @@ const ProfileOverviewScreen: React.FC = () => {
               <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 2, fontSize: 12 }]} numberOfLines={1}>{displayEmail}</Text>
               <View style={[styles.phoneRow, { justifyContent: 'flex-start', marginTop: 3 }]}>
                 <Icon name="phone" size={11} color="rgba(255,255,255,0.7)" />
-                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 5, fontSize: 11 }]} numberOfLines={1}>{profile?.personal?.phone || user?.phone || 'Add phone number'}</Text>
+                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 5, fontSize: 11 }]} numberOfLines={1}>{profile?.personal?.phone || profile?.personal?.mobile || user?.phone || user?.mobile || 'Add phone number'}</Text>
               </View>
             </View>
 
