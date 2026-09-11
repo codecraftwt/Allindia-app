@@ -30,7 +30,9 @@ import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
-import { fetchAppliedJobs, fetchApplicationCounts, fetchWishlist, fetchHRInvites } from '../../../redux/slice/profileSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchAppliedJobs, fetchApplicationCounts, fetchWishlist, fetchHRInvites, dismissHRInvite, markHRInviteAsRead } from '../../../redux/slice/profileSlice';
+import { markNotificationAsRead } from '../../../redux/slice/notificationSlice';
 import { toggleWishlist } from '../../../redux/slice/jobSlice';
 import SkeletonPulse from '../../../components/SkeletonPulse';
 import { typography, moderateScale } from '../../../theme/typography';
@@ -39,7 +41,7 @@ import GuestView from '../../../components/GuestView';
 import JobIndiaIcon from '../../../assets/Job india Icon & logo file/Icon Job india.jpg';
 import ApplicationStatsDashboard from './components/ApplicationStatsDashboard';
 import JobActionModal from '../../../components/JobActionModal';
-import { BASE_URL } from '../../../api/axiosInstance';
+import api, { BASE_URL } from '../../../api/axiosInstance';
 
 const AppliedJobCard = React.memo(function AppliedJobCard({ job, colors, onPress, profileData }: { job: any; colors: ThemeColors; onPress: () => void; profileData: any }) {
   const { t } = useTranslation();
@@ -473,6 +475,7 @@ const ApplicationsScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const { appliedJobs, applicationCounts, loading, countsLoading, data: profileData, wishlistJobs, hrInvites } = useSelector((state: RootState) => state.profile);
+  const { notifications = [] } = useSelector((state: RootState) => state.notifications);
   const { isLoggedIn } = useSelector((state: RootState) => state.auth);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -483,11 +486,39 @@ const ApplicationsScreen: React.FC = () => {
   const [companyModal, setCompanyModal] = useState<{ visible: boolean; company: any }>({ visible: false, company: null });
   const navigation = useNavigation<StackNavigationProp<ApplicationsStackParamList>>();
 
-  const openJobDetail = (job: any) => {
+  const openJobDetail = React.useCallback((job: any) => {
     navigation.navigate('JobDetail', { jobId: job.slug || job.id });
-  };
+  }, [navigation]);
 
-  const openInviteDetail = (invite: any) => {
+  const openInviteDetail = React.useCallback((invite: any) => {
+    if (invite?.id) {
+      const inviteIdStr = String(invite.id);
+      dispatch(dismissHRInvite(invite.id));
+      dispatch(markHRInviteAsRead({ inviteId: invite.id, type: invite.type }));
+
+      if (Array.isArray(notifications) && notifications.length > 0) {
+        const matchingNotifs = notifications.filter((n: any) => {
+          if (!n || n.is_read) return false;
+          const nData = n.data || {};
+          if (nData.invitation_id && String(nData.invitation_id) === inviteIdStr) return true;
+          if (nData.invite_id && String(nData.invite_id) === inviteIdStr) return true;
+          if (nData.id && String(nData.id) === inviteIdStr) return true;
+          if (n.message && invite.employer?.name && n.message.toLowerCase().includes(invite.employer.name.toLowerCase())) return true;
+          if (n.title && invite.employer?.name && n.title.toLowerCase().includes(invite.employer.name.toLowerCase())) return true;
+          return false;
+        });
+        matchingNotifs.forEach((notif: any) => {
+          dispatch(markNotificationAsRead(notif.id));
+        });
+      }
+
+      AsyncStorage.getItem('hidden_hr_invite_ids').then((stored) => {
+        const parsed = stored ? JSON.parse(stored) : [];
+        const next = [...parsed.filter((id: string) => id !== inviteIdStr), inviteIdStr];
+        AsyncStorage.setItem('hidden_hr_invite_ids', JSON.stringify(next));
+      }).catch(console.warn);
+    }
+
     const hasJobDetails = invite.job_details && typeof invite.job_details === 'object' && Object.keys(invite.job_details).length > 0;
     
     if (hasJobDetails) {
@@ -501,7 +532,7 @@ const ApplicationsScreen: React.FC = () => {
     } else {
       Alert.alert('Notice', 'No details available for this invite.');
     }
-  };
+  }, [dispatch, navigation, notifications]);
 
   const filteredAppliedJobs = React.useMemo(() => {
     let filtered = appliedJobs;
@@ -553,7 +584,7 @@ const ApplicationsScreen: React.FC = () => {
     }
   };
 
-  const renderEmpty = () => {
+  const renderEmpty = React.useCallback(() => {
     const isApplied = activeTab === 'applied';
     const isInvites = activeTab === 'invites';
     return (
@@ -567,7 +598,9 @@ const ApplicationsScreen: React.FC = () => {
         </Text>
       </View>
     );
-  };
+  }, [activeTab, searchQuery, colors.border, colors.textSecondary, colors.textPlaceholder, t]);
+
+  const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -713,14 +746,14 @@ const ApplicationsScreen: React.FC = () => {
         <View style={{ flex: 1 }}>
           <FlatList
             data={activeTab === 'applied' ? filteredAppliedJobs : activeTab === 'saved' ? filteredSavedJobs : filteredHRInvites}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={keyExtractor}
             renderItem={renderJobItem}
             ListHeaderComponent={listHeader}
             initialNumToRender={8}
             maxToRenderPerBatch={10}
             windowSize={11}
             removeClippedSubviews={true}
-            ListEmptyComponent={!(loading || isPending) ? renderEmpty() : null}
+            ListEmptyComponent={!(loading || isPending) ? renderEmpty : null}
             contentContainerStyle={styles.scroll}
             showsVerticalScrollIndicator={false}
             refreshControl={

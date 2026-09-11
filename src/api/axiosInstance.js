@@ -16,6 +16,23 @@ const api = axios.create({
   },
 });
 
+// Request interceptor to automatically attach Authorization header from Redux state
+api.interceptors.request.use(
+  (config) => {
+    try {
+      const state = store.getState();
+      const token = state?.auth?.token;
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      // Store not ready or error
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor to handle global 401 Unauthenticated errors
 api.interceptors.response.use(
   (response) => response,

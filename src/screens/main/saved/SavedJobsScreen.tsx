@@ -186,9 +186,9 @@ const SavedJobsScreen: React.FC = () => {
     }
   };
 
-  const handleOpenDetail = (jobId: number) => {
+  const handleOpenDetail = React.useCallback((jobId: number) => {
     navigation.navigate('JobDetail', { jobId: jobId.toString() });
-  };
+  }, [navigation]);
 
   const renderJobItem = React.useCallback(({ item }: { item: any }) => (
     <SavedJobCard
@@ -198,6 +198,22 @@ const SavedJobsScreen: React.FC = () => {
       onOpenDetail={() => handleOpenDetail(item.id)}
     />
   ), [colors, handleOpenDetail]);
+
+  const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
+
+  const renderSeparator = React.useCallback(() => <View style={{ height: spacing.md }} />, []);
+
+  const renderEmpty = React.useCallback(() => (
+    <View style={styles.emptyContainer}>
+      <Icon name={searchQuery ? "search-minus" : "heart-o"} size={48} color={colors.border} />
+      <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
+        {searchQuery ? "No matching jobs" : "No saved jobs yet"}
+      </Text>
+      <Text style={[typography.small, { color: colors.textPlaceholder }]}>
+        {searchQuery ? "Try a different search term" : "Jobs you wishlist will appear here"}
+      </Text>
+    </View>
+  ), [colors.border, colors.textPlaceholder, colors.textSecondary, searchQuery]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -248,7 +264,7 @@ const SavedJobsScreen: React.FC = () => {
       <FlatList
         data={loading && filteredJobs.length === 0 ? [] : filteredJobs}
         ListHeaderComponent={loading && filteredJobs.length === 0 ? <SavedJobsSkeleton /> : null}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={keyExtractor}
         renderItem={renderJobItem}
         initialNumToRender={8}
         maxToRenderPerBatch={10}
@@ -258,18 +274,8 @@ const SavedJobsScreen: React.FC = () => {
           styles.listContent,
           !loading && filteredJobs.length === 0 && styles.listEmpty,
         ]}
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        ListEmptyComponent={!loading ? (
-          <View style={styles.emptyContainer}>
-            <Icon name={searchQuery ? "search-minus" : "heart-o"} size={48} color={colors.border} />
-            <Text style={[typography.labelMedium, { color: colors.textSecondary, marginTop: spacing.md }]}>
-              {searchQuery ? "No matching jobs" : "No saved jobs yet"}
-            </Text>
-            <Text style={[typography.small, { color: colors.textPlaceholder }]}>
-              {searchQuery ? "Try a different search term" : "Jobs you wishlist will appear here"}
-            </Text>
-          </View>
-        ) : null}
+        ItemSeparatorComponent={renderSeparator}
+        ListEmptyComponent={!loading ? renderEmpty : null}
         refreshControl={
           <RefreshControl 
             refreshing={loading && filteredJobs.length > 0} 

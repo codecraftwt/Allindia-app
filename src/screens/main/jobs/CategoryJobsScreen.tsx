@@ -103,7 +103,7 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
 
 const { width } = Dimensions.get('window');
 
-function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColors; onPress: () => void; isDark?: boolean }) {
+const JobCard = React.memo(function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColors; onPress: () => void; isDark?: boolean }) {
   const companyName = job.employer?.company?.company_name || job.company_name || job.company || 'Hiring Company';
   const locationLabel = job.location?.label || job.location_name || (typeof job.location === 'string' ? job.location : job.location?.city) || 'India';
   const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ${job.salary_max.toLocaleString()}` : 'Negotiable');
@@ -192,7 +192,7 @@ function JobCard({ job, colors, onPress, isDark }: { job: any; colors: ThemeColo
       </View>
     </Pressable>
   );
-}
+});
 
 const CategoryJobsSkeleton: React.FC = () => {
   const { colors } = useTheme();
@@ -243,7 +243,6 @@ const CategoryJobsScreen: React.FC = () => {
 
   useEffect(() => {
     if (categoryId) {
-      // Only fetch if we don't have jobs for this category yet
       if (jobsByCategory.length === 0) {
         dispatch(fetchJobsByCategory({ 
           category_id: categoryId,
@@ -251,52 +250,62 @@ const CategoryJobsScreen: React.FC = () => {
         }));
       }
     } else {
-      if (selectedId === 'all') {
-        if (recommended.length === 0) {
-          dispatch(fetchJobs({ per_page: 100 }));
-        }
-      } else {
-        // If we're missing any of the main feed lists, fetch them
-        if (latest.length === 0 || trending.length === 0 || nearby.length === 0) {
-          dispatch(fetchHomeFeed());
-        }
+      if (latest.length === 0 && trending.length === 0) {
+        dispatch(fetchHomeFeed());
       }
     }
-  }, [dispatch, selectedId, categoryId, recommended.length, latest.length, trending.length, nearby.length, jobsByCategory.length]);
+  }, [categoryId, dispatch, jobsByCategory.length, latest.length, trending.length]);
 
-  const applyAdvancedFilters = (filters: any) => {
-    setActiveFilter(filters);
-    setIsFiltered(Object.keys(filters).length > 0);
-    dispatch(filterJobs({ ...filters, category_id: categoryId }));
-  };
+  const applyAdvancedFilters = useCallback((filters: any) => {
+    setShowFilterGrid(false);
+    setIsFiltered(true);
+    dispatch(filterJobs(filters));
+  }, [dispatch]);
 
   const jobsData = useMemo(() => {
-    let data = [];
+    let list: any[] = [];
     if (isFiltered) {
-      data = filteredJobs;
-    } else if (categoryId && jobsByCategory.length > 0) {
-      // If in category mode, extract jobs from the first category in jobsByCategory
-      data = jobsByCategory[0].jobs || [];
+      list = filteredJobs;
+    } else if (categoryId) {
+      list = jobsByCategory;
     } else {
       switch (selectedId) {
-        case 'all': data = recommended; break;
-        case 'latest': data = latest; break;
-        case 'trending': data = trending; break;
-        case 'nearby': data = nearby; break;
-        case 'recommended': data = recommended; break;
-        default: data = recommended;
+        case 'latest':
+          list = latest;
+          break;
+        case 'trending':
+          list = trending;
+          break;
+        case 'nearby':
+          list = nearby;
+          break;
+        case 'recommended':
+          list = recommended;
+          break;
+        case 'all':
+        default:
+          const combined = [...latest, ...trending, ...nearby, ...recommended];
+          const seen = new Set();
+          list = combined.filter(job => {
+            if (!job || seen.has(job.id)) return false;
+            seen.add(job.id);
+            return true;
+          });
+          break;
       }
     }
 
-    if (searchQuery.trim()) {
+    if (searchQuery.trim().length > 0) {
       const q = searchQuery.toLowerCase();
-      return data.filter((job: any) => 
-        job.title?.toLowerCase().includes(q) || 
-        job.employer?.company?.company_name?.toLowerCase().includes(q) ||
-        job.location?.label?.toLowerCase().includes(q)
-      );
+      list = list.filter(job => {
+        const title = job.title?.toLowerCase() || '';
+        const company = (job.employer?.company?.company_name || job.company_name || job.company || '').toLowerCase();
+        const loc = (job.location?.label || job.location_name || '').toLowerCase();
+        return title.includes(q) || company.includes(q) || loc.includes(q);
+      });
     }
-    return data;
+
+    return list;
   }, [selectedId, isFiltered, latest, trending, nearby, recommended, categoryId, jobsByCategory, filteredJobs, searchQuery]);
 
   const allTabs = useMemo(() => [
@@ -307,13 +316,13 @@ const CategoryJobsScreen: React.FC = () => {
     { id: 'recommended', name: 'Recommended' },
   ], []);
 
-  const renderTab = ({ item }: { item: any }) => {
+  const renderTab = useCallback(({ item }: { item: any }) => {
     const isActive = selectedId === item.id;
     return (
       <Pressable
         onPress={() => {
           setSelectedId(item.id);
-          setIsFiltered(false); // Clear filter view when switching tabs
+          setIsFiltered(false);
         }}
         style={styles.tabContainer}>
         <Text style={[
@@ -330,7 +339,30 @@ const CategoryJobsScreen: React.FC = () => {
         )}
       </Pressable>
     );
-  };
+  }, [colors.primary, colors.textSecondary, selectedId]);
+
+  const keyExtractor = useCallback((item: any) => item.id.toString(), []);
+  const tabKeyExtractor = useCallback((item: any) => item.id, []);
+
+  const renderJobItem = useCallback(({ item }: { item: any }) => (
+    <JobCard
+      job={item}
+      colors={colors}
+      isDark={isDark}
+      onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
+    />
+  ), [colors, isDark, navigation]);
+
+  const renderSeparator = useCallback(() => <View style={{ height: spacing.md }} />, []);
+
+  const renderEmpty = useCallback(() => (
+    <View style={styles.empty}>
+      <Icon name="search" size={moderateScale(42)} color={colors.border} />
+      <Text style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
+        No jobs found in this category
+      </Text>
+    </View>
+  ), [colors.border, colors.textPlaceholder]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
@@ -348,7 +380,7 @@ const CategoryJobsScreen: React.FC = () => {
           data={allTabs}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id}
+          keyExtractor={tabKeyExtractor}
           renderItem={renderTab}
           contentContainerStyle={styles.tabsContent}
         />
@@ -378,28 +410,18 @@ const CategoryJobsScreen: React.FC = () => {
       ) : (
         <FlatList
           data={jobsData}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={keyExtractor}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: insets.bottom + spacing.xl }
           ]}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-          renderItem={({ item }) => (
-            <JobCard
-              job={item}
-              colors={colors}
-              isDark={isDark}
-              onPress={() => navigation.navigate('JobDetail', { jobId: item.id })}
-            />
-          )}
-          ListEmptyComponent={() => (
-            <View style={styles.empty}>
-              <Icon name="search" size={moderateScale(42)} color={colors.border} />
-              <Text style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
-                No jobs found in this category
-              </Text>
-            </View>
-          )}
+          ItemSeparatorComponent={renderSeparator}
+          renderItem={renderJobItem}
+          ListEmptyComponent={renderEmpty}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={true}
         />
       )}
 

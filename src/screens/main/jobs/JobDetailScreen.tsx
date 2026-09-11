@@ -162,7 +162,7 @@ const formatDescription = (html: string) => {
 
   return text.trim();
 };
-function InfoRow({ label, value, icon, colors, style, textWrap }: { label: string; value: string; icon: string; colors: ThemeColors; style?: any; textWrap?: boolean }) {
+const InfoRow = React.memo(function InfoRow({ label, value, icon, colors, style, textWrap }: { label: string; value: string; icon: string; colors: ThemeColors; style?: any; textWrap?: boolean }) {
   return (
     <View style={[styles.infoRow, style]}>
       <View style={[styles.infoIcon, { backgroundColor: colors.surfaceHighlight }]}>
@@ -174,7 +174,7 @@ function InfoRow({ label, value, icon, colors, style, textWrap }: { label: strin
       </View>
     </View>
   );
-}
+});
 
 const JobDetailSkeleton: React.FC = () => {
   return (
@@ -205,7 +205,7 @@ const isQuestionRequired = (q: any): boolean => {
   return val === true || val === 1 || val === '1' || val === 'true' || val === 'yes';
 };
 
-function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
+const SimilarJobCard = React.memo(function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const companyName = job.employer?.company?.company_name || job.company || 'Unknown Company';
   const locationLabel = job.location?.label || 'Remote';
   return (
@@ -257,9 +257,9 @@ function SimilarJobCard({ job, colors, onPress }: { job: any; colors: ThemeColor
       </View>
     </Pressable>
   );
-}
+});
 
-const GuestLockedContent = ({ children, colors }: { children: React.ReactNode, colors: ThemeColors }) => {
+const GuestLockedContent = React.memo(({ children, colors }: { children: React.ReactNode, colors: ThemeColors }) => {
   return (
     <View style={{ position: 'relative', marginTop: moderateScale(6), overflow: 'hidden', minHeight: moderateScale(70) }}>
       <View style={{ opacity: 0.15 }} pointerEvents="none">
@@ -273,7 +273,7 @@ const GuestLockedContent = ({ children, colors }: { children: React.ReactNode, c
       </View>
     </View>
   );
-};
+});
 
 const JobDetailScreen: React.FC = () => {
   const { colors, mode } = useTheme();

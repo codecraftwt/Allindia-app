@@ -39,9 +39,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { fetchMetaCategories } from '../../../redux/slice/metaSlice';
 import { fetchHomeFeed, fetchJobs, filterJobs } from '../../../redux/slice/jobSlice';
-import { fetchProfile, fetchHRInvites, dismissHRInvite } from '../../../redux/slice/profileSlice';
+import { fetchProfile, fetchHRInvites, dismissHRInvite, fetchAppliedJobs, markHRInviteAsRead } from '../../../redux/slice/profileSlice';
 import { fetchAdminMedia } from '../../../redux/slice/mediaSlice';
-import { fetchNotifications } from '../../../redux/slice/notificationSlice';
+import { fetchNotifications, markNotificationAsRead } from '../../../redux/slice/notificationSlice';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
@@ -669,23 +669,32 @@ const MemoizedHomeContent = React.memo(({
   navigation,
   homeMedia,
   hrInvites,
+  appliedJobs,
+  notifications,
   isLoggedIn,
 }: any) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const [showAppStatus, setShowAppStatus] = useState(false);
-  const currentStatusId = 'mock_status_1';
 
+  const [hiddenAppStatusIds, setHiddenAppStatusIds] = useState<string[]>([]);
   const [hiddenInviteIds, setHiddenInviteIds] = useState<string[]>([]);
-  const [hasLoadedHiddenInvites, setHasLoadedHiddenInvites] = useState(false);
+  const [hasLoadedHiddenData, setHasLoadedHiddenData] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     const checkStatus = async () => {
       try {
-        const hiddenStatusId = await AsyncStorage.getItem('hiddenAppStatusId');
-        if (isMounted && hiddenStatusId !== currentStatusId) {
-          setShowAppStatus(true);
+        if (!isLoggedIn) {
+          if (isMounted) setHasLoadedHiddenData(true);
+          return;
+        }
+
+        const storedHiddenAppStatus = await AsyncStorage.getItem('hidden_app_status_ids');
+        if (isMounted && storedHiddenAppStatus) {
+          const parsedStatus = JSON.parse(storedHiddenAppStatus);
+          if (Array.isArray(parsedStatus)) {
+            setHiddenAppStatusIds(parsedStatus.map(String));
+          }
         }
 
         const storedHiddenInvites = await AsyncStorage.getItem('hidden_hr_invite_ids');
@@ -703,19 +712,19 @@ const MemoizedHomeContent = React.memo(({
           }
         }
       } catch (e) {
-        if (isMounted) setShowAppStatus(true);
+        console.warn('Error loading hidden status ids', e);
       } finally {
-        if (isMounted) setHasLoadedHiddenInvites(true);
+        if (isMounted) setHasLoadedHiddenData(true);
       }
     };
     checkStatus();
     return () => {
       isMounted = false;
     };
-  }, [currentStatusId]);
+  }, [isLoggedIn]);
 
   const latestInvite = useMemo(() => {
-    if (!isLoggedIn || !hasLoadedHiddenInvites || !Array.isArray(hrInvites) || hrInvites.length === 0) return null;
+    if (!isLoggedIn || !hasLoadedHiddenData || !Array.isArray(hrInvites) || hrInvites.length === 0) return null;
     return hrInvites.find((inv: any) => {
       if (!inv || !inv.id) return false;
       const invIdStr = String(inv.id);
@@ -723,16 +732,47 @@ const MemoizedHomeContent = React.memo(({
       if (inv.is_read === true || inv.is_read === 1 || inv.is_read === '1') return false;
       if (inv.read_at != null && inv.read_at !== '') return false;
       if (inv.status === 'read' || inv.status === 'dismissed' || inv.status === 'viewed') return false;
+
+      // Cross-reference with backend notifications database
+      if (Array.isArray(notifications) && notifications.length > 0) {
+        const matchingNotif = notifications.find((n: any) => {
+          if (!n) return false;
+          const nData = n.data || {};
+          if (nData.invitation_id && String(nData.invitation_id) === invIdStr) return true;
+          if (nData.invite_id && String(nData.invite_id) === invIdStr) return true;
+          if (nData.id && String(nData.id) === invIdStr) return true;
+          if (n.message && inv.employer?.name && n.message.toLowerCase().includes(inv.employer.name.toLowerCase())) return true;
+          if (n.title && inv.employer?.name && n.title.toLowerCase().includes(inv.employer.name.toLowerCase())) return true;
+          return false;
+        });
+        if (matchingNotif && matchingNotif.is_read) {
+          return false;
+        }
+      }
+
       return true;
     }) || null;
-  }, [isLoggedIn, hasLoadedHiddenInvites, hrInvites, hiddenInviteIds]);
+  }, [isLoggedIn, hasLoadedHiddenData, hrInvites, hiddenInviteIds, notifications]);
 
-  const handleHideAppStatus = async () => {
-    setShowAppStatus(false);
+  const latestShortlistedApp = useMemo(() => {
+    if (!isLoggedIn || !hasLoadedHiddenData || !Array.isArray(appliedJobs) || appliedJobs.length === 0) return null;
+    return appliedJobs.find((item: any) => {
+      if (!item) return false;
+      const appId = String(item.application?.id || item.id);
+      if (hiddenAppStatusIds.includes(appId)) return false;
+      const status = item.application?.status?.toLowerCase();
+      return status === 'shortlisted' || status === 'selected';
+    }) || null;
+  }, [isLoggedIn, hasLoadedHiddenData, appliedJobs, hiddenAppStatusIds]);
+
+  const handleHideAppStatus = async (appId: string | number) => {
+    const idStr = String(appId);
+    const nextHidden = [...hiddenAppStatusIds.filter(id => id !== idStr), idStr];
+    setHiddenAppStatusIds(nextHidden);
     try {
-      await AsyncStorage.setItem('hiddenAppStatusId', currentStatusId);
+      await AsyncStorage.setItem('hidden_app_status_ids', JSON.stringify(nextHidden));
     } catch (e) {
-      console.log('Error hiding status', e);
+      console.log('Error hiding app status', e);
     }
   };
 
@@ -741,6 +781,25 @@ const MemoizedHomeContent = React.memo(({
     const nextHidden = [...hiddenInviteIds.filter(id => id !== idStr), idStr];
     setHiddenInviteIds(nextHidden);
     dispatch(dismissHRInvite(inviteId));
+    dispatch(markHRInviteAsRead({ inviteId, type: latestInvite?.type }));
+
+    // Also mark corresponding server notification as read
+    if (Array.isArray(notifications) && notifications.length > 0) {
+      const matchingNotifs = notifications.filter((n: any) => {
+        if (!n || n.is_read) return false;
+        const nData = n.data || {};
+        if (nData.invitation_id && String(nData.invitation_id) === idStr) return true;
+        if (nData.invite_id && String(nData.invite_id) === idStr) return true;
+        if (nData.id && String(nData.id) === idStr) return true;
+        if (n.message && latestInvite?.employer?.name && n.message.toLowerCase().includes(latestInvite.employer.name.toLowerCase())) return true;
+        if (n.title && latestInvite?.employer?.name && n.title.toLowerCase().includes(latestInvite.employer.name.toLowerCase())) return true;
+        return false;
+      });
+      matchingNotifs.forEach((notif: any) => {
+        dispatch(markNotificationAsRead(notif.id));
+      });
+    }
+
     try {
       await AsyncStorage.setItem('hidden_hr_invite_ids', JSON.stringify(nextHidden));
     } catch (e) {
@@ -748,20 +807,40 @@ const MemoizedHomeContent = React.memo(({
     }
   };
 
-  const handleSlidePress = (slide?: any) => {
-    if (!slide || !slide.target_action) {
+  const handleSlidePress = useCallback((slide?: any) => {
+    if (!slide || (!slide.target_action && !slide.action_key)) {
       goSearch();
       return;
     }
     
-    switch (slide.target_action) {
-      case 'REFER_APP':
-        import('react-native').then(({ Share }) => {
-          Share.share({
-            message: '🚀 Looking for a new job or better career opportunities?\n\nGet JobIndia today! Thousands of verified jobs, direct HR connections, and quick applications—all in one app.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia',
-          });
-        });
-        break;
+    const action = (slide.target_action || slide.action_key || '').toUpperCase();
+    const actionKey = (slide.action_key || '').toLowerCase();
+
+    if (action === 'MY_ACTIVITY' || actionKey === 'my_activity' || action === 'APPLICATIONS' || action === 'ACTIVITY') {
+      const parentTab = navigation.getParent() as any;
+      parentTab?.navigate('Applications');
+      return;
+    }
+
+    if (
+      action === 'REFER_APP' ||
+      actionKey === 'refer_app' ||
+      action === 'REFER' ||
+      actionKey === 'refer' ||
+      action === 'REFER_FRIENDS' ||
+      actionKey === 'refer_friends' ||
+      action === 'INVITE_FRIENDS' ||
+      actionKey === 'invite_friends'
+    ) {
+      Share.share({
+        title: 'JobIndia - Find Verified Jobs & Direct HR Contacts',
+        message:
+          '🚀 Looking for a new job or know someone who is?\n\nCheck out JobIndia! Discover thousands of verified jobs and connect directly with hiring HRs and recruiters.\n\n👉 Download now: https://play.google.com/store/apps/details?id=com.jobsindia',
+      }).catch((err) => console.warn('Share error:', err));
+      return;
+    }
+
+    switch (action) {
       case 'AI_SECTIONS':
         const aiTab = navigation.getParent() as any;
         aiTab?.navigate('AIAssistant');
@@ -780,7 +859,29 @@ const MemoizedHomeContent = React.memo(({
         goSearch();
         break;
     }
-  };
+  }, [goSearch, navigation]);
+
+  const keyExtractor = useCallback((item: any) => item.id.toString(), []);
+
+  const renderLatestItem = useCallback(({ item: job }: { item: any }) => (
+    <JobTrendCard
+      job={{ ...job, isLatest: true }}
+      colors={colors}
+      onPress={() => openJob(job)}
+      tagRotationStyle={tagRotationStyle}
+      isDark={isDark}
+    />
+  ), [colors, openJob, tagRotationStyle, isDark]);
+
+  const renderTrendingItem = useCallback(({ item: job }: { item: any }) => (
+    <JobTrendCard
+      job={job}
+      colors={colors}
+      onPress={() => openJob(job)}
+      tagRotationStyle={tagRotationStyle}
+      isDark={isDark}
+    />
+  ), [colors, openJob, tagRotationStyle, isDark]);
 
   return (
     <Animated.ScrollView
@@ -789,6 +890,7 @@ const MemoizedHomeContent = React.memo(({
       scrollEnabled={!showFilterGrid}
       style={styles.scrollMain}
       showsVerticalScrollIndicator={false}
+      removeClippedSubviews={true}
       contentContainerStyle={[
         styles.scrollContent,
         { paddingBottom: 80, paddingTop: 140 + (insets.top || 40) },
@@ -813,8 +915,13 @@ const MemoizedHomeContent = React.memo(({
               onHide={() => handleHideInvite(latestInvite.id)}
             />
           )}
-          {showAppStatus && (
-            <HomeApplicationStatus colors={colors} onHide={handleHideAppStatus} />
+          {latestShortlistedApp && (
+            <HomeApplicationStatus
+              colors={colors}
+              job={latestShortlistedApp}
+              onHide={() => handleHideAppStatus(latestShortlistedApp.application?.id || latestShortlistedApp.id)}
+              onPress={() => openJob(latestShortlistedApp)}
+            />
           )}
           <QuickFilterCards colors={colors} />
           {/* <HomeCategoriesSection
@@ -839,19 +946,12 @@ const MemoizedHomeContent = React.memo(({
                 contentContainerStyle={styles.trendingScroll}
                 decelerationRate="fast"
                 data={latest}
-                keyExtractor={item => item.id.toString()}
+                keyExtractor={keyExtractor}
                 initialNumToRender={4}
                 maxToRenderPerBatch={4}
                 windowSize={5}
-                renderItem={({ item: job }) => (
-                  <JobTrendCard
-                    job={{ ...job, isLatest: true }}
-                    colors={colors}
-                    onPress={() => openJob(job)}
-                    tagRotationStyle={tagRotationStyle}
-                    isDark={isDark}
-                  />
-                )}
+                removeClippedSubviews={true}
+                renderItem={renderLatestItem}
               />
             </>
           )}
@@ -870,19 +970,12 @@ const MemoizedHomeContent = React.memo(({
                 contentContainerStyle={styles.trendingScroll}
                 decelerationRate="fast"
                 data={trending}
-                keyExtractor={item => item.id.toString()}
+                keyExtractor={keyExtractor}
                 initialNumToRender={4}
                 maxToRenderPerBatch={4}
                 windowSize={5}
-                renderItem={({ item: job }) => (
-                  <JobTrendCard
-                    job={job}
-                    colors={colors}
-                    onPress={() => openJob(job)}
-                    tagRotationStyle={tagRotationStyle}
-                    isDark={isDark}
-                  />
-                )}
+                removeClippedSubviews={true}
+                renderItem={renderTrendingItem}
               />
             </>
           )}
@@ -960,10 +1053,10 @@ const HomeScreen: React.FC = () => {
   const { user, isLoggedIn } = useSelector((state: RootState) => state.auth);
   const { categories, loading: metaLoading } = useSelector((state: RootState) => state.meta);
   const { trending, nearby, recommended, latest, homeLoading } = useSelector((state: RootState) => state.jobs);
-  const { data: profileData, hrInvites } = useSelector((state: RootState) => state.profile);
+  const { data: profileData, hrInvites, appliedJobs } = useSelector((state: RootState) => state.profile);
   const { homeMedia = [] } = useSelector((state: RootState) => state.media || {});
   const { selectedCity, selectedArea } = useSelector((state: RootState) => state.address || {});
-  const { unreadCount } = useSelector((state: RootState) => state.notifications);
+  const { unreadCount, notifications = [] } = useSelector((state: RootState) => state.notifications);
   const isAnyLoading = homeLoading || metaLoading;
   const { t } = useTranslation();
 
@@ -1188,33 +1281,38 @@ const HomeScreen: React.FC = () => {
         dispatch(fetchProfile());
       }
       dispatch(fetchHRInvites());
+      dispatch(fetchAppliedJobs());
     }
-  }, [dispatch, isLoggedIn, profileData]);
+  }, [dispatch, isLoggedIn]);
 
   const displayName = useMemo(() => {
     const n = user?.name || draft.fullName.trim();
     return n.length > 0 ? n : 'Job seeker';
   }, [user?.name, draft.fullName]);
 
-  const goSearch = () => setShowSearchOverlay(true);
-  const goProfile = () => {
+  const goSearch = useCallback(() => setShowSearchOverlay(true), []);
+  
+  const goProfile = useCallback(() => {
     const tab = navigation.getParent() as BottomTabNavigationProp<MainTabParamList> | undefined;
     tab?.navigate('Profile');
-  };
-  const openJob = (job: any) => navigation.navigate('JobDetail', { jobId: job.slug || job.id });
+  }, [navigation]);
 
-  const applyAdvancedFilters = (filters: any) => {
+  const openJob = useCallback((job: any) => {
+    navigation.navigate('JobDetail', { jobId: job.slug || job.id });
+  }, [navigation]);
+
+  const applyAdvancedFilters = useCallback((filters: any) => {
     setShowFilterGrid(false);
     navigation.navigate('JobListing', { filters });
-  };
+  }, [navigation]);
 
-  const handleCloseFilter = () => {
+  const handleCloseFilter = useCallback(() => {
     setShowFilterGrid(false);
     if (filterBgTimer.current) clearTimeout(filterBgTimer.current);
     filterBgTimer.current = setTimeout(() => setFilterBgVisible(false), 350);
-  };
+  }, []);
 
-  const handleFilterOpen = () => {
+  const handleFilterOpen = useCallback(() => {
     if (filterBgTimer.current) clearTimeout(filterBgTimer.current);
     setFilterBgVisible(true);
     const maxTranslate = -COLLAPSE_DISTANCE + 26;
@@ -1226,7 +1324,7 @@ const HomeScreen: React.FC = () => {
     const baseHeight = headerHeightRef.current > 0 ? headerHeightRef.current : 155;
     setFilterTop(baseHeight + clampedTranslateY - 8);
     setShowFilterGrid(prev => !prev);
-  };
+  }, []);
 
   const onRefresh = useCallback(() => {
     dispatch(fetchMetaCategories());
@@ -1234,6 +1332,7 @@ const HomeScreen: React.FC = () => {
     if (isLoggedIn) {
       dispatch(fetchProfile());
       dispatch(fetchHRInvites());
+      dispatch(fetchAppliedJobs());
       dispatch(fetchNotifications());
     }
   }, [dispatch, isLoggedIn]);
@@ -1289,6 +1388,8 @@ const HomeScreen: React.FC = () => {
         navigation={navigation}
         homeMedia={homeMedia}
         hrInvites={hrInvites}
+        appliedJobs={appliedJobs}
+        notifications={notifications}
         isLoggedIn={isLoggedIn}
       />
 

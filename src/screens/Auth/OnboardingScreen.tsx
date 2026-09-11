@@ -7,10 +7,11 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Animated,
+  Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -52,6 +53,7 @@ type NavigationProp = StackNavigationProp<AuthStackParamList, 'Splash'>;
 const OnboardingScreen = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const slidesRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -82,12 +84,18 @@ const OnboardingScreen = () => {
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
+  const topInset = Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 0);
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       
-      <View style={styles.header}>
-        <TouchableOpacity onPress={completeOnboarding}>
+      <View style={[styles.header, { paddingTop: topInset + moderateScale(spacing.xs) }]}>
+        <TouchableOpacity 
+          onPress={completeOnboarding}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+        >
           <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
         </TouchableOpacity>
       </View>
@@ -140,7 +148,7 @@ const OnboardingScreen = () => {
         ref={slidesRef}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom + moderateScale(spacing.md), moderateScale(spacing.xxl)) }]}>
         <View style={styles.paginationContainer}>
           {SLIDES.map((_, index) => {
             const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
@@ -184,7 +192,7 @@ const OnboardingScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -196,7 +204,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: moderateScale(spacing.xl),
-    paddingTop: moderateScale(spacing.lg),
+    paddingBottom: moderateScale(spacing.xs),
   },
   skipText: {
     fontSize: moderateScale(16),

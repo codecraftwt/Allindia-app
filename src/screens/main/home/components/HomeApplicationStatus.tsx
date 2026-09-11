@@ -6,8 +6,19 @@ import { radius } from '../../../../theme/radius';
 import { spacing } from '../../../../theme/spacing';
 import { moderateScale } from '../../../../theme/typography';
 import { useTranslation } from 'react-i18next';
+import { BASE_URL } from '../../../../api/axiosInstance';
 
-export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors; onHide: () => void }) => {
+export const HomeApplicationStatus = ({
+  colors,
+  job,
+  onHide,
+  onPress,
+}: {
+  colors: ThemeColors;
+  job?: any;
+  onHide: () => void;
+  onPress?: () => void;
+}) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   
@@ -22,6 +33,31 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
     ).start();
   }, [pulseAnim]);
 
+  if (!job) return null;
+
+  const companyObj = job.employer?.company || job.company || {};
+  const employerObj = job.employer || {};
+  const application = job.application || {};
+  const status = application.status || 'shortlisted';
+  const jobTitle = job.title || 'Application';
+  const companyName = companyObj.company_name || 'Company';
+  const salaryLabel = job.salary || (job.salary_min && job.salary_max ? `₹${job.salary_min.toLocaleString()} - ₹${job.salary_max.toLocaleString()}` : 'Salary Negotiable');
+  const locationLabel = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'India';
+  const appliedDate = application.applied_at
+    ? new Date(application.applied_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    : '';
+  const managerName = employerObj.name || 'Manager';
+
+  const cleanBaseUrl = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+  const rawLogo = companyObj.company_logo_url || employerObj.company_logo;
+  const logoUri = rawLogo
+    ? rawLogo.startsWith('http')
+      ? rawLogo
+      : `${cleanBaseUrl}${rawLogo.startsWith('/') ? '' : '/'}${rawLogo}`
+    : null;
+
+  const statusTitle = status === 'selected' ? 'Congratulations! Selected 🎉' : 'You are Shortlisted! 🎉';
+
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
@@ -35,7 +71,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
 
       <Pressable 
         onPress={() => setExpanded(!expanded)}
-        style={[styles.wiCard, { backgroundColor: colors.surface, borderColor: colors.border + '80' }]}
+        style={[styles.wiCard, { backgroundColor: colors.surface, borderColor: '#10b98150' }]}
       >
         {/* Compact Status Row (Always visible) */}
         <View style={styles.compactRow}>
@@ -45,39 +81,52 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
           
           <View style={styles.statusTextWrapper}>
             <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>
-              You are Shortlisted!{' '}
+              {statusTitle}{' '}
             </Text>
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <Text style={{ fontSize: moderateScale(15) }}>🎉</Text>
             </Animated.View>
           </View>
           
-          <View style={styles.toggleBtn}>
+          <TouchableOpacity 
+            onPress={() => {
+              if (expanded) {
+                onHide();
+              } else {
+                setExpanded(true);
+              }
+            }} 
+            style={styles.toggleBtn}
+          >
             <Icon name={expanded ? "times" : "chevron-down"} size={moderateScale(13)} color={colors.textSecondary} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Expanded Details */}
         {expanded && (
           <View style={[styles.expandedContent, { borderTopColor: colors.border }]}>
-            <View style={styles.wiCardHeader}>
+            <Pressable onPress={onPress} style={styles.wiCardHeader}>
               <View style={[styles.wiLogoBox, { backgroundColor: colors.surfaceHighlight }]}>
-                <Icon name="building" size={moderateScale(22)} color={colors.primary} />
+                {logoUri ? (
+                  <Image source={{ uri: logoUri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                ) : (
+                  <Icon name="building" size={moderateScale(22)} color={colors.primary} />
+                )}
               </View>
               <View style={styles.wiHeaderInfo}>
-                <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>Accountant Manager</Text>
-                <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>Global Tech Solution</Text>
+                <Text style={[styles.wiJobTitle, { color: colors.textPrimary }]}>{jobTitle}</Text>
+                <Text style={[styles.wiCompanyName, { color: colors.textSecondary }]}>{companyName}</Text>
               </View>
-            </View>
+            </Pressable>
 
             <View style={styles.wiMetaSection}>
               <View style={styles.wiMetaItem}>
                 <Icon name="money" size={moderateScale(13)} color={colors.textSecondary} />
-                <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>Salary Negotiable</Text>
+                <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>{salaryLabel}</Text>
               </View>
               <View style={styles.wiMetaItem}>
                 <Icon name="map-marker" size={moderateScale(13)} color={colors.textSecondary} />
-                <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>Dhule, MAHARASHTRA</Text>
+                <Text style={[styles.wiMetaText, { color: colors.textPrimary }]}>{locationLabel}</Text>
               </View>
             </View>
 
@@ -93,7 +142,7 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
                   <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>
                     Applied successfully
                   </Text>
-                  <Text style={{ fontSize: moderateScale(10), color: colors.textSecondary }}>7 Jul</Text>
+                  {appliedDate ? <Text style={{ fontSize: moderateScale(10), color: colors.textSecondary }}>{appliedDate}</Text> : null}
                 </View>
               </View>
               <View style={[styles.wiJourneyRow, { marginTop: 4 }]}>
@@ -103,14 +152,14 @@ export const HomeApplicationStatus = ({ colors, onHide }: { colors: ThemeColors;
                   </View>
                 </View>
                 <Text style={[styles.wiJourneyText, { color: colors.textPrimary, fontWeight: '700' }]}>
-                  You are Shortlisted! 🎉
+                  {statusTitle}
                 </Text>
               </View>
             </View>
 
             <View style={styles.wiManagerRow}>
               <Icon name="user-circle" size={moderateScale(15)} color={colors.textSecondary} />
-              <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>Ramesh (Manager)</Text>
+              <Text style={[styles.wiManagerText, { color: colors.textSecondary }]}>{managerName} (Manager)</Text>
             </View>
           </View>
         )}

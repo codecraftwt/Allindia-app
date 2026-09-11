@@ -72,7 +72,7 @@ const getTagConfig = (tag: string, colors: any) => {
   return { icon: 'check-circle', color: colors?.primary || '#2563EB' };
 };
 
-function JobListCard({
+const JobListCard = React.memo(function JobListCard({
   job,
   colors,
   onPress,
@@ -170,7 +170,7 @@ function JobListCard({
       </View>
     </Pressable>
   );
-}
+});
 
 const JobListingSkeleton: React.FC = () => {
   const { colors } = useTheme();
@@ -213,9 +213,9 @@ const JobListingScreen: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
 
-  const openJob = (job: any) => {
+  const openJob = React.useCallback((job: any) => {
     navigation.navigate('JobDetail', { jobId: job.slug || job.id });
-  };
+  }, [navigation]);
 
   React.useEffect(() => {
     Keyboard.dismiss();
@@ -231,6 +231,28 @@ const JobListingScreen: React.FC = () => {
   const jobsData = query ? searchResults : (isFiltered || filters ? filteredJobs : recommended);
 
   const headerTitle = query ? `"${query}"` : (route.params?.categoryName || (filters ? 'Filtered results' : 'All jobs'));
+
+  const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
+
+  const renderItem = React.useCallback(({ item }: { item: any }) => (
+    <JobListCard job={item} colors={colors} onPress={() => openJob(item)} />
+  ), [colors, openJob]);
+
+  const renderSeparator = React.useCallback(() => (
+    <View style={{ height: spacing.md }} />
+  ), []);
+
+  const renderEmpty = React.useCallback(() => (
+    <View style={styles.emptyContainer}>
+      <Icon name="search" size={moderateScale(42)} color={colors.border} />
+      <Text style={[typography.sectionTitle, { color: colors.textPrimary, marginTop: spacing.md }]}>
+        No jobs found
+      </Text>
+      <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm }]}>
+        We couldn't find any jobs matching "{query || 'your criteria'}". Try adjusting your filters or search terms.
+      </Text>
+    </View>
+  ), [colors, query]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -254,26 +276,18 @@ const JobListingScreen: React.FC = () => {
         ) : (
           <FlatList
             data={jobsData}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={keyExtractor}
             contentContainerStyle={[
               styles.listContent,
               { paddingBottom: spacing.xxl + Math.max(insets.bottom, spacing.md) + 90 },
             ]}
-            ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-            renderItem={({ item }) => (
-              <JobListCard job={item} colors={colors} onPress={() => openJob(item)} />
-            )}
-            ListEmptyComponent={() => (
-              <View style={styles.emptyContainer}>
-                <Icon name="search" size={moderateScale(42)} color={colors.border} />
-                <Text style={[typography.sectionTitle, { color: colors.textPrimary, marginTop: spacing.md }]}>
-                  No jobs found
-                </Text>
-                <Text style={[typography.body, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm }]}>
-                  We couldn't find any jobs matching "{query || 'your criteria'}". Try adjusting your filters or search terms.
-                </Text>
-              </View>
-            )}
+            ItemSeparatorComponent={renderSeparator}
+            renderItem={renderItem}
+            ListEmptyComponent={renderEmpty}
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews={true}
             showsVerticalScrollIndicator={false}
           />
         )}

@@ -35,7 +35,7 @@ function timeAgo(dateString: string, justNowLabel: string) {
   return past.toLocaleDateString();
 }
 
-function NotificationRow({ item, colors, onPress, t }: { item: ApiNotification; colors: ThemeColors; onPress: () => void; t: (key: string, fallback: string) => string }) {
+const NotificationRow = React.memo(function NotificationRow({ item, colors, onPress, t }: { item: ApiNotification; colors: ThemeColors; onPress: () => void; t: (key: string, fallback: string) => string }) {
   const isJob = item.type?.includes('Job') || false;
   const iconBg = isJob ? colors.surfaceHighlight : colors.successBackground;
   const iconColor = isJob ? colors.primary : colors.success;
@@ -74,7 +74,7 @@ function NotificationRow({ item, colors, onPress, t }: { item: ApiNotification; 
       </View>
     </Pressable>
   );
-}
+});
 
 const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useTheme();
@@ -90,6 +90,108 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
       dispatch(fetchNotifications(50));
     }
   }, [dispatch, isLoggedIn]);
+
+  const handleMarkAsRead = React.useCallback((item: ApiNotification) => {
+    if (!item.is_read) {
+      dispatch(markNotificationAsRead(item.id));
+    }
+
+    let notifData = item.data;
+    if (typeof notifData === 'string') {
+      try { notifData = JSON.parse(notifData); } catch(e) {}
+    }
+
+    const titleStr = (item.title || '').toLowerCase();
+    const typeStr = (item.type || '').toLowerCase();
+
+    const isJobNotification = typeStr.includes('job') || titleStr.includes('job') || typeStr.includes('application') || titleStr.includes('application');
+
+    if (isJobNotification) {
+      let jobId = notifData?.job_id || 
+                  notifData?.jobId || 
+                  notifData?.job?.id || 
+                  notifData?.application?.job_id ||
+                  notifData?.application?.job?.id ||
+                  notifData?.meta?.job_id;
+      
+      if (!jobId && notifData?.id) {
+        jobId = notifData.id;
+      }
+
+      if (jobId) {
+        // @ts-ignore
+        navigation.navigate('JobDetail', { jobId });
+      }
+    }
+  }, [dispatch, navigation]);
+
+  const handleMarkAllRead = React.useCallback(() => {
+    if (notifications.some(n => !n.is_read)) {
+      dispatch(markAllNotificationsAsRead());
+    }
+  }, [dispatch, notifications]);
+
+  const handleDelete = React.useCallback((id: string) => {
+    dispatch(deleteNotification(id));
+  }, [dispatch]);
+
+  const handleClearAll = React.useCallback(() => {
+    if (notifications.length > 0) {
+      dispatch(clearAllNotifications());
+    }
+  }, [dispatch, notifications]);
+
+  const sections = useMemo(() => {
+    const jobAlerts: ApiNotification[] = [];
+    const employerActivity: ApiNotification[] = [];
+    
+    notifications.forEach(n => {
+      if (n.type?.includes('Job')) {
+        jobAlerts.push(n);
+      } else {
+        employerActivity.push(n);
+      }
+    });
+    
+    const s = [];
+    if (jobAlerts.length > 0) s.push({ title: t('notificationsScreen.jobAlerts', 'Job alerts'), data: jobAlerts });
+    if (employerActivity.length > 0) s.push({ title: t('notificationsScreen.employerActivity', 'Employer activity'), data: employerActivity });
+    return s;
+  }, [notifications, t]);
+
+  const handleRefresh = React.useCallback(() => {
+    dispatch(fetchNotifications(50));
+  }, [dispatch]);
+
+  const keyExtractor = React.useCallback((item: ApiNotification) => item.id, []);
+
+  const renderSectionHeader = React.useCallback(({ section: { title } }: any) => (
+    <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+  ), [colors.textPrimary]);
+
+  const renderItem = React.useCallback(({ item }: { item: ApiNotification }) => (
+    <Swipeable
+      renderRightActions={() => (
+        <View style={styles.deleteActionContainer}>
+          <Pressable
+            onPress={() => handleDelete(item.id)}
+            style={[styles.deleteAction, { backgroundColor: colors.error }]}
+          >
+            <Icon name="trash" size={moderateScale(18)} color="#FFF" />
+          </Pressable>
+        </View>
+      )}
+      onSwipeableOpen={(direction, swipeable) => {
+        if (direction === 'right') {
+          handleDelete(item.id);
+          swipeable.close();
+        }
+      }}
+      rightThreshold={moderateScale(70)}
+    >
+      <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} t={t} />
+    </Swipeable>
+  ), [colors, handleDelete, handleMarkAsRead, t]);
 
   if (!isLoggedIn) {
     return (
@@ -113,79 +215,6 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
       </SafeAreaView>
     );
   }
-
-  const handleMarkAsRead = (item: ApiNotification) => {
-    if (!item.is_read) {
-      dispatch(markNotificationAsRead(item.id));
-    }
-
-    let notifData = item.data;
-    if (typeof notifData === 'string') {
-      try { notifData = JSON.parse(notifData); } catch(e) {}
-    }
-
-    const titleStr = (item.title || '').toLowerCase();
-    const typeStr = (item.type || '').toLowerCase();
-
-    const isJobNotification = typeStr.includes('job') || titleStr.includes('job') || typeStr.includes('application') || titleStr.includes('application');
-
-    if (isJobNotification) {
-      // Try extracting job ID from various possible Laravel notification payload structures
-      let jobId = notifData?.job_id || 
-                  notifData?.jobId || 
-                  notifData?.job?.id || 
-                  notifData?.application?.job_id ||
-                  notifData?.application?.job?.id ||
-                  notifData?.meta?.job_id;
-      
-      if (!jobId && notifData?.id) {
-        jobId = notifData.id; // fallback if id represents job_id
-      }
-
-      if (jobId) {
-        // @ts-ignore
-        navigation.navigate('JobDetail', { jobId });
-      }
-    }
-  };
-
-  const handleMarkAllRead = () => {
-    if (notifications.some(n => !n.is_read)) {
-      dispatch(markAllNotificationsAsRead());
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    dispatch(deleteNotification(id));
-  };
-
-  const handleClearAll = () => {
-    if (notifications.length > 0) {
-      dispatch(clearAllNotifications());
-    }
-  };
-
-  const sections = useMemo(() => {
-    const jobAlerts: ApiNotification[] = [];
-    const employerActivity: ApiNotification[] = [];
-    
-    notifications.forEach(n => {
-      if (n.type?.includes('Job')) {
-        jobAlerts.push(n);
-      } else {
-        employerActivity.push(n);
-      }
-    });
-    
-    const s = [];
-    if (jobAlerts.length > 0) s.push({ title: t('notificationsScreen.jobAlerts', 'Job alerts'), data: jobAlerts });
-    if (employerActivity.length > 0) s.push({ title: t('notificationsScreen.employerActivity', 'Employer activity'), data: employerActivity });
-    return s;
-  }, [notifications, t]);
-
-  const handleRefresh = () => {
-    dispatch(fetchNotifications(50));
-  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
@@ -223,33 +252,13 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
       ) : (
         <SectionList
           sections={sections}
-          keyExtractor={item => item.id}
-          renderSectionHeader={({ section: { title } }) => (
-            <Text style={[typography.sectionTitle, styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
-          )}
-          renderItem={({ item }) => (
-            <Swipeable
-              renderRightActions={() => (
-                <View style={styles.deleteActionContainer}>
-                  <Pressable
-                    onPress={() => handleDelete(item.id)}
-                    style={[styles.deleteAction, { backgroundColor: colors.error }]}
-                  >
-                    <Icon name="trash" size={moderateScale(18)} color="#FFF" />
-                  </Pressable>
-                </View>
-              )}
-              onSwipeableOpen={(direction, swipeable) => {
-                if (direction === 'right') {
-                  handleDelete(item.id);
-                  swipeable.close();
-                }
-              }}
-              rightThreshold={moderateScale(70)}
-            >
-              <NotificationRow item={item} colors={colors} onPress={() => handleMarkAsRead(item)} t={t} />
-            </Swipeable>
-          )}
+          keyExtractor={keyExtractor}
+          renderSectionHeader={renderSectionHeader}
+          renderItem={renderItem}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={true}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           SectionSeparatorComponent={() => <View style={{ height: spacing.md }} />}
           contentContainerStyle={[

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -144,6 +144,144 @@ const TagCycling = ({ tags, colors }: { tags: any[], colors: any }) => {
     </Animated.View>
   );
 };
+
+const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) => {
+  const companyName = item.employer?.company?.company_name || item.company_name || item.company || t('allJobs.hiringCompany', 'Hiring Company');
+  const locationLabel = item.location?.label || item.location_name || (typeof item.location === 'string' ? item.location : item.location?.city) || t('allJobs.india', 'India');
+  const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : t('allJobs.negotiable', 'Negotiable'));
+  const jobType = formatJobType(item.job_type_label || item.employmentType || item.job_type || 'Full Time');
+
+  const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
+  const hasAppliedTags = item.applied_tags && item.applied_tags.length > 0;
+
+  const checkTag = (tagNameMatch: string) => {
+    const checkArray = (arr: any[]) => arr?.some((t: any) => {
+      const name = typeof t === 'string' ? t : t.name;
+      return name && name.toLowerCase().includes(tagNameMatch);
+    });
+    return checkArray(item.applied_tags) || checkArray(item.tags);
+  };
+  const isSpotlight = checkTag('spotlight');
+  const isBoost = checkTag('boost');
+
+  let cardBgColor = colors.surface;
+  let cardBorderColor = colors.border;
+  let cardBorderWidth = 1;
+  let cardShadowColor = colors.shadow;
+  let cardElevation = 2;
+
+  let locationTextColor = colors.textSecondary;
+  let locationIconColor = colors.textSecondary;
+
+  if (isSpotlight) {
+    cardBgColor = isDark ? '#2D2714' : '#FDE68A';
+    cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#D4AF37';
+    cardElevation = isDark ? 0 : 4;
+  } else if (isBoost) {
+    cardBgColor = isDark ? '#3F1616' : '#FCA5A5';
+    cardBorderColor = isDark ? '#EF4444' : '#EF4444';
+    cardBorderWidth = 1;
+    cardShadowColor = isDark ? 'transparent' : '#DC2626';
+    cardElevation = isDark ? 0 : 4;
+  }
+
+  return (
+    <Pressable
+      onPress={() => onPress(item.slug || item.id)}
+      style={[
+        styles.jobCard,
+        {
+          backgroundColor: cardBgColor,
+          borderColor: cardBorderColor,
+          borderWidth: cardBorderWidth,
+          shadowColor: cardShadowColor,
+          shadowOpacity: (isSpotlight || isBoost) ? 0.2 : 0.05,
+          elevation: cardElevation,
+          padding: moderateScale(12),
+        }
+      ]}
+    >
+      {(hasAppliedTags || (item.tags && item.tags.length > 0)) ? (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: moderateScale(8) }}>
+          {hasAppliedTags ? (
+            <TagCycling tags={item.applied_tags} colors={colors} />
+          ) : item.tags && item.tags.length > 0 ? (
+            <TagCycling tags={item.tags} colors={colors} />
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={[styles.cardHeader, { marginBottom: moderateScale(8) }]}>
+        <View style={[styles.iconBox, { backgroundColor: hasAppliedTags ? primaryTagColor + '20' : colors.surfaceHighlight }]}>
+          {item.employer?.company?.company_logo_url ? (
+            <Image
+              source={{ uri: item.employer.company.company_logo_url }}
+              style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), resizeMode: 'contain' }}
+            />
+          ) : (
+            <Icon name="briefcase" size={moderateScale(18)} color={hasAppliedTags ? primaryTagColor : colors.primary} />
+          )}
+        </View>
+        <View style={[styles.titleBox, { paddingRight: moderateScale(22) }]}>
+          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
+            {companyName}
+          </Text>
+        </View>
+        {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
+          <View style={{ position: 'absolute', right: 0, top: 0 }}>
+            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
+          </View>
+        )}
+      </View>
+
+      <View style={[styles.cardMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }]}>
+        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
+          <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
+          <Text style={[typography.small, { color: locationTextColor, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>
+            {locationLabel}
+          </Text>
+        </View>
+        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>
+          {salaryLabel}
+        </Text>
+      </View>
+
+      <View style={[styles.cardFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground, borderColor: 'transparent', borderWidth: 0, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
+          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
+            {jobType}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+});
+
+const JobSkeleton = React.memo(({ colors }: { colors: any }) => (
+  <View style={{ gap: spacing.md, padding: spacing.lg }}>
+    {[1, 2, 3, 4, 5].map(i => (
+      <View key={i} style={[styles.jobCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.cardHeader}>
+          <SkeletonPulse style={styles.iconBox} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <SkeletonPulse style={{ height: 16, width: '60%', borderRadius: 4 }} />
+            <SkeletonPulse style={{ height: 12, width: '40%', borderRadius: 4 }} />
+          </View>
+        </View>
+        <View style={{ marginTop: 12 }} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <SkeletonPulse style={{ height: 16, width: 80, borderRadius: 4 }} />
+          <SkeletonPulse style={{ height: 20, width: 60, borderRadius: 6 }} />
+        </View>
+      </View>
+    ))}
+  </View>
+));
 
 const AllJobsScreen = () => {
   const { colors, isDark } = useTheme();
@@ -310,143 +448,60 @@ const AllJobsScreen = () => {
     />
   ), [colors, isDark, t, handleJobPress]);
 
-const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) => {
-  const companyName = item.employer?.company?.company_name || item.company_name || item.company || t('allJobs.hiringCompany', 'Hiring Company');
-  const locationLabel = item.location?.label || item.location_name || (typeof item.location === 'string' ? item.location : item.location?.city) || t('allJobs.india', 'India');
-  const salaryLabel = item.salary || (item.salary_min && item.salary_max ? `₹${item.salary_min.toLocaleString()} - ${item.salary_max.toLocaleString()}` : t('allJobs.negotiable', 'Negotiable'));
-  const jobType = formatJobType(item.job_type_label || item.employmentType || item.job_type || 'Full Time');
+  const keyExtractor = useCallback((item: any) => item.id.toString(), []);
 
-  const primaryTagColor = item.applied_tags?.[0]?.icon_color || colors.primary;
-  const hasAppliedTags = item.applied_tags && item.applied_tags.length > 0;
-
-  const checkTag = (tagNameMatch: string) => {
-    const checkArray = (arr: any[]) => arr?.some((t: any) => {
-      const name = typeof t === 'string' ? t : t.name;
-      return name && name.toLowerCase().includes(tagNameMatch);
-    });
-    return checkArray(item.applied_tags) || checkArray(item.tags);
-  };
-  const isSpotlight = checkTag('spotlight');
-  const isBoost = checkTag('boost');
-
-  let cardBgColor = colors.surface;
-  let cardBorderColor = colors.border;
-  let cardBorderWidth = 1;
-  let cardShadowColor = colors.shadow;
-  let cardElevation = 2;
-
-  let locationTextColor = colors.textSecondary;
-  let locationIconColor = colors.textSecondary;
-
-  if (isSpotlight) {
-    cardBgColor = isDark ? '#2D2714' : '#FDE68A';
-    cardBorderColor = isDark ? '#F59E0B' : '#F59E0B';
-    cardBorderWidth = 1;
-    cardShadowColor = isDark ? 'transparent' : '#D4AF37';
-    cardElevation = isDark ? 0 : 4;
-  } else if (isBoost) {
-    cardBgColor = isDark ? '#3F1616' : '#FCA5A5';
-    cardBorderColor = isDark ? '#EF4444' : '#EF4444';
-    cardBorderWidth = 1;
-    cardShadowColor = isDark ? 'transparent' : '#DC2626';
-    cardElevation = isDark ? 0 : 4;
-  }
-
-  return (
-    <Pressable
-      onPress={() => onPress(item.slug || item.id)}
-      style={[
-        styles.jobCard,
-        {
-          backgroundColor: cardBgColor,
-          borderColor: cardBorderColor,
-          borderWidth: cardBorderWidth,
-          shadowColor: cardShadowColor,
-          shadowOpacity: (isSpotlight || isBoost) ? 0.2 : 0.05,
-          elevation: cardElevation,
-          padding: moderateScale(12),
-        }
-      ]}
-    >
-      {(hasAppliedTags || (item.tags && item.tags.length > 0)) ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: moderateScale(8) }}>
-          {hasAppliedTags ? (
-            <TagCycling tags={item.applied_tags} colors={colors} />
-          ) : item.tags && item.tags.length > 0 ? (
-            <TagCycling tags={item.tags} colors={colors} />
-          ) : null}
-        </View>
-      ) : null}
-
-      <View style={[styles.cardHeader, { marginBottom: moderateScale(8) }]}>
-        <View style={[styles.iconBox, { backgroundColor: hasAppliedTags ? primaryTagColor + '20' : colors.surfaceHighlight }]}>
-          {item.employer?.company?.company_logo_url ? (
-            <Image
-              source={{ uri: item.employer.company.company_logo_url }}
-              style={{ width: moderateScale(38), height: moderateScale(38), borderRadius: moderateScale(8), resizeMode: 'contain' }}
-            />
-          ) : (
-            <Icon name="briefcase" size={moderateScale(18)} color={hasAppliedTags ? primaryTagColor : colors.primary} />
-          )}
-        </View>
-        <View style={[styles.titleBox, { paddingRight: moderateScale(22) }]}>
-          <Text style={[typography.jobTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={[typography.small, { color: colors.textSecondary, marginTop: 2 }]} numberOfLines={1}>
-            {companyName}
-          </Text>
-        </View>
-        {(item.employer?.company?.verification_status === 'approved' || item.employer?.verification_status === 'approved') && (
-          <View style={{ position: 'absolute', right: 0, top: 0 }}>
-            <MaterialCommunityIcons name="check-decagram" size={moderateScale(16)} color="#3B82F6" />
-          </View>
-        )}
-      </View>
-
-      <View style={[styles.cardMeta, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(8) }]}>
-        <View style={[styles.metaItem, { flex: 1, marginRight: moderateScale(8) }]}>
-          <Icon name="map-marker" size={moderateScale(12)} color={locationIconColor} />
-          <Text style={[typography.small, { color: locationTextColor, marginLeft: moderateScale(4), flexShrink: 1 }]} numberOfLines={1}>
-            {locationLabel}
-          </Text>
-        </View>
-        <Text style={[typography.labelMedium, { color: colors.success, fontWeight: '700' }]}>
-          {salaryLabel}
-        </Text>
-      </View>
-
-      <View style={[styles.cardFooter, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-        <View style={[styles.typeBadge, { backgroundColor: colors.badgeBackground, borderColor: 'transparent', borderWidth: 0, paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(6) }]}>
-          <Text style={[typography.tiny, { color: colors.badgeText, fontWeight: '600', fontSize: moderateScale(10) }]}>
-            {jobType}
-          </Text>
-        </View>
-      </View>
-    </Pressable>
-  );
-});
-
-  const JobSkeleton = () => (
-    <View style={{ gap: spacing.md, padding: spacing.lg }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <View key={i} style={[styles.jobCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.cardHeader}>
-            <SkeletonPulse style={styles.iconBox} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <SkeletonPulse style={{ height: 16, width: '60%', borderRadius: 4 }} />
-              <SkeletonPulse style={{ height: 12, width: '40%', borderRadius: 4 }} />
-            </View>
-          </View>
-          <View style={{ marginTop: 12 }} />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <SkeletonPulse style={{ height: 16, width: 80, borderRadius: 4 }} />
-            <SkeletonPulse style={{ height: 20, width: 60, borderRadius: 6 }} />
-          </View>
-        </View>
-      ))}
+  const renderFooter = useCallback(() => loadingMore ? (
+    <View style={{ padding: 20, alignItems: 'center' }}>
+      <ActivityIndicator size="small" color={colors.primary} />
     </View>
-  );
+  ) : null, [colors.primary, loadingMore]);
+
+  const handleClearFilters = useCallback(() => {
+    setActiveFilters(null);
+    setIsFiltered(false);
+    setActiveTab('All');
+    setSelectedQuickFilter(null);
+    setSearch('');
+    setPage(1);
+  }, []);
+
+  const renderEmpty = useCallback(() => (
+    <View style={styles.empty}>
+      <Icon name="briefcase" size={moderateScale(50)} color={colors.border} />
+      <Text style={[typography.h4, { color: colors.textSecondary, marginTop: 16 }]}>
+        {t('allJobs.noJobs', 'No jobs available yet')}
+      </Text>
+      {isFiltered && (
+        <Pressable
+          onPress={handleClearFilters}
+          style={{
+            marginTop: 24,
+            paddingHorizontal: moderateScale(20),
+            paddingVertical: moderateScale(10),
+            backgroundColor: colors.primary,
+            borderRadius: radius.md,
+          }}
+        >
+          <Text style={[typography.labelMedium, { color: '#fff', fontWeight: '600' }]}>
+            {t('allJobs.clearFilters', 'Clear Filters')}
+          </Text>
+        </Pressable>
+      )}
+    </View>
+  ), [colors.border, colors.primary, handleClearFilters, isFiltered, t]);
+
+  const listHeaderComponent = useMemo(() => (
+    <View style={{ marginBottom: spacing.md }}>
+      <HomeCategoriesSection
+        categories={categories}
+        colors={colors}
+        navigation={navigation}
+        homeCategoriesMock={HOME_CATEGORIES}
+        isDark={isDark}
+        loading={metaLoading}
+      />
+    </View>
+  ), [categories, colors, isDark, metaLoading, navigation]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -561,25 +616,14 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
               loading={true}
             />
           </View>
-          <JobSkeleton />
+          <JobSkeleton colors={colors} />
         </View>
       ) : (
         <FlatList
           data={jobsToShow}
-          ListHeaderComponent={
-            <View style={{ marginBottom: spacing.md }}>
-              <HomeCategoriesSection
-                categories={categories}
-                colors={colors}
-                navigation={navigation}
-                homeCategoriesMock={HOME_CATEGORIES}
-                isDark={isDark}
-                loading={metaLoading}
-              />
-            </View>
-          }
+          ListHeaderComponent={listHeaderComponent}
           renderItem={renderJobItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={keyExtractor}
           contentContainerStyle={[styles.list, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
           onEndReached={loadMoreJobs}
@@ -588,42 +632,8 @@ const MemoizedJobCard = React.memo(({ item, colors, isDark, t, onPress }: any) =
           maxToRenderPerBatch={10}
           windowSize={11}
           removeClippedSubviews={true}
-          ListFooterComponent={() => loadingMore ? (
-            <View style={{ padding: 20, alignItems: 'center' }}>
-              <ActivityIndicator size="small" color={colors.primary} />
-            </View>
-          ) : null}
-          ListEmptyComponent={() => (
-            <View style={styles.empty}>
-              <Icon name="briefcase" size={moderateScale(50)} color={colors.border} />
-              <Text style={[typography.h4, { color: colors.textSecondary, marginTop: 16 }]}>
-                {t('allJobs.noJobs', 'No jobs available yet')}
-              </Text>
-              {isFiltered && (
-                <Pressable
-                  onPress={() => {
-                    setActiveFilters(null);
-                    setIsFiltered(false);
-                    setActiveTab('All');
-                    setSelectedQuickFilter(null);
-                    setSearch('');
-                    setPage(1);
-                  }}
-                  style={{
-                    marginTop: 24,
-                    paddingHorizontal: moderateScale(20),
-                    paddingVertical: moderateScale(10),
-                    backgroundColor: colors.primary,
-                    borderRadius: radius.md,
-                  }}
-                >
-                  <Text style={[typography.labelMedium, { color: '#fff', fontWeight: '600' }]}>
-                    {t('allJobs.clearFilters', 'Clear Filters')}
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-          )}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
         />
       )}
 

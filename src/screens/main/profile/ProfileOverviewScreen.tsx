@@ -471,25 +471,25 @@ const ProfileOverviewScreen: React.FC = () => {
       ]}
     >
       <View style={[styles.settingsIconBox, { backgroundColor: (color || colors.primary) + '15' }]}>
-        <MaterialIcon name={icon} size={22} color={color || colors.primary} />
+        <MaterialIcon name={icon} size={moderateScale(22)} color={color || colors.primary} />
       </View>
       <View style={styles.settingsText}>
-        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: 16, fontWeight: '600' }]}>{title}</Text>
+        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontSize: moderateScale(16), fontWeight: '600' }]}>{title}</Text>
         {(isMissing || subtitle) ? (
-          <Text style={[typography.small, { color: isMissing ? colors.error : (subtitleColor || colors.textSecondary), marginTop: 3 }]}>
+          <Text style={[typography.small, { color: isMissing ? colors.error : (subtitleColor || colors.textSecondary), marginTop: moderateScale(3), fontSize: moderateScale(12) }]}>
             {isMissing ? t('profileDetails.notAddedYet', 'Not added yet') : subtitle}
           </Text>
         ) : null}
         {!isMissing && bottomText ? (
-          <Text style={[typography.small, { color: bottomTextColor, marginTop: 3, fontSize: 12, fontWeight: '500' }]}>
+          <Text style={[typography.small, { color: bottomTextColor, marginTop: moderateScale(3), fontSize: moderateScale(12), fontWeight: '500' }]}>
             {bottomText}
           </Text>
         ) : null}
         {!isMissing && tags && tags.length > 0 ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 6, gap: 6 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: moderateScale(6), gap: moderateScale(6) }}>
             {tags.map((tag: string, index: number) => (
-              <View key={index} style={{ backgroundColor: color + '15', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                <Text style={{ color: color, fontSize: 11, fontWeight: '600' }}>{tag}</Text>
+              <View key={index} style={{ backgroundColor: color + '15', paddingHorizontal: moderateScale(8), paddingVertical: moderateScale(3), borderRadius: moderateScale(12) }}>
+                <Text style={{ color: color, fontSize: moderateScale(11), fontWeight: '600' }}>{tag}</Text>
               </View>
             ))}
           </View>
@@ -497,22 +497,22 @@ const ProfileOverviewScreen: React.FC = () => {
       </View>
       {isMissing ? (
         <View style={[styles.statusBadge, { backgroundColor: colors.error + '10' }]}>
-          <Text style={[typography.tiny, { color: colors.error, fontWeight: '700', letterSpacing: 0.5 }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
+          <Text style={[typography.tiny, { color: colors.error, fontWeight: '700', letterSpacing: 0.5, fontSize: moderateScale(10) }]}>{t('profileDetails.addBadge', 'ADD')}</Text>
         </View>
       ) : (
-        <Icon name="chevron-right" size={18} color={colors.textPlaceholder} />
+        <Icon name="chevron-right" size={moderateScale(18)} color={colors.textPlaceholder} />
       )}
     </Pressable>
   );
 
   const ProfileSkeleton = () => (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-      <View style={[styles.headerBackground, { height: 340 }]}>
-        <SkeletonPulse style={{ flex: 1, borderBottomLeftRadius: 40, borderBottomRightRadius: 40 }} />
+      <View style={[styles.headerBackground, { height: moderateScale(340) }]}>
+        <SkeletonPulse style={{ flex: 1, borderBottomLeftRadius: moderateScale(40), borderBottomRightRadius: moderateScale(40) }} />
       </View>
-      <View style={{ paddingHorizontal: spacing.md, marginTop: -20 }}>
-        <SkeletonPulse style={{ height: 100, borderRadius: 24, marginBottom: 20 }} />
-        <SkeletonPulse style={{ height: 300, borderRadius: 24 }} />
+      <View style={{ paddingHorizontal: spacing.md, marginTop: moderateScale(-20) }}>
+        <SkeletonPulse style={{ height: moderateScale(100), borderRadius: moderateScale(24), marginBottom: moderateScale(20) }} />
+        <SkeletonPulse style={{ height: moderateScale(300), borderRadius: moderateScale(24) }} />
       </View>
     </ScrollView>
   );
@@ -534,29 +534,29 @@ const ProfileOverviewScreen: React.FC = () => {
 
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <View style={[styles.headerBackground, { backgroundColor: mode === 'dark' ? '#1E293B' : colors.primary, position: 'relative', height: 'auto', paddingBottom: 16 }]}>
+        <View style={[styles.headerBackground, { backgroundColor: mode === 'dark' ? '#1E293B' : colors.primary, position: 'relative', height: 'auto', paddingBottom: moderateScale(16) }]}>
           {/* Subtle gradient / decorative circles */}
           <View style={[styles.decorativeCircle, { top: -50, left: -50, backgroundColor: '#FFFFFF', opacity: 0.05 }]} />
-          <View style={[styles.decorativeCircle, { top: 100, right: -80, width: 250, height: 250, backgroundColor: '#FFFFFF', opacity: 0.03 }]} />
+          <View style={[styles.decorativeCircle, { top: 100, right: -80, width: moderateScale(250), height: moderateScale(250), backgroundColor: '#FFFFFF', opacity: 0.03 }]} />
 
           <View style={{ paddingTop: insets.top > 20 ? insets.top - 10 : insets.top, zIndex: 10 }} />
 
-          <View style={[styles.profileSummaryHorizontal, { paddingHorizontal: 16, alignItems: 'center', paddingBottom: 0, paddingTop: 4 }]}>
+          <View style={[styles.profileSummaryHorizontal, { paddingHorizontal: moderateScale(16), alignItems: 'center', paddingBottom: 0, paddingTop: moderateScale(4) }]}>
             <View style={styles.avatarContainer}>
               <Pressable
                 onPress={() => profilePic ? setShowImageViewer(true) : setShowImagePicker(true)}
-                style={[styles.avatarCircleHuge, { width: 68, height: 68, borderRadius: 34, borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.8)' }]}
+                style={[styles.avatarCircleHuge, { width: moderateScale(68), height: moderateScale(68), borderRadius: moderateScale(34), borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.8)' }]}
               >
                 {profilePic && !imageError ? (
                   <Image source={{ uri: profilePic }} style={styles.avatarImage} onError={() => setImageError(true)} />
                 ) : (
                   <View style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary + '20' }]}>
                     {displayName && displayName !== 'User' ? (
-                      <Text style={[typography.h3, { color: colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+                      <Text style={[typography.h3, { color: colors.primary, fontSize: moderateScale(24), fontWeight: 'bold' }]}>
                         {profileInitials(displayName)}
                       </Text>
                     ) : (
-                      <Icon name="user" size={28} color={colors.primary} />
+                      <Icon name="user" size={moderateScale(28)} color={colors.primary} />
                     )}
                   </View>
                 )}
@@ -568,36 +568,36 @@ const ProfileOverviewScreen: React.FC = () => {
               </Pressable>
               <Pressable
                 onPress={() => setShowImagePicker(true)}
-                style={[styles.cameraIconBtnPremium, { width: 22, height: 22, borderRadius: 11, bottom: -2, right: -2, borderWidth: 1.5, borderColor: mode === 'dark' ? '#1E293B' : colors.primary }]}
+                style={[styles.cameraIconBtnPremium, { width: moderateScale(22), height: moderateScale(22), borderRadius: moderateScale(11), bottom: -2, right: -2, borderWidth: 1.5, borderColor: mode === 'dark' ? '#1E293B' : colors.primary }]}
               >
-                <Icon name="camera" size={10} color={colors.primary} />
+                <Icon name="camera" size={moderateScale(10)} color={colors.primary} />
               </Pressable>
             </View>
 
-            <View style={[styles.summaryTextLeft, { marginLeft: 14, flex: 1 }]}>
+            <View style={[styles.summaryTextLeft, { marginLeft: moderateScale(14), flex: 1 }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={[typography.h3, { color: '#FFFFFF', fontSize: 18, fontWeight: '700', letterSpacing: 0.3, flexShrink: 1 }]} numberOfLines={1}>{displayName}</Text>
-                <MaterialIcon name="check-decagram" size={18} color="#60A5FA" style={{ marginLeft: 6 }} />
+                <Text style={[typography.h3, { color: '#FFFFFF', fontSize: moderateScale(18), fontWeight: '700', letterSpacing: 0.3, flexShrink: 1 }]} numberOfLines={1}>{displayName}</Text>
+                <MaterialIcon name="check-decagram" size={moderateScale(18)} color="#60A5FA" style={{ marginLeft: moderateScale(6) }} />
               </View>
-              <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: 2, fontSize: 12 }]} numberOfLines={1}>{displayEmail}</Text>
-              <View style={[styles.phoneRow, { justifyContent: 'flex-start', marginTop: 3 }]}>
-                <Icon name="phone" size={11} color="rgba(255,255,255,0.7)" />
-                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: 5, fontSize: 11 }]} numberOfLines={1}>{profile?.personal?.phone || profile?.personal?.mobile || user?.phone || user?.mobile || 'Add phone number'}</Text>
+              <Text style={[typography.body, { color: 'rgba(255,255,255,0.85)', marginTop: moderateScale(2), fontSize: moderateScale(12) }]} numberOfLines={1}>{displayEmail}</Text>
+              <View style={[styles.phoneRow, { justifyContent: 'flex-start', marginTop: moderateScale(3) }]}>
+                <Icon name="phone" size={moderateScale(11)} color="rgba(255,255,255,0.7)" />
+                <Text style={[typography.small, { color: 'rgba(255,255,255,0.85)', marginLeft: moderateScale(5), fontSize: moderateScale(11) }]} numberOfLines={1}>{profile?.personal?.phone || profile?.personal?.mobile || user?.phone || user?.mobile || 'Add phone number'}</Text>
               </View>
             </View>
 
             {completion && completion.percentage < 100 && (
-              <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }, { scale: pulseAnim }], width: 105, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 12, marginLeft: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 }]}>
+              <Animated.View style={[{ opacity: fadeAnim, transform: [{ translateY: translateYAnim }, { scale: pulseAnim }], width: moderateScale(105), backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: moderateScale(16), padding: moderateScale(12), marginLeft: moderateScale(8), borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 }]}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '700', letterSpacing: 0.2 }}>Profile Score</Text>
-                  <Icon name="info" size={12} color="rgba(255,255,255,0.7)" />
+                  <Text style={{ color: '#FFF', fontSize: moderateScale(10), fontWeight: '700', letterSpacing: 0.2 }}>Profile Score</Text>
+                  <Icon name="info" size={moderateScale(12)} color="rgba(255,255,255,0.7)" />
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: 6 }}>
-                  <Text style={{ color: '#FFF', fontSize: 24, fontWeight: '800' }}>{completion?.percentage || 0}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 10, fontWeight: '600', marginLeft: 2 }}>/100</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', marginTop: moderateScale(6) }}>
+                  <Text style={{ color: '#FFF', fontSize: moderateScale(24), fontWeight: '800' }}>{completion?.percentage || 0}</Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: moderateScale(10), fontWeight: '600', marginLeft: moderateScale(2) }}>/100</Text>
                 </View>
-                <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: 9, marginTop: 2, fontWeight: '500' }} numberOfLines={1}>Almost there 🚀</Text>
-                <View style={{ height: 4, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2, marginTop: 8, overflow: 'hidden' }}>
+                <Text style={{ color: 'rgba(255,255,255,0.95)', fontSize: moderateScale(9), marginTop: moderateScale(2), fontWeight: '500' }} numberOfLines={1}>Almost there 🚀</Text>
+                <View style={{ height: moderateScale(4), backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 2, marginTop: moderateScale(8), overflow: 'hidden' }}>
                   <View style={{ width: `${completion?.percentage || 0}%`, height: '100%', backgroundColor: '#4ADE80', borderRadius: 2 }} />
                 </View>
               </Animated.View>
@@ -696,9 +696,9 @@ const ProfileOverviewScreen: React.FC = () => {
               ]}
             >
               <View style={[styles.reelsIconBox, { backgroundColor: mode === 'dark' ? '#EC489925' : '#FCE7F3' }]}>
-                <Icon name="play-circle" size={24} color="#EC4899" />
+                <Icon name="play-circle" size={moderateScale(24)} color="#EC4899" />
               </View>
-              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: 16, flex: 1, fontSize: 16, fontWeight: '700' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Bites')}</Text>
+              <Text style={[typography.labelMedium, { color: colors.textPrimary, marginLeft: moderateScale(16), flex: 1, fontSize: moderateScale(16), fontWeight: '700' }]} numberOfLines={1}>{t('profileOverview.reels', 'Job Bites')}</Text>
               <View style={styles.newBadge}>
                 <Text style={styles.newBadgeText}>{t('profileOverview.reelsTag', 'NEW')}</Text>
               </View>
@@ -718,10 +718,10 @@ const ProfileOverviewScreen: React.FC = () => {
           </GroupedSection>
 
           <Animated.View style={[styles.proTipPremium, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary + '20', opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }]}>
-            <MaterialIcon name="lightbulb-on-outline" size={24} color={colors.primary} />
+            <MaterialIcon name="lightbulb-on-outline" size={moderateScale(24)} color={colors.primary} />
             <View style={styles.proTipText}>
-              <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: '700' }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
-              <Text style={[typography.small, { color: colors.textSecondary, marginTop: 4, lineHeight: 20 }]}>
+              <Text style={[typography.labelMedium, { color: colors.primary, fontWeight: '700', fontSize: moderateScale(14) }]}>{t('profileDetails.proTipTitle', 'Pro Tip')}</Text>
+              <Text style={[typography.small, { color: colors.textSecondary, marginTop: moderateScale(4), lineHeight: moderateScale(20), fontSize: moderateScale(12) }]}>
                 {t('profileDetails.proTipDesc', 'Profiles with photos and resumes get 5x more attention from employers.')}
               </Text>
             </View>

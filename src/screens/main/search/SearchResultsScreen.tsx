@@ -24,7 +24,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import SideFilterHub from '../../../components/SideFilterHub';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
+const JobCard = React.memo(function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPress: () => void }) {
   const company = job.employer?.company || {};
   const companyName = company.company_name || job.company_name || job.company || 'Hiring Company';
   const location = job.location?.label || (typeof job.location === 'string' ? job.location : job.location?.city) || 'Remote';
@@ -86,7 +86,7 @@ function JobCard({ job, colors, onPress }: { job: any; colors: ThemeColors; onPr
       </View>
     </Pressable>
   );
-}
+});
 
 const SearchResultsScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -119,19 +119,40 @@ const SearchResultsScreen: React.FC = () => {
     }
   }, [dispatch]);
 
-  const handleSearch = () => {
+  const handleSearch = React.useCallback(() => {
     if (searchText.trim()) {
       dispatch(searchJobs(searchText));
     }
-  };
+  }, [dispatch, searchText]);
 
-  const applyAdvancedFilters = (filters: any) => {
+  const applyAdvancedFilters = React.useCallback((filters: any) => {
     setActiveFilter(filters);
     dispatch(filterJobs({ 
       q: searchText,
       ...filters
     }));
-  };
+  }, [dispatch, searchText]);
+
+  const keyExtractor = React.useCallback((item: any) => item.id.toString(), []);
+
+  const renderJobItem = React.useCallback(({ item }: { item: any }) => (
+    <JobCard 
+      job={item} 
+      colors={colors} 
+      onPress={() => navigation.navigate('JobDetail', { jobId: item.id })} 
+    />
+  ), [colors, navigation]);
+
+  const renderSeparator = React.useCallback(() => <View style={{ height: 12 }} />, []);
+
+  const renderEmpty = React.useCallback(() => (
+    <View style={styles.empty}>
+      <Icon name="search" size={48} color={colors.border} />
+      <Text style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
+        No results found for "{searchText}"
+      </Text>
+    </View>
+  ), [colors.border, colors.textPlaceholder, searchText]);
 
   return (
     <View style={[styles.safe, { backgroundColor: colors.background, paddingTop: insets.top }]}>
@@ -152,7 +173,7 @@ const SearchResultsScreen: React.FC = () => {
           />
           {searchText.length > 0 && (
             <Pressable onPress={() => setSearchText('')}>
-              <Icon name="times-circle" size={16} color={colors.textPlaceholder} />
+              <Icon name="times-circle" size={14} color={colors.textPlaceholder} />
             </Pressable>
           )}
         </View>
@@ -166,27 +187,18 @@ const SearchResultsScreen: React.FC = () => {
       ) : (
         <FlatList
           data={visibleJobs}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={keyExtractor}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: insets.bottom + 80 }
           ]}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-          renderItem={({ item }) => (
-            <JobCard 
-              job={item} 
-              colors={colors} 
-              onPress={() => navigation.navigate('JobDetail', { jobId: item.id })} 
-            />
-          )}
-          ListEmptyComponent={() => (
-            <View style={styles.empty}>
-              <Icon name="search" size={48} color={colors.border} />
-              <Text style={[typography.labelMedium, { color: colors.textPlaceholder, marginTop: spacing.md }]}>
-                No results found for "{searchText}"
-              </Text>
-            </View>
-          )}
+          ItemSeparatorComponent={renderSeparator}
+          renderItem={renderJobItem}
+          ListEmptyComponent={renderEmpty}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={7}
+          removeClippedSubviews={true}
         />
       )}
 

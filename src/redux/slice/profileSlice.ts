@@ -229,6 +229,42 @@ export const fetchHRInvites = createAsyncThunk(
   }
 );
 
+export const markHRInviteAsRead = createAsyncThunk(
+  'profile/markHRInviteAsRead',
+  async ({ inviteId, type }: { inviteId: number | string; type?: string }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+      if (!token) return { inviteId };
+
+      const possibleUrls = [
+        `api/candidate/profile/invitations/${type || 'job_application'}/${inviteId}/read`,
+        `api/candidate/profile/invitations/${inviteId}/read`,
+        `api/candidate/invitations/${inviteId}/read`,
+        `api/candidate/profile/invitations/read`,
+      ];
+
+      for (const url of possibleUrls) {
+        try {
+          await api.post(
+            url,
+            { id: inviteId, invitation_id: inviteId },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          break;
+        } catch (e) {
+          // try next url
+        }
+      }
+      return { inviteId };
+    } catch (error: any) {
+      return { inviteId };
+    }
+  }
+);
+
 export const fetchWishlist = createAsyncThunk(
   'profile/fetchWishlist',
   async (_, { getState, rejectWithValue }) => {
@@ -605,18 +641,20 @@ const profileSlice = createSlice({
       })
       .addCase(fetchHRInvites.fulfilled, (state, action) => {
         state.loading = false;
-        const all = action.payload.data?.invitations || [];
-        state.hrInvites = all.filter((inv: any) => {
-          if (!inv || !inv.id) return false;
-          if (inv.is_read === true || inv.is_read === 1 || inv.is_read === '1') return false;
-          if (inv.read_at != null && inv.read_at !== '') return false;
-          if (inv.status === 'read' || inv.status === 'dismissed' || inv.status === 'viewed') return false;
-          return true;
-        });
+        state.hrInvites = action.payload.data?.invitations || [];
       })
       .addCase(fetchHRInvites.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(markHRInviteAsRead.fulfilled, (state, action) => {
+        const inviteId = action.payload?.inviteId;
+        if (inviteId && Array.isArray(state.hrInvites)) {
+          const item = state.hrInvites.find((inv: any) => String(inv.id) === String(inviteId));
+          if (item) {
+            item.is_read = true;
+          }
+        }
       })
       .addCase(fetchEducation.pending, (state) => {
         state.loading = true;

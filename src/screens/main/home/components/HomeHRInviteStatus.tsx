@@ -2,19 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import type { AppDispatch } from '../../../../redux/store';
+import { markHRInviteAsRead } from '../../../../redux/slice/profileSlice';
+import { markNotificationAsRead } from '../../../../redux/slice/notificationSlice';
 import type { ThemeColors } from '../../../../theme/colors';
 import { spacing } from '../../../../theme/spacing';
 import { radius } from '../../../../theme/radius';
 import { moderateScale } from '../../../../theme/typography';
 import { useTranslation } from 'react-i18next';
-import api, { BASE_URL } from '../../../../api/axiosInstance';
+import { BASE_URL } from '../../../../api/axiosInstance';
 
 export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeColors; invite: any; onHide: () => void }) => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch<AppDispatch>();
   const [expanded, setExpanded] = useState(false);
-  const userToken = useSelector((state: any) => state.auth.token);
+  const notifications = useSelector((state: any) => state.notifications?.notifications || []);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -47,24 +51,40 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
   const titleText = isJobApp && jobDetails?.title ? jobDetails.title : (companyObj.company_name || 'Anonymous Company');
   const subtitleText = isJobApp && jobDetails?.title ? (companyObj.company_name || 'Anonymous Company') : 'HR Interview Invite';
   
-  const markAsRead = async () => {
-    if (invite?.type && invite?.id) {
-      try {
-        await api.post(
-          `api/candidate/profile/invitations/${invite.type}/${invite.id}/read`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${userToken}` },
-          }
-        );
-      } catch (error) {
-        console.error('Failed to mark invite as read:', error);
+  const markAsRead = () => {
+    if (invite?.id) {
+      const idStr = String(invite.id);
+      dispatch(markHRInviteAsRead({ inviteId: invite.id, type: invite.type }));
+
+      // Also mark matching server notifications as read
+      if (Array.isArray(notifications) && notifications.length > 0) {
+        const matchingNotifs = notifications.filter((n: any) => {
+          if (!n || n.is_read) return false;
+          const nData = n.data || {};
+          if (nData.invitation_id && String(nData.invitation_id) === idStr) return true;
+          if (nData.invite_id && String(nData.invite_id) === idStr) return true;
+          if (nData.id && String(nData.id) === idStr) return true;
+          if (n.message && employerObj.name && n.message.toLowerCase().includes(employerObj.name.toLowerCase())) return true;
+          if (n.title && employerObj.name && n.title.toLowerCase().includes(employerObj.name.toLowerCase())) return true;
+          return false;
+        });
+        matchingNotifs.forEach((notif: any) => {
+          dispatch(markNotificationAsRead(notif.id));
+        });
       }
     }
   };
 
+  const handleToggleExpand = () => {
+    const nextState = !expanded;
+    setExpanded(nextState);
+    if (nextState) {
+      markAsRead();
+    }
+  };
+
   const openInviteDetail = () => {
-    onHide(); // Hide from UI immediately
+    onHide(); // Hide from UI immediately and save to storage
     markAsRead(); // Mark as read via API
     
     const hasJobDetails = invite.job_details && typeof invite.job_details === 'object' && Object.keys(invite.job_details).length > 0;
@@ -81,7 +101,7 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
   };
 
   const handleClose = () => {
-    onHide(); // Hide from UI immediately
+    onHide(); // Hide from UI immediately and save to storage
     markAsRead();
   };
 
@@ -97,7 +117,7 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
       </View>
 
       <Pressable 
-        onPress={() => setExpanded(!expanded)}
+        onPress={handleToggleExpand}
         style={[styles.wiCard, { backgroundColor: colors.surface, borderColor: colors.primary + '50' }]}
       >
         {/* Compact Status Row */}
@@ -120,7 +140,7 @@ export const HomeHRInviteStatus = ({ colors, invite, onHide }: { colors: ThemeCo
               if (expanded) {
                 handleClose();
               } else {
-                setExpanded(true);
+                handleToggleExpand();
               }
             }} 
             style={styles.toggleBtn}

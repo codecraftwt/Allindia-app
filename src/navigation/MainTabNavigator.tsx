@@ -26,7 +26,7 @@ const CustomTabBarButton = React.memo(({ children, onPress, isReels }: any) => {
       <Pressable
         style={styles.reelsButtonContainer}
         onPress={onPress}
-        delayPressIn={0}
+        unstable_pressDelay={0}
       >
         <View style={[styles.reelsButton, { backgroundColor: colors.primary }]}>
           {children}
@@ -39,7 +39,7 @@ const CustomTabBarButton = React.memo(({ children, onPress, isReels }: any) => {
     <Pressable
       style={styles.tabButton}
       onPress={onPress}
-      delayPressIn={0}
+      unstable_pressDelay={0}
       android_ripple={{ color: colors.surfaceHighlight, borderless: true, radius: 35 }}
     >
       {children}
