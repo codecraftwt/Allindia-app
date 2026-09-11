@@ -234,7 +234,7 @@ const ReelItem = React.memo<ReelItemProps>(
             <Image
               source={{ uri: thumbnailUri || mediaUri }}
               style={styles.fullImage}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           )}
           <View style={styles.gradientOverlay} />
@@ -348,7 +348,7 @@ const StoryViewer: React.FC<{
           <Video
             source={{ uri: mediaUri }}
             style={StyleSheet.absoluteFill}
-            resizeMode="cover"
+            resizeMode="contain"
             paused={false}
             muted={false}
             repeat={false}
@@ -358,7 +358,7 @@ const StoryViewer: React.FC<{
           <Image
             source={{ uri: mediaUri }}
             style={StyleSheet.absoluteFill}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         )}
 
