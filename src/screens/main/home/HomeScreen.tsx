@@ -1469,7 +1469,7 @@ const HomeScreen: React.FC = () => {
                       }}
                       style={{ paddingVertical: 2, paddingHorizontal: 6 }}
                     >
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>{t('home.clearAll', 'Clear All')}</Text>
+                      <Text style={{ fontSize: moderateScale(12), fontWeight: '700', color: colors.primary }}>{t('home.clearAll', 'Clear All')}</Text>
                     </Pressable>
                   )}
                 </View>

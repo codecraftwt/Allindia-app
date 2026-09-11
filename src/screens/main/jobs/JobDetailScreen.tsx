@@ -1120,7 +1120,7 @@ const JobDetailScreen: React.FC = () => {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={[typography.small, { color: colors.textPlaceholder }]}>{t('jobDetail.address', 'Address')}</Text>
-                          <Text style={[typography.body, { color: colors.textPrimary, fontSize: 13, textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]} numberOfLines={2}>
+                          <Text style={[typography.body, { color: colors.textPrimary, fontSize: moderateScale(13), textDecorationLine: (currentJob.google_map_link || currentJob.employer?.company?.google_map_link) ? 'underline' : 'none' }]} numberOfLines={2}>
                             {[
                               currentJob.employer.company.address,
                               currentJob.employer.company.city,

@@ -283,16 +283,15 @@ const AtsScoreOrb: React.FC<AtsScoreOrbProps> = ({
 
   return (
     <View style={{ alignItems: 'center', width: '100%' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 65, marginBottom: 18, justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(65), marginBottom: moderateScale(18), justifyContent: 'center' }}>
         <Image
           source={require('../../../assets/Job india Icon & logo file/Icon Job india.jpg')}
-          style={{ width: 32, height: 32, borderRadius: 8, marginRight: 10 }}
+          style={{ width: moderateScale(32), height: moderateScale(32), borderRadius: moderateScale(8), marginRight: moderateScale(10) }}
           resizeMode="cover"
         />
-        <Text style={{ fontSize: 22, color: colors.textPrimary, fontWeight: '900', letterSpacing: -0.5 }}>
+        <Text style={{ fontSize: moderateScale(22), color: colors.textPrimary, fontWeight: '900', letterSpacing: -0.5 }}>
           Job India <Text style={{ color: ORANGE_COLOR }}>AI Resume Builder</Text>
         </Text>
-
       </View>
 
       {/* Miniature simulated resume card containing vertical scan line */}

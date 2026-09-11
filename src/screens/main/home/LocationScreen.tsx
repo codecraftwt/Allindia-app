@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import api from '../../../api/axiosInstance';
 import { useTheme } from '../../../context/ThemeContext';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { radius } from '../../../theme/radius';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { setSelectedLocation } from '../../../redux/slice/addressSlice';
@@ -273,53 +273,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: spacing.md,
     paddingHorizontal: spacing.md,
-    height: 50,
+    height: moderateScale(50),
     borderRadius: radius.lg,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: moderateScale(12),
+    fontSize: moderateScale(16),
   },
-  scroll: { paddingBottom: 40 },
+  scroll: { paddingBottom: moderateScale(40) },
   currentLocation: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: spacing.md,
-    padding: 16,
+    padding: moderateScale(16),
     borderRadius: radius.xl,
-    marginBottom: 16,
+    marginBottom: moderateScale(16),
   },
   gpsCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  gpsText: { flex: 1, marginLeft: 16 },
+  gpsText: { flex: 1, marginLeft: moderateScale(16) },
 
   selectionBar: {
     flexDirection: 'row',
     marginHorizontal: spacing.md,
-    padding: 8,
+    padding: moderateScale(8),
     borderRadius: radius.lg,
     borderWidth: 1,
-    marginBottom: 24,
+    marginBottom: moderateScale(24),
     alignItems: 'center',
   },
   selectionItem: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(12),
   },
   selectionLabel: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: 'bold',
     marginBottom: 2,
   },
   selectionValue: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: 'bold',
   },
   separator: {

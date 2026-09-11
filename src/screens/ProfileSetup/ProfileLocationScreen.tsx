@@ -19,7 +19,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { INDIAN_CITIES } from './profileSetupConstants';
 import { ProfileSetupLayout } from './ProfileSetupLayout';
 
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: typography.body.fontFamily,
   },
   modalOverlay: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.search,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontFamily: typography.body.fontFamily,
   },
   cityList: {

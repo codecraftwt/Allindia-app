@@ -19,7 +19,7 @@ import type { ThemeColors } from '../../../theme/colors';
 import { components } from '../../../theme/components';
 import { radius } from '../../../theme/radius';
 import { spacing } from '../../../theme/spacing';
-import { typography } from '../../../theme/typography';
+import { typography, moderateScale } from '../../../theme/typography';
 import { INITIAL_RECENT_SEARCHES, SUGGESTED_KEYWORDS } from './searchMockData';
 
 type SearchNav = StackNavigationProp<SearchStackParamList, 'SearchHome'>;
@@ -289,7 +289,7 @@ const SearchScreen: React.FC = () => {
           </Text>
           {recent.length > 0 && (
             <Pressable onPress={clearAllRecent} style={{ paddingVertical: 4, paddingHorizontal: 8 }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>Clear All</Text>
+              <Text style={{ fontSize: moderateScale(12), fontWeight: '700', color: colors.primary }}>Clear All</Text>
             </Pressable>
           )}
         </View>
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 18, // Increased font size
+    fontSize: moderateScale(16),
     fontWeight: '600',
     paddingVertical: 0,
   },
@@ -396,19 +396,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   expChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(10),
     borderRadius: radius.pill,
     borderWidth: 1,
   },
   expText: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: 'bold',
   },
   searchCta: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: moderateScale(50),
     borderRadius: radius.lg,
     marginBottom: spacing.xl,
     elevation: 8,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   searchCtaText: {
-    fontSize: 18,
+    fontSize: moderateScale(17),
     fontWeight: 'bold',
   },
   suggestionDropdown: {

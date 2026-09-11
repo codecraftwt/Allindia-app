@@ -24,7 +24,7 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../context/ThemeContext';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
+import { typography, moderateScale } from '../../theme/typography';
 import { ProfileSetupLayout } from './ProfileSetupLayout';
 
 type Props = StackScreenProps<AuthStackParamList, 'ProfileBasicInfo'>;
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: typography.body.fontFamily,
   },
   miniSearch: {

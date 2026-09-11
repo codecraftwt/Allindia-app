@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionHeading: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: '700',
     letterSpacing: 0.8,
     marginBottom: spacing.sm,
@@ -470,12 +470,12 @@ const styles = StyleSheet.create({
     marginLeft: moderateScale(14),
   },
   rowTitle: {
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontWeight: '600',
     letterSpacing: 0.1,
   },
   rowSubtitle: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     marginTop: 2,
   },
   rowRightBadge: {
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   languageChipText: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: '600',
   },
   logoutWrap: {
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     marginRight: moderateScale(10),
   },
   logoutText: {
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontWeight: '700',
   },
   modalOverlay: {
@@ -578,10 +578,10 @@ const styles = StyleSheet.create({
     marginLeft: moderateScale(12),
   },
   langLabel: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
   },
   langSub: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     marginTop: 1,
   },
   selectedBadge: {

@@ -321,19 +321,19 @@ const styles = StyleSheet.create({
   },
   heroBadgeText: {
     color: '#FBBF24',
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   heroTitle: {
-    fontSize: 26,
+    fontSize: moderateScale(26),
     fontWeight: '900',
     color: '#FFFFFF',
     letterSpacing: -0.5,
     marginBottom: 6,
   },
   heroSubtitle: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '500',
     textAlign: 'center',

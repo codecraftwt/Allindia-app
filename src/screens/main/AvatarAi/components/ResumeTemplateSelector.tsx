@@ -461,11 +461,12 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={() => {
+                  setStatusModal(prev => ({ ...prev, visible: false }));
                   statusModal.onAction?.();
                 }}
                 style={[styles.modalActionBtn, { backgroundColor: ORANGE_COLOR }]}
               >
-                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: 15 }]}>
+                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: moderateScale(15) }]}>
                   {statusModal.actionText}
                 </Text>
               </TouchableOpacity>
@@ -475,7 +476,7 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
                 onPress={() => setStatusModal(prev => ({ ...prev, visible: false }))}
                 style={[styles.modalActionBtn, { backgroundColor: ORANGE_COLOR }]}
               >
-                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: 15 }]}>
+                <Text style={[typography.labelMedium, { color: '#ffffff', fontWeight: '800', fontSize: moderateScale(15) }]}>
                   OK
                 </Text>
               </TouchableOpacity>
@@ -572,7 +573,7 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
         </Pressable>
 
         <View style={{ flex: 1, marginLeft: 8 }}>
-          <Text style={[typography.sectionTitle, { color: colors.textPrimary, fontSize: 18 }]}>
+          <Text style={[typography.sectionTitle, { color: colors.textPrimary, fontSize: moderateScale(18) }]}>
             Choose Resume Format
           </Text>
           <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: 2 }]}>
@@ -581,8 +582,8 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
         </View>
 
         <View style={[styles.scoreBadge, { backgroundColor: ORANGE_COLOR + '20' }]}>
-          <Text style={{ fontSize: 18, fontWeight: '900', color: ORANGE_COLOR }}>{generatedResume.score}%</Text>
-          <Text style={{ fontSize: 8, fontWeight: '700', color: ORANGE_COLOR }}>ATS</Text>
+          <Text style={{ fontSize: moderateScale(18), fontWeight: '900', color: ORANGE_COLOR }}>{generatedResume.score}%</Text>
+          <Text style={{ fontSize: moderateScale(8), fontWeight: '700', color: ORANGE_COLOR }}>ATS</Text>
         </View>
       </View>
 
@@ -777,7 +778,7 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
                     style={{ marginRight: 4 }}
                   />
                   <Text style={{
-                    fontSize: 11,
+                    fontSize: moderateScale(11),
                     fontWeight: '700',
                     color: isSelected ? '#fff' : colors.textPrimary,
                     flex: 1,
@@ -788,7 +789,7 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
                   </Text>
                   {isSelected && (
                     <View style={styles.selectedBadge}>
-                      <Icon name="checkmark-circle" size={14} color="#fff" />
+                      <Icon name="checkmark-circle" size={moderateScale(14)} color="#fff" />
                     </View>
                   )}
                 </View>
@@ -804,12 +805,12 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
           return (
             <View style={[styles.descCard, { backgroundColor: ORANGE_COLOR + '08', borderColor: ORANGE_COLOR + '25' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                <Icon name={sel.icon as any} size={18} color={ORANGE_COLOR} style={{ marginRight: 8 }} />
-                <Text style={{ fontSize: 15, fontWeight: '800', color: colors.textPrimary }}>
+                <Icon name={sel.icon as any} size={moderateScale(18)} color={ORANGE_COLOR} style={{ marginRight: 8 }} />
+                <Text style={{ fontSize: moderateScale(15), fontWeight: '800', color: colors.textPrimary }}>
                   {sel.name}
                 </Text>
               </View>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 18 }}>
+              <Text style={{ fontSize: moderateScale(12), color: colors.textSecondary, lineHeight: moderateScale(18) }}>
                 {sel.description}
               </Text>
             </View>
@@ -830,8 +831,8 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
               },
             ]}
           >
-            <Icon name="eye-outline" size={18} color={colors.textPrimary} />
-            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginLeft: 6 }}>
+            <Icon name="eye-outline" size={moderateScale(18)} color={colors.textPrimary} />
+            <Text style={{ fontSize: moderateScale(13), fontWeight: '700', color: colors.textPrimary, marginLeft: 6 }}>
               Preview Full
             </Text>
           </Pressable>
@@ -847,8 +848,8 @@ export const ResumeTemplateSelector: React.FC<ResumeTemplateSelectorProps> = ({
               },
             ]}
           >
-            <Icon name="download" size={18} color="#fff" />
-            <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff', marginLeft: 6 }}>
+            <Icon name="download" size={moderateScale(18)} color="#fff" />
+            <Text style={{ fontSize: moderateScale(13), fontWeight: '800', color: '#fff', marginLeft: 6 }}>
               Download PDF
             </Text>
           </Pressable>

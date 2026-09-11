@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '800',
     textTransform: 'uppercase',
     marginBottom: spacing.xs,
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   badgeText: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: 'bold',
     textTransform: 'uppercase',
   },
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
     fontWeight: '600',
     marginBottom: moderateScale(6),
   },
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: moderateScale(48),
     paddingHorizontal: moderateScale(spacing.md),
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   eyeIcon: {
     paddingHorizontal: moderateScale(spacing.md),
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#FF5252',
-    fontSize: 11,
+    fontSize: moderateScale(11),
     marginTop: 4,
     marginLeft: 2,
   },
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     gap: moderateScale(8),
   },
   requirementText: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
   },
   statusOverlay: {
     flex: 1,

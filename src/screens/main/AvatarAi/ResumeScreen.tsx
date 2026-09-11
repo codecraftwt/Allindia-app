@@ -212,30 +212,30 @@ const ResumeScreen: React.FC = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 18, justifyContent: 'center' }}>
             <Image
               source={require('../../../assets/Job india Icon & logo file/Icon Job india.jpg')}
-              style={{ width: 32, height: 32, borderRadius: 8, marginRight: 10 }}
+              style={{ width: moderateScale(32), height: moderateScale(32), borderRadius: moderateScale(8), marginRight: moderateScale(10) }}
               resizeMode="cover"
             />
-            <Text style={{ fontSize: 22, color: colors.textPrimary, fontWeight: '900', letterSpacing: -0.5 }}>
+            <Text style={{ fontSize: moderateScale(22), color: colors.textPrimary, fontWeight: '900', letterSpacing: -0.5 }}>
               Job India <Text style={{ color: ORANGE_COLOR }}>AI Resume Builder</Text>
             </Text>
           </View>
 
 
           {/* Resume Card with Scanner */}
-          <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 20, marginBottom: 10, width: '100%', position: 'relative' }}>
+          <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: moderateScale(20), marginBottom: moderateScale(10), width: '100%', position: 'relative' }}>
 
 
 
             {/* HUD Callout: Keywords */}
-            <View style={[styles.hudCallout, { left: -4, top: 40, borderColor: ORANGE_COLOR + '45', backgroundColor: colors.surface }]}>
-              <Icon name="checkmark-circle" size={11} color={ORANGE_COLOR} style={{ marginRight: 4 }} />
-              <Text style={{ fontSize: 8, fontWeight: '800', color: colors.textPrimary }}>Keywords</Text>
+            <View style={[styles.hudCallout, { left: -4, top: moderateScale(40), borderColor: ORANGE_COLOR + '45', backgroundColor: colors.surface }]}>
+              <Icon name="checkmark-circle" size={moderateScale(11)} color={ORANGE_COLOR} style={{ marginRight: 4 }} />
+              <Text style={{ fontSize: moderateScale(8), fontWeight: '800', color: colors.textPrimary }}>Keywords</Text>
             </View>
 
             {/* HUD Callout: PDF Approved */}
-            <View style={[styles.hudCallout, { right: -4, top: 180, borderColor: '#10b981' + '45', backgroundColor: colors.surface }]}>
-              <Icon name="shield-checkmark" size={11} color="#10b981" style={{ marginRight: 4 }} />
-              <Text style={{ fontSize: 8, fontWeight: '800', color: colors.textPrimary }}>PDF Approved</Text>
+            <View style={[styles.hudCallout, { right: -4, top: moderateScale(180), borderColor: '#10b981' + '45', backgroundColor: colors.surface }]}>
+              <Icon name="shield-checkmark" size={moderateScale(11)} color="#10b981" style={{ marginRight: 4 }} />
+              <Text style={{ fontSize: moderateScale(8), fontWeight: '800', color: colors.textPrimary }}>PDF Approved</Text>
             </View>
 
             {/* HUD Callout: ATS Boosted */}

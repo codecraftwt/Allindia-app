@@ -200,7 +200,7 @@ const SalarySelectionField = ({ label, value, onChange, colors }: any) => {
           borderWidth: isFocused ? 1.5 : 1,
         },
       ]}>
-      <Text style={{ fontSize: 18, color: colors.primary, fontWeight: 'bold', width: 20, textAlign: 'center' }}>₹</Text>
+      <Text style={{ fontSize: moderateScale(18), color: colors.primary, fontWeight: 'bold', width: moderateScale(20), textAlign: 'center' }}>₹</Text>
       <View style={{ flex: 1 }}>
         <Text style={[typography.tiny, { color: colors.textSecondary }]}>{label}</Text>
         <TextInput
@@ -1140,7 +1140,7 @@ const styles = StyleSheet.create({
   segment: { flex: 1, padding: moderateScale(14), borderRadius: radius.md, borderWidth: 1, alignItems: 'center' },
   yearsRow: { flexDirection: 'row', alignItems: 'center', gap: moderateScale(16) },
   stepper: { width: moderateScale(44), height: moderateScale(44), borderRadius: moderateScale(22), borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  yearsInput: { width: moderateScale(60), height: moderateScale(44), borderRadius: radius.sm, borderWidth: 1, fontSize: 18, fontWeight: 'bold' },
+  yearsInput: { width: moderateScale(60), height: moderateScale(44), borderRadius: radius.sm, borderWidth: 1, fontSize: moderateScale(18), fontWeight: 'bold' },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',

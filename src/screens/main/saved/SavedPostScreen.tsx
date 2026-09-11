@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: 'bold',
   },
   list: {
@@ -142,12 +142,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   jobTitle: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: 'bold',
     marginBottom: 4,
   },
   company: {
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '600',
     marginBottom: 6,
   },
@@ -158,10 +158,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   location: {
-    fontSize: 12,
+    fontSize: moderateScale(12),
   },
   date: {
-    fontSize: 11,
+    fontSize: moderateScale(11),
     fontStyle: 'italic',
   },
   removeBtn: {
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     gap: moderateScale(16),
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: '600',
   }
 });

@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontFamily: typography.body.fontFamily,
   },
   genderRow: {

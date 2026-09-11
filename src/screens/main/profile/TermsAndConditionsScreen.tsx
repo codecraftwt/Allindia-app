@@ -232,8 +232,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   bulletDot: {
-    fontSize: 16,
-    lineHeight: 18,
+    fontSize: moderateScale(16),
+    lineHeight: moderateScale(18),
     marginRight: spacing.sm,
     width: moderateScale(8),
     textAlign: 'center',

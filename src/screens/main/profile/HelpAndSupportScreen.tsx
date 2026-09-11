@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: moderateScale(10),
     fontWeight: '800',
     textTransform: 'uppercase',
     marginBottom: spacing.sm,
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xs,
   },
   contactBadgeText: {
-    fontSize: 9,
+    fontSize: moderateScale(9),
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -443,12 +443,12 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     paddingHorizontal: spacing.md,
-    fontSize: 14,
+    fontSize: moderateScale(14),
   },
   textArea: {
     borderRadius: radius.md,
     padding: spacing.md,
-    fontSize: 14,
+    fontSize: moderateScale(14),
     height: moderateScale(90),
     textAlignVertical: 'top',
   },

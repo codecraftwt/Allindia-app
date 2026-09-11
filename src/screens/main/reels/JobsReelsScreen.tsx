@@ -452,7 +452,7 @@ const storyStyles = StyleSheet.create({
   avatar: { width: '100%', height: '100%' },
   label: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: moderateScale(14),
     fontWeight: '700',
     maxWidth: moderateScale(220),
   },
@@ -916,8 +916,8 @@ const styles = StyleSheet.create({
     padding: moderateScale(12),
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  reelTitle: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  reelCompany: { color: 'rgba(255,255,255,0.8)', fontSize: 11 },
+  reelTitle: { color: '#fff', fontSize: moderateScale(14), fontWeight: 'bold' },
+  reelCompany: { color: 'rgba(255,255,255,0.8)', fontSize: moderateScale(11) },
   loadingOverlay: { backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
   absoluteLoader: {
     ...StyleSheet.absoluteFillObject,
@@ -991,15 +991,15 @@ const styles = StyleSheet.create({
   },
   bottomDetails: { position: 'absolute', left: moderateScale(20), right: moderateScale(20) },
   companyRow: { flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) },
-  companyName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  fullJobTitle: { color: '#fff', fontSize: 26, fontWeight: 'bold', marginBottom: moderateScale(20) },
+  companyName: { color: '#fff', fontSize: moderateScale(16), fontWeight: 'bold' },
+  fullJobTitle: { color: '#fff', fontSize: moderateScale(26), fontWeight: 'bold', marginBottom: moderateScale(20) },
   mainApplyBtn: {
     height: moderateScale(54),
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  applyBtnLabel: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  applyBtnLabel: { color: '#fff', fontSize: moderateScale(16), fontWeight: 'bold' },
 });
 
 export default JobsReelsScreen;
