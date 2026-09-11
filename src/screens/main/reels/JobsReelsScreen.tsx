@@ -45,57 +45,7 @@ const isVideoMedia = (item: any) => {
   return /\.(mp4|mov|mkv|webm|avi|m3u8)(\?.*)?$/i.test(url);
 };
 
-const CATEGORIES = [
-  { id: '1', name: 'Software', img: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=200' },
-  { id: '2', name: 'Design', img: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=200' },
-  { id: '3', name: 'Marketing', img: 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=200' },
-  { id: '4', name: 'Sales', img: 'https://images.unsplash.com/photo-1552581234-261207845094?q=80&w=200' },
-  { id: '5', name: 'Finance', img: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=200' },
-];
 
-const THREADS_DATA = [
-  {
-    id: 't1',
-    user: 'Priya Verma',
-    handle: '@rahul_tech',
-    avatar: 'https://i.pravatar.cc/150?u=rahul',
-    content: 'Just had an amazing interview at Google! The process was tough but very rewarding. 🚀 #InterviewTips #GoogleJobs',
-    time: '2h',
-    replies: 12,
-    likes: 156,
-  },
-  {
-    id: 't2',
-    user: 'Rahul Sharma',
-    handle: '@priya_ux',
-    avatar: 'https://i.pravatar.cc/150?u=priya',
-    content: 'UI/UX Designers! Portfolio is more important than your degree. Focus on case studies. 🎨✨',
-    time: '4h',
-    replies: 45,
-    likes: 890,
-  }
-];
-
-const VIDEOS_DATA = [
-  {
-    id: 'v1',
-    title: 'How to crack Product Management roles in 2024',
-    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1000',
-    channel: 'JobIndia Academy',
-    views: '1.2M views',
-    time: '2 days ago',
-    duration: '12:45',
-  },
-  {
-    id: 'v2',
-    title: 'A day in the life of a Software Engineer at Microsoft',
-    thumbnail: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000',
-    channel: 'TechVlogs',
-    views: '850K views',
-    time: '1 week ago',
-    duration: '08:20',
-  }
-];
 
 const RotatingBorder = ({ colors }: any) => {
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -570,11 +520,17 @@ const JobsReelsScreen: React.FC = () => {
   
   // Separate status and reel media
   const statusList = useMemo(() => {
-    return (reels || []).filter((item: any) => item.reel_status === 'status');
+    return (reels || []).filter((item: any) => {
+      const status = String(item?.reel_status || '').toLowerCase().trim();
+      return status === 'status' || status === 'both';
+    });
   }, [reels]);
 
   const reelsList = useMemo(() => {
-    return (reels || []).filter((item: any) => item.reel_status !== 'status');
+    return (reels || []).filter((item: any) => {
+      const status = String(item?.reel_status || '').toLowerCase().trim();
+      return status === 'reel' || status === 'both' || !status || status !== 'status';
+    });
   }, [reels]);
 
   const [activeType, setActiveType] = useState<'reel' | 'status'>('reel');
@@ -797,51 +753,6 @@ const JobsReelsScreen: React.FC = () => {
                   </View>
                 </View>
               )}
-
-              {/* Community Threads */}
-              <View style={styles.section}>
-                <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Community</Text>
-                <View style={styles.threadsContainer}>
-                  {THREADS_DATA.map(thread => (
-                    <View key={thread.id} style={[styles.threadCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                      <Image source={{ uri: thread.avatar }} style={styles.threadAvatar} />
-                      <View style={styles.threadContent}>
-                        <View style={styles.threadHeader}>
-                          <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: 'bold' }]}>{thread.user}</Text>
-                          <Text style={[typography.tiny, { color: colors.textSecondary }]}>{thread.time}</Text>
-                        </View>
-                        <Text style={[typography.body, { color: colors.textPrimary, marginTop: 4 }]}>{thread.content}</Text>
-                        <View style={styles.threadFooter}>
-                          <View style={styles.threadAction}>
-                            <Icon name="heart-outline" size={16} color={colors.textSecondary} />
-                            <Text style={[typography.tiny, { color: colors.textSecondary, marginLeft: 4 }]}>{thread.likes}</Text>
-                          </View>
-                          <View style={styles.threadAction}>
-                            <Icon name="comment-outline" size={16} color={colors.textSecondary} />
-                            <Text style={[typography.tiny, { color: colors.textSecondary, marginLeft: 4 }]}>{thread.replies}</Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Videos Section */}
-              <View style={styles.section}>
-                <Text style={[typography.h4, { color: colors.textPrimary, marginLeft: 20, marginBottom: 15 }]}>Insights</Text>
-                <View style={styles.videoList}>
-                  {VIDEOS_DATA.map(video => (
-                    <View key={video.id} style={[styles.videoCard, { backgroundColor: colors.surface }]}>
-                      <Image source={{ uri: video.thumbnail }} style={styles.videoThumbLarge} />
-                      <View style={styles.videoInfo}>
-                        <Text style={[typography.labelMedium, { color: colors.textPrimary, fontWeight: 'bold' }]} numberOfLines={2}>{video.title}</Text>
-                        <Text style={[typography.tiny, { color: colors.textSecondary, marginTop: 4 }]}>{video.channel} • {video.views}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
             </>
           )}
         </ScrollView>
@@ -883,7 +794,7 @@ const styles = StyleSheet.create({
   },
   reelCard: {
     width: width - moderateScale(40),
-    height: moderateScale(360),
+    height: moderateScale(500),
     borderRadius: radius.card,
     overflow: 'hidden',
   },
@@ -924,30 +835,6 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(34),
     borderWidth: moderateScale(2),
   },
-  threadsContainer: { paddingHorizontal: moderateScale(20), gap: moderateScale(15) },
-  threadCard: {
-    flexDirection: 'row',
-    padding: moderateScale(15),
-    borderRadius: radius.card,
-    borderWidth: 1,
-  },
-  threadAvatar: { width: moderateScale(40), height: moderateScale(40), borderRadius: moderateScale(20) },
-  threadContent: { flex: 1, marginLeft: moderateScale(12) },
-  threadHeader: { flexDirection: 'row', justifyContent: 'space-between' },
-  threadFooter: { flexDirection: 'row', marginTop: moderateScale(12), gap: moderateScale(20) },
-  threadAction: { flexDirection: 'row', alignItems: 'center' },
-  videoList: { paddingHorizontal: moderateScale(20), gap: moderateScale(20) },
-  videoCard: {
-    borderRadius: radius.card,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  videoThumbLarge: { width: '100%', height: moderateScale(180), resizeMode: 'cover' },
-  videoInfo: { padding: moderateScale(15) },
   fullReel: { width: width, height: height, backgroundColor: '#000' },
   fullImage: { ...StyleSheet.absoluteFillObject },
   gradientOverlay: {
